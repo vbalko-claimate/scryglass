@@ -714,6 +714,159 @@ def _suggest_attacks(state: GameState) -> list[Advice]:
     return []
 
 
+def _opp_open_mana_colors(state: GameState) -> tuple[int, set[str]]:
+    """Count opponent's untapped lands and determine available colors."""
+    _BASIC_COLORS = {"plains": "W", "island": "U", "swamp": "B",
+                     "mountain": "R", "forest": "G"}
+    opp_lands = [o for o in state.opp_battlefield() if o.is_land and not o.is_tapped]
+    colors: set[str] = set()
+    for land in opp_lands:
+        card = card_cache.get(land.grp_id)
+        if card:
+            colors.update(_land_produces_colors(card))
+        else:
+            # Fallback: recognize basic land names from object
+            name_lower = land.name.lower()
+            for basic, c in _BASIC_COLORS.items():
+                if basic in name_lower:
+                    colors.add(c)
+    return len(opp_lands), colors
+
+
+def _combat_trick_risk(state: GameState, opp_attackers: list[GameObject],
+                       my_blockers: list[GameObject]) -> dict:
+    """Assess risk of opponent having a combat trick.
+
+    Factors: open mana, colors, suspicious attack patterns, meta deck info.
+    Returns {risk: 0.0-0.95, types: [...], warning: str}.
+    """
+    opp_mana, opp_colors = _opp_open_mana_colors(state)
+
+    if opp_mana == 0:
+        return {"risk": 0.0, "types": [], "warning": ""}
+
+    risk = 0.0
+    trick_types: list[str] = []
+
+    # Color-based trick likelihood
+    if "R" in opp_colors:
+        if opp_mana >= 1:
+            risk += 0.25
+            trick_types.append("pump")
+        if opp_mana >= 3:
+            risk += 0.15  # mass pump (Trumpet Blast etc.)
+            trick_types.append("mass_pump")
+    if "G" in opp_colors and opp_mana >= 1:
+        risk += 0.25
+        trick_types.append("pump")
+    if "W" in opp_colors and opp_mana >= 1:
+        risk += 0.15
+        trick_types.append("protection")
+    if "B" in opp_colors and opp_mana >= 2:
+        risk += 0.10
+        trick_types.append("removal")
+    if "U" in opp_colors and opp_mana >= 2:
+        risk += 0.10
+        trick_types.append("bounce")
+
+    # Suspicious attack pattern: sending creatures into obviously bad blocks
+    # (e.g. 1/1s into a 4/3 — they'd all die for no gain without a trick)
+    if my_blockers:
+        would_die = 0
+        for att in opp_attackers:
+            for blk in my_blockers:
+                if blk.power >= att.toughness and blk.toughness > att.power:
+                    would_die += 1
+                    break
+        if len(opp_attackers) > 0:
+            die_ratio = would_die / len(opp_attackers)
+            if die_ratio >= 0.4 and would_die >= 2:
+                risk += 0.20
+
+    # Meta deck intel: hidden_reach or known combat tricks in key_threats
+    opp_deck = _current_opp_deck
+    if opp_deck:
+        if opp_deck.hidden_reach > 0:
+            risk += 0.10
+        for threat in opp_deck.key_threats:
+            card_name = threat.get("card", "") if isinstance(threat, dict) else str(threat)
+            reason = threat.get("reason", "") if isinstance(threat, dict) else ""
+            if any(kw in reason.lower() for kw in ["trick", "pump", "combat", "instant"]):
+                risk += 0.15
+                break
+
+    risk = min(risk, 0.95)
+
+    warning = ""
+    if risk >= 0.3:
+        color_names = {"R": "red", "G": "green", "W": "white", "B": "black", "U": "blue"}
+        colors_str = "/".join(color_names.get(c, c) for c in sorted(opp_colors))
+        warning = (f"Opp has {opp_mana} open mana ({colors_str})"
+                   f" — combat trick risk {risk:.0%}")
+
+    return {"risk": risk, "types": trick_types, "warning": warning}
+
+
+def _blocker_value(obj: GameObject, state: GameState) -> float:
+    """How valuable is a creature — higher score = more worth preserving.
+
+    Considers: keywords (lifelink, ward, flying), buffed stats,
+    board scarcity, card win rate.
+    """
+    card = card_cache.get(obj.grp_id)
+    value = 0.0
+
+    # Base from current P/T and CMC
+    value += obj.power * 1.5 + obj.toughness * 0.5
+    if card:
+        value += card.cmc * 0.5
+
+    # Buffed creature: current stats exceed card's base stats (has auras/counters)
+    if card:
+        try:
+            base_p = int(card.power) if card.power else 0
+        except (ValueError, TypeError):
+            base_p = 0
+        try:
+            base_t = int(card.toughness) if card.toughness else 0
+        except (ValueError, TypeError):
+            base_t = 0
+        if obj.power > base_p or obj.toughness > base_t:
+            value += 3  # carrying enchantments or counters — high value
+
+    # Key keywords that provide ongoing value
+    if _has_keyword(obj, "Lifelink"):
+        value += 5  # ongoing life swing every turn
+    if _has_keyword(obj, "Flying"):
+        value += 3  # evasion = primary win condition in flyer decks
+    if _has_keyword(obj, "Ward"):
+        value += 2  # hard to remove — opponent already invested to get past ward
+    if _has_keyword(obj, "Deathtouch"):
+        value += 2  # defensive deterrent
+    if _has_keyword(obj, "Hexproof"):
+        value += 3
+    if _has_keyword(obj, "Indestructible"):
+        value += 4
+    if _has_keyword(obj, "Double strike"):
+        value += 3
+
+    # Board scarcity: losing your only/few creatures is devastating
+    my_creatures = state.my_creatures()
+    creature_count = len(my_creatures)
+    if creature_count == 1:
+        value += 6
+    elif creature_count == 2:
+        value += 4
+    elif creature_count == 3:
+        value += 2
+
+    # Card win rate bonus
+    wr = _get_card_wr().get(obj.name, 50)
+    value += (wr - 50) * 0.1
+
+    return value
+
+
 def _check_combat_blocks(state: GameState) -> list[Advice]:
     if state.pending_request != "GREMessageType_DeclareBlockersReq":
         return []
@@ -746,6 +899,13 @@ def _check_combat_blocks(state: GameState) -> list[Advice]:
             if c.mana_cost and not _can_pay_mana_cost(c.mana_cost, untapped_lands):
                 continue
             combat_tricks.append(c)
+
+    # C4: Assess opponent combat trick risk
+    trick = _combat_trick_risk(state, opp_attackers, my_blockers)
+    trick_risk = trick["risk"]
+
+    # Life cushion: how safe is it to take the hit and preserve board
+    life_cushion = max(0.0, (life - incoming) / life) if life > 0 else 0.0
 
     advice = []
     lethal = incoming >= life
@@ -782,6 +942,8 @@ def _check_combat_blocks(state: GameState) -> list[Advice]:
             attacker_priority.append((a, a.power, ""))
 
     used_blockers: set[int] = set()
+    # C4: track blockers that were skipped due to trick risk
+    trick_preserved: list[GameObject] = []
 
     for attacker, threat_score, _ in attacker_priority:
         att_deathtouch = _has_keyword(attacker, "Deathtouch")
@@ -841,21 +1003,43 @@ def _check_combat_blocks(state: GameState) -> list[Advice]:
                     best_block = blocker
                     best_type = "chump"
 
+        # C4: Evaluate trick risk vs blocker value before committing
+        if best_block and trick_risk > 0.3 and not lethal:
+            blk_value = _blocker_value(best_block, state)
+
+            # High-value blocker + significant trick risk + comfortable life
+            # → preserve the creature, don't risk losing it to a trick
+            if (blk_value >= 10 and trick_risk >= 0.4
+                    and life_cushion >= 0.3 and best_type != "chump"):
+                trick_preserved.append(best_block)
+                best_block = None
+                best_type = ""
+
+            # Medium-value blocker with trick risk: downgrade confidence
+            elif blk_value >= 6 and trick_risk >= 0.3 and best_type == "clean_kill":
+                best_type = "risky_clean"
+
         if best_block:
             used_blockers.add(best_block.instance_id)
             if best_type == "clean_kill":
                 advice.append(Advice("heuristic", "high",
                     f"Block {attacker.name} with {best_block.name} — kills it, survives",
                     confidence=0.85))
+            elif best_type == "risky_clean":
+                opp_mana, _ = _opp_open_mana_colors(state)
+                advice.append(Advice("heuristic", "medium",
+                    f"Block {attacker.name} with {best_block.name} — kills it IF no trick"
+                    f" (opp has {opp_mana} open mana)",
+                    confidence=max(0.4, 0.85 - trick_risk)))
             elif best_type == "trade":
                 extra = ""
                 if hand_has_threat:
                     extra = " (you have follow-up in hand)"
                 # C3: check if combat trick saves the blocker
-                for trick in combat_tricks:
-                    trick_text = " ".join(a.lower() for a in trick.abilities)
+                for trick_card in combat_tricks:
+                    trick_text = " ".join(a.lower() for a in trick_card.abilities)
                     if "indestructible" in trick_text or "+1/+" in trick_text or "gets +" in trick_text:
-                        extra = f" — cast {trick.name} to save it"
+                        extra = f" — cast {trick_card.name} to save it"
                         break
                 advice.append(Advice("heuristic", "medium",
                     f"Trade: block {attacker.name} with {best_block.name}{extra}",
@@ -876,13 +1060,27 @@ def _check_combat_blocks(state: GameState) -> list[Advice]:
             f"Not enough blockers — need to block at least {incoming - life + 1} damage to survive",
             confidence=0.9))
 
+    # C4: Trick risk — recommend preserving high-value blockers
+    if trick_preserved and not lethal:
+        names = ", ".join(b.name for b in trick_preserved)
+        advice.insert(0, Advice("heuristic", "high",
+            f"Don't block — preserve {names}"
+            f" (trick risk {trick_risk:.0%}, life cushion {life_cushion:.0%})",
+            confidence=0.7 + trick_risk * 0.2))
+
     # Explicit "don't block" when we have blockers but no good matchups
-    if my_blockers and not used_blockers and not lethal:
+    if my_blockers and not used_blockers and not trick_preserved and not lethal:
         att_names = ", ".join(f"{a.name} ({a.power}/{a.toughness})"
                               for a in opp_attackers[:3])
         advice.append(Advice("heuristic", "medium",
             f"Don't block — no favorable trades vs {att_names}",
             confidence=0.75))
+
+    # C4: Add trick warning when we still recommend blocking
+    if (trick["warning"] and used_blockers
+            and any(a.priority in ("high", "critical") for a in advice)):
+        advice.append(Advice("heuristic", "high",
+            trick["warning"], confidence=0.7))
 
     return advice[:3]
 
