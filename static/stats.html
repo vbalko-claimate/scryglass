@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MTGA Stats</title>
+    <style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #1a1a2e; color: #e0e0e0; font-family: 'Segoe UI', system-ui, sans-serif; }
+
+#app {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 20px;
+    background: #16213e;
+    border-radius: 8px;
+    border: 1px solid #0f3460;
+}
+header h1 { font-size: 20px; color: #e94560; }
+header a {
+    color: #90caf9;
+    text-decoration: none;
+    font-size: 13px;
+    margin-left: auto;
+}
+header a:hover { color: #fff; }
+
+/* Overview cards */
+.overview {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+}
+.stat-card {
+    background: #16213e;
+    border: 1px solid #0f3460;
+    border-radius: 8px;
+    padding: 16px;
+    text-align: center;
+}
+.stat-card .value {
+    font-size: 32px;
+    font-weight: 700;
+    color: #e94560;
+}
+.stat-card .label {
+    font-size: 12px;
+    color: #888;
+    margin-top: 4px;
+}
+.stat-card.win .value { color: #4caf50; }
+.stat-card.loss .value { color: #f44336; }
+.stat-card.neutral .value { color: #ffd700; }
+
+/* Sections */
+.section {
+    background: #16213e;
+    border: 1px solid #0f3460;
+    border-radius: 8px;
+    padding: 16px;
+}
+.section h2 {
+    font-size: 16px;
+    color: #e94560;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Tables */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+th {
+    text-align: left;
+    padding: 8px 10px;
+    border-bottom: 2px solid #0f3460;
+    color: #888;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+td {
+    padding: 8px 10px;
+    border-bottom: 1px solid #0f3460;
+}
+tr:hover { background: rgba(233, 69, 96, 0.05); }
+.result-win { color: #4caf50; font-weight: 600; }
+.result-loss { color: #f44336; font-weight: 600; }
+
+/* Win rate bar */
+.wr-bar {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 120px;
+}
+.wr-bar-track {
+    width: 60px;
+    height: 6px;
+    background: #2a2a4a;
+    border-radius: 3px;
+    overflow: hidden;
+}
+.wr-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.5s ease;
+}
+.wr-good { background: #4caf50; }
+.wr-mid { background: #ffd700; }
+.wr-bad { background: #f44336; }
+
+/* Trend chart */
+.trend-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    height: 60px;
+    padding: 4px 0;
+}
+.trend-bar {
+    flex: 1;
+    min-width: 8px;
+    max-width: 20px;
+    border-radius: 2px 2px 0 0;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    position: relative;
+}
+.trend-bar:hover { opacity: 0.8; }
+.trend-bar.win { background: #4caf50; height: 100%; }
+.trend-bar.loss { background: #f44336; height: 100%; }
+.trend-bar .tip {
+    display: none;
+    position: absolute;
+    bottom: 110%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #0f3460;
+    color: #e0e0e0;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    white-space: nowrap;
+    z-index: 10;
+    pointer-events: none;
+}
+.trend-bar:hover .tip { display: block; }
+
+/* Life graph */
+.life-graph-container {
+    position: relative;
+    height: 200px;
+    margin-top: 8px;
+}
+canvas { width: 100%; height: 100%; }
+
+/* Match detail */
+.match-row { cursor: pointer; }
+.match-detail {
+    display: none;
+    padding: 8px 10px;
+    background: #1a1a2e;
+}
+.match-detail.open { display: table-row; }
+.match-detail td {
+    padding: 12px;
+    border-bottom: 1px solid #0f3460;
+}
+.game-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+.game-tab {
+    padding: 4px 12px;
+    background: #0f3460;
+    border: 1px solid #1a1a4e;
+    border-radius: 4px;
+    color: #90caf9;
+    cursor: pointer;
+    font-size: 12px;
+}
+.game-tab.active {
+    background: #e94560;
+    color: #fff;
+    border-color: #e94560;
+}
+
+/* Streak badge */
+.streak-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 600;
+}
+.streak-badge.positive { background: rgba(76, 175, 80, 0.2); color: #4caf50; }
+.streak-badge.negative { background: rgba(244, 67, 54, 0.2); color: #f44336; }
+.streak-badge.zero { background: rgba(136, 136, 136, 0.2); color: #888; }
+
+/* Mana curve bars */
+.mana-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    height: 120px;
+    padding: 8px 0;
+}
+.mana-turn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    max-width: 60px;
+    gap: 4px;
+}
+.mana-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 80px;
+    width: 100%;
+}
+.mana-bar {
+    flex: 1;
+    border-radius: 2px 2px 0 0;
+    min-height: 2px;
+    position: relative;
+}
+.mana-bar.available { background: #0f3460; }
+.mana-bar.spent { background: #e94560; }
+.mana-turn-label { font-size: 10px; color: #666; }
+.mana-eff-label { font-size: 10px; color: #90caf9; }
+
+/* Mulligan cards */
+.mull-decisions {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+.mull-card {
+    background: #1a1a2e;
+    border: 1px solid #0f3460;
+    border-radius: 6px;
+    padding: 12px 20px;
+    text-align: center;
+    min-width: 140px;
+}
+.mull-card .mull-label { font-size: 12px; color: #888; margin-bottom: 4px; }
+.mull-card .mull-value { font-size: 22px; font-weight: 700; }
+.mull-card .mull-wr { font-size: 12px; margin-top: 4px; }
+
+/* Weakness alerts */
+.weakness-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    background: rgba(244, 67, 54, 0.08);
+    border: 1px solid rgba(244, 67, 54, 0.2);
+    border-radius: 6px;
+    margin-bottom: 8px;
+}
+.weakness-icon { font-size: 18px; }
+.weakness-name { font-weight: 600; color: #f44336; min-width: 180px; }
+.weakness-tip { font-size: 12px; color: #888; }
+
+/* Match summary */
+.summary-btn {
+    padding: 3px 10px;
+    background: #0f3460;
+    border: 1px solid #1a1a4e;
+    border-radius: 4px;
+    color: #90caf9;
+    cursor: pointer;
+    font-size: 11px;
+    white-space: nowrap;
+}
+.summary-btn:hover { background: #e94560; color: #fff; border-color: #e94560; }
+.summary-btn:disabled { opacity: 0.5; cursor: wait; }
+.summary-btn.cached {
+    border-color: #4caf50;
+    color: #4caf50;
+}
+.match-summary {
+    display: none;
+    padding: 12px 16px;
+    background: #1a1a2e;
+    border-top: 1px solid #0f3460;
+    font-size: 13px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    color: #ccc;
+}
+.match-summary.open { display: table-row; }
+.match-summary td {
+    padding: 14px 16px;
+    border-bottom: 2px solid #0f3460;
+}
+.summary-text {
+    max-width: 100%;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+.summary-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+.summary-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #e94560;
+    font-weight: 600;
+}
+.summary-close {
+    padding: 2px 8px;
+    background: transparent;
+    border: 1px solid #333;
+    border-radius: 4px;
+    color: #666;
+    cursor: pointer;
+    font-size: 11px;
+}
+.summary-close:hover { color: #e94560; border-color: #e94560; }
+
+/* Timeline */
+.timeline-btn {
+    padding: 3px 10px;
+    background: #0f3460;
+    border: 1px solid #1a1a4e;
+    border-radius: 4px;
+    color: #90caf9;
+    cursor: pointer;
+    font-size: 11px;
+    margin-left: 8px;
+}
+.timeline-btn:hover { background: #e94560; color: #fff; border-color: #e94560; }
+.timeline-panel {
+    display: none;
+    margin-top: 12px;
+    border-top: 1px solid #0f3460;
+    padding-top: 12px;
+}
+.timeline-panel.open { display: block; }
+.tl-mull {
+    padding: 8px 12px;
+    background: rgba(255, 215, 0, 0.08);
+    border: 1px solid rgba(255, 215, 0, 0.2);
+    border-radius: 6px;
+    margin-bottom: 8px;
+    font-size: 12px;
+}
+.tl-mull-label { color: #ffd700; font-weight: 600; }
+.tl-game-header {
+    font-size: 13px;
+    font-weight: 600;
+    color: #e94560;
+    margin: 12px 0 6px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #0f3460;
+}
+.tl-turn {
+    display: flex;
+    gap: 8px;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(15, 52, 96, 0.5);
+    font-size: 12px;
+    align-items: flex-start;
+}
+.tl-turn:last-child { border-bottom: none; }
+.tl-turn-num {
+    min-width: 28px;
+    font-weight: 700;
+    color: #e94560;
+    font-size: 13px;
+}
+.tl-turn-mana {
+    min-width: 55px;
+    color: #666;
+    font-size: 11px;
+}
+.tl-turn-events { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.tl-ev {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+.tl-ev-play { color: #4caf50; }
+.tl-ev-opp { color: #f44336; }
+.tl-ev-atk { color: #ff9800; }
+.tl-ev-life { color: #90caf9; }
+.tl-ev-comply { color: #ce93d8; font-size: 11px; }
+.tl-turn-life {
+    min-width: 80px;
+    text-align: right;
+    color: #888;
+    font-size: 11px;
+}
+.tl-game-end {
+    padding: 8px 12px;
+    margin-top: 6px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+}
+.tl-game-end.win { background: rgba(76, 175, 80, 0.1); color: #4caf50; border: 1px solid rgba(76, 175, 80, 0.2); }
+.tl-game-end.loss { background: rgba(244, 67, 54, 0.1); color: #f44336; border: 1px solid rgba(244, 67, 54, 0.2); }
+
+/* Opponent badge */
+.opp-badge {
+    display: inline-block;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 10px;
+    background: rgba(233, 69, 96, 0.15);
+    color: #e94560;
+    margin-left: 4px;
+    font-weight: 600;
+}
+
+/* Color dots */
+.color-dots { display: inline-flex; gap: 2px; margin-right: 4px; }
+.color-dot {
+    width: 12px; height: 12px; border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.2);
+    display: inline-block;
+}
+.color-dot.W { background: #f9faf4; }
+.color-dot.U { background: #0e68ab; }
+.color-dot.B { background: #150b00; border-color: #444; }
+.color-dot.R { background: #d3202a; }
+.color-dot.G { background: #00733e; }
+
+/* Empty state */
+.empty { color: #555; font-style: italic; font-size: 13px; padding: 16px; text-align: center; }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <header>
+            <h1>MTGA Stats</h1>
+            <a href="/">Back to Advisor</a>
+        </header>
+
+        <div class="overview" id="overview"></div>
+
+        <div class="section">
+            <h2>Recent Trend</h2>
+            <div class="trend-chart" id="trend-chart"></div>
+        </div>
+
+        <div class="section">
+            <h2>Deck Performance</h2>
+            <div id="decks-table"></div>
+        </div>
+
+        <div class="section">
+            <h2>Matchups</h2>
+            <div id="matchups-table"></div>
+        </div>
+
+        <div class="section">
+            <h2>Color Matchups</h2>
+            <div id="color-matchups-table"></div>
+        </div>
+
+        <div class="section">
+            <h2>Mulligan Stats</h2>
+            <div id="mulligan-stats"></div>
+        </div>
+
+        <div class="section">
+            <h2>My Card Performance</h2>
+            <div id="my-cards-table"></div>
+        </div>
+
+        <div class="section">
+            <h2>Mana Curve Efficiency</h2>
+            <div id="mana-curve"></div>
+        </div>
+
+        <div class="section">
+            <h2>Advice Compliance</h2>
+            <div id="compliance-stats"></div>
+        </div>
+
+        <div class="section" id="weakness-section" style="display:none">
+            <h2>Weakness Alerts</h2>
+            <div id="weakness-list"></div>
+        </div>
+
+        <div class="section">
+            <h2>Opponent Cards</h2>
+            <div id="opp-cards-table"></div>
+        </div>
+
+        <div class="section">
+            <h2>Match History</h2>
+            <table id="history-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Result</th>
+                        <th>Opponent</th>
+                        <th>My Deck</th>
+                        <th>Opp Deck</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="history-body"></tbody>
+            </table>
+        </div>
+
+        <div class="section" id="life-section" style="display:none">
+            <h2>Life Graph <span id="life-match-info" style="font-size:12px;color:#888;font-weight:normal"></span></h2>
+            <div class="game-tabs" id="game-tabs"></div>
+            <div class="life-graph-container">
+                <canvas id="life-canvas"></canvas>
+            </div>
+        </div>
+    </div>
+
+<script>
+// ─── Data fetching ───
+async function fetchJSON(url) {
+    const r = await fetch(url);
+    return r.json();
+}
+
+function wrClass(wr) {
+    return wr >= 55 ? 'wr-good' : wr >= 45 ? 'wr-mid' : 'wr-bad';
+}
+
+function wrBar(wr, total) {
+    return `<div class="wr-bar">
+        <span>${wr}%</span>
+        <div class="wr-bar-track"><div class="wr-bar-fill ${wrClass(wr)}" style="width:${wr}%"></div></div>
+        <span style="color:#666;font-size:11px">(${total})</span>
+    </div>`;
+}
+
+function formatDate(iso) {
+    if (!iso) return '';
+    const d = new Date(iso + (iso.includes('Z') ? '' : 'Z'));
+    return d.toLocaleDateString('cs-CZ', { day: 'numeric', month: 'short' }) + ' ' +
+           d.toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' });
+}
+
+// ─── Overview ───
+async function loadOverview() {
+    const d = await fetchJSON('/api/stats/overview');
+    const el = document.getElementById('overview');
+    const streakClass = d.streak > 0 ? 'positive' : d.streak < 0 ? 'negative' : 'zero';
+    const streakText = d.streak > 0 ? `${d.streak}W` : d.streak < 0 ? `${Math.abs(d.streak)}L` : '0';
+    el.innerHTML = `
+        <div class="stat-card"><div class="value">${d.total}</div><div class="label">Matches</div></div>
+        <div class="stat-card win"><div class="value">${d.wins}</div><div class="label">Wins</div></div>
+        <div class="stat-card loss"><div class="value">${d.losses}</div><div class="label">Losses</div></div>
+        <div class="stat-card neutral"><div class="value">${d.win_rate}%</div><div class="label">Win Rate</div></div>
+        <div class="stat-card"><div class="value">${d.avg_turns}</div><div class="label">Avg Turns</div></div>
+        <div class="stat-card"><div class="value"><span class="streak-badge ${streakClass}">${streakText}</span></div><div class="label">Streak</div></div>
+    `;
+}
+
+// ─── Trend ───
+async function loadTrend() {
+    const data = await fetchJSON('/api/stats/trend');
+    const el = document.getElementById('trend-chart');
+    if (!data.length) { el.innerHTML = '<div class="empty">No matches yet</div>'; return; }
+    el.innerHTML = data.map(m => {
+        const cls = m.result === 'Win' ? 'win' : 'loss';
+        const tip = `${formatDate(m.date)} ${m.result}${m.opp_deck ? ' vs ' + m.opp_deck : ''}`;
+        return `<div class="trend-bar ${cls}" data-match="${m.match_id}"><div class="tip">${tip}</div></div>`;
+    }).join('');
+    // Click to show life graph
+    el.querySelectorAll('.trend-bar').forEach(bar => {
+        bar.onclick = () => loadLifeGraph(bar.dataset.match);
+    });
+}
+
+// ─── Decks ───
+async function loadDecks() {
+    const data = await fetchJSON('/api/stats/decks');
+    const el = document.getElementById('decks-table');
+    if (!data.length) { el.innerHTML = '<div class="empty">No deck data yet — play a few matches</div>'; return; }
+    el.innerHTML = `<table>
+        <thead><tr><th>Deck</th><th>Win Rate</th><th>W</th><th>L</th></tr></thead>
+        <tbody>${data.map(d => `
+            <tr>
+                <td>${d.deck}</td>
+                <td>${wrBar(d.win_rate, d.total)}</td>
+                <td class="result-win">${d.wins}</td>
+                <td class="result-loss">${d.losses}</td>
+            </tr>
+        `).join('')}</tbody>
+    </table>`;
+}
+
+// ─── Matchups ───
+async function loadMatchups() {
+    const data = await fetchJSON('/api/stats/matchups');
+    const el = document.getElementById('matchups-table');
+    if (!data.length) { el.innerHTML = '<div class="empty">No matchup data yet — opponent decks need to be identified</div>'; return; }
+    el.innerHTML = `<table>
+        <thead><tr><th>My Deck</th><th>vs</th><th>Win Rate</th><th>Matches</th></tr></thead>
+        <tbody>${data.map(d => `
+            <tr>
+                <td>${d.my_deck}</td>
+                <td>${d.opp_deck}</td>
+                <td>${wrBar(d.win_rate, d.total)}</td>
+                <td>${d.total}</td>
+            </tr>
+        `).join('')}</tbody>
+    </table>`;
+}
+
+// ─── Opponent Cards ───
+async function loadOppCards() {
+    const data = await fetchJSON('/api/stats/opp-cards');
+    const el = document.getElementById('opp-cards-table');
+    if (!data.length) { el.innerHTML = '<div class="empty">No opponent card data yet — starts tracking from next match</div>'; return; }
+    el.innerHTML = `<table>
+        <thead><tr><th>Card</th><th>Times Seen</th><th>Matches</th></tr></thead>
+        <tbody>${data.slice(0, 20).map(d => `
+            <tr>
+                <td>${d.card}</td>
+                <td>${d.times}</td>
+                <td>${d.matches}</td>
+            </tr>
+        `).join('')}</tbody>
+    </table>`;
+}
+
+// ─── Match History ───
+function dim(val) { return val ? val : '<span style="color:#444">—</span>'; }
+
+async function loadHistory() {
+    const data = await fetchJSON('/api/history');
+    const el = document.getElementById('history-body');
+    el.innerHTML = data.filter(m => m.result).map(m => `
+        <tr class="match-row" data-match="${m.match_id}">
+            <td>${formatDate(m.started_at)}</td>
+            <td class="${m.result === 'Win' ? 'result-win' : 'result-loss'}">${m.result}</td>
+            <td>${dim(m.opponent_name)}${m.opp_match_count >= 2 ? '<span class="opp-badge">' + m.opp_match_count + 'x</span>' : ''}</td>
+            <td>${dim(m.my_deck_name)}</td>
+            <td>${dim(m.opp_deck_name)}</td>
+            <td>
+                <button class="summary-btn${m.has_summary ? ' cached' : ''}" data-match="${m.match_id}" onclick="event.stopPropagation(); loadMatchSummary('${m.match_id}', this)">${m.has_summary ? '&#x2713; Summary' : 'Summary'}</button>
+            </td>
+        </tr>
+        <tr class="match-summary" id="summary-${m.match_id}">
+            <td colspan="6">
+                <div class="summary-header">
+                    <span class="summary-label">LLM Match Summary</span>
+                    <span>
+                        <button class="timeline-btn" onclick="loadTimeline('${m.match_id}')">Turn-by-Turn Detail</button>
+                        <button class="summary-close" onclick="closeSummary('${m.match_id}')">Close</button>
+                    </span>
+                </div>
+                <div class="summary-text" id="summary-text-${m.match_id}"></div>
+                <div class="timeline-panel" id="timeline-${m.match_id}"></div>
+            </td>
+        </tr>
+    `).join('');
+    el.querySelectorAll('.match-row').forEach(row => {
+        row.onclick = () => loadLifeGraph(row.dataset.match);
+    });
+}
+
+async function loadMatchSummary(matchId, btn) {
+    const summaryRow = document.getElementById('summary-' + matchId);
+    const textEl = document.getElementById('summary-text-' + matchId);
+
+    // Toggle if already open
+    if (summaryRow.classList.contains('open')) {
+        summaryRow.classList.remove('open');
+        return;
+    }
+
+    // Close other open summaries
+    document.querySelectorAll('.match-summary.open').forEach(el => el.classList.remove('open'));
+
+    btn.disabled = true;
+    btn.textContent = 'Loading...';
+    summaryRow.classList.add('open');
+    textEl.textContent = 'Generating summary...';
+
+    try {
+        const data = await fetchJSON('/api/match-summary/' + matchId);
+        textEl.textContent = data.summary || 'No summary available.';
+        btn.classList.add('cached');
+        btn.innerHTML = '&#x2713; Summary';
+    } catch (e) {
+        textEl.textContent = 'Error loading summary: ' + e.message;
+    } finally {
+        btn.disabled = false;
+    }
+}
+
+function closeSummary(matchId) {
+    document.getElementById('summary-' + matchId).classList.remove('open');
+    const tl = document.getElementById('timeline-' + matchId);
+    if (tl) tl.classList.remove('open');
+}
+
+async function loadTimeline(matchId) {
+    const panel = document.getElementById('timeline-' + matchId);
+    if (panel.classList.contains('open')) {
+        panel.classList.remove('open');
+        return;
+    }
+    panel.innerHTML = '<div style="color:#666;padding:8px">Loading timeline...</div>';
+    panel.classList.add('open');
+
+    try {
+        const d = await fetchJSON('/api/match-timeline/' + matchId);
+        if (!d.games || !d.games.length) {
+            panel.innerHTML = '<div class="empty">No turn data for this match</div>';
+            return;
+        }
+        panel.innerHTML = renderTimeline(d);
+    } catch (e) {
+        panel.innerHTML = '<div style="color:#f44336;padding:8px">Error: ' + e.message + '</div>';
+    }
+}
+
+function renderTimeline(d) {
+    let html = '';
+
+    // Mulligans
+    if (d.mulligans && d.mulligans.length) {
+        for (const m of d.mulligans) {
+            const dec = m.decision === 'keep' ? 'KEEP' : 'MULLIGAN';
+            const col = m.decision === 'keep' ? '#4caf50' : '#ffd700';
+            html += `<div class="tl-mull">
+                <span class="tl-mull-label">Game ${m.game}</span>
+                <span style="color:${col};font-weight:600"> ${dec}</span>
+                <span style="color:#888"> (${m.hand_size} cards):</span>
+                <span style="color:#ccc"> ${m.hand.join(', ')}</span>
+            </div>`;
+        }
+    }
+
+    // Games
+    for (const game of d.games) {
+        if (d.games.length > 1) {
+            html += `<div class="tl-game-header">Game ${game.game}</div>`;
+        }
+
+        // Track running life totals
+        let myLife = 20, oppLife = 20;
+
+        for (const t of game.turns) {
+            // Update life from changes
+            for (const lc of t.life_changes) {
+                if (lc.player === 'me') myLife = lc.new;
+                else oppLife = lc.new;
+            }
+
+            let events = '';
+
+            // My plays
+            for (const p of t.my_plays) {
+                const icon = p.is_land ? '&#9830;' : '&#9733;';
+                events += `<div class="tl-ev tl-ev-play">${icon} ${p.name}${!p.is_land ? ' <span style="color:#666">(' + p.cmc + ')</span>' : ''}</div>`;
+            }
+
+            // Opp plays
+            for (const p of t.opp_plays) {
+                events += `<div class="tl-ev tl-ev-opp">&#9888; Opp: ${p.name}</div>`;
+            }
+
+            // My attacks
+            if (t.attacks.length) {
+                const names = t.attacks.map(a => a.name + ' ' + a.power + '/' + a.toughness).join(', ');
+                const dmg = t.attacks.reduce((s, a) => s + a.power, 0);
+                events += `<div class="tl-ev tl-ev-atk">&#9876; Attack (${dmg} dmg): ${names}</div>`;
+            }
+
+            // Opponent attacks
+            if (t.opp_attacks && t.opp_attacks.length) {
+                const names = t.opp_attacks.map(a => a.name + ' ' + a.power + '/' + a.toughness).join(', ');
+                const dmg = t.opp_attacks.reduce((s, a) => s + a.power, 0);
+                events += `<div class="tl-ev tl-ev-opp">&#9876; Opp Attack (${dmg} dmg): ${names}</div>`;
+            }
+
+            // Enchantment attachments (B3)
+            if (t.enchantments && t.enchantments.length) {
+                for (const e of t.enchantments) {
+                    events += `<div class="tl-ev" style="color:#ce93d8">&#128279; ${e.aura} &rarr; ${e.target_owner === 'me' ? 'my' : 'opp'} ${e.target}</div>`;
+                }
+            }
+
+            // Block declarations (B2)
+            if (t.blocks && t.blocks.length) {
+                for (const b of t.blocks) {
+                    if (b.no_blocks) {
+                        events += `<div class="tl-ev" style="color:#888">&#9632; No blocks declared</div>`;
+                    } else if (b.blocker) {
+                        const atks = (b.attackers || []).map(a => a.name).join(', ');
+                        events += `<div class="tl-ev" style="color:#64b5f6">&#9632; Block: ${b.blocker} ${b.blocker_power}/${b.blocker_toughness} blocks ${atks}</div>`;
+                    }
+                }
+            }
+
+            // Creature removals (deaths, exile, bounce)
+            if (t.removals && t.removals.length) {
+                for (const r of t.removals) {
+                    const who = r.owner === 'me' ? 'My' : 'Opp';
+                    const destMap = {died: '&#9760; died', exiled: '&#10006; exiled', bounced: '&#8617; bounced', tucked: '&#8595; tucked'};
+                    const destLabel = destMap[r.destination] || r.destination;
+                    const tempExile = r.temporary_exile ? ' <span style="color:#ffd700;font-size:10px" title="Card was enchanted/exiled temporarily — losing this creature has extra impact!">[temp exile!]</span>' : '';
+                    const causedBy = r.caused_by ? ` <span style="color:#888;font-size:10px">(by ${r.caused_by})</span>` : '';
+                    const col = r.owner === 'me' ? '#f44336' : '#4caf50';
+                    events += `<div class="tl-ev" style="color:${col}">${destLabel}: ${who} ${r.name} ${r.power}/${r.toughness}${causedBy}${tempExile}</div>`;
+                }
+            }
+
+            // Life changes
+            for (const lc of t.life_changes) {
+                const who = lc.player === 'me' ? 'Me' : 'Opp';
+                const col = lc.delta > 0 ? '#4caf50' : '#f44336';
+                events += `<div class="tl-ev tl-ev-life">${who}: ${lc.old}&rarr;${lc.new} <span style="color:${col}">(${lc.delta > 0 ? '+' : ''}${lc.delta})</span></div>`;
+            }
+
+            // Compliance
+            if (t.compliance) {
+                const c = t.compliance;
+                const icon = c.followed ? '&#10003;' : '&#10007;';
+                const col = c.followed ? '#4caf50' : '#ffd700';
+                events += `<div class="tl-ev tl-ev-comply"><span style="color:${col}">${icon}</span> ${c.followed ? 'Followed' : 'Ignored'}: played ${c.played}${!c.followed ? ', rec: ' + c.recommended.join(', ') : ''}</div>`;
+            }
+
+            if (!events) continue; // skip empty turns
+
+            const manaStr = t.mana !== null ? `${t.mana}&#9671; ${t.lands}L` : '';
+
+            // B4: board snapshot tooltip
+            let snapTip = '';
+            if (t.board_snapshot) {
+                const bs = t.board_snapshot;
+                const myC = (bs.my_creatures || []).map(c => `${c.name} ${c.power}/${c.toughness}${c.tapped ? ' T' : ''}`).join(', ');
+                const oppC = (bs.opp_creatures || []).map(c => `${c.name} ${c.power}/${c.toughness}`).join(', ');
+                snapTip = `Board: My[${myC || 'empty'}] Opp[${oppC || 'empty'}] Hand:${bs.my_hand_size}`;
+            }
+
+            html += `<div class="tl-turn">
+                <div class="tl-turn-num" ${snapTip ? 'title="' + snapTip.replace(/"/g, '&quot;') + '" style="cursor:help;text-decoration:underline dotted"' : ''}>T${t.turn}</div>
+                <div class="tl-turn-mana">${manaStr}</div>
+                <div class="tl-turn-events">${events}</div>
+                <div class="tl-turn-life">${myLife} / ${oppLife}</div>
+            </div>`;
+        }
+
+        // Game end
+        const ge = (d.game_ends || []).find(e => e.game === game.game);
+        if (ge) {
+            const won = ge.my_life > 0 && ge.opp_life <= 0;
+            const cls = d.result === 'Win' ? 'win' : 'loss';
+            html += `<div class="tl-game-end ${cls}">
+                Game Over &mdash; Me: ${ge.my_life} life, Opp: ${ge.opp_life} life
+            </div>`;
+        }
+    }
+
+    return html;
+}
+
+// ─── Life Graph ───
+let currentLifeData = null;
+let currentGame = 1;
+
+async function loadLifeGraph(matchId) {
+    const data = await fetchJSON(`/api/stats/life/${matchId}`);
+    currentLifeData = data;
+    currentGame = 1;
+
+    const section = document.getElementById('life-section');
+    section.style.display = 'block';
+
+    const info = document.getElementById('life-match-info');
+    const parts = [];
+    if (data.result) parts.push(data.result === 'Win' ? 'Win' : 'Loss');
+    if (data.opponent) parts.push('vs ' + data.opponent);
+    if (data.my_deck) parts.push(data.my_deck);
+    info.textContent = parts.join(' — ');
+
+    // Game tabs
+    const tabs = document.getElementById('game-tabs');
+    if (data.games.length > 1) {
+        tabs.innerHTML = data.games.map((g, i) =>
+            `<div class="game-tab ${i === 0 ? 'active' : ''}" data-game="${i}">${'Game ' + (i+1)}</div>`
+        ).join('');
+        tabs.querySelectorAll('.game-tab').forEach(tab => {
+            tab.onclick = () => {
+                tabs.querySelectorAll('.game-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                currentGame = parseInt(tab.dataset.game);
+                drawLifeGraph();
+            };
+        });
+    } else {
+        tabs.innerHTML = '';
+    }
+
+    drawLifeGraph();
+    section.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function drawLifeGraph() {
+    const canvas = document.getElementById('life-canvas');
+    const ctx = canvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.parentElement.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.scale(dpr, dpr);
+
+    const W = rect.width;
+    const H = rect.height;
+    const PAD = { top: 20, right: 20, bottom: 30, left: 40 };
+
+    ctx.clearRect(0, 0, W, H);
+
+    if (!currentLifeData || !currentLifeData.games.length) return;
+    const game = currentLifeData.games[currentGame] || currentLifeData.games[0];
+    if (!game) return;
+
+    const me = game.me;
+    const opp = game.opp;
+    const turns = Math.max(me.length, opp.length);
+    if (turns < 2) return;
+
+    const maxLife = Math.max(...me, ...opp, 20);
+    const minLife = Math.min(...me, ...opp, 0);
+    const lifeRange = maxLife - minLife || 1;
+
+    const plotW = W - PAD.left - PAD.right;
+    const plotH = H - PAD.top - PAD.bottom;
+
+    function x(turn) { return PAD.left + (turn / (turns - 1)) * plotW; }
+    function y(life) { return PAD.top + plotH - ((life - minLife) / lifeRange) * plotH; }
+
+    // Grid lines
+    ctx.strokeStyle = '#0f3460';
+    ctx.lineWidth = 0.5;
+    for (let l = Math.ceil(minLife / 5) * 5; l <= maxLife; l += 5) {
+        ctx.beginPath();
+        ctx.moveTo(PAD.left, y(l));
+        ctx.lineTo(W - PAD.right, y(l));
+        ctx.stroke();
+        ctx.fillStyle = '#555';
+        ctx.font = '10px sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillText(l, PAD.left - 6, y(l) + 3);
+    }
+
+    // Turn labels
+    ctx.fillStyle = '#555';
+    ctx.textAlign = 'center';
+    ctx.font = '10px sans-serif';
+    const step = Math.max(1, Math.floor(turns / 10));
+    for (let t = 0; t < turns; t += step) {
+        ctx.fillText('T' + t, x(t), H - PAD.bottom + 16);
+    }
+
+    // Zero line
+    if (minLife < 0) {
+        ctx.strokeStyle = '#f44336';
+        ctx.lineWidth = 0.5;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(PAD.left, y(0));
+        ctx.lineTo(W - PAD.right, y(0));
+        ctx.stroke();
+        ctx.setLineDash([]);
+    }
+
+    // Draw line
+    function drawLine(data, color) {
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2.5;
+        ctx.lineJoin = 'round';
+        ctx.beginPath();
+        for (let i = 0; i < data.length; i++) {
+            if (i === 0) ctx.moveTo(x(i), y(data[i]));
+            else ctx.lineTo(x(i), y(data[i]));
+        }
+        ctx.stroke();
+
+        // Dots
+        ctx.fillStyle = color;
+        for (let i = 0; i < data.length; i++) {
+            ctx.beginPath();
+            ctx.arc(x(i), y(data[i]), 2.5, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // End label
+        const last = data[data.length - 1];
+        ctx.fillStyle = color;
+        ctx.font = 'bold 12px sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText(last, x(data.length - 1) + 6, y(last) + 4);
+    }
+
+    drawLine(me, '#4caf50');
+    drawLine(opp, '#f44336');
+
+    // Legend
+    ctx.font = '11px sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillStyle = '#4caf50';
+    ctx.fillText('You', W - PAD.right, PAD.top - 6);
+    ctx.fillStyle = '#f44336';
+    ctx.fillText('Opponent', W - PAD.right - 40, PAD.top - 6);
+}
+
+// ─── Color Matchups ───
+function colorDots(colorKey) {
+    return colorKey.split('').map(c => `<span class="color-dot ${c}"></span>`).join('');
+}
+
+async function loadColorMatchups() {
+    const data = await fetchJSON('/api/stats/color-matchups');
+    const el = document.getElementById('color-matchups-table');
+    if (!data.length) { el.innerHTML = '<div class="empty">No color matchup data yet</div>'; return; }
+    el.innerHTML = `<table>
+        <thead><tr><th>vs Colors</th><th>Win Rate</th><th>W</th><th>L</th></tr></thead>
+        <tbody>${data.map(d => `
+            <tr>
+                <td><span class="color-dots">${colorDots(d.colors)}</span> ${d.name}</td>
+                <td>${wrBar(d.win_rate, d.total)}</td>
+                <td class="result-win">${d.wins}</td>
+                <td class="result-loss">${d.losses}</td>
+            </tr>
+        `).join('')}</tbody>
+    </table>`;
+}
+
+// ─── Mulligan Stats ───
+async function loadMulligan() {
+    const data = await fetchJSON('/api/stats/mulligan');
+    const el = document.getElementById('mulligan-stats');
+    if (!data.total) { el.innerHTML = '<div class="empty">No mulligan data yet — starts tracking from next match</div>'; return; }
+
+    const decLabel = d => d === 'MulliganOption_AcceptHand' ? 'Keep' : d === 'MulliganOption_Mulligan' ? 'Mulligan' : d;
+    let html = `<div class="mull-decisions">
+        <div class="mull-card">
+            <div class="mull-label">Keep Rate</div>
+            <div class="mull-value" style="color:#ffd700">${data.keep_rate}%</div>
+            <div class="mull-wr" style="color:#666">${data.total} decisions</div>
+        </div>`;
+    for (const d of data.decisions) {
+        const col = d.win_rate >= 50 ? '#4caf50' : '#f44336';
+        html += `<div class="mull-card">
+            <div class="mull-label">${decLabel(d.decision)}</div>
+            <div class="mull-value">${d.total}×</div>
+            <div class="mull-wr">WR: <span style="color:${col}">${d.win_rate}%</span> (${d.wins}W/${d.losses}L)</div>
+        </div>`;
+    }
+    html += '</div>';
+    el.innerHTML = html;
+}
+
+// ─── My Card Performance ───
+async function loadMyCards() {
+    const data = await fetchJSON('/api/stats/my-cards');
+    const el = document.getElementById('my-cards-table');
+    if (!data.length) { el.innerHTML = '<div class="empty">No card play data yet — starts tracking from next match</div>'; return; }
+    el.innerHTML = `<table>
+        <thead><tr><th>Card</th><th>Win Rate</th><th>Matches</th><th>Played</th></tr></thead>
+        <tbody>${data.map(d => `
+            <tr>
+                <td>${d.card}</td>
+                <td>${wrBar(d.win_rate, d.matches)}</td>
+                <td>${d.matches}</td>
+                <td style="color:#666">${d.times}×</td>
+            </tr>
+        `).join('')}</tbody>
+    </table>`;
+}
+
+// ─── Mana Curve Efficiency ───
+async function loadManaCurve() {
+    const data = await fetchJSON('/api/stats/mana-curve');
+    const el = document.getElementById('mana-curve');
+    if (!data.length) { el.innerHTML = '<div class="empty">No mana data yet — starts tracking from next match</div>'; return; }
+
+    const maxMana = Math.max(...data.map(d => d.avg_available), 1);
+    let html = '<div class="mana-chart">';
+    for (const d of data) {
+        const availH = (d.avg_available / maxMana) * 80;
+        const spentH = (d.avg_spent / maxMana) * 80;
+        html += `<div class="mana-turn">
+            <div class="mana-eff-label">${d.efficiency}%</div>
+            <div class="mana-bars">
+                <div class="mana-bar available" style="height:${availH}px" title="Available: ${d.avg_available}"></div>
+                <div class="mana-bar spent" style="height:${spentH}px" title="Spent: ${d.avg_spent}"></div>
+            </div>
+            <div class="mana-turn-label">T${d.turn}</div>
+        </div>`;
+    }
+    html += '</div>';
+    html += '<div style="font-size:11px;color:#666;display:flex;gap:16px;margin-top:4px">'
+        + '<span><span style="display:inline-block;width:10px;height:10px;background:#0f3460;border-radius:2px"></span> Available</span>'
+        + '<span><span style="display:inline-block;width:10px;height:10px;background:#e94560;border-radius:2px"></span> Spent</span>'
+        + '</div>';
+    el.innerHTML = html;
+}
+
+// ─── Advice Compliance ───
+async function loadCompliance() {
+    const data = await fetchJSON('/api/stats/compliance');
+    const el = document.getElementById('compliance-stats');
+    if (!data.total) { el.innerHTML = '<div class="empty">No advice compliance data yet — starts tracking from next match</div>'; return; }
+
+    const typeLabel = t => t === 'followed' ? 'Followed' : 'Ignored';
+    let html = `<div class="mull-decisions">
+        <div class="mull-card">
+            <div class="mull-label">Follow Rate</div>
+            <div class="mull-value" style="color:#90caf9">${data.follow_rate}%</div>
+            <div class="mull-wr" style="color:#666">${data.total} plays tracked</div>
+        </div>`;
+    for (const d of data.decisions) {
+        const col = d.type === 'followed'
+            ? (d.win_rate >= 50 ? '#4caf50' : '#ffd700')
+            : (d.win_rate >= 50 ? '#ffd700' : '#f44336');
+        html += `<div class="mull-card">
+            <div class="mull-label">${typeLabel(d.type)}</div>
+            <div class="mull-value">${d.total}×</div>
+            <div class="mull-wr">WR: <span style="color:${col}">${d.win_rate}%</span> (${d.wins}W/${d.losses}L)</div>
+        </div>`;
+    }
+    html += '</div>';
+    el.innerHTML = html;
+}
+
+// ─── Weakness Alerts ───
+async function loadWeaknesses() {
+    const data = await fetchJSON('/api/stats/weaknesses');
+    const section = document.getElementById('weakness-section');
+    const el = document.getElementById('weakness-list');
+    if (!data.length) return;
+    section.style.display = 'block';
+    el.innerHTML = data.map(w => {
+        const icon = w.type === 'weak_card' ? '&#9888;' : '&#9888;';
+        const label = w.type === 'weak_card' ? 'Card' : 'Deck';
+        return `<div class="weakness-item">
+            <span class="weakness-icon">${icon}</span>
+            <span class="weakness-name">${w.name}</span>
+            <span>${wrBar(w.win_rate, w.matches)}</span>
+            <span class="weakness-tip">${w.tip}</span>
+        </div>`;
+    }).join('');
+}
+
+// ─── Init ───
+(async function() {
+    await Promise.all([
+        loadOverview(), loadTrend(), loadDecks(), loadMatchups(),
+        loadColorMatchups(), loadMulligan(), loadMyCards(), loadManaCurve(),
+        loadCompliance(), loadWeaknesses(),
+        loadOppCards(), loadHistory(),
+    ]);
+})();
+
+window.addEventListener('resize', () => { if (currentLifeData) drawLifeGraph(); });
+</script>
+</body>
+</html>

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MTGA Play Advisor</title>
+    <link rel="stylesheet" href="/static/style.css?v=3">
+</head>
+<body>
+    <div id="app">
+        <header>
+            <h1>MTGA Advisor</h1>
+            <a href="/stats" style="color:#90caf9;text-decoration:none;font-size:12px">Stats</a>
+            <div id="status">
+                <span id="connection-status" class="status-dot disconnected"></span>
+                <span id="match-status">Waiting for match...</span>
+            </div>
+            <div id="turn-info"></div>
+            <div id="strategy-info" class="strategy-info" style="display:none"></div>
+        </header>
+
+        <section id="opponent-zone" class="zone">
+            <div class="zone-header">
+                <span id="opp-name">Opponent</span>
+                <span id="opp-life" class="life">20</span>
+                <span id="opp-meta" class="opp-meta"></span>
+            </div>
+            <div id="opp-meta-details" class="opp-meta-details" style="display:none"></div>
+            <div id="opp-battlefield" class="card-row"></div>
+        </section>
+
+        <section id="threat-panel" style="display:none">
+            <div class="threat-header">
+                <h3>Opponent Threats</h3>
+                <span id="threat-count"></span>
+            </div>
+            <div id="threat-list"></div>
+        </section>
+
+        <section id="advice-panel">
+            <div class="advice-header">
+                <h2>Advice</h2>
+                <button id="ask-ai-btn" onclick="askLLM()">Ask AI</button>
+                <button id="summary-btn" onclick="matchSummary()">Match Summary</button>
+                <select id="backend-select" onchange="setBackend(this.value)">
+                    <option value="claude_cli">Claude CLI</option>
+                    <option value="ollama">Ollama (local)</option>
+                    <option value="anthropic_api">API</option>
+                </select>
+            </div>
+            <div id="advice-list"></div>
+        </section>
+
+        <section id="my-zone" class="zone">
+            <div id="my-battlefield" class="card-row"></div>
+            <div class="zone-header">
+                <span id="my-name">You</span>
+                <span id="my-life" class="life">20</span>
+                <span id="mana-info" class="mana-info"></span>
+            </div>
+        </section>
+
+        <section id="hand-zone">
+            <h3>Hand</h3>
+            <div id="hand-cards" class="card-row"></div>
+        </section>
+
+        <footer>
+            <span id="library-count">Library: 0</span>
+            <span id="graveyard-count">Graveyard: 0</span>
+            <span id="stack-count"></span>
+            <span id="game-state-id"></span>
+        </footer>
+    </div>
+
+    <script src="/static/app.js?v=3"></script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+# Runtime databases
+*.db
+*.db-shm
+*.db-wal
+data/backups/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+
+# Environment
+.env
+
+# OS
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+
+# Claude Code
+.claude/
