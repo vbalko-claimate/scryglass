@@ -28,6 +28,37 @@ from .models import Advice, GameState
 
 log = logging.getLogger(__name__)
 
+ARCHIVE_DIR = Path(__file__).parent.parent / "data" / "log_archive"
+
+
+def _archive_player_log(log_path: Path):
+    """Copy Player.log to archive dir so raw GRE data survives MTGA restarts."""
+    if not log_path.exists():
+        return
+    import shutil
+    from datetime import datetime
+    ARCHIVE_DIR.mkdir(parents=True, exist_ok=True)
+    stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    dest = ARCHIVE_DIR / f"Player_{stamp}.log"
+    # Skip if file is tiny (empty session) or already archived this minute
+    size = log_path.stat().st_size
+    if size < 1000:
+        return
+    # Avoid duplicate archives
+    existing = sorted(ARCHIVE_DIR.glob("Player_*.log"))
+    if existing:
+        last = existing[-1]
+        if last.stat().st_size == size:
+            return  # same size = same log, already archived
+    shutil.copy2(log_path, dest)
+    log.info("Archived Player.log (%d KB) -> %s", size // 1024, dest.name)
+
+    # Keep only last 50 archives
+    archives = sorted(ARCHIVE_DIR.glob("Player_*.log"))
+    for old in archives[:-50]:
+        old.unlink()
+
+
 app = FastAPI(title="MTGA Advisor")
 
 # Static files
@@ -294,6 +325,9 @@ async def startup():
     advisor.on_threat_update = on_threat_update
     tracker.on_my_card_played = advisor.check_card_played
     tracker.on_stack_observed = advisor.on_stack_observed
+
+    # Archive Player.log before processing (so raw GRE data survives MTGA restarts)
+    _archive_player_log(watcher.log_path)
 
     # Catch up on current log (clear events first to avoid duplicates on restart)
     log.info("Reading existing log...")
