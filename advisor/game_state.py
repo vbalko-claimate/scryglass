@@ -147,7 +147,8 @@ class GameStateTracker:
 
         if msg_type == "GREMessageType_ConnectResp":
             self._handle_connect_resp(gm)
-        elif msg_type == "GREMessageType_GameStateMessage":
+        elif msg_type in ("GREMessageType_GameStateMessage",
+                           "GREMessageType_QueuedGameStateMessage"):
             self._handle_game_state_message(gm)
         elif msg_type == "GREMessageType_DieRollResultsResp":
             self._handle_die_roll(gm)
@@ -297,6 +298,9 @@ class GameStateTracker:
         for obj in gsm.get("gameObjects", []):
             self._add_or_update_object(obj)
 
+        # Track stack spells
+        self._detect_stack_spells(gsm)
+
         # Remove deleted
         for iid in gsm.get("diffDeletedInstanceIds", []):
             self.state.objects.pop(iid, None)
@@ -380,6 +384,12 @@ class GameStateTracker:
         # Game objects (merge)
         for obj in gsm.get("gameObjects", []):
             self._add_or_update_object(obj)
+
+        # Track instants/sorceries via stack zone membership
+        # (objects may already have a different zoneId in their gameObject
+        #  by the time the diff arrives, so we detect stack presence from
+        #  the zone's objectInstanceIds list instead)
+        self._detect_stack_spells(gsm)
 
         # Remove deleted objects
         for iid in gsm.get("diffDeletedInstanceIds", []):
@@ -497,54 +507,6 @@ class GameStateTracker:
             self._seen_on_bf.add(iid)
         else:
             self._seen_on_bf.discard(iid)
-
-        # --- Stack zone detection for instants/sorceries ---
-        on_stack = obj_zone and obj_zone.type == "ZoneType_Stack"
-        was_on_stack = False
-        if old_obj:
-            old_zone_stack = self.state.zones.get(old_obj.zone_id)
-            was_on_stack = old_zone_stack and old_zone_stack.type == "ZoneType_Stack"
-
-        entering_stack = on_stack and not was_on_stack
-
-        # Guard against duplicate events from Full state snapshots
-        if entering_stack and iid in self._seen_on_stack:
-            entering_stack = False
-        if on_stack:
-            self._seen_on_stack.add(iid)
-        else:
-            self._seen_on_stack.discard(iid)
-
-        # Log instants/sorceries entering the stack (they never touch the battlefield)
-        is_instant_or_sorcery = (card and
-            ("Instant" in (card.card_types or []) or
-             "Sorcery" in (card.card_types or [])))
-
-        if (entering_stack and is_instant_or_sorcery and grp_id > 0
-                and self.state.match_info.match_id and card):
-            spell_data = {
-                "name": card.name,
-                "grp_id": grp_id,
-                "card_types": card.card_types,
-                "colors": card.colors,
-                "cmc": card.cmc,
-                "oracle_text": (card.oracle_text[:200]
-                                if card.oracle_text else ""),
-            }
-            if opp_seat and owner == opp_seat:
-                save_match_event(
-                    self.state.match_info.match_id, "opp_spell_cast",
-                    game_number=self.state.match_info.game_number,
-                    turn_number=self.state.turn_info.turn_number,
-                    phase=self.state.turn_info.phase,
-                    data=spell_data)
-            elif my_seat and owner == my_seat:
-                save_match_event(
-                    self.state.match_info.match_id, "spell_cast",
-                    game_number=self.state.match_info.game_number,
-                    turn_number=self.state.turn_info.turn_number,
-                    phase=self.state.turn_info.phase,
-                    data=spell_data)
 
         # Log opponent cards entering battlefield
         if (entering_bf and opp_seat and owner == opp_seat and card
@@ -693,6 +655,63 @@ class GameStateTracker:
                 data=event_data)
 
         self.state.objects[iid] = game_obj
+
+    def _detect_stack_spells(self, gsm: dict):
+        """Detect instants/sorceries entering the stack via zone membership.
+
+        GRE often sends instant/sorcery objects with their *final* zoneId
+        (graveyard/limbo) even though they appear in the stack zone's
+        objectInstanceIds list.  So we track them through zones, not objects.
+        """
+        if not self.state.match_info.match_id:
+            return
+        opp_seat = self.state.match_info.opponent_seat_id
+        my_seat = self.state.my_seat_id
+
+        for z in gsm.get("zones", []):
+            if z.get("type") != "ZoneType_Stack":
+                continue
+            for iid in z.get("objectInstanceIds", []):
+                if iid in self._seen_on_stack:
+                    continue  # already logged
+                self._seen_on_stack.add(iid)
+
+                obj = self.state.objects.get(iid)
+                if not obj:
+                    continue
+                card = card_cache.get(obj.grp_id)
+                if not card or obj.grp_id <= 0:
+                    continue
+                if "Instant" not in (card.card_types or []) and \
+                   "Sorcery" not in (card.card_types or []):
+                    continue
+
+                spell_data = {
+                    "name": card.name,
+                    "grp_id": obj.grp_id,
+                    "card_types": card.card_types,
+                    "colors": card.colors,
+                    "cmc": card.cmc,
+                    "oracle_text": (card.oracle_text[:200]
+                                    if card.oracle_text else ""),
+                }
+                owner = obj.owner_seat_id
+                if opp_seat and owner == opp_seat:
+                    log.info("Opponent spell cast: %s", card.name)
+                    save_match_event(
+                        self.state.match_info.match_id, "opp_spell_cast",
+                        game_number=self.state.match_info.game_number,
+                        turn_number=self.state.turn_info.turn_number,
+                        phase=self.state.turn_info.phase,
+                        data=spell_data)
+                elif my_seat and owner == my_seat:
+                    log.info("Player spell cast: %s", card.name)
+                    save_match_event(
+                        self.state.match_info.match_id, "spell_cast",
+                        game_number=self.state.match_info.game_number,
+                        turn_number=self.state.turn_info.turn_number,
+                        phase=self.state.turn_info.phase,
+                        data=spell_data)
 
     def _parse_actions(self, actions_data: list[dict]):
         """Parse available actions."""
