@@ -365,9 +365,17 @@ def save_meta_decks(meta_decks: list[MetaDeck]):
 # ─── Card Matching ──────────────────────────────────────────────
 
 def _has_keyword(card_abilities: list[str], keyword: str) -> bool:
-    """Check if any ability string contains the keyword (case-insensitive)."""
-    kw = keyword.lower()
-    return any(kw in ab.lower() for ab in card_abilities)
+    """Check if any ability string contains the keyword (case-insensitive).
+
+    Supports '|' as OR: "destroy|exile" matches if any ability contains
+    either "destroy" or "exile".
+    """
+    keywords = [k.strip().lower() for k in keyword.split("|")]
+    for ab in card_abilities:
+        ab_l = ab.lower()
+        if any(kw in ab_l for kw in keywords):
+            return True
+    return False
 
 
 def _has_protection(card_abilities: list[str]) -> set[str]:
@@ -399,8 +407,11 @@ def _card_matches(obj: GameObject, matcher: CardMatcher, mana: int = 99,
         names = matcher.name if isinstance(matcher.name, list) else [matcher.name]
         if card.name not in names:
             return False
-    if matcher.keyword and not _has_keyword(card.abilities, matcher.keyword):
-        return False
+    if matcher.keyword:
+        # Check both abilities and oracle_text for keyword match
+        oracle = [card.oracle_text] if card.oracle_text else []
+        if not _has_keyword(card.abilities + oracle, matcher.keyword):
+            return False
     if matcher.card_type and matcher.card_type not in card.card_types:
         return False
     if matcher.cmc_min is not None and card.cmc < matcher.cmc_min:

@@ -607,8 +607,18 @@ def _suggest_plays(state: GameState) -> list[Advice]:
     flash_spells = [c for c in spells if _has_flash(c)]
     non_flash_spells = [c for c in spells if not _has_flash(c)]
 
-    # Use non-flash creatures first; only suggest flash if nothing else to play
-    active_creatures = non_flash_creatures if non_flash_creatures else creatures
+    # Detect if opponent is fast — suppress "hold flash" and deploy instead
+    opp_is_fast = False
+    if _current_opp_deck:
+        opp_speed = getattr(_current_opp_deck, "speed", "")
+        opp_is_fast = opp_speed in ("fast", "very_fast")
+
+    # Against fast decks: deploy flash creatures immediately (board presence > trick value)
+    if opp_is_fast and flash_creatures and not non_flash_creatures:
+        active_creatures = creatures  # include flash — deploy everything
+    else:
+        # Use non-flash creatures first; only suggest flash if nothing else to play
+        active_creatures = non_flash_creatures if non_flash_creatures else creatures
 
     if active_creatures:
         turn = state.turn_info.turn_number
@@ -625,14 +635,40 @@ def _suggest_plays(state: GameState) -> list[Advice]:
         best = active_creatures[0]
         wr = _get_card_wr()
         wr_note = f" [{wr[best.name]:.0f}% WR]" if best.name in wr else ""
-        advice.append(Advice("heuristic", "medium",
+        # Upgrade priority vs fast decks when we have no board
+        prio = "medium"
+        conf = 0.6
+        if opp_is_fast and not my_creatures:
+            prio = "high"
+            conf = 0.75
+        advice.append(Advice("heuristic", prio,
                               f"Cast {best.name} ({best.mana_cost}){wr_note}",
-                              confidence=0.6,
+                              confidence=conf,
                               recommended_cards=[best.name]))
 
+    # Flash vs reactive instant trade-off detection
+    reactive_instants = [c for c in hand
+                         if not c.is_land and card_cache.get(c.grp_id)
+                         and _is_reactive_instant(card_cache.get(c.grp_id))
+                         and card_cache.get(c.grp_id).cmc <= mana]
+    if flash_creatures and reactive_instants and my_creatures:
+        # Both compete for open mana — warn about the trade-off
+        best_fc = max(flash_creatures, key=lambda c: c.cmc)
+        best_ri = reactive_instants[0]
+        ri_card = card_cache.get(best_ri.grp_id)
+        ri_name = ri_card.name if ri_card else best_ri.name
+        # Only warn if they actually compete (combined cost > available mana)
+        if best_fc.cmc + (ri_card.cmc if ri_card else 0) > mana:
+            advice.append(Advice("heuristic", "medium",
+                                  f"Trade-off: {best_fc.name} (flash) OR hold mana for "
+                                  f"{ri_name} (protection) — pick one",
+                                  confidence=0.6))
+
     # Suggest holding flash cards for opponent's turn (only if we have other plays)
+    # Suppress vs fast decks — board presence is more important
     flash_holdable = flash_creatures + flash_spells
-    if flash_holdable and (non_flash_creatures or non_flash_spells or removal_cards):
+    if (flash_holdable and not opp_is_fast
+            and (non_flash_creatures or non_flash_spells or removal_cards)):
         flash_holdable.sort(key=lambda c: (-c.cmc, -_card_score(c.name)))
         best_flash = flash_holdable[0]
         # Skip if we already have a "hold" advice from strategy rules
@@ -657,7 +693,7 @@ def _suggest_plays(state: GameState) -> list[Advice]:
     if lands_in_hand and not any("land" in a.message.lower() for a in advice):
         advice.append(Advice("heuristic", "low", "Play a land", confidence=0.4))
 
-    return advice[:2]
+    return advice[:3]
 
 
 def _suggest_attacks(state: GameState) -> list[Advice]:

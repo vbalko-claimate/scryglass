@@ -35,6 +35,7 @@ class GameStateTracker:
         # re-sends all objects (clearing self.state.objects loses
         # the old_obj needed for entering-battlefield detection).
         self._seen_on_bf: set[int] = set()
+        self._seen_on_stack: set[int] = set()
 
     @property
     def match_active(self) -> bool:
@@ -497,6 +498,54 @@ class GameStateTracker:
         else:
             self._seen_on_bf.discard(iid)
 
+        # --- Stack zone detection for instants/sorceries ---
+        on_stack = obj_zone and obj_zone.type == "ZoneType_Stack"
+        was_on_stack = False
+        if old_obj:
+            old_zone_stack = self.state.zones.get(old_obj.zone_id)
+            was_on_stack = old_zone_stack and old_zone_stack.type == "ZoneType_Stack"
+
+        entering_stack = on_stack and not was_on_stack
+
+        # Guard against duplicate events from Full state snapshots
+        if entering_stack and iid in self._seen_on_stack:
+            entering_stack = False
+        if on_stack:
+            self._seen_on_stack.add(iid)
+        else:
+            self._seen_on_stack.discard(iid)
+
+        # Log instants/sorceries entering the stack (they never touch the battlefield)
+        is_instant_or_sorcery = (card and
+            ("Instant" in (card.card_types or []) or
+             "Sorcery" in (card.card_types or [])))
+
+        if (entering_stack and is_instant_or_sorcery and grp_id > 0
+                and self.state.match_info.match_id and card):
+            spell_data = {
+                "name": card.name,
+                "grp_id": grp_id,
+                "card_types": card.card_types,
+                "colors": card.colors,
+                "cmc": card.cmc,
+                "oracle_text": (card.oracle_text[:200]
+                                if card.oracle_text else ""),
+            }
+            if opp_seat and owner == opp_seat:
+                save_match_event(
+                    self.state.match_info.match_id, "opp_spell_cast",
+                    game_number=self.state.match_info.game_number,
+                    turn_number=self.state.turn_info.turn_number,
+                    phase=self.state.turn_info.phase,
+                    data=spell_data)
+            elif my_seat and owner == my_seat:
+                save_match_event(
+                    self.state.match_info.match_id, "spell_cast",
+                    game_number=self.state.match_info.game_number,
+                    turn_number=self.state.turn_info.turn_number,
+                    phase=self.state.turn_info.phase,
+                    data=spell_data)
+
         # Log opponent cards entering battlefield
         if (entering_bf and opp_seat and owner == opp_seat and card
                 and not card.is_land and grp_id > 0
@@ -821,6 +870,7 @@ class GameStateTracker:
         self._recent_annotations = []
         self._last_auto_tap = {}
         self._seen_on_bf = set()
+        self._seen_on_stack = set()
 
 
 def _safe_int(val) -> int:

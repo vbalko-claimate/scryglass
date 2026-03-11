@@ -143,7 +143,7 @@
       "layer": "general",
       "tags": ["reactive"],
       "require": [
-        {"zone": "hand", "match": {"type": "Instant", "castable": true}, "min_count": 1},
+        {"zone": "hand", "match": {"type": "Instant", "keyword": "destroy|exile|damage|return target|-X/-X", "castable": true}, "min_count": 1},
         {"zone": "opp_battlefield", "match": {"type": "Creature"}, "min_count": 1}
       ],
       "action": "Save removal for their biggest threat",
