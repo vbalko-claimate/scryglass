@@ -6,7 +6,10 @@ import logging
 from typing import Callable
 
 from .database import card_cache, get_matchup_wr, get_observed_opp_decks, save_advice, save_match, save_match_event
-from .heuristics import analyze as heuristic_analyze, reset_caches as reset_heuristic_caches, set_opp_deck
+from .heuristics import (
+    analyze as heuristic_analyze, reset_caches as reset_heuristic_caches,
+    set_opp_deck, set_opp_tracker_data,
+)
 from .llm_advisor import assess_threats, get_advice as llm_get_advice
 from .models import Advice, CardInfo, GameState
 from .strategy import (
@@ -206,6 +209,7 @@ class AdvisorEngine:
             self._opp_seen_ids = update_opponent_tracking(
                 self._opp_tracker, state, self._opp_seen_ids)
             # Try to identify opponent's deck (uses global meta_decks)
+            self._sync_tracker_data()
             opp_deck = self._opp_tracker.identify(self._meta_decks)
             if opp_deck:
                 set_opp_deck(opp_deck)  # wire meta threats into heuristic scoring
@@ -434,6 +438,37 @@ class AdvisorEngine:
         }
         self.on_strategy_info(info)
 
+    def _sync_tracker_data(self):
+        """Push opponent tracker data to heuristics module."""
+        set_opp_tracker_data(
+            self._opp_tracker.ability_triggers,
+            self._opp_tracker.spent_removal)
+
+    def on_stack_observed(self, event_type: str, data: dict):
+        """Called when a spell or ability is observed on the stack."""
+        name = data.get("name", "")
+        colors = data.get("colors", [])
+
+        if event_type == "opp_spell_cast":
+            card_types = data.get("card_types", [])
+            oracle = data.get("oracle_text", "")
+            self._opp_tracker.observe_spell(name, colors, card_types, oracle)
+            # Re-identify after new spell data
+            if self._meta_decks:
+                opp_deck = self._opp_tracker.identify(self._meta_decks)
+                if opp_deck:
+                    set_opp_deck(opp_deck)
+                    opp_name = opp_deck.name
+                    if opp_name != self._last_opp_deck:
+                        self._last_opp_deck = opp_name
+                        log.info("Opponent re-identified via spell: %s (%.0f%%)",
+                                 opp_name, self._opp_tracker.confidence * 100)
+                        self._broadcast_strategy_info()
+        elif event_type == "opp_ability":
+            self._opp_tracker.observe_ability(name)
+
+        self._sync_tracker_data()
+
     def check_card_played(self, card_name: str, match_id: str,
                            turn: int, game_number: int):
         """Called when player plays a non-land card. Compare with recommendations."""
@@ -630,6 +665,21 @@ async def generate_match_summary(match_id: str) -> str:
         opp_names = list(dict.fromkeys(
             e["data"].get("name", "?") for e in opp_cards))
         lines.append(f"Opponent cards seen: {', '.join(opp_names[:15])}")
+
+    # Opponent spells (instants/sorceries)
+    opp_spells = [e for e in events if e["type"] == "opp_spell_cast"]
+    if opp_spells:
+        spell_names = [f"T{e['turn']}: {e['data'].get('name', '?')}"
+                       for e in opp_spells]
+        lines.append(f"Opponent spells cast: {', '.join(spell_names[:10])}")
+
+    # Opponent ability triggers
+    opp_abilities = [e for e in events if e["type"] == "opp_ability"]
+    if opp_abilities:
+        from collections import Counter
+        ab_counts = Counter(e["data"].get("name", "?") for e in opp_abilities)
+        ab_strs = [f"{name} ({count}x)" for name, count in ab_counts.most_common(5)]
+        lines.append(f"Opponent ability triggers: {', '.join(ab_strs)}")
 
     # Life changes
     life_events = [e for e in events if e["type"] == "life_change"]

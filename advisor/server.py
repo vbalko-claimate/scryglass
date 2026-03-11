@@ -293,6 +293,7 @@ async def startup():
     advisor.on_strategy_info = on_strategy_info
     advisor.on_threat_update = on_threat_update
     tracker.on_my_card_played = advisor.check_card_played
+    tracker.on_stack_observed = advisor.on_stack_observed
 
     # Catch up on current log (clear events first to avoid duplicates on restart)
     log.info("Reading existing log...")

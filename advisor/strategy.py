@@ -189,11 +189,28 @@ class OpponentTracker:
         self.seen_colors: set[str] = set()
         self.identified_deck: MetaDeck | None = None
         self.confidence: float = 0.0
+        self.spent_removal: list[str] = []  # removal spells already used
+        self.ability_triggers: dict[str, int] = {}  # source_card_name: trigger_count
 
     def observe(self, card_name: str, colors: list[str]):
         """Track a card the opponent played."""
         self.seen_cards[card_name] = self.seen_cards.get(card_name, 0) + 1
         self.seen_colors.update(colors)
+
+    def observe_spell(self, card_name: str, colors: list[str],
+                      card_types: list[str], oracle_text: str = ""):
+        """Track a spell cast (instant/sorcery) — also detects removal."""
+        self.observe(card_name, colors)
+        # Detect removal spells
+        text = oracle_text.lower()
+        if any(kw in text for kw in ("destroy", "exile", "damage",
+                                      "return target", "-x/-x", "gets -")):
+            self.spent_removal.append(card_name)
+
+    def observe_ability(self, source_card_name: str):
+        """Track a triggered/activated ability firing."""
+        self.ability_triggers[source_card_name] = (
+            self.ability_triggers.get(source_card_name, 0) + 1)
 
     def identify(self, meta_decks: list[MetaDeck]) -> MetaDeck | None:
         """Try to identify opponent's deck from observed cards."""
@@ -257,6 +274,8 @@ class OpponentTracker:
         self.seen_colors.clear()
         self.identified_deck = None
         self.confidence = 0.0
+        self.spent_removal.clear()
+        self.ability_triggers.clear()
 
 
 # ─── Color / Archetype Helpers ─────────────────────────────────

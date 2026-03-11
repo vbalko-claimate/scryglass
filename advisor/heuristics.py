@@ -11,12 +11,23 @@ if TYPE_CHECKING:
 
 # Current opponent deck (set by advisor_engine when opponent identified)
 _current_opp_deck: "MetaDeck | None" = None
+# Opponent tracking data (set by advisor_engine)
+_opp_ability_triggers: dict[str, int] = {}  # source_card_name: count
+_opp_spent_removal: list[str] = []
 
 
 def set_opp_deck(deck: "MetaDeck | None"):
     """Set identified opponent deck for threat scoring."""
     global _current_opp_deck
     _current_opp_deck = deck
+
+
+def set_opp_tracker_data(ability_triggers: dict[str, int],
+                         spent_removal: list[str]):
+    """Update opponent tracking data for heuristic scoring."""
+    global _opp_ability_triggers, _opp_spent_removal
+    _opp_ability_triggers = ability_triggers
+    _opp_spent_removal = spent_removal
 
 
 # Cached card win rates + player preferences (loaded once per session)
@@ -52,9 +63,12 @@ def _card_score(name: str) -> float:
 def reset_caches():
     """Reset WR/preference caches (called on match end to pick up new data)."""
     global _card_wr, _player_prefs, _current_opp_deck
+    global _opp_ability_triggers, _opp_spent_removal
     _card_wr = None
     _player_prefs = None
     _current_opp_deck = None
+    _opp_ability_triggers = {}
+    _opp_spent_removal = []
 
 
 def hand_synergy_score(candidate_grp_id: int, hand: list[GameObject]) -> int:
@@ -241,6 +255,15 @@ def evaluate_opponent_board(state: GameState) -> list[tuple[GameObject, float, s
         if obj.power > base_p:
             score += 2
             reasons.append(f"buffed to {obj.power}/{obj.toughness}")
+
+        # Ability trigger frequency boost — cards that trigger a lot are higher priority
+        trigger_count = _opp_ability_triggers.get(card.name, 0)
+        if trigger_count >= 3:
+            score += min(trigger_count, 8)  # cap at +8
+            reasons.append(f"triggered {trigger_count}x")
+        elif trigger_count >= 1:
+            score += trigger_count
+            reasons.append(f"triggered {trigger_count}x")
 
         # Meta threat boost — identified opponent's key threats get priority
         opp_deck = _current_opp_deck
@@ -830,6 +853,13 @@ def _combat_trick_risk(state: GameState, opp_attackers: list[GameObject],
             if any(kw in reason.lower() for kw in ["trick", "pump", "combat", "instant"]):
                 risk += 0.15
                 break
+
+    # Reduce risk if opponent has already spent removal this game
+    # (fewer cards in hand = lower trick probability)
+    if _opp_spent_removal:
+        spent = len(_opp_spent_removal)
+        risk -= spent * 0.05  # each spent removal = -5% risk
+        risk = max(risk, 0.0)
 
     risk = min(risk, 0.95)
 

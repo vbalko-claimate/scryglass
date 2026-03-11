@@ -24,6 +24,8 @@ class GameStateTracker:
         self.on_match_start: Callable[[], None] | None = None
         self.on_match_end: Callable[[bool], None] | None = None
         self.on_my_card_played: Callable[[str, str, int, int], None] | None = None
+        # Spell/ability observation callback: (event_type, card_name, colors, card_types, oracle_text, source_card_name)
+        self.on_stack_observed: Callable[[str, dict], None] | None = None
         self._match_active = False
         self._last_logged_turn = 0
         # B1: recent annotations for death-cause resolution
@@ -694,22 +696,25 @@ class GameStateTracker:
                         "ability_grp_id": obj.grp_id,
                         "parent_id": obj.parent_id,
                     }
+                    event_type = None
                     if opp_seat and owner == opp_seat:
+                        event_type = "opp_ability"
                         log.info("Opponent ability: %s", source_card.name)
-                        save_match_event(
-                            self.state.match_info.match_id, "opp_ability",
-                            game_number=self.state.match_info.game_number,
-                            turn_number=self.state.turn_info.turn_number,
-                            phase=self.state.turn_info.phase,
-                            data=ability_data)
                     elif my_seat and owner == my_seat:
+                        event_type = "ability"
                         log.info("Player ability: %s", source_card.name)
+                    if event_type:
                         save_match_event(
-                            self.state.match_info.match_id, "ability",
+                            self.state.match_info.match_id, event_type,
                             game_number=self.state.match_info.game_number,
                             turn_number=self.state.turn_info.turn_number,
                             phase=self.state.turn_info.phase,
                             data=ability_data)
+                        if self.on_stack_observed:
+                            self.on_stack_observed(event_type, {
+                                "name": source_card.name,
+                                "colors": source_card.colors,
+                            })
                     continue
 
                 # --- Instant/Sorcery spell on stack ---
@@ -729,22 +734,22 @@ class GameStateTracker:
                     "oracle_text": (card.oracle_text[:200]
                                     if card.oracle_text else ""),
                 }
+                event_type = None
                 if opp_seat and owner == opp_seat:
+                    event_type = "opp_spell_cast"
                     log.info("Opponent spell cast: %s", card.name)
-                    save_match_event(
-                        self.state.match_info.match_id, "opp_spell_cast",
-                        game_number=self.state.match_info.game_number,
-                        turn_number=self.state.turn_info.turn_number,
-                        phase=self.state.turn_info.phase,
-                        data=spell_data)
                 elif my_seat and owner == my_seat:
+                    event_type = "spell_cast"
                     log.info("Player spell cast: %s", card.name)
+                if event_type:
                     save_match_event(
-                        self.state.match_info.match_id, "spell_cast",
+                        self.state.match_info.match_id, event_type,
                         game_number=self.state.match_info.game_number,
                         turn_number=self.state.turn_info.turn_number,
                         phase=self.state.turn_info.phase,
                         data=spell_data)
+                    if self.on_stack_observed:
+                        self.on_stack_observed(event_type, spell_data)
 
     def _parse_actions(self, actions_data: list[dict]):
         """Parse available actions."""
