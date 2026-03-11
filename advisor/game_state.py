@@ -479,6 +479,8 @@ class GameStateTracker:
             has_summoning_sickness=obj.get("hasSummoningSickness", False),
             object_type=obj.get("type", "GameObjectType_Card").replace("GameObjectType_", ""),
             attached_to_id=None,  # B3: resolved via annotations, not object field
+            source_grp_id=obj.get("objectSourceGrpId", 0),
+            parent_id=obj.get("parentId", 0)
         )
 
         # Check if object is entering battlefield (zone-type based, not owner-based)
@@ -679,6 +681,38 @@ class GameStateTracker:
                 obj = self.state.objects.get(iid)
                 if not obj:
                     continue
+                owner = obj.owner_seat_id
+
+                # --- Ability on stack ---
+                if obj.object_type == "Ability":
+                    source_card = card_cache.get(obj.source_grp_id)
+                    if not source_card:
+                        continue
+                    ability_data = {
+                        "name": source_card.name,
+                        "source_grp_id": obj.source_grp_id,
+                        "ability_grp_id": obj.grp_id,
+                        "parent_id": obj.parent_id,
+                    }
+                    if opp_seat and owner == opp_seat:
+                        log.info("Opponent ability: %s", source_card.name)
+                        save_match_event(
+                            self.state.match_info.match_id, "opp_ability",
+                            game_number=self.state.match_info.game_number,
+                            turn_number=self.state.turn_info.turn_number,
+                            phase=self.state.turn_info.phase,
+                            data=ability_data)
+                    elif my_seat and owner == my_seat:
+                        log.info("Player ability: %s", source_card.name)
+                        save_match_event(
+                            self.state.match_info.match_id, "ability",
+                            game_number=self.state.match_info.game_number,
+                            turn_number=self.state.turn_info.turn_number,
+                            phase=self.state.turn_info.phase,
+                            data=ability_data)
+                    continue
+
+                # --- Instant/Sorcery spell on stack ---
                 card = card_cache.get(obj.grp_id)
                 if not card or obj.grp_id <= 0:
                     continue
@@ -695,7 +729,6 @@ class GameStateTracker:
                     "oracle_text": (card.oracle_text[:200]
                                     if card.oracle_text else ""),
                 }
-                owner = obj.owner_seat_id
                 if opp_seat and owner == opp_seat:
                     log.info("Opponent spell cast: %s", card.name)
                     save_match_event(

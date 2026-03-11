@@ -70,6 +70,8 @@ class GameObject:
     counters: dict[str, int] = field(default_factory=dict)
     abilities: list[dict] = field(default_factory=list)
     object_type: str = "Card"  # Card, Ability, Token
+    source_grp_id: int = 0  # for Ability: grp_id of the source card
+    parent_id: int = 0  # for Ability: instance_id of the parent object
 
     @property
     def is_creature(self) -> bool:
