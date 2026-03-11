@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MTGA Advisor — Manage</title>
+    <style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #1a1a2e; color: #e0e0e0; font-family: 'Segoe UI', system-ui, sans-serif; }
+
+#app {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 20px;
+    background: #16213e;
+    border-radius: 8px;
+    border: 1px solid #0f3460;
+}
+header h1 { font-size: 20px; color: #e94560; }
+header a {
+    color: #90caf9;
+    text-decoration: none;
+    font-size: 13px;
+}
+header a:hover { color: #fff; }
+.nav-links { margin-left: auto; display: flex; gap: 16px; }
+
+/* Tabs */
+.tabs {
+    display: flex;
+    gap: 4px;
+    background: #16213e;
+    border-radius: 8px;
+    padding: 4px;
+    border: 1px solid #0f3460;
+}
+.tab {
+    padding: 8px 20px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    color: #888;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.tab:hover { color: #e0e0e0; background: rgba(255,255,255,0.05); }
+.tab.active { background: #0f3460; color: #e94560; font-weight: 600; }
+
+/* Section */
+.section {
+    background: #16213e;
+    border: 1px solid #0f3460;
+    border-radius: 8px;
+    padding: 16px;
+    display: none;
+}
+.section.active { display: block; }
+.section h2 {
+    font-size: 16px;
+    color: #e94560;
+    margin-bottom: 12px;
+}
+
+/* Tables */
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid #0f3460; font-size: 13px; }
+th { color: #888; font-weight: 600; font-size: 12px; text-transform: uppercase; }
+tr:hover { background: rgba(255,255,255,0.03); }
+.badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+}
+.badge-user { background: rgba(233,69,96,0.2); color: #e94560; border: 1px solid rgba(233,69,96,0.3); }
+.badge-builtin { background: rgba(33,150,243,0.15); color: #90caf9; border: 1px solid rgba(33,150,243,0.2); }
+.color-dot {
+    display: inline-block;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    margin-right: 2px;
+    vertical-align: middle;
+    border: 1px solid rgba(255,255,255,0.2);
+}
+.color-W { background: #f5f0d0; }
+.color-U { background: #1a6fb0; }
+.color-B { background: #3d3040; }
+.color-R { background: #c03030; }
+.color-G { background: #2d7a1e; }
+
+/* Buttons */
+.btn {
+    padding: 6px 14px;
+    border-radius: 4px;
+    border: none;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.btn-primary { background: #e94560; color: #fff; }
+.btn-primary:hover { background: #c73650; }
+.btn-secondary { background: #0f3460; color: #90caf9; border: 1px solid #2196f3; }
+.btn-secondary:hover { background: #1a4a80; }
+.btn-small { padding: 3px 10px; font-size: 11px; }
+.btn-row { display: flex; gap: 8px; align-items: center; }
+
+/* Detail panel / Editor */
+.detail-panel {
+    margin-top: 12px;
+    background: #1a1a2e;
+    border: 1px solid #0f3460;
+    border-radius: 8px;
+    padding: 16px;
+    display: none;
+}
+.detail-panel.open { display: block; }
+.detail-panel h3 {
+    font-size: 14px;
+    color: #e94560;
+    margin-bottom: 12px;
+}
+
+/* Rule cards */
+.rule-card {
+    background: #0f3460;
+    border: 1px solid #1a1a4e;
+    border-radius: 6px;
+    padding: 10px 14px;
+    margin-bottom: 8px;
+    font-size: 12px;
+}
+.rule-card .rule-id {
+    font-weight: 600;
+    color: #e94560;
+    font-size: 11px;
+    margin-bottom: 4px;
+}
+.rule-card .rule-action {
+    color: #e0e0e0;
+    font-size: 13px;
+    margin-bottom: 4px;
+}
+.rule-card .rule-meta {
+    color: #666;
+    font-size: 11px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.rule-card .rule-meta span { white-space: nowrap; }
+.priority-critical { border-left: 3px solid #f44336; }
+.priority-high { border-left: 3px solid #ff9800; }
+.priority-medium { border-left: 3px solid #2196f3; }
+.priority-low { border-left: 3px solid #4caf50; }
+
+/* Meta deck cards */
+.meta-card {
+    background: #0f3460;
+    border: 1px solid #1a1a4e;
+    border-radius: 6px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+}
+.meta-card h4 {
+    font-size: 14px;
+    color: #fff;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.meta-card .meta-info {
+    font-size: 12px;
+    color: #888;
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+}
+.meta-card .signal-cards {
+    font-size: 11px;
+    color: #90caf9;
+}
+.meta-card .key-threats {
+    font-size: 11px;
+    color: #ff8a80;
+    margin-top: 4px;
+}
+
+/* JSON Editor */
+.json-editor {
+    width: 100%;
+    min-height: 400px;
+    background: #0d1b2a;
+    color: #90caf9;
+    border: 1px solid #0f3460;
+    border-radius: 6px;
+    padding: 12px;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 12px;
+    line-height: 1.5;
+    resize: vertical;
+    tab-size: 2;
+}
+.json-editor:focus { outline: 1px solid #e94560; }
+
+/* Deck content */
+.deck-content {
+    width: 100%;
+    min-height: 300px;
+    background: #0d1b2a;
+    color: #e0e0e0;
+    border: 1px solid #0f3460;
+    border-radius: 6px;
+    padding: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    line-height: 1.5;
+    resize: vertical;
+    white-space: pre;
+}
+
+/* Guide content */
+.guide-content {
+    background: #0d1b2a;
+    border: 1px solid #0f3460;
+    border-radius: 6px;
+    padding: 16px;
+    font-size: 13px;
+    line-height: 1.6;
+    max-height: 600px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+}
+
+/* Search */
+.search-bar {
+    padding: 8px 14px;
+    background: #0d1b2a;
+    border: 1px solid #0f3460;
+    border-radius: 6px;
+    color: #e0e0e0;
+    font-size: 13px;
+    width: 100%;
+    margin-bottom: 12px;
+}
+.search-bar:focus { outline: 1px solid #e94560; }
+.search-bar::placeholder { color: #555; }
+
+/* Summary stats */
+.summary-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+}
+.summary-card {
+    background: #0f3460;
+    border-radius: 6px;
+    padding: 12px;
+    text-align: center;
+}
+.summary-card .value { font-size: 28px; font-weight: 700; color: #e94560; }
+.summary-card .label { font-size: 11px; color: #888; margin-top: 2px; }
+
+/* Toast */
+.toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: #4caf50;
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 13px;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+}
+.toast.show { opacity: 1; }
+.toast.error { background: #f44336; }
+
+/* Review banner */
+.review-banner {
+    background: rgba(255, 152, 0, 0.15);
+    border: 1px solid rgba(255, 152, 0, 0.4);
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+.review-banner .icon { font-size: 20px; flex-shrink: 0; line-height: 1; }
+.review-banner .text { font-size: 13px; color: #ffcc80; line-height: 1.5; }
+.review-banner .text strong { color: #ffa500; }
+.review-banner .text code {
+    background: rgba(0,0,0,0.3);
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 12px;
+}
+.badge-review {
+    background: rgba(255, 152, 0, 0.2);
+    color: #ffa500;
+    border: 1px solid rgba(255, 152, 0, 0.4);
+}
+.badge-observed {
+    background: rgba(156, 39, 176, 0.2);
+    color: #ce93d8;
+    border: 1px solid rgba(156, 39, 176, 0.3);
+}
+.meta-card.needs-review {
+    border-color: rgba(255, 152, 0, 0.4);
+}
+.meta-card .review-tag {
+    font-size: 10px;
+    color: #ffa500;
+    font-style: italic;
+}
+    </style>
+</head>
+<body>
+    <div id="app">
+        <header>
+            <h1>Manage</h1>
+            <div class="nav-links">
+                <a href="/">Advisor</a>
+                <a href="/stats">Stats</a>
+            </div>
+        </header>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('strategies')">Strategies</button>
+            <button class="tab" onclick="switchTab('general')">General Rules</button>
+            <button class="tab" onclick="switchTab('meta')">Meta Decks</button>
+            <button class="tab" onclick="switchTab('decks')">Decks</button>
+            <button class="tab" onclick="switchTab('guides')">Guides</button>
+        </div>
+
+        <!-- Strategies -->
+        <div id="tab-strategies" class="section active">
+            <h2>Deck Strategies</h2>
+            <div id="strategies-summary" class="summary-row"></div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Colors</th>
+                        <th>Archetype</th>
+                        <th>Rules</th>
+                        <th>Source</th>
+                        <th>Win Rate</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="strategies-body"></tbody>
+            </table>
+            <div id="strategy-detail" class="detail-panel"></div>
+        </div>
+
+        <!-- General Rules -->
+        <div id="tab-general" class="section">
+            <h2>General MTG Rules</h2>
+            <div id="general-summary" class="summary-row"></div>
+            <input type="text" class="search-bar" id="general-search"
+                   placeholder="Filter rules by id, action, layer..." oninput="filterGeneralRules()">
+            <div id="general-rules-list"></div>
+            <div style="margin-top:12px" class="btn-row">
+                <button class="btn btn-secondary" onclick="editGeneralJSON()">Edit JSON</button>
+            </div>
+            <div id="general-editor" class="detail-panel">
+                <h3>Edit general.json</h3>
+                <textarea id="general-json" class="json-editor"></textarea>
+                <div class="btn-row" style="margin-top:8px">
+                    <button class="btn btn-primary" onclick="saveGeneralJSON()">Save</button>
+                    <button class="btn btn-secondary" onclick="closeGeneralEditor()">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Meta Decks -->
+        <div id="tab-meta" class="section">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+                <h2 style="margin-bottom:0">Meta Decks</h2>
+                <button id="sync-meta-btn" class="btn btn-primary" onclick="syncMeta()">Sync from MTGGoldfish</button>
+                <span id="sync-status" style="font-size:12px;color:#888"></span>
+            </div>
+            <div id="meta-review-banner"></div>
+            <div id="meta-summary" class="summary-row"></div>
+            <input type="text" class="search-bar" id="meta-search"
+                   placeholder="Filter by name, archetype, colors..." oninput="filterMetaDecks()">
+            <div id="meta-decks-list"></div>
+            <div style="margin-top:12px" class="btn-row">
+                <button class="btn btn-secondary" onclick="editMetaJSON()">Edit JSON</button>
+            </div>
+            <div id="meta-editor" class="detail-panel">
+                <h3>Edit meta_decks.json</h3>
+                <textarea id="meta-json" class="json-editor" style="min-height:500px"></textarea>
+                <div class="btn-row" style="margin-top:8px">
+                    <button class="btn btn-primary" onclick="saveMetaJSON()">Save</button>
+                    <button class="btn btn-secondary" onclick="closeMetaEditor()">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Decks -->
+        <div id="tab-decks" class="section">
+            <h2>Deck Lists</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Cards</th>
+                        <th>Size</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="decks-body"></tbody>
+            </table>
+            <div id="deck-detail" class="detail-panel"></div>
+        </div>
+
+        <!-- Guides -->
+        <div id="tab-guides" class="section">
+            <h2>Strategy Guides</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Source</th>
+                        <th>Size</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="guides-body"></tbody>
+            </table>
+            <div id="guide-detail" class="detail-panel"></div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+<script>
+// ── State ──
+let strategiesData = [];
+let generalData = null;
+let metaData = null;
+let allGeneralRules = [];
+let allMetaDecks = [];
+
+// ── Tabs ──
+function switchTab(name) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelector(`.tab[onclick*="${name}"]`).classList.add('active');
+    document.getElementById(`tab-${name}`).classList.add('active');
+
+    // Lazy load
+    if (name === 'strategies') loadStrategies();
+    if (name === 'general') loadGeneralRules();
+    if (name === 'meta') loadMetaDecks();
+    if (name === 'decks') loadDecks();
+    if (name === 'guides') loadGuides();
+}
+
+// ── Toast ──
+function showToast(msg, isError = false) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast show' + (isError ? ' error' : '');
+    setTimeout(() => t.className = 'toast', 2500);
+}
+
+// ── Color dots ──
+function colorDots(colors) {
+    return (colors || []).map(c => `<span class="color-dot color-${c}"></span>`).join('');
+}
+
+// ── Strategies ──
+async function loadStrategies() {
+    const res = await fetch('/api/manage/strategies');
+    strategiesData = await res.json();
+
+    const totalRules = strategiesData.reduce((s, d) => s + d.rule_count, 0);
+    const userCount = strategiesData.filter(d => d.source === 'user').length;
+    document.getElementById('strategies-summary').innerHTML = `
+        <div class="summary-card"><div class="value">${strategiesData.length}</div><div class="label">Strategies</div></div>
+        <div class="summary-card"><div class="value">${userCount}</div><div class="label">Custom</div></div>
+        <div class="summary-card"><div class="value">${totalRules}</div><div class="label">Total Rules</div></div>
+    `;
+
+    const tbody = document.getElementById('strategies-body');
+    tbody.innerHTML = strategiesData.map(s => {
+        const stats = s.stats || {};
+        const games = stats.games || 0;
+        const wr = games > 0 ? ((stats.wins / games) * 100).toFixed(0) + '%' : '—';
+        return `<tr>
+            <td><strong>${s.name}</strong></td>
+            <td>${colorDots(s.colors)}</td>
+            <td>${s.archetype}</td>
+            <td>${s.rule_count}</td>
+            <td><span class="badge badge-${s.source}">${s.source}</span></td>
+            <td>${wr}${games > 0 ? ` (${games}g)` : ''}</td>
+            <td><button class="btn btn-secondary btn-small" onclick="viewStrategy('${s.file}')">View</button></td>
+        </tr>`;
+    }).join('');
+}
+
+async function viewStrategy(filename) {
+    const res = await fetch(`/api/manage/strategy/${filename}`);
+    const data = await res.json();
+    const panel = document.getElementById('strategy-detail');
+    const rules = data.rules || [];
+
+    panel.innerHTML = `
+        <h3>${data.name} <span style="color:#888;font-size:12px">(${filename})</span></h3>
+        <div style="margin-bottom:8px;font-size:12px;color:#888">
+            ${colorDots(data.colors)} ${data.archetype}
+            · Signature: ${(data.deck_signature || []).join(', ') || '—'}
+        </div>
+        ${rules.length ? rules.map(r => ruleCard(r)).join('') : '<div style="color:#555;font-style:italic">No rules</div>'}
+        <div class="btn-row" style="margin-top:12px">
+            <button class="btn btn-secondary" onclick="editStrategyJSON('${filename}')">Edit JSON</button>
+            <button class="btn btn-secondary" onclick="closeStrategyDetail()">Close</button>
+        </div>
+        <div id="strategy-editor-wrap"></div>
+    `;
+    panel.classList.add('open');
+    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+async function editStrategyJSON(filename) {
+    const res = await fetch(`/api/manage/strategy/${filename}`);
+    const data = await res.json();
+    const wrap = document.getElementById('strategy-editor-wrap');
+    wrap.innerHTML = `
+        <div style="margin-top:12px">
+            <textarea id="strategy-json-edit" class="json-editor">${JSON.stringify(data, null, 2)}</textarea>
+            <div class="btn-row" style="margin-top:8px">
+                <button class="btn btn-primary" onclick="saveStrategyJSON('${filename}')">Save</button>
+                <button class="btn btn-secondary" onclick="document.getElementById('strategy-editor-wrap').innerHTML=''">Cancel</button>
+            </div>
+        </div>
+    `;
+}
+
+async function saveStrategyJSON(filename) {
+    const text = document.getElementById('strategy-json-edit').value;
+    try {
+        const data = JSON.parse(text);
+        const res = await fetch(`/api/manage/strategy/${filename}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        });
+        if (res.ok) {
+            showToast('Strategy saved');
+            loadStrategies();
+            closeStrategyDetail();
+        } else {
+            showToast('Save failed', true);
+        }
+    } catch (e) {
+        showToast('Invalid JSON: ' + e.message, true);
+    }
+}
+
+function closeStrategyDetail() {
+    document.getElementById('strategy-detail').classList.remove('open');
+}
+
+// ── General Rules ──
+async function loadGeneralRules() {
+    const res = await fetch('/api/manage/general-rules');
+    generalData = await res.json();
+    allGeneralRules = generalData.rules || [];
+
+    const byLayer = {};
+    allGeneralRules.forEach(r => {
+        byLayer[r.layer] = (byLayer[r.layer] || 0) + 1;
+    });
+    const layerCounts = Object.entries(byLayer).map(([k, v]) => `${k}: ${v}`).join(', ');
+    document.getElementById('general-summary').innerHTML = `
+        <div class="summary-card"><div class="value">${allGeneralRules.length}</div><div class="label">Rules</div></div>
+        <div class="summary-card" style="grid-column:span 2"><div class="value" style="font-size:14px;color:#90caf9">${layerCounts}</div><div class="label">By Layer</div></div>
+    `;
+
+    renderGeneralRules(allGeneralRules);
+}
+
+function renderGeneralRules(rules) {
+    document.getElementById('general-rules-list').innerHTML =
+        rules.map(r => ruleCard(r)).join('') ||
+        '<div style="color:#555;font-style:italic">No matching rules</div>';
+}
+
+function filterGeneralRules() {
+    const q = document.getElementById('general-search').value.toLowerCase();
+    if (!q) return renderGeneralRules(allGeneralRules);
+    const filtered = allGeneralRules.filter(r =>
+        (r.id || '').toLowerCase().includes(q) ||
+        (r.action || '').toLowerCase().includes(q) ||
+        (r.layer || '').toLowerCase().includes(q) ||
+        (r.tags || []).join(' ').toLowerCase().includes(q)
+    );
+    renderGeneralRules(filtered);
+}
+
+function editGeneralJSON() {
+    document.getElementById('general-json').value = JSON.stringify(generalData, null, 2);
+    document.getElementById('general-editor').classList.add('open');
+}
+
+function closeGeneralEditor() {
+    document.getElementById('general-editor').classList.remove('open');
+}
+
+async function saveGeneralJSON() {
+    const text = document.getElementById('general-json').value;
+    try {
+        const data = JSON.parse(text);
+        const res = await fetch('/api/manage/general-rules', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        });
+        if (res.ok) {
+            showToast('General rules saved');
+            closeGeneralEditor();
+            loadGeneralRules();
+        } else {
+            showToast('Save failed', true);
+        }
+    } catch (e) {
+        showToast('Invalid JSON: ' + e.message, true);
+    }
+}
+
+// ── Meta Decks ──
+async function loadMetaDecks() {
+    const res = await fetch('/api/manage/meta-decks');
+    metaData = await res.json();
+    allMetaDecks = metaData.meta_decks || [];
+
+    const archetypes = {};
+    allMetaDecks.forEach(d => { archetypes[d.archetype] = (archetypes[d.archetype] || 0) + 1; });
+    const archStr = Object.entries(archetypes).map(([k, v]) => `${k}: ${v}`).join(', ');
+    const needsReview = allMetaDecks.filter(d => d.needs_review);
+    const observed = allMetaDecks.filter(d => d.source === 'observed');
+    document.getElementById('meta-summary').innerHTML = `
+        <div class="summary-card"><div class="value">${allMetaDecks.length}</div><div class="label">Meta Decks</div></div>
+        <div class="summary-card"><div class="value">${observed.length}</div><div class="label">Observed</div></div>
+        <div class="summary-card" style="grid-column:span 2"><div class="value" style="font-size:14px;color:#90caf9">${archStr}</div><div class="label">By Archetype</div></div>
+    `;
+
+    // Review banner
+    const bannerEl = document.getElementById('meta-review-banner');
+    if (needsReview.length > 0) {
+        bannerEl.innerHTML = `
+            <div class="review-banner">
+                <div class="icon">&#9888;</div>
+                <div class="text">
+                    <strong>${needsReview.length} deck(s) need review</strong> — missing key_threats or description.<br>
+                    Run <code>uv run python tools/update_meta.py</code> with LLM configured to auto-generate,
+                    or edit manually below / via JSON editor.
+                </div>
+            </div>`;
+    } else {
+        bannerEl.innerHTML = '';
+    }
+
+    renderMetaDecks(allMetaDecks);
+}
+
+function renderMetaDecks(decks) {
+    document.getElementById('meta-decks-list').innerHTML = decks.map(d => {
+        const signals = Object.keys(d.signal_cards || {}).slice(0, 6).join(', ');
+        const threats = (d.key_threats || []).map(t => t.card).join(', ');
+        const reviewClass = d.needs_review ? ' needs-review' : '';
+        const badges = [];
+        badges.push(`<span class="badge badge-builtin" style="font-size:10px">${d.archetype}</span>`);
+        if (d.source === 'observed') badges.push('<span class="badge badge-observed" style="font-size:10px">observed</span>');
+        if (d.needs_review) badges.push('<span class="badge badge-review" style="font-size:10px">needs review</span>');
+        const metaPct = d.meta_pct ? `${d.meta_pct}% meta · ` : '';
+        return `<div class="meta-card${reviewClass}">
+            <h4>${colorDots(d.colors)} ${d.name}
+                ${badges.join(' ')}
+                <span style="font-size:11px;color:#888;margin-left:auto">${metaPct}${d.speed || 'medium'} · kill T${d.typical_kill_turn || '?'}</span>
+            </h4>
+            <div class="meta-info">
+                ${d.description && !d.description.includes('Auto-generated') ? `<span>${d.description}</span>` : ''}
+            </div>
+            ${signals ? `<div class="signal-cards">Signals: ${signals}</div>` : ''}
+            ${threats ? `<div class="key-threats">Threats: ${threats}</div>` : '<div class="review-tag">No key threats defined</div>'}
+        </div>`;
+    }).join('') || '<div style="color:#555;font-style:italic">No meta decks</div>';
+}
+
+function filterMetaDecks() {
+    const q = document.getElementById('meta-search').value.toLowerCase();
+    if (!q) return renderMetaDecks(allMetaDecks);
+    const filtered = allMetaDecks.filter(d =>
+        d.name.toLowerCase().includes(q) ||
+        (d.archetype || '').toLowerCase().includes(q) ||
+        (d.colors || []).join('').toLowerCase().includes(q) ||
+        (d.speed || '').toLowerCase().includes(q)
+    );
+    renderMetaDecks(filtered);
+}
+
+function editMetaJSON() {
+    document.getElementById('meta-json').value = JSON.stringify(metaData, null, 2);
+    document.getElementById('meta-editor').classList.add('open');
+}
+
+function closeMetaEditor() {
+    document.getElementById('meta-editor').classList.remove('open');
+}
+
+async function saveMetaJSON() {
+    const text = document.getElementById('meta-json').value;
+    try {
+        const data = JSON.parse(text);
+        const res = await fetch('/api/manage/meta-decks', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        });
+        if (res.ok) {
+            showToast(`Meta decks saved (${(data.meta_decks || []).length} decks)`);
+            closeMetaEditor();
+            loadMetaDecks();
+        } else {
+            showToast('Save failed', true);
+        }
+    } catch (e) {
+        showToast('Invalid JSON: ' + e.message, true);
+    }
+}
+
+// ── Meta Sync ──
+async function syncMeta() {
+    const btn = document.getElementById('sync-meta-btn');
+    const status = document.getElementById('sync-status');
+    btn.disabled = true;
+    btn.textContent = 'Syncing...';
+    status.textContent = 'Scraping MTGGoldfish + merging + LLM enrichment...';
+    status.style.color = '#90caf9';
+
+    try {
+        const res = await fetch('/api/manage/sync-meta', { method: 'POST' });
+        const data = await res.json();
+
+        if (res.status === 409) {
+            status.textContent = 'Sync already running, try again later';
+            status.style.color = '#ffa500';
+        } else if (data.status === 'ok') {
+            const summary = (data.summary || []).join(' | ');
+            status.textContent = summary || 'Sync complete';
+            status.style.color = '#4caf50';
+            showToast('Meta decks synced');
+            loadMetaDecks();
+        } else {
+            status.textContent = 'Sync failed — check server logs';
+            status.style.color = '#f44336';
+            showToast('Sync failed', true);
+            console.error('Sync output:', data.output);
+        }
+    } catch (e) {
+        status.textContent = `Error: ${e.message}`;
+        status.style.color = '#f44336';
+        showToast('Sync error', true);
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'Sync from MTGGoldfish';
+}
+
+// ── Decks ──
+async function loadDecks() {
+    const res = await fetch('/api/manage/decks');
+    const decks = await res.json();
+
+    const tbody = document.getElementById('decks-body');
+    tbody.innerHTML = decks.map(d => `<tr>
+        <td><strong>${d.name}</strong></td>
+        <td>${d.card_count}</td>
+        <td>${(d.size_bytes / 1024).toFixed(1)} KB</td>
+        <td><button class="btn btn-secondary btn-small" onclick="viewDeck('${d.file}')">View</button></td>
+    </tr>`).join('') || '<tr><td colspan="4" style="color:#555;font-style:italic">No deck files found</td></tr>';
+}
+
+async function viewDeck(filename) {
+    const res = await fetch(`/api/manage/deck/${filename}`);
+    const data = await res.json();
+    const panel = document.getElementById('deck-detail');
+    panel.innerHTML = `
+        <h3>${filename}</h3>
+        <pre class="deck-content">${escapeHtml(data.content)}</pre>
+        <div class="btn-row" style="margin-top:8px">
+            <button class="btn btn-secondary" onclick="document.getElementById('deck-detail').classList.remove('open')">Close</button>
+        </div>
+    `;
+    panel.classList.add('open');
+    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ── Guides ──
+async function loadGuides() {
+    const res = await fetch('/api/manage/guides');
+    const guides = await res.json();
+
+    const tbody = document.getElementById('guides-body');
+    tbody.innerHTML = guides.map(g => `<tr>
+        <td><strong>${g.name}</strong></td>
+        <td><span class="badge badge-${g.source}">${g.source}</span></td>
+        <td>${(g.size_bytes / 1024).toFixed(1)} KB</td>
+        <td><button class="btn btn-secondary btn-small" onclick="viewGuide('${g.file}')">View</button></td>
+    </tr>`).join('') || '<tr><td colspan="4" style="color:#555;font-style:italic">No guides found</td></tr>';
+}
+
+async function viewGuide(filename) {
+    const res = await fetch(`/api/manage/guide/${filename}`);
+    const data = await res.json();
+    const panel = document.getElementById('guide-detail');
+    panel.innerHTML = `
+        <h3>${filename}</h3>
+        <div class="guide-content">${escapeHtml(data.content)}</div>
+        <div class="btn-row" style="margin-top:8px">
+            <button class="btn btn-secondary" onclick="document.getElementById('guide-detail').classList.remove('open')">Close</button>
+        </div>
+    `;
+    panel.classList.add('open');
+    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ── Helpers ──
+function ruleCard(r) {
+    const meta = [];
+    if (r.layer) meta.push(`layer: ${r.layer}`);
+    if (r.phase) meta.push(`phase: ${Array.isArray(r.phase) ? r.phase.join('/') : r.phase}`);
+    if (r.my_turn === true) meta.push('my turn');
+    if (r.my_turn === false) meta.push('opp turn');
+    if (r.step) meta.push(`step: ${r.step}`);
+    if (r.weight !== undefined && r.weight !== 1.0) meta.push(`weight: ${r.weight}`);
+    if (r.tags && r.tags.length) meta.push(`tags: ${r.tags.join(', ')}`);
+    const stats = r.stats || {};
+    if (stats.fired) meta.push(`fired: ${stats.fired}`);
+
+    const conditions = [];
+    if (r.require) {
+        r.require.forEach(zc => {
+            const m = zc.match || {};
+            let desc = `${zc.zone}`;
+            if (m.type) desc += ` [${m.type}]`;
+            if (m.name) desc += ` "${Array.isArray(m.name) ? m.name.join('|') : m.name}"`;
+            if (m.keyword) desc += ` kw:${m.keyword}`;
+            if (m.castable) desc += ' (castable)';
+            if (zc.absent) desc += ' ABSENT';
+            if (zc.min_count > 1) desc += ` x${zc.min_count}+`;
+            conditions.push(desc);
+        });
+    }
+    if (r.life_below) conditions.push(`life < ${r.life_below}`);
+    if (r.opp_life_below) conditions.push(`opp life < ${r.opp_life_below}`);
+    if (r.mana_min) conditions.push(`mana >= ${r.mana_min}`);
+    if (r.my_creatures_min) conditions.push(`creatures >= ${r.my_creatures_min}`);
+    if (r.opp_creatures_min) conditions.push(`opp creatures >= ${r.opp_creatures_min}`);
+    if (r.opp_speed) conditions.push(`vs ${r.opp_speed}`);
+
+    return `<div class="rule-card priority-${r.priority || 'medium'}">
+        <div class="rule-id">${r.id} <span style="color:#666">· ${r.priority || 'medium'}</span></div>
+        <div class="rule-action">${r.action}</div>
+        ${conditions.length ? `<div style="font-size:11px;color:#90caf9;margin-bottom:2px">Conditions: ${conditions.join(' · ')}</div>` : ''}
+        <div class="rule-meta">${meta.map(m => `<span>${m}</span>`).join('')}</div>
+    </div>`;
+}
+
+function escapeHtml(text) {
+    const d = document.createElement('div');
+    d.textContent = text;
+    return d.innerHTML;
+}
+
+// ── Init ──
+loadStrategies();
+</script>
+</body>
+</html>

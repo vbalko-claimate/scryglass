@@ -4,12 +4,15 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import sys
 from dataclasses import asdict
 from pathlib import Path
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
+
+from fastapi.responses import JSONResponse
 
 from .advisor_engine import AdvisorEngine, generate_match_summary
 from .database import (
@@ -19,12 +22,17 @@ from .database import (
     get_stats_mulligan, get_stats_my_cards, get_stats_opp_cards,
     get_stats_color_matchups, get_stats_opponents, get_stats_overview,
     get_stats_recent_trend, get_stats_weaknesses, get_match_timeline,
-    import_cards_from_mtga, init_db,
+    import_cards_from_mtga, init_db, USER_DATA_DIR,
 )
 from .game_state import GameStateTracker
 from .llm_advisor import get_backend, set_backend
 from .log_watcher import LogWatcher
 from .models import Advice, GameState
+from .strategy import (
+    RULES_DIR, USER_RULES_DIR, META_DECKS_PATH,
+    load_meta_decks, load_strategy, _load_strategy_file,
+    _all_strategy_dirs,
+)
 
 log = logging.getLogger(__name__)
 
@@ -590,3 +598,198 @@ async def match_summary_endpoint(match_id: str):
 async def match_timeline_endpoint(match_id: str):
     """Get structured turn-by-turn timeline for a match."""
     return get_match_timeline(match_id)
+
+
+# ─── Management API ─────────────────────────────────────────────
+
+@app.get("/manage")
+async def manage_page():
+    return FileResponse(str(STATIC_DIR / "manage.html"),
+                        headers={"Cache-Control": "no-cache, no-store, must-revalidate"})
+
+
+@app.get("/api/manage/strategies")
+async def manage_strategies():
+    """List all strategies from both built-in and user dirs."""
+    strategies = []
+    seen_names = set()
+    for strategy_dir in _all_strategy_dirs():
+        if not strategy_dir.exists():
+            continue
+        for path in sorted(strategy_dir.glob("*.json")):
+            try:
+                data = json.loads(path.read_text())
+                name = data.get("name", path.stem)
+                if name in seen_names:
+                    continue
+                seen_names.add(name)
+                is_user = str(path).startswith(str(USER_RULES_DIR))
+                strategies.append({
+                    "name": name,
+                    "file": path.name,
+                    "source": "user" if is_user else "builtin",
+                    "archetype": data.get("archetype", "unknown"),
+                    "colors": data.get("colors", []),
+                    "deck_signature": data.get("deck_signature", []),
+                    "rule_count": len(data.get("rules", [])),
+                    "stats": data.get("stats", {}),
+                })
+            except Exception:
+                continue
+    return strategies
+
+
+@app.get("/api/manage/strategy/{filename}")
+async def manage_strategy_detail(filename: str):
+    """Get full strategy JSON for editing."""
+    # Security: only allow .json in expected dirs
+    for d in _all_strategy_dirs():
+        path = d / filename
+        if path.exists() and path.suffix == ".json":
+            return json.loads(path.read_text())
+    return JSONResponse({"error": "not found"}, status_code=404)
+
+
+@app.put("/api/manage/strategy/{filename}")
+async def manage_strategy_save(filename: str, request: dict):
+    """Save strategy JSON (user dir only)."""
+    if not filename.endswith(".json"):
+        return JSONResponse({"error": "invalid filename"}, status_code=400)
+    USER_RULES_DIR.mkdir(parents=True, exist_ok=True)
+    path = USER_RULES_DIR / filename
+    path.write_text(json.dumps(request, indent=2, ensure_ascii=False))
+    log.info("Strategy saved via manage UI: %s", path)
+    return {"status": "ok", "path": str(path)}
+
+
+@app.get("/api/manage/general-rules")
+async def manage_general_rules():
+    """Get general.json rules."""
+    path = RULES_DIR / "general.json"
+    if not path.exists():
+        return JSONResponse({"error": "general.json not found"}, status_code=404)
+    return json.loads(path.read_text())
+
+
+@app.put("/api/manage/general-rules")
+async def manage_general_rules_save(request: dict):
+    """Save general.json."""
+    path = RULES_DIR / "general.json"
+    path.write_text(json.dumps(request, indent=2, ensure_ascii=False))
+    log.info("General rules saved via manage UI")
+    return {"status": "ok"}
+
+
+@app.get("/api/manage/meta-decks")
+async def manage_meta_decks():
+    """Get meta_decks.json."""
+    if not META_DECKS_PATH.exists():
+        return {"meta_decks": []}
+    return json.loads(META_DECKS_PATH.read_text())
+
+
+@app.put("/api/manage/meta-decks")
+async def manage_meta_decks_save(request: dict):
+    """Save meta_decks.json."""
+    META_DECKS_PATH.parent.mkdir(parents=True, exist_ok=True)
+    META_DECKS_PATH.write_text(json.dumps(request, indent=2, ensure_ascii=False))
+    log.info("Meta decks saved via manage UI (%d decks)", len(request.get("meta_decks", [])))
+    return {"status": "ok"}
+
+
+@app.get("/api/manage/decks")
+async def manage_decks():
+    """List deck files from user data dir."""
+    decks_dir = USER_DATA_DIR / "decks"
+    if not decks_dir.exists():
+        return []
+    decks = []
+    for path in sorted(decks_dir.glob("*.txt")):
+        lines = path.read_text().splitlines()
+        card_count = sum(1 for l in lines if l.strip() and not l.startswith("//")
+                         and not l.startswith("Deck") and not l.startswith("Sideboard")
+                         and not l.startswith("Commander"))
+        decks.append({
+            "file": path.name,
+            "name": path.stem.replace("_", " ").title(),
+            "card_count": card_count,
+            "size_bytes": path.stat().st_size,
+        })
+    return decks
+
+
+@app.get("/api/manage/deck/{filename}")
+async def manage_deck_detail(filename: str):
+    """Get deck file content."""
+    decks_dir = USER_DATA_DIR / "decks"
+    path = decks_dir / filename
+    if not path.exists() or not path.suffix == ".txt":
+        return JSONResponse({"error": "not found"}, status_code=404)
+    return {"file": filename, "content": path.read_text()}
+
+
+@app.get("/api/manage/guides")
+async def manage_guides():
+    """List strategy guide markdown files."""
+    guides = []
+    for d in _all_strategy_dirs():
+        if not d.exists():
+            continue
+        for path in sorted(d.glob("*.md")):
+            is_user = str(path).startswith(str(USER_RULES_DIR))
+            guides.append({
+                "file": path.name,
+                "name": path.stem.replace("_", " ").title(),
+                "source": "user" if is_user else "builtin",
+                "size_bytes": path.stat().st_size,
+            })
+    return guides
+
+
+@app.get("/api/manage/guide/{filename}")
+async def manage_guide_detail(filename: str):
+    """Get guide markdown content."""
+    for d in _all_strategy_dirs():
+        path = d / filename
+        if path.exists() and path.suffix == ".md":
+            return {"file": filename, "content": path.read_text()}
+    return JSONResponse({"error": "not found"}, status_code=404)
+
+
+_sync_lock = asyncio.Lock()
+
+
+@app.post("/api/manage/sync-meta")
+async def manage_sync_meta():
+    """Run meta deck sync: scrape MTGGoldfish + merge + LLM enrichment."""
+    if _sync_lock.locked():
+        return JSONResponse({"error": "Sync already in progress"}, status_code=409)
+
+    async with _sync_lock:
+        script = Path(__file__).parent.parent / "tools" / "update_meta.py"
+        proc = await asyncio.create_subprocess_exec(
+            sys.executable, str(script),
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.STDOUT,
+            cwd=str(script.parent.parent),
+        )
+        stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=300)
+        output = stdout.decode("utf-8", errors="replace") if stdout else ""
+
+        # Parse summary from output
+        lines = output.split("\n")
+        summary_lines = []
+        in_summary = False
+        for line in lines:
+            if "SUMMARY" in line:
+                in_summary = True
+                continue
+            if in_summary and line.strip().startswith(("From ", "Kept ", "Need ", "Written", "Backup")):
+                summary_lines.append(line.strip())
+
+        return {
+            "status": "ok" if proc.returncode == 0 else "error",
+            "returncode": proc.returncode,
+            "summary": summary_lines,
+            "output": output[-3000:],  # last 3k chars
+        }

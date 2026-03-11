@@ -75,6 +75,7 @@ def hand_synergy_score(candidate_grp_id: int, hand: list[GameObject]) -> int:
     """C1: Score how well a card synergizes with the rest of the hand.
 
     Checks if playing the candidate enables triggers on other hand cards.
+    Works across all color combinations.
     """
     candidate = card_cache.get(candidate_grp_id)
     if not candidate:
@@ -85,20 +86,20 @@ def hand_synergy_score(candidate_grp_id: int, hand: list[GameObject]) -> int:
     cand_combined = cand_text + " " + cand_oracle
 
     # What does this candidate provide?
+    is_creature = candidate.is_creature
+    is_noncreature = not is_creature and not candidate.is_land
     has_lifelink = "lifelink" in cand_combined
     has_passive_lifegain = ("gain" in cand_combined and "life" in cand_combined
                             and "whenever" in cand_combined)
-    # ETB lifegain = triggers from creatures entering (Sanctifier pattern)
     has_etb_lifegain = (has_passive_lifegain
                         and ("enters" in cand_combined or "creature" in cand_combined))
     provides_lifegain = has_lifelink or has_passive_lifegain
-    is_creature = candidate.is_creature
     cand_subtypes = set(s.lower() for s in candidate.subtypes)
 
     score = 0
     for obj in hand:
         if obj.grp_id == candidate_grp_id:
-            continue  # don't score self
+            continue
         other = card_cache.get(obj.grp_id)
         if not other:
             continue
@@ -106,29 +107,54 @@ def hand_synergy_score(candidate_grp_id: int, hand: list[GameObject]) -> int:
         other_oracle = (other.oracle_text or "").lower()
         other_combined = other_text + " " + other_oracle
 
-        # Does candidate enable other's "whenever you gain life" trigger?
+        # --- Lifegain synergy (W/WB) ---
         if "whenever you gain life" in other_combined:
             if has_etb_lifegain:
-                # ETB lifegain triggers automatically from playing creatures — superior
                 score += 3
             elif has_lifelink:
-                # Lifelink requires attacking and not being blocked — conditional
                 score += 1
             elif has_passive_lifegain:
                 score += 2
 
-        # Does candidate enable "whenever a creature enters" / "another creature"?
+        # --- Creature-enters synergy (all colors) ---
         if "whenever" in other_combined and "enters" in other_combined and is_creature:
             score += 1
 
-        # Does candidate enable "whenever another [subtype]"?
+        # --- Tribal synergy (all colors) ---
         for st in cand_subtypes:
             if "whenever" in other_combined and st in other_combined:
                 score += 1
 
-        # Does candidate provide counters/buffs for other payoffs?
-        if "+1/+1 counter" in other_combined and provides_lifegain:
+        # --- Spellslinger / Prowess synergy (R/U) ---
+        _spell_triggers = [
+            "prowess", "whenever you cast a noncreature",
+            "whenever you cast an instant", "whenever you cast a sorcery",
+            "magecraft",
+        ]
+        if is_noncreature and any(t in other_combined for t in _spell_triggers):
+            score += 2
+
+        # --- Death / Sacrifice synergy (B/BR) ---
+        _death_triggers = [
+            "whenever a creature dies", "whenever another creature",
+            "whenever you sacrifice", "whenever a creature you control dies",
+        ]
+        if is_creature and any(t in other_combined for t in _death_triggers):
             score += 1
+        # Sac outlets boost creatures with death triggers
+        if "sacrifice" in other_combined and "dies" in cand_combined:
+            score += 2
+
+        # --- Attack synergy (R/W aggro) ---
+        if is_creature and "whenever" in other_combined and "attack" in other_combined:
+            score += 1
+
+        # --- +1/+1 counter payoffs (all colors) ---
+        if "+1/+1 counter" in other_combined:
+            if provides_lifegain:
+                score += 1
+            if "adapt" in cand_combined or "+1/+1 counter" in cand_combined:
+                score += 1
 
     return score
 
@@ -163,19 +189,29 @@ def evaluate_opponent_board(state: GameState) -> list[tuple[GameObject, float, s
         oracle = (card.oracle_text or "").lower()
         combined = text + " " + oracle
 
-        # Keyword bonuses
+        # Keyword bonuses — conditional protection gets lower bonus + label
         kw_bonuses = [
             ("flying", 3, "flying"),
             ("deathtouch", 4, "deathtouch"),
             ("lifelink", 3, "lifelink"),
             ("trample", 2, "trample"),
             ("menace", 2, "menace"),
+            ("haste", 2, "haste"),
             ("hexproof", 5, "hexproof"),
             ("indestructible", 6, "indestructible"),
             ("double strike", 4, "double strike"),
+            ("first strike", 2, "first strike"),
+            ("ward", 3, "ward"),
         ]
         for kw, bonus, label in kw_bonuses:
             if kw in combined:
+                # Conditional protection keywords get reduced bonus
+                if kw in ("hexproof", "indestructible", "ward"):
+                    prot = _protection_status(card, kw)
+                    if prot == "conditional":
+                        score += bonus // 2  # half bonus — might not be active
+                        reasons.append(f"{label} (conditional)")
+                        continue
                 score += bonus
                 reasons.append(label)
 
@@ -516,6 +552,9 @@ def _suggest_plays(state: GameState) -> list[Advice]:
     mana = len(untapped_lands)
     lands_in_hand = [c for c in hand if c.is_land]
 
+    # Account for land drop: if we have a land in hand, we'll play it first
+    effective_mana = mana + 1 if lands_in_hand else mana
+
     advice = []
 
     # Check for opponent cast-penalty enchantments (Painful Quandary etc.)
@@ -532,11 +571,20 @@ def _suggest_plays(state: GameState) -> list[Advice]:
         if obj.is_land:
             continue
         card = card_cache.get(obj.grp_id)
-        if not card or card.cmc > mana:
+        if not card or card.cmc > effective_mana:
             continue
-        # Color check: verify untapped lands can actually pay the colored pips
-        if card.mana_cost and not _can_pay_mana_cost(card.mana_cost, untapped_lands):
-            continue
+        # Color check: verify lands can pay the colored pips
+        # Try current lands first; if that fails, try with each possible land drop
+        if card.mana_cost:
+            can_pay = _can_pay_mana_cost(card.mana_cost, untapped_lands)
+            if not can_pay and lands_in_hand:
+                for land_obj in lands_in_hand:
+                    if _can_pay_mana_cost(card.mana_cost,
+                                          untapped_lands + [land_obj]):
+                        can_pay = True
+                        break
+            if not can_pay:
+                continue
         # Auras need a valid target on the battlefield
         if _is_aura(card) and not _has_aura_target(card, my_creatures, opp_bf):
             continue
@@ -549,11 +597,37 @@ def _suggest_plays(state: GameState) -> list[Advice]:
         castable.append(card)
 
     # Check if we have removal and opponent has threats
+    _REMOVAL_KW = ["destroy", "exile", "damage", "sacrifice", "-",
+                    "fight", "deals damage equal",  # green fight/bite
+                    "return target", "return up to"]  # blue bounce
     removal_cards = []
     for card in castable:
         abilities_lower = " ".join(a.lower() for a in card.abilities)
-        if any(kw in abilities_lower for kw in ["destroy", "exile", "damage", "sacrifice", "-"]):
+        if any(kw in abilities_lower for kw in _REMOVAL_KW):
             removal_cards.append(card)
+
+    # Check burn-to-face: if burn spells can reach lethal in 1-2 turns, suggest face
+    opp = state.opp_player()
+    if opp and removal_cards:
+        burn_cards = []
+        for card in removal_cards:
+            abs_lower = " ".join(a.lower() for a in card.abilities)
+            # Extract damage amount from "deals N damage to any target"
+            import re
+            m = re.search(r"deals (\d+) damage to any target", abs_lower)
+            if m:
+                burn_cards.append((card, int(m.group(1))))
+        if burn_cards:
+            total_burn = sum(dmg for _, dmg in burn_cards)
+            # Add attack damage from creatures that can attack
+            attack_dmg = sum(c.power for c in state.my_creatures() if _can_attack(c))
+            if total_burn + attack_dmg >= opp.life_total and opp.life_total <= total_burn + 6:
+                burn_names = " + ".join(f"{c.name} ({d})" for c, d in burn_cards)
+                advice.append(Advice("heuristic", "high",
+                                      f"Burn face for lethal — {burn_names} = {total_burn} dmg "
+                                      f"(opp at {opp.life_total})",
+                                      confidence=0.8,
+                                      recommended_cards=[c.name for c, _ in burn_cards]))
 
     # A2: Use board evaluator to find best removal target
     if removal_cards:
@@ -568,26 +642,56 @@ def _suggest_plays(state: GameState) -> list[Advice]:
             # Also check auras on this creature for granted keywords
             aura_abs = _get_aura_abilities(top_threat, state)
             combined_abs = threat_abs + " " + aura_abs
-            if "hexproof" in combined_abs or "shroud" in combined_abs:
-                continue
+
+            # Check hexproof/shroud — skip permanent, warn+urgent for conditional
+            hex_status = _protection_status(threat_card, "hexproof")
+            shroud_status = _protection_status(threat_card, "shroud")
+            # Aura-granted hexproof/shroud is always "permanent" from our perspective
+            if hex_status == "absent" and "hexproof" in aura_abs:
+                hex_status = "permanent"
+            if shroud_status == "absent" and "shroud" in aura_abs:
+                shroud_status = "permanent"
+
+            if hex_status == "permanent" or shroud_status == "permanent":
+                continue  # can't target at all
             threat_name = threat_card.name
             warn = ""
+            is_urgent = False
+            if hex_status == "conditional" or shroud_status == "conditional":
+                # Conditional protection — might activate soon, remove NOW
+                warn = " (URGENT — gains hexproof if condition met!)"
+                is_urgent = True
+
             available_removal = removal_cards[:]
-            if "indestructible" in combined_abs:
-                exile_removal = [r for r in available_removal
-                                 if "exile" in " ".join(a.lower() for a in r.abilities)]
-                if exile_removal:
-                    available_removal = exile_removal
-                    warn = " (indestructible — exile!)"
+
+            # Check indestructible — permanent vs conditional
+            indest_status = _protection_status(threat_card, "indestructible")
+            if indest_status == "absent" and "indestructible" in aura_abs:
+                indest_status = "permanent"
+
+            if indest_status == "permanent":
+                # Permanent indestructible: exile or bounce only
+                bypass_removal = [
+                    r for r in available_removal
+                    if any(kw in " ".join(a.lower() for a in r.abilities)
+                           for kw in ["exile", "return target", "return up to"])
+                ]
+                if bypass_removal:
+                    available_removal = bypass_removal
+                    warn += " (indestructible — exile/bounce!)"
                 else:
                     continue
+            elif indest_status == "conditional":
+                # Conditional indestructible: any removal works now, but be urgent
+                warn += " (gains indestructible — remove now!)"
+                is_urgent = True
             valid_removal = [r for r in available_removal
                              if _removal_can_target(r, top_threat)]
             if not valid_removal:
                 continue
             if "ward" in combined_abs:
                 ward_cost = _parse_ward_cost(combined_abs)
-                if ward_cost and ward_cost + valid_removal[0].cmc > mana:
+                if ward_cost and ward_cost + valid_removal[0].cmc > effective_mana:
                     # Ward too expensive — check if we can target an aura on it instead
                     aura_advice = _suggest_aura_removal(
                         top_threat, state, removal_cards, mana, untapped_lands,
@@ -599,20 +703,46 @@ def _suggest_plays(state: GameState) -> list[Advice]:
                 warn += " (has ward)"
             # Warn about aura-based exile returning if aura is destroyed
             best_removal = valid_removal[0]
+            is_aura_rem = _is_aura_removal(best_removal)
             removal_abs = " ".join(a.lower() for a in best_removal.abilities)
-            if ("enchant" in removal_abs and "exile" in removal_abs
-                    and "when" in (threat_card.oracle_text or "").lower()
-                    and "enters" in (threat_card.oracle_text or "").lower()):
-                warn += " (returns if aura destroyed — has ETB!)"
+            if is_aura_rem and "exile" in removal_abs:
+                # Aura exile is temporary — returns when aura leaves
+                warn += " (temporary — returns if aura removed)"
+                # Also warn if target has ETB (re-triggers on return)
+                threat_oracle = (threat_card.oracle_text or "").lower()
+                threat_abs_lower = " ".join(a.lower() for a in threat_card.abilities)
+                if (("enters" in threat_oracle or "enters" in threat_abs_lower)
+                        and any(kw in threat_oracle + threat_abs_lower
+                                for kw in ["draw", "create", "gain", "deal",
+                                           "destroy", "exile", "return"])):
+                    warn += " (has ETB — bad if it returns!)"
+            elif ("enchant" in removal_abs and "exile" in removal_abs):
+                # Non-aura enchantment exile (Banishing Light etc.)
+                warn += " (returns if enchantment destroyed)"
             # Flash removal: hold for opp turn unless threat is urgent
-            if _has_flash(best_removal) and threat_score < 10:
+            if _has_flash(best_removal) and threat_score < 10 and not is_urgent:
                 advice.append(Advice("heuristic", "medium",
                                       f"Hold {best_removal.name} — flash removal, "
                                       f"use on opp turn vs {threat_name}",
                                       confidence=0.6,
                                       recommended_cards=[best_removal.name]))
+            elif is_aura_rem:
+                first_ab = best_removal.abilities[0].lower() if best_removal.abilities else ""
+                if "you control" in first_ab:
+                    target_note = "on your creature"
+                else:
+                    target_note = "on creature"
+                prio = "critical" if is_urgent else "high"
+                advice.append(Advice("heuristic", prio,
+                                      f"Cast {best_removal.name} {target_note} — "
+                                      f"exiles {threat_name} "
+                                      f"({top_threat.power}/{top_threat.toughness})"
+                                      f"{warn}",
+                                      confidence=0.85 if is_urgent else 0.7,
+                                      recommended_cards=[best_removal.name]))
             else:
-                advice.append(Advice("heuristic", "high",
+                prio = "critical" if is_urgent else "high"
+                advice.append(Advice("heuristic", prio,
                                       f"Remove {threat_name} ({top_threat.power}/{top_threat.toughness}) "
                                       f"with {best_removal.name} — {threat_reason}{warn}",
                                       confidence=0.7,
@@ -712,11 +842,19 @@ def _suggest_plays(state: GameState) -> list[Advice]:
                               confidence=0.5,
                               recommended_cards=[best.name]))
 
+    # Suggest activated abilities on battlefield creatures
+    ability_advice = _suggest_activated_abilities(state, mana)
+    for aa in ability_advice:
+        # Don't duplicate if we already have a cast suggestion for same card
+        if not any(aa.recommended_cards and rc in a.message
+                   for a in advice for rc in aa.recommended_cards):
+            advice.append(aa)
+
     # Remind about land drop
     if lands_in_hand and not any("land" in a.message.lower() for a in advice):
         advice.append(Advice("heuristic", "low", "Play a land", confidence=0.4))
 
-    return advice[:3]
+    return advice[:4]
 
 
 def _suggest_attacks(state: GameState) -> list[Advice]:
@@ -768,6 +906,26 @@ def _suggest_attacks(state: GameState) -> list[Advice]:
         names = ", ".join(a.name for a in deathtouchers)
         return [Advice("heuristic", "medium",
                         f"Attack with {names} — deathtouch forces bad trades",
+                        confidence=0.6)]
+
+    # Favorable trades: creatures that outclass all possible single blockers
+    favorable = []
+    for a in attackers:
+        if a in evasive or a in vigilant:
+            continue
+        # Attacker survives any single block (power > all blocker toughness scenarios)
+        can_trade_up = False
+        for b in opp_blockers:
+            # We kill them and survive: our power >= their toughness, their power < our toughness
+            if a.power >= b.toughness and b.power < a.toughness:
+                can_trade_up = True
+            # They can't profitably block: our power > their toughness (we kill) and they die
+        if can_trade_up:
+            favorable.append(a)
+    if favorable:
+        names = ", ".join(a.name for a in favorable)
+        return [Advice("heuristic", "medium",
+                        f"Attack with {names} — survives any single block",
                         confidence=0.6)]
 
     return []
@@ -1194,6 +1352,21 @@ def _is_aura(card) -> bool:
     return first_ability.startswith("enchant ")
 
 
+def _is_aura_removal(card) -> bool:
+    """Check if a card is an aura with an ETB removal effect (exile/destroy).
+
+    Examples: Sheltered by Ghosts, Ossification, Borrowed Time.
+    These enchant a permanent but have an ETB that exiles/destroys opponent's stuff.
+    """
+    if not _is_aura(card):
+        return False
+    abilities_lower = " ".join(a.lower() for a in card.abilities)
+    has_etb = "enters" in abilities_lower or "enter" in abilities_lower
+    has_removal = any(kw in abilities_lower
+                      for kw in ["exile", "destroy target", "destroy another"])
+    return has_etb and has_removal
+
+
 def _needs_own_creature(card) -> bool:
     """Check if a spell requires a creature you control (buff/protection spells)."""
     oracle = (card.oracle_text or "").lower()
@@ -1214,11 +1387,14 @@ def _is_reactive_instant(card) -> bool:
     oracle = (card.oracle_text or "").lower()
     abilities_text = " ".join(a.lower() for a in card.abilities)
     combined = oracle + " " + abilities_text
+    # Fight/bite instants ARE removal, not reactive — they proactively remove threats
+    if "fight" in combined or "deals damage equal" in combined:
+        return False
     # Combat tricks / protection: buff own creature
     if _needs_own_creature(card):
         return True
     # Counterspells
-    if "counter target" in combined:
+    if "counter target" in combined or "counter spell" in combined:
         return True
     # Pure protection (hexproof, indestructible, phase out)
     if any(kw in combined for kw in ["hexproof", "phase out", "indestructible",
@@ -1233,6 +1409,145 @@ def _has_flash(card) -> bool:
     abilities_text = " ".join(a.lower() for a in card.abilities)
     combined = oracle + " " + abilities_text
     return "flash" in combined
+
+
+import re as _re
+
+# Patterns for activated abilities: "{cost}: effect"
+_ACTIVATED_RE = _re.compile(
+    r'\{([^}]+)\}'   # mana symbols in braces
+    r'(?:[,\s]*\{[^}]+\})*'  # additional cost symbols
+    r'\s*:\s*'        # colon separator
+    r'(.+)',          # effect text
+)
+
+# Mana cost pattern inside braces: oN or oW/oU/oB/oR/oG
+_MANA_COST_RE = _re.compile(r'o(\d+|[WUBRG])')
+
+# Effect keywords that are worth suggesting
+_PUMP_KEYWORDS = ["get +", "+1/+1", "+2/+2", "+1/+0", "+2/+0", "+0/+1"]
+_DRAW_KEYWORDS = ["draw a card", "draw cards", "look at the top"]
+_OTHER_VALUABLE = ["create", "destroy", "exile", "return", "counter",
+                   "gain", "lose", "deals", "tap target", "untap"]
+
+
+def _parse_activated_abilities(card) -> list[dict]:
+    """Parse activated abilities from card text. Returns list of
+    {text, mana_cost, effect, category} dicts."""
+    results = []
+    for ab in (card.abilities or []):
+        m = _ACTIVATED_RE.match(ab)
+        if not m:
+            continue
+        cost_part = ab[:ab.index(":")]
+        effect = m.group(2).strip().lower()
+
+        # Skip pure mana abilities (tap for mana)
+        if _re.match(r'^add \{?o?[WUBRGC\d]', effect):
+            continue
+        # Skip sacrifice-only costs without meaningful effect
+        if "sacrifice cardname" in cost_part.lower() and "add" in effect:
+            continue
+
+        # Calculate total mana cost
+        total_mana = 0
+        for sym in _MANA_COST_RE.findall(cost_part):
+            if sym.isdigit():
+                total_mana += int(sym)
+            else:
+                total_mana += 1  # colored pip = 1 mana
+
+        needs_tap = "oT" in cost_part
+
+        # Categorize
+        category = "utility"
+        if any(kw in effect for kw in _PUMP_KEYWORDS):
+            category = "pump"
+        elif any(kw in effect for kw in _DRAW_KEYWORDS):
+            category = "draw"
+        elif any(kw in effect for kw in ["create", "token"]):
+            category = "token"
+        elif any(kw in effect for kw in ["destroy", "exile", "deals"]):
+            category = "removal"
+
+        results.append({
+            "text": ab,
+            "mana_cost": total_mana,
+            "needs_tap": needs_tap,
+            "effect": effect,
+            "category": category,
+        })
+    return results
+
+
+def _suggest_activated_abilities(state: GameState, mana: int) -> list[Advice]:
+    """Suggest activated abilities on battlefield creatures worth using."""
+    my_bf = state.my_battlefield()
+    my_creatures = state.my_creatures()
+    advice = []
+
+    for obj in my_bf:
+        if obj.is_land:
+            continue
+        # Skip tapped creatures for tap-abilities
+        card = card_cache.get(obj.grp_id)
+        if not card:
+            continue
+
+        abilities = _parse_activated_abilities(card)
+        for ab in abilities:
+            if ab["mana_cost"] > mana:
+                continue
+            if ab["needs_tap"] and obj.is_tapped:
+                continue
+
+            # Pump: only suggest before combat if we have creatures to attack
+            if ab["category"] == "pump":
+                attackers = [c for c in my_creatures if _can_attack(c)]
+                if not attackers:
+                    continue
+                # Only in main phase or begin combat
+                if "Main" not in state.turn_info.phase and "Combat" not in state.turn_info.phase:
+                    continue
+                n_attackers = len(attackers)
+                # Is it a team pump or single target?
+                is_team = "creatures you control" in ab["effect"]
+                if is_team:
+                    advice.append(Advice("heuristic", "high",
+                                         f"Activate {card.name} — {ab['text'][:60]}... "
+                                         f"(buffs {n_attackers} attacker{'s' if n_attackers > 1 else ''})",
+                                         confidence=0.8,
+                                         recommended_cards=[card.name]))
+                else:
+                    advice.append(Advice("heuristic", "medium",
+                                         f"Activate {card.name} — {ab['text'][:60]}",
+                                         confidence=0.6,
+                                         recommended_cards=[card.name]))
+
+            elif ab["category"] == "draw":
+                # Draw abilities: suggest if low on cards
+                hand_size = len(state.my_hand())
+                if hand_size <= 2:
+                    advice.append(Advice("heuristic", "medium",
+                                         f"Activate {card.name} — draw (hand: {hand_size})",
+                                         confidence=0.6,
+                                         recommended_cards=[card.name]))
+
+            elif ab["category"] == "removal":
+                opp_threats = state.opp_battlefield()
+                if opp_threats:
+                    advice.append(Advice("heuristic", "high",
+                                         f"Activate {card.name} — {ab['text'][:60]}",
+                                         confidence=0.7,
+                                         recommended_cards=[card.name]))
+
+            elif ab["category"] == "token":
+                advice.append(Advice("heuristic", "low",
+                                     f"Activate {card.name} — {ab['text'][:60]}",
+                                     confidence=0.5,
+                                     recommended_cards=[card.name]))
+
+    return advice
 
 
 # Land subtype → color mapping (MTGA DB uses numeric subtype IDs)
@@ -1510,6 +1825,33 @@ def _has_keyword(obj: GameObject, keyword: str) -> bool:
         return False
     kw = keyword.lower()
     return any(kw in ab.lower() for ab in card.abilities)
+
+
+def _protection_status(card, keyword: str) -> str:
+    """Check if a protection keyword (hexproof/indestructible/shroud) is
+    permanent, conditional, or absent.
+
+    Returns:
+        "permanent"   — always active (standalone keyword)
+        "conditional" — gated by "as long as" / "if" / "until" condition
+        "absent"      — keyword not present
+    """
+    kw = keyword.lower()
+    abilities_lower = " ".join(a.lower() for a in card.abilities)
+    if kw not in abilities_lower:
+        return "absent"
+    # Check if the keyword is conditional
+    _COND_MARKERS = ["as long as", "if you", "if an ", "if a ", "if it ",
+                     "if there", "while ", "unless ", kw + " until",
+                     "gains " + kw + " until"]
+    for ab in card.abilities:
+        ab_lower = ab.lower()
+        if kw not in ab_lower:
+            continue
+        if any(m in ab_lower for m in _COND_MARKERS):
+            return "conditional"
+    # If we get here, keyword is present but not conditional → permanent
+    return "permanent"
 
 
 def _has_guaranteed_keyword(obj: GameObject, keyword: str) -> bool:

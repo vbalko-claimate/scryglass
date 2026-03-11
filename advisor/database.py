@@ -191,6 +191,18 @@ def import_cards_from_mtga():
         WHERE c.IsPrimaryCard = 1 AND c.IsToken = 0
     """)
 
+    # Build subtype ID → name map from Enums table
+    subtype_map: dict[str, str] = {}
+    try:
+        for val, loc in mtga_conn.execute("""
+            SELECT e.Value, l.Loc FROM Enums e
+            JOIN Localizations_enUS l ON e.LocId = l.LocId AND l.Formatted = 1
+            WHERE e.Type = 'SubType'
+        """):
+            subtype_map[str(val)] = re.sub(r"<[^>]+>", "", loc)
+    except sqlite3.Error:
+        pass  # older DB versions might not have this
+
     conn = get_connection()
     count = 0
     batch = []
@@ -201,7 +213,8 @@ def import_cards_from_mtga():
         name = re.sub(r"<[^>]+>", "", name_raw or "")
         colors = [DB_COLORS.get(c, c) for c in (colors_str or "").split(",") if c.strip() and c.strip() in DB_COLORS]
         card_types = [DB_TYPES.get(t, t) for t in (types_str or "").split(",") if t.strip() and t.strip() in DB_TYPES]
-        subtypes_list = [s.strip() for s in (subtypes_str or "").split(",") if s.strip()]
+        subtypes_list = [subtype_map.get(s.strip(), s.strip())
+                         for s in (subtypes_str or "").split(",") if s.strip()]
         abilities = _parse_abilities(mtga_conn, ability_ids or "")
         rarity_name = RARITY_MAP.get(rarity, "Unknown")
 

@@ -176,18 +176,18 @@ async def _call_claude_cli(prompt: str) -> str:
     env.pop("CLAUDECODE", None)  # Allow nested invocation
 
     proc = await asyncio.create_subprocess_exec(
-        "claude", "-p", prompt, "--max-turns", "1",
+        "claude", "-p", prompt, "--tools", "",
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
         env=env,
     )
 
     try:
-        # Claude CLI has ~10-15s startup overhead, allow 60s total
-        stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=60.0)
+        # Claude CLI has ~10-15s startup overhead, allow 120s total
+        stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=120.0)
     except asyncio.TimeoutError:
         proc.kill()
-        return "LLM timeout (60s)"
+        return "LLM timeout (120s)"
 
     if proc.returncode != 0:
         err = stderr.decode().strip()
