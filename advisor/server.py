@@ -326,8 +326,10 @@ async def startup():
     tracker.on_my_card_played = advisor.check_card_played
     tracker.on_stack_observed = advisor.on_stack_observed
 
-    # Archive Player.log before processing (so raw GRE data survives MTGA restarts)
+    # Archive Player.log (and Player-prev.log) before processing
     _archive_player_log(watcher.log_path)
+    prev_log = watcher.log_path.parent / "Player-prev.log"
+    _archive_player_log(prev_log)
 
     # Catch up on current log (clear events first to avoid duplicates on restart)
     log.info("Reading existing log...")
