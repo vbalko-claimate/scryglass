@@ -627,6 +627,42 @@ class GameStateTracker:
                           "power": game_obj.power,
                           "toughness": game_obj.toughness})
 
+        # Track cards leaving the hand (hand disruption: exile/discard by opponent)
+        in_hand = obj_zone and obj_zone.type == "ZoneType_Hand"
+        was_in_hand = False
+        if old_obj:
+            old_zone_for_hand = self.state.zones.get(old_obj.zone_id)
+            was_in_hand = old_zone_for_hand and old_zone_for_hand.type == "ZoneType_Hand"
+
+        leaving_hand = was_in_hand and not in_hand and not on_battlefield
+        if (leaving_hand and my_seat and owner == my_seat and card
+                and grp_id > 0 and self.state.match_info.match_id):
+            dest_zone_h = self.state.zones.get(game_obj.zone_id)
+            dest_type_h = dest_zone_h.type if dest_zone_h else "unknown"
+            dest_label_h = {
+                "ZoneType_Exile": "exiled",
+                "ZoneType_Graveyard": "discarded",
+                "ZoneType_Stack": None,      # being cast — ignore
+                "ZoneType_Battlefield": None, # played — ignore
+            }.get(dest_type_h, "removed")
+            if dest_label_h:
+                caused_by_h = self._resolve_removal_cause(iid)
+                event_data_h: dict = {
+                    "name": card.name, "grp_id": grp_id,
+                    "destination": dest_label_h,
+                    "card_types": card.card_types,
+                }
+                if caused_by_h:
+                    event_data_h["caused_by"] = caused_by_h["name"]
+                    event_data_h["caused_by_type"] = caused_by_h["type"]
+                save_match_event(
+                    self.state.match_info.match_id, "hand_disrupted",
+                    game_number=self.state.match_info.game_number,
+                    turn_number=self.state.turn_info.turn_number,
+                    phase=self.state.turn_info.phase,
+                    data=event_data_h)
+                self.state.hand_disrupted_count += 1
+
         # Track creatures leaving the battlefield (death/exile/bounce)
         leaving_bf = was_on_bf and not on_battlefield
         if (leaving_bf and old_obj and card and grp_id > 0

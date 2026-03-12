@@ -178,6 +178,9 @@ class GameState:
     game_state_id: int = 0
     annotations: list[dict] = field(default_factory=list)
 
+    # Hand disruption counter — incremented when opponent exiles/discards from our hand
+    hand_disrupted_count: int = 0
+
     # Helpers
     def my_player(self) -> PlayerState | None:
         return self.players.get(self.my_seat_id)

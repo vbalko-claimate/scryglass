@@ -347,6 +347,9 @@ def analyze(state: GameState) -> list[Advice]:
     # Mulligan
     advice.extend(_check_mulligan(state))
 
+    # Hand disruption warning (fires once, turn-agnostic)
+    advice.extend(_check_hand_disruption(state))
+
     if is_my_turn:
         # Only suggest attacks/lethal on our turn
         advice.extend(_check_lethal(state))
@@ -360,6 +363,21 @@ def analyze(state: GameState) -> list[Advice]:
     # Cap at 3 most important
     advice.sort(key=lambda a: {"critical": 0, "high": 1, "medium": 2, "low": 3}.get(a.priority, 4))
     return advice[:3]
+
+
+def _check_hand_disruption(state: GameState) -> list[Advice]:
+    """Warn when opponent has exiled/discarded cards from our hand this game."""
+    count = state.hand_disrupted_count
+    if count <= 0:
+        return []
+    hand_size = len(state.my_hand())
+    if count == 1:
+        msg = f"Opponent disrupted your hand — 1 card lost. Hand: {hand_size} cards left."
+        priority = "medium"
+    else:
+        msg = f"Opponent disrupted your hand — {count} cards lost. Hand: {hand_size} cards left. Play around further disruption."
+        priority = "high"
+    return [Advice("heuristic", priority, msg)]
 
 
 def _check_lethal(state: GameState) -> list[Advice]:
