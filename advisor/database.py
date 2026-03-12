@@ -243,10 +243,41 @@ def import_cards_from_mtga():
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, batch)
 
+    # Import tokens (lightweight — just name/types/P/T for display)
+    token_batch = []
+    mtga_cur.execute("""
+        SELECT c.GrpId, l.Loc, c.Colors, c.Types, c.Subtypes,
+               c.Power, c.Toughness, c.ExpansionCode
+        FROM Cards c
+        JOIN Localizations_enUS l ON c.TitleId = l.LocId AND l.Formatted = 1
+        WHERE c.IsToken = 1
+    """)
+    for row in mtga_cur.fetchall():
+        grp_id, name_raw, colors_str, types_str, subtypes_str, power, toughness, exp = row
+        name = re.sub(r"<[^>]+>", "", name_raw or "")
+        colors = [DB_COLORS.get(c, c) for c in (colors_str or "").split(",") if c.strip() and c.strip() in DB_COLORS]
+        card_types = [DB_TYPES.get(t, t) for t in (types_str or "").split(",") if t.strip() and t.strip() in DB_TYPES]
+        subtypes_list = [subtype_map.get(s.strip(), s.strip())
+                         for s in (subtypes_str or "").split(",") if s.strip()]
+        token_batch.append((
+            grp_id, name, "", 0,
+            json.dumps(colors), json.dumps(card_types), json.dumps(subtypes_list),
+            power or "", toughness or "", "Token", exp or "",
+            "[]", "", "mtga_token",
+        ))
+    if token_batch:
+        conn.executemany("""
+            INSERT OR REPLACE INTO cards
+            (grp_id, name, mana_cost, cmc, colors, card_types, subtypes,
+             power, toughness, rarity, expansion, abilities, oracle_text, source)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, token_batch)
+    token_count = len(token_batch)
+
     # Store import metadata
     conn.execute(
         "INSERT OR REPLACE INTO meta (key, value, updated_at) VALUES (?, ?, ?)",
-        ("last_card_import", json.dumps({"count": count, "mtga_db": mtga_path}),
+        ("last_card_import", json.dumps({"count": count, "tokens": token_count, "mtga_db": mtga_path}),
          datetime.now().isoformat()),
     )
     conn.commit()

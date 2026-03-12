@@ -8,7 +8,7 @@ from typing import Callable
 from .database import card_cache, get_matchup_wr, get_observed_opp_decks, save_advice, save_match, save_match_event
 from .heuristics import (
     analyze as heuristic_analyze, reset_caches as reset_heuristic_caches,
-    set_opp_deck, set_opp_tracker_data,
+    set_my_archetype, set_opp_deck, set_opp_tracker_data,
 )
 from .llm_advisor import assess_threats, get_advice as llm_get_advice
 from .models import Advice, CardInfo, GameState
@@ -23,7 +23,7 @@ log = logging.getLogger(__name__)
 _last_advice_state_id: tuple[int, str] = (-1, "")
 
 
-def _is_notable(card: CardInfo) -> bool:
+def _is_notable(card: CardInfo, obj: "GameObject | None" = None) -> bool:
     """Check if a permanent warrants threat assessment."""
     if card.is_land:
         return False
@@ -31,17 +31,29 @@ def _is_notable(card: CardInfo) -> bool:
         return True
     if any(t in card.card_types for t in ["Artifact", "Enchantment"]):
         return True
-    # Creatures with complex abilities (not just simple keywords)
     if card.is_creature:
-        text = " ".join(card.abilities)
+        text = " ".join(a.lower() for a in card.abilities)
+        # Keywords that make a creature threatening
+        if any(kw in text for kw in ["ward", "hexproof", "indestructible",
+                                      "double strike", "deathtouch",
+                                      "whenever", "counter", "destroy",
+                                      "exile", "create", "+1/+1"]):
+            return True
+        # Complex abilities
         if len(text) > 80:
             return True
+        # Buffed beyond base stats (auras, counters)
+        if obj:
+            base_p = int(card.power) if card.power else 0
+            base_t = int(card.toughness) if card.toughness else 0
+            if obj.power > base_p + 1 or obj.toughness > base_t + 1:
+                return True
     return False
 
 
-def _quick_danger(card: CardInfo) -> int:
+def _quick_danger(card: CardInfo, obj: "GameObject | None" = None) -> int:
     """Quick heuristic danger level 1-5."""
-    text = (" ".join(card.abilities) + " " + card.oracle_text).lower()
+    text = (" ".join(card.abilities) + " " + (card.oracle_text or "")).lower()
     if "Planeswalker" in card.card_types:
         return 5
     if any(kw in text for kw in ["destroy all", "exile all", "-x/-x",
@@ -51,12 +63,21 @@ def _quick_danger(card: CardInfo) -> int:
                                   "counter target", "each opponent",
                                   "protection from everything"]):
         return 4
+    base = 2
     if any(kw in text for kw in ["create", "token", "+1/+1 counter",
                                   "deals damage", "whenever", "search your library"]):
-        return 3
-    if any(kw in text for kw in ["gain life", "scry", "tap target"]):
-        return 2
-    return 2  # Notable permanents default to 2
+        base = 3
+    # Buffed creatures are more dangerous — escalate based on live power
+    if obj and card.is_creature:
+        base_p = int(card.power) if card.power else 0
+        if obj.power >= 5:
+            base = max(base, 4)
+        elif obj.power >= base_p + 2:
+            base = max(base, 3)
+    # Ward/hexproof makes it harder to answer
+    if any(kw in text for kw in ["ward", "hexproof", "indestructible"]):
+        base = max(base, 3)
+    return base
 
 
 def _quick_summary(card: CardInfo) -> str:
@@ -154,6 +175,7 @@ class AdvisorEngine:
         self._meta_decks = load_meta_decks()
         self._enrich_meta_decks()
         if self._strategy:
+            set_my_archetype(self._strategy.archetype)
             log.info("Strategy active: %s (%s, %d rules, %d meta decks)",
                      self._strategy.name, self._strategy.archetype,
                      len(self._strategy.rules), len(self._meta_decks))
@@ -328,17 +350,28 @@ class AdvisorEngine:
         for iid in removed:
             del self._active_threats[iid]
 
-        # Detect new notable permanents
+        # Detect new notable permanents + re-evaluate buffed existing ones
         new_cards: list[dict] = []
         for obj in opp_bf:
             if obj.instance_id in self._active_threats:
+                # Re-evaluate if creature got significantly buffed
+                existing = self._active_threats[obj.instance_id]
+                card = card_cache.get(obj.grp_id)
+                if card and card.is_creature:
+                    new_danger = _quick_danger(card, obj)
+                    if new_danger > existing["danger"]:
+                        existing["danger"] = new_danger
+                        existing["priority"] = (
+                            "must-remove" if new_danger >= 4
+                            else "should-remove" if new_danger >= 3
+                            else "monitor")
                 continue
             card = card_cache.get(obj.grp_id)
-            if not card or not _is_notable(card):
+            if not card or not _is_notable(card, obj):
                 continue
 
-            # Quick heuristic assessment
-            danger = _quick_danger(card)
+            # Quick heuristic assessment — include live stats
+            danger = _quick_danger(card, obj)
             threat: dict = {
                 "instance_id": obj.instance_id,
                 "name": card.name,

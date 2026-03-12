@@ -1,6 +1,6 @@
 [project]
 name = "scryglass"
-version = "0.2.0"
+version = "0.3.0"
 description = "Real-time strategic advisor for Magic: The Gathering Arena"
 requires-python = ">=3.12"
 dependencies = [

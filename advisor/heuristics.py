@@ -11,6 +11,8 @@ if TYPE_CHECKING:
 
 # Current opponent deck (set by advisor_engine when opponent identified)
 _current_opp_deck: "MetaDeck | None" = None
+# My deck archetype (set by advisor_engine when strategy loaded)
+_my_archetype: str = "unknown"
 # Opponent tracking data (set by advisor_engine)
 _opp_ability_triggers: dict[str, int] = {}  # source_card_name: count
 _opp_spent_removal: list[str] = []
@@ -20,6 +22,12 @@ def set_opp_deck(deck: "MetaDeck | None"):
     """Set identified opponent deck for threat scoring."""
     global _current_opp_deck
     _current_opp_deck = deck
+
+
+def set_my_archetype(archetype: str):
+    """Set player's deck archetype for deck-aware heuristics."""
+    global _my_archetype
+    _my_archetype = archetype
 
 
 def set_opp_tracker_data(ability_triggers: dict[str, int],
@@ -62,11 +70,12 @@ def _card_score(name: str) -> float:
 
 def reset_caches():
     """Reset WR/preference caches (called on match end to pick up new data)."""
-    global _card_wr, _player_prefs, _current_opp_deck
+    global _card_wr, _player_prefs, _current_opp_deck, _my_archetype
     global _opp_ability_triggers, _opp_spent_removal
     _card_wr = None
     _player_prefs = None
     _current_opp_deck = None
+    _my_archetype = "unknown"
     _opp_ability_triggers = {}
     _opp_spent_removal = []
 
@@ -183,11 +192,14 @@ def evaluate_opponent_board(state: GameState) -> list[tuple[GameObject, float, s
             scored.append((obj, obj.power * 1.5, "unknown card"))
             continue
 
-        score = obj.power * 1.5 + obj.toughness * 0.5
         reasons = []
         text = " ".join(a.lower() for a in card.abilities)
         oracle = (card.oracle_text or "").lower()
         combined = text + " " + oracle
+
+        # Double strike effectively doubles combat damage
+        power_mult = 2.0 if "double strike" in combined else 1.0
+        score = obj.power * 1.5 * power_mult + obj.toughness * 0.5
 
         # Keyword bonuses — conditional protection gets lower bonus + label
         kw_bonuses = [
@@ -443,7 +455,9 @@ def _check_opponent_lethal(state: GameState) -> list[Advice]:
 
     opp_attackers = [c for c in state.opp_creatures()
                      if c.can_attack and not _has_keyword(c, "Defender")]
-    opp_power = sum(c.power for c in opp_attackers)
+    opp_power = sum(
+        c.power * (2 if _has_keyword(c, "double strike") else 1)
+        for c in opp_attackers)
 
     if opp_power >= me.life_total:
         my_blockers = [c for c in state.my_creatures() if not c.is_tapped]
@@ -487,16 +501,57 @@ def _check_mulligan(state: GameState) -> list[Advice]:
         else:
             hand_cards.append(obj.name)
 
+    # Determine colors available from lands in hand (for color-aware mulligan)
+    # T1: one untapped land; T2: two lands (one may be tapped)
+    hand_land_colors_t1: set[str] = set()  # colors from one untapped land
+    hand_land_colors_t2: set[str] = set()  # colors from up to two lands by T2
+    land_cards_in_hand = []
+    for obj in hand:
+        if not obj.is_land:
+            continue
+        card = card_cache.get(obj.grp_id)
+        if card:
+            produced = _land_produces_colors(card)
+            land_cards_in_hand.append((card, produced))
+            hand_land_colors_t2.update(produced)
+            first_ab = card.abilities[0].lower() if card.abilities else ""
+            if "enters tapped" not in first_ab:
+                hand_land_colors_t1.update(produced)
+
+    def _spell_colors_available(card_info, by_turn: int) -> bool:
+        """Check if lands in hand produce colors needed for this spell by given turn."""
+        colored_pips, _ = _parse_mana_pips(card_info.mana_cost)
+        if not colored_pips:
+            return True  # colorless/generic only
+        available = hand_land_colors_t1 if by_turn <= 1 else hand_land_colors_t2
+        return all(c in available for c in set(colored_pips))
+
     # Count castable spells (assuming we play one land per turn)
+    # For aggro/tempo decks, reactive-only spells (combat tricks, protection,
+    # counterspells) don't count as "early plays" — you need proactive threats.
+    # For control decks, reactive spells ARE valid early plays.
+    is_proactive_deck = _my_archetype in ("aggro", "tempo", "unknown")
     castable_t1 = 0
     castable_t2 = 0
+    early_creatures = 0  # creatures castable by T2
+    color_blocked_spells = 0  # spells that would be castable but wrong colors
     for obj in nonlands:
         card = card_cache.get(obj.grp_id)
         if card:
+            if is_proactive_deck and _is_reactive_instant(card):
+                continue
             if card.cmc <= 1:
-                castable_t1 += 1
+                if _spell_colors_available(card, 1):
+                    castable_t1 += 1
+                else:
+                    color_blocked_spells += 1
             if card.cmc <= 2:
-                castable_t2 += 1
+                if _spell_colors_available(card, 2):
+                    castable_t2 += 1
+                    if card.is_creature:
+                        early_creatures += 1
+                else:
+                    color_blocked_spells += 1
 
     hand_str = ", ".join(hand_cards)
 
@@ -509,21 +564,63 @@ def _check_mulligan(state: GameState) -> list[Advice]:
             return [Advice("heuristic", "high",
                            f"Mulligan — {lands} lands: {hand_str}",
                            confidence=0.85)]
+        # Aggro/tempo: 4+ lands means only 3 spells — not enough pressure
+        if is_proactive_deck and lands >= 4 and castable_t2 <= 2:
+            return [Advice("heuristic", "medium",
+                           f"Risky keep — {lands} lands, only {hand_size - lands} "
+                           f"spells for aggro: {hand_str}",
+                           confidence=0.6)]
         # All lands ETB tapped — no play until T2+ (devastating for aggro)
         if tapped_lands > 0 and untapped_lands == 0 and lands <= 3:
             return [Advice("heuristic", "high",
                            f"Risky keep — all {lands} lands enter tapped, "
                            f"no play until T{lands + 1}: {hand_str}",
                            confidence=0.7)]
+        # Aggro: early plays exist but no creatures — removal without board is dead
+        if is_proactive_deck and castable_t2 >= 1 and early_creatures == 0:
+            return [Advice("heuristic", "medium",
+                           f"Risky keep — {castable_t2} early spell(s) but no "
+                           f"creatures before T3: {hand_str}",
+                           confidence=0.5)]
         if lands >= 2 and castable_t2 >= 1:
             # Warn if most lands are tapped
             tapped_warn = ""
             if tapped_lands >= lands - 1 and tapped_lands > 0:
                 tapped_warn = f" ({tapped_lands} tapped!)"
+            # Warn about color-blocked spells
+            color_warn = ""
+            if color_blocked_spells > 0:
+                missing = set()
+                for obj in nonlands:
+                    card = card_cache.get(obj.grp_id)
+                    if card and card.cmc <= 2:
+                        pips, _ = _parse_mana_pips(card.mana_cost)
+                        for p in pips:
+                            if p not in hand_land_colors_t2:
+                                missing.add(p)
+                if missing:
+                    color_warn = f" (no {'/'.join(sorted(missing))} mana!)"
+            conf = 0.75
+            if tapped_warn or color_warn:
+                conf = 0.55
             return [Advice("heuristic", "medium",
-                           f"Keep — {lands} lands{tapped_warn}, "
+                           f"Keep — {lands} lands{tapped_warn}{color_warn}, "
                            f"{castable_t2} early play(s): {hand_str}",
-                           confidence=0.75 if not tapped_warn else 0.55)]
+                           confidence=conf)]
+        if lands >= 2 and castable_t2 == 0 and color_blocked_spells > 0:
+            missing = set()
+            for obj in nonlands:
+                card = card_cache.get(obj.grp_id)
+                if card and card.cmc <= 2:
+                    pips, _ = _parse_mana_pips(card.mana_cost)
+                    for p in pips:
+                        if p not in hand_land_colors_t2:
+                            missing.add(p)
+            missing_str = "/".join(sorted(missing)) if missing else "?"
+            return [Advice("heuristic", "high",
+                           f"Risky keep — {lands} lands but no {missing_str} mana "
+                           f"for early plays: {hand_str}",
+                           confidence=0.7)]
         if lands >= 2 and castable_t2 == 0:
             return [Advice("heuristic", "medium",
                            f"Risky keep — {lands} lands but no early plays: {hand_str}",
@@ -553,7 +650,20 @@ def _suggest_plays(state: GameState) -> list[Advice]:
     lands_in_hand = [c for c in hand if c.is_land]
 
     # Account for land drop: if we have a land in hand, we'll play it first
-    effective_mana = mana + 1 if lands_in_hand else mana
+    # But tapped lands (Guildgates, temples) don't add mana this turn
+    has_untapped_land_drop = False
+    if lands_in_hand:
+        for land_obj in lands_in_hand:
+            land_card = card_cache.get(land_obj.grp_id)
+            if land_card:
+                first_ab = land_card.abilities[0].lower() if land_card.abilities else ""
+                if "enters tapped" not in first_ab:
+                    has_untapped_land_drop = True
+                    break
+            else:
+                has_untapped_land_drop = True  # assume untapped if unknown
+                break
+    effective_mana = mana + 1 if has_untapped_land_drop else mana
 
     advice = []
 
@@ -563,6 +673,18 @@ def _suggest_plays(state: GameState) -> list[Advice]:
     if cast_penalty:
         advice.append(Advice("heuristic", "high",
                               cast_penalty, confidence=0.85))
+
+    # Detect Seam Rip — on battlefield OR likely in opponent's deck
+    opp_has_seam_rip = any(
+        card_cache.get(o.grp_id) and card_cache.get(o.grp_id).name == "Seam Rip"
+        for o in opp_bf
+        if not o.is_creature
+    )
+    opp_seam_rip_likely = False
+    if not opp_has_seam_rip and _current_opp_deck:
+        sig = getattr(_current_opp_deck, "signal_cards", {})
+        if sig.get("Seam Rip", 0) >= 0.08:
+            opp_seam_rip_likely = True
 
     # Suggest castable spells (biggest first)
     my_creatures = state.my_creatures()
@@ -646,11 +768,11 @@ def _suggest_plays(state: GameState) -> list[Advice]:
             # Check hexproof/shroud — skip permanent, warn+urgent for conditional
             hex_status = _protection_status(threat_card, "hexproof")
             shroud_status = _protection_status(threat_card, "shroud")
-            # Aura-granted hexproof/shroud is always "permanent" from our perspective
+            # Aura-granted hexproof/shroud — check if conditional
             if hex_status == "absent" and "hexproof" in aura_abs:
-                hex_status = "permanent"
+                hex_status = _aura_keyword_status(aura_abs, "hexproof")
             if shroud_status == "absent" and "shroud" in aura_abs:
-                shroud_status = "permanent"
+                shroud_status = _aura_keyword_status(aura_abs, "shroud")
 
             if hex_status == "permanent" or shroud_status == "permanent":
                 continue  # can't target at all
@@ -667,7 +789,7 @@ def _suggest_plays(state: GameState) -> list[Advice]:
             # Check indestructible — permanent vs conditional
             indest_status = _protection_status(threat_card, "indestructible")
             if indest_status == "absent" and "indestructible" in aura_abs:
-                indest_status = "permanent"
+                indest_status = _aura_keyword_status(aura_abs, "indestructible")
 
             if indest_status == "permanent":
                 # Permanent indestructible: exile or bounce only
@@ -691,16 +813,20 @@ def _suggest_plays(state: GameState) -> list[Advice]:
                 continue
             if "ward" in combined_abs:
                 ward_cost = _parse_ward_cost(combined_abs)
-                if ward_cost and ward_cost + valid_removal[0].cmc > effective_mana:
-                    # Ward too expensive — check if we can target an aura on it instead
-                    aura_advice = _suggest_aura_removal(
-                        top_threat, state, removal_cards, mana, untapped_lands,
-                        threat_name, threat_score, threat_reason)
-                    if aura_advice:
-                        advice.append(aura_advice)
-                        break
-                    continue
-                warn += " (has ward)"
+                if ward_cost:
+                    total_ward_cost = ward_cost + valid_removal[0].cmc
+                    if total_ward_cost > mana:
+                        # Ward too expensive even with current mana — try aura removal
+                        aura_advice = _suggest_aura_removal(
+                            top_threat, state, removal_cards, mana, untapped_lands,
+                            threat_name, threat_score, threat_reason)
+                        if aura_advice:
+                            advice.append(aura_advice)
+                            break
+                        continue
+                    warn += f" (ward — costs {total_ward_cost} total)"
+                else:
+                    warn += " (has ward)"
             # Warn about aura-based exile returning if aura is destroyed
             best_removal = valid_removal[0]
             is_aura_rem = _is_aura_removal(best_removal)
@@ -773,12 +899,32 @@ def _suggest_plays(state: GameState) -> list[Advice]:
         # Use non-flash creatures first; only suggest flash if nothing else to play
         active_creatures = non_flash_creatures if non_flash_creatures else creatures
 
+    # Seam Rip warning: if opp has Seam Rip (or likely runs it), warn about CMC ≤ 2
+    if (opp_has_seam_rip or opp_seam_rip_likely) and active_creatures:
+        low_cmc = [c for c in active_creatures if c.cmc <= 2]
+        high_cmc = [c for c in active_creatures if c.cmc >= 3]
+        if low_cmc and high_cmc:
+            if opp_has_seam_rip:
+                advice.append(Advice("heuristic", "medium",
+                                      f"Opponent has Seam Rip — prefer CMC 3+ creatures "
+                                      f"({', '.join(c.name for c in high_cmc[:2])})",
+                                      confidence=0.7))
+            else:
+                advice.append(Advice("heuristic", "low",
+                                      f"Opponent's deck likely runs Seam Rip — "
+                                      f"consider CMC 3+ creatures "
+                                      f"({', '.join(c.name for c in high_cmc[:2])})",
+                                      confidence=0.4))
+
     if active_creatures:
         turn = state.turn_info.turn_number
+        my_creature_count = len(my_creatures)
         if turn <= 4:
             # C1: hand-aware priority — synergy score breaks ties
+            # On empty board, prefer evasion (flyers) to establish clock
             active_creatures.sort(key=lambda c: (
                 -c.cmc if c.cmc <= mana else 99,
+                0 if my_creature_count == 0 and _has_evasion(c) else 1,
                 -hand_synergy_score(c.grp_id, hand),
                 -_card_score(c.name),
                 c.name,
@@ -824,9 +970,13 @@ def _suggest_plays(state: GameState) -> list[Advice]:
             and (non_flash_creatures or non_flash_spells or removal_cards)):
         flash_holdable.sort(key=lambda c: (-c.cmc, -_card_score(c.name)))
         best_flash = flash_holdable[0]
-        # Skip if we already have a "hold" advice from strategy rules
-        if not any("hold" in a.message.lower() and best_flash.name.lower() in a.message.lower()
-                   for a in advice):
+        # Skip if we already recommended casting this card (contradicting advice)
+        already_recommended = any(
+            best_flash.name.lower() in a.message.lower()
+            and ("cast " in a.message.lower() or "hold" in a.message.lower())
+            for a in advice
+        )
+        if not already_recommended:
             advice.append(Advice("heuristic", "low",
                                   f"Hold {best_flash.name} — has flash, cast on opp turn",
                                   confidence=0.5))
@@ -1387,9 +1537,16 @@ def _is_reactive_instant(card) -> bool:
     oracle = (card.oracle_text or "").lower()
     abilities_text = " ".join(a.lower() for a in card.abilities)
     combined = oracle + " " + abilities_text
-    # Fight/bite instants ARE removal, not reactive — they proactively remove threats
+    # Fight/bite instants ARE removal, not reactive
     if "fight" in combined or "deals damage equal" in combined:
         return False
+    # Modal spells ("Choose one/two") with a removal mode are NOT reactive
+    # e.g. Valorous Stance: indestructible OR destroy creature power 4+
+    if "choose one" in combined or "choose two" in combined:
+        _REMOVAL_IN_MODE = ["destroy", "exile", "damage", "return target",
+                            "sacrifice", "fight"]
+        if any(kw in combined for kw in _REMOVAL_IN_MODE):
+            return False
     # Combat tricks / protection: buff own creature
     if _needs_own_creature(card):
         return True
@@ -1409,6 +1566,14 @@ def _has_flash(card) -> bool:
     abilities_text = " ".join(a.lower() for a in card.abilities)
     combined = oracle + " " + abilities_text
     return "flash" in combined
+
+
+def _has_evasion(card) -> bool:
+    """Check if a card has evasion (flying, menace, unblockable, shadow, etc.)."""
+    abilities_text = " ".join(a.lower() for a in card.abilities)
+    return any(kw in abilities_text
+               for kw in ["flying", "menace", "can't be blocked",
+                           "shadow", "fear", "intimidate", "skulk"])
 
 
 import re as _re
@@ -1851,6 +2016,23 @@ def _protection_status(card, keyword: str) -> str:
         if any(m in ab_lower for m in _COND_MARKERS):
             return "conditional"
     # If we get here, keyword is present but not conditional → permanent
+    return "permanent"
+
+
+def _aura_keyword_status(aura_abs: str, keyword: str) -> str:
+    """Check if a keyword granted by an aura is permanent or conditional.
+
+    aura_abs is the concatenated lowercase ability text of auras on a creature.
+    Returns "permanent" or "conditional".
+    """
+    kw = keyword.lower()
+    _COND_MARKERS = ["as long as", "if you", "if an ", "if a ", "if it ",
+                     "if there", "while ", "unless ", kw + " until",
+                     "gains " + kw + " until",
+                     kw + " entered this turn",   # Shardmage's Rescue pattern
+                     "entered this turn"]
+    if any(m in aura_abs for m in _COND_MARKERS):
+        return "conditional"
     return "permanent"
 
 
