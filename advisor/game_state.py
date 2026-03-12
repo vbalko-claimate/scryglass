@@ -30,6 +30,8 @@ class GameStateTracker:
         self._last_logged_turn = 0
         # B1: recent annotations for death-cause resolution
         self._recent_annotations: list[dict] = []
+        # B3b: persistent aura→target attachment map (aura_iid → target_iid)
+        self._attachment_map: dict[int, int] = {}
         # B5: auto-tap solutions keyed by instance_id
         self._last_auto_tap: dict[int, dict] = {}
         # Track instance IDs already seen on battlefield to avoid
@@ -371,6 +373,13 @@ class GameStateTracker:
         if new_annotations:
             self.state.annotations = new_annotations
             self._recent_annotations = new_annotations
+            # B3b: update persistent attachment map from AttachmentCreated annotations
+            for ann in new_annotations:
+                if "AnnotationType_AttachmentCreated" in ann.get("type", []):
+                    aura_iid = ann.get("affectorId")
+                    aids = ann.get("affectedIds", [])
+                    if aura_iid and aids:
+                        self._attachment_map[aura_iid] = aids[0]
 
         # Zones (merge — replace changed zones)
         for z in gsm.get("zones", []):
@@ -480,7 +489,7 @@ class GameStateTracker:
             is_tapped=obj.get("isTapped", False),
             has_summoning_sickness=obj.get("hasSummoningSickness", False),
             object_type=obj.get("type", "GameObjectType_Card").replace("GameObjectType_", ""),
-            attached_to_id=None,  # B3: resolved via annotations, not object field
+            attached_to_id=self._attachment_map.get(iid),  # B3: from AttachmentCreated annotations
             source_grp_id=obj.get("objectSourceGrpId", 0),
             parent_id=obj.get("parentId", 0)
         )
@@ -569,6 +578,8 @@ class GameStateTracker:
                             target_iid = aids[0]
                             break
             if target_iid:
+                # Wire attached_to_id on the aura object so _get_aura_abilities works
+                game_obj.attached_to_id = target_iid
                 target_obj = self.state.objects.get(target_iid)
                 target_card = card_cache.get(target_obj.grp_id) if target_obj else None
                 target_owner = ("me" if target_obj and target_obj.owner_seat_id == my_seat
@@ -928,6 +939,7 @@ class GameStateTracker:
         self._last_auto_tap = {}
         self._seen_on_bf = set()
         self._seen_on_stack = set()
+        self._attachment_map = {}
 
 
 def _safe_int(val) -> int:

@@ -453,19 +453,56 @@ def _check_opponent_lethal(state: GameState) -> list[Advice]:
     if not me:
         return []
 
-    opp_attackers = [c for c in state.opp_creatures()
+    opp_creatures = state.opp_creatures()
+    opp_attackers = [c for c in opp_creatures
                      if c.can_attack and not _has_keyword(c, "Defender")]
+    my_blockers = [c for c in state.my_creatures() if not c.is_tapped]
+    my_flyers = [c for c in my_blockers if _has_keyword(c, "Flying")]
+    advice = []
+
+    # Standard lethal check (total power vs life)
     opp_power = sum(
         c.power * (2 if _has_keyword(c, "double strike") else 1)
         for c in opp_attackers)
+    if opp_power >= me.life_total and len(my_blockers) < len(opp_attackers):
+        advice.append(Advice("heuristic", "critical",
+                             f"DANGER — opponent has {opp_power} power, you have {me.life_total} life",
+                             confidence=0.8))
 
-    if opp_power >= me.life_total:
-        my_blockers = [c for c in state.my_creatures() if not c.is_tapped]
-        if len(my_blockers) < len(opp_attackers):
-            return [Advice("heuristic", "critical",
-                            f"DANGER — opponent has {opp_power} power, you have {me.life_total} life",
-                            confidence=0.8)]
-    return []
+    # Trampler accumulation warning: tramplers on board can't be chumped
+    # Warn when total trample power exceeds our ability to absorb
+    tramplers = [c for c in opp_creatures
+                 if _has_keyword(c, "Trample") and not _has_keyword(c, "Defender")]
+    if len(tramplers) >= 2:
+        trample_power = sum(c.power for c in tramplers)
+        # Blockers absorb toughness points worth of damage, excess tramples through
+        blocker_tough = sum(c.toughness for c in my_blockers
+                            if not _has_keyword(c, "Flying"))  # ground blockers only
+        trample_through = max(0, trample_power - blocker_tough)
+        if trample_through >= me.life_total * 0.5 and trample_through > 0:
+            names = ", ".join(f"{c.name}({c.power}/{c.toughness})"
+                              for c in tramplers[:3])
+            advice.append(Advice("heuristic", "high",
+                                 f"Trample accumulation — {trample_power} power trampling, "
+                                 f"~{trample_through} gets through: {names}",
+                                 confidence=0.7))
+
+    # Haste creature warning: opponent summoned creature this turn that can attack immediately
+    # Ball Lightning pattern: high power + haste (can appear out of nowhere)
+    haste_threats = [c for c in opp_creatures if _has_keyword(c, "Haste")]
+    for ht in haste_threats:
+        card = card_cache.get(ht.grp_id)
+        if card and ht.power >= 4:
+            total_with_haste = ht.power + sum(
+                c.power for c in opp_attackers if c.instance_id != ht.instance_id)
+            if total_with_haste >= me.life_total * 0.6:
+                advice.append(Advice("heuristic", "critical",
+                                     f"HASTE THREAT: {card.name} ({ht.power}/{ht.toughness}) "
+                                     f"can attack this turn — {total_with_haste} total power!",
+                                     confidence=0.85))
+                break
+
+    return advice
 
 
 def _check_mulligan(state: GameState) -> list[Advice]:
