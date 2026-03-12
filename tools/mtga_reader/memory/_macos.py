@@ -99,7 +99,7 @@ class MachMemoryReader(BaseMemoryReader):
             return b"\x00" * size
         return bytes(buf)
 
-    def find_game_assembly_data_base(self) -> int:
+    def find_game_assembly_data_segments(self) -> list[tuple[int, int]]:
         regions = self._find_ga_regions()
         if not regions:
             raise RuntimeError("No GameAssembly.dylib regions found")
@@ -114,9 +114,8 @@ class MachMemoryReader(BaseMemoryReader):
         if not rw_regions:
             raise RuntimeError("No r/w data segments in GameAssembly")
 
-        base = rw_regions[1][0] if len(rw_regions) >= 2 else rw_regions[0][0]
-        print(f"[+] Using data segment: {hex(base)}")
-        return base
+        print(f"[+] Found {len(rw_regions)} writable data segments")
+        return rw_regions
 
     def get_heap_ranges(self) -> list[tuple[int, int]]:
         return [

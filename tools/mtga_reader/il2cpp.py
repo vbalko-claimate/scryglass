@@ -23,27 +23,43 @@ FIELD_SIZE = 0x20  # 32 bytes per field entry
 ARRAY_LENGTH = 0x18
 ARRAY_DATA = 0x20
 
-# Known offsets for s_TypeInfoTable in GameAssembly __DATA
-TYPE_INFO_TABLE_OFFSETS = [0x24C10, 0x24360, 0x24350, 0x24370, 0x24340, 0x24380, 0x243A0]
+# Known offsets for s_TypeInfoTable in GameAssembly __DATA (cached from previous runs)
+_KNOWN_OFFSETS = [0x24C10, 0x24360, 0x24350, 0x24370, 0x24340, 0x24380, 0x243A0]
 
 
 # ── Type info table discovery ─────────────────────────────────────
 
 def find_type_info_table(reader: BaseMemoryReader, data_base: int) -> int:
-    """Find s_TypeInfoTable in GameAssembly __DATA segment."""
-    for offset in TYPE_INFO_TABLE_OFFSETS:
-        table = _validate_table(reader, data_base + offset)
-        if table:
-            print(f"[+] type_info_table at offset {hex(offset)} -> {hex(table)}")
-            return table
+    """Find s_TypeInfoTable by scanning all GameAssembly __DATA segments.
 
-    # Brute force scan first 256KB
-    print("[!] Known offsets failed, brute-force scanning __DATA...")
-    for off in range(0, 0x40000, 8):
-        table = _validate_table(reader, data_base + off, threshold=5)
-        if table:
-            print(f"[+] type_info_table at offset {hex(off)} -> {hex(table)}")
-            return table
+    Auto-discovers the table by scanning every pointer-aligned address in every
+    writable data segment. No hardcoded offsets required (they're just hints
+    for faster first-try).
+    """
+    segments = reader.find_game_assembly_data_segments()
+
+    # Phase 1: try known offsets on each segment (fast)
+    for seg_base, seg_size in segments:
+        for offset in _KNOWN_OFFSETS:
+            if offset >= seg_size:
+                continue
+            table = _validate_table(reader, seg_base + offset)
+            if table:
+                print(f"[+] type_info_table at {hex(seg_base)}+{hex(offset)} -> {hex(table)}")
+                return table
+
+    # Phase 2: full scan of all writable segments (thorough)
+    print("[*] Known offsets failed — scanning all data segments...")
+    for seg_base, seg_size in segments:
+        print(f"    Scanning {hex(seg_base)} ({seg_size // 1024}KB)...")
+        for off in range(0, seg_size, 8):
+            table = _validate_table(reader, seg_base + off, threshold=5)
+            if table:
+                print(f"[+] type_info_table at {hex(seg_base)}+{hex(off)} -> {hex(table)}")
+                # Remember for next time
+                if off not in _KNOWN_OFFSETS:
+                    _KNOWN_OFFSETS.insert(0, off)
+                return table
 
     raise RuntimeError("Could not find type_info_table")
 

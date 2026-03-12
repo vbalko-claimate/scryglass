@@ -36,10 +36,11 @@ def main():
 
     reader = create_reader(pid)
 
-    # 2. Find GameAssembly data segment
-    data_base = reader.find_game_assembly_data_base()
+    # 2. Find GameAssembly data segments
+    segments = reader.find_game_assembly_data_segments()
+    data_base = segments[0][0]
 
-    # 3. Find IL2CPP type table
+    # 3. Find IL2CPP type table (scans all data segments automatically)
     table = find_type_info_table(reader, data_base)
 
     # 4. Discover PAPA class (for verbose field dump)

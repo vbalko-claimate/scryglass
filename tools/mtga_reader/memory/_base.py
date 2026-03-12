@@ -14,10 +14,24 @@ class BaseMemoryReader(ABC):
         """Read raw bytes from target process memory."""
         ...
 
-    @abstractmethod
+    def find_game_assembly_data_segments(self) -> list[tuple[int, int]]:
+        """Find all GameAssembly writable data segments. Returns [(base, size), ...].
+
+        Override this for platforms with multiple data segments (macOS).
+        Default: wraps find_game_assembly_data_base() with estimated size.
+        """
+        base = self.find_game_assembly_data_base()
+        return [(base, 0x100000)]  # 1MB default scan range
+
     def find_game_assembly_data_base(self) -> int:
-        """Find the GameAssembly writable data segment base address."""
-        ...
+        """Find the GameAssembly writable data segment base address.
+
+        Override this for platforms with a single data segment (Windows/Linux).
+        """
+        segs = self.find_game_assembly_data_segments()
+        if not segs:
+            raise RuntimeError("No GameAssembly data segments found")
+        return segs[0][0]
 
     @abstractmethod
     def get_heap_ranges(self) -> list[tuple[int, int]]:
