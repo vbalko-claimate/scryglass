@@ -2,17 +2,18 @@
 from __future__ import annotations
 
 import asyncio
+import copy
 import json
 import logging
 import sys
 from dataclasses import asdict
 from pathlib import Path
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, PlainTextResponse
 
 from .advisor_engine import AdvisorEngine, generate_match_summary
 from .database import (
@@ -28,6 +29,7 @@ from .game_state import GameStateTracker
 from .llm_advisor import get_backend, set_backend
 from .log_watcher import LogWatcher
 from .models import Advice, GameState
+from .reporting import build_match_report, get_latest_completed_match_id
 from .strategy import (
     RULES_DIR, USER_RULES_DIR, META_DECKS_PATH,
     load_meta_decks, load_strategy, _load_strategy_file,
@@ -174,12 +176,13 @@ def advice_to_list(advice_list: list[Advice]) -> list[dict]:
 
 def on_state_change(state: GameState):
     """Callback when game state changes — run advice immediately, broadcast async."""
+    state_snapshot = copy.deepcopy(state)
     # Broadcast state update (fire and forget)
     asyncio.get_event_loop().create_task(
-        broadcast({"type": "state_update", "data": state_to_dict(state)})
+        broadcast({"type": "state_update", "data": state_to_dict(state_snapshot)})
     )
     # Run advisor synchronously so advice is ready before next message
-    asyncio.get_event_loop().create_task(_run_advice(state))
+    asyncio.get_event_loop().create_task(_run_advice(state_snapshot))
 
 
 async def _run_advice(state: GameState):
@@ -189,8 +192,9 @@ async def _run_advice(state: GameState):
 
 def on_decision_point(state: GameState, request_type: str):
     """Callback when a decision point is reached — advice runs inline."""
+    state_snapshot = copy.deepcopy(state)
     asyncio.get_event_loop().create_task(
-        _handle_decision(state, request_type)
+        _handle_decision(state_snapshot, request_type)
     )
 
 
@@ -232,6 +236,13 @@ def on_threat_update(threats: list[dict]):
     """Callback when threat assessments change."""
     asyncio.get_event_loop().create_task(
         broadcast({"type": "threat_assessment", "data": threats})
+    )
+
+
+def on_llm_status(status: dict):
+    """Callback when LLM pending/ready state changes."""
+    asyncio.get_event_loop().create_task(
+        broadcast({"type": "llm_status", "data": status})
     )
 
 
@@ -331,6 +342,7 @@ async def startup():
     advisor.on_advice = on_advice
     advisor.on_strategy_info = on_strategy_info
     advisor.on_threat_update = on_threat_update
+    advisor.on_llm_status = on_llm_status
     tracker.on_my_card_played = advisor.check_card_played
     tracker.on_stack_observed = advisor.on_stack_observed
 
@@ -388,6 +400,27 @@ async def websocket_endpoint(ws: WebSocket):
             "data": advisor.active_threats,
         }, default=str))
 
+    await ws.send_text(json.dumps({
+        "type": "backend_changed",
+        "data": {"backend": get_backend()},
+    }, default=str))
+    await ws.send_text(json.dumps({
+        "type": "llm_auto_changed",
+        "data": {
+            "enabled": advisor.auto_llm_enabled,
+            "mode": advisor.advice_mode,
+            "scope": advisor.llm_scope,
+        },
+    }, default=str))
+    await ws.send_text(json.dumps({
+        "type": "strategy_info",
+        "data": advisor.current_strategy_info(),
+    }, default=str))
+    await ws.send_text(json.dumps({
+        "type": "llm_status",
+        "data": advisor.llm_status,
+    }, default=str))
+
     try:
         while True:
             data = await ws.receive_text()
@@ -409,12 +442,23 @@ async def websocket_endpoint(ws: WebSocket):
                         "data": advice_to_list([summary]),
                     }, default=str))
 
+            elif msg.get("action") == "toggle_llm":
+                advisor.set_auto_llm(bool(msg.get("enabled")))
+                await broadcast({
+                    "type": "llm_auto_changed",
+                    "data": {
+                        "enabled": advisor.auto_llm_enabled,
+                        "mode": advisor.advice_mode,
+                        "scope": advisor.llm_scope,
+                    },
+                })
+
             elif msg.get("action") == "set_backend":
                 set_backend(msg.get("backend", "claude_cli"))
-                await ws.send_text(json.dumps({
+                await broadcast({
                     "type": "backend_changed",
                     "data": {"backend": get_backend()},
-                }, default=str))
+                })
 
     except WebSocketDisconnect:
         clients.remove(ws)
@@ -433,7 +477,13 @@ async def current_state():
 
 @app.get("/api/backend")
 async def llm_backend():
-    return {"backend": get_backend(), "available": ["claude_cli", "ollama", "anthropic_api"]}
+    return {
+        "backend": get_backend(),
+        "available": ["claude_cli", "ollama", "anthropic_api"],
+        "auto_llm": advisor.auto_llm_enabled,
+        "advice_mode": advisor.advice_mode,
+        "llm_scope": advisor.llm_scope,
+    }
 
 
 @app.get("/api/debug/test-threats")
@@ -592,6 +642,40 @@ async def match_summary_endpoint(match_id: str):
     """Generate or return cached LLM summary for a historical match."""
     summary = await generate_match_summary(match_id)
     return {"match_id": match_id, "summary": summary}
+
+
+@app.get("/api/match-report/latest")
+async def match_report_latest_endpoint():
+    """Download a deterministic report for the latest completed match."""
+    match_id = get_latest_completed_match_id()
+    if not match_id:
+        raise HTTPException(status_code=404, detail="No completed match found")
+    filename, report = build_match_report(match_id)
+    return PlainTextResponse(
+        report,
+        media_type="text/markdown; charset=utf-8",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "X-Match-Id": match_id,
+        },
+    )
+
+
+@app.get("/api/match-report/{match_id}")
+async def match_report_endpoint(match_id: str):
+    """Download a deterministic report for a specific match."""
+    try:
+        filename, report = build_match_report(match_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    return PlainTextResponse(
+        report,
+        media_type="text/markdown; charset=utf-8",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "X-Match-Id": match_id,
+        },
+    )
 
 
 @app.get("/api/match-timeline/{match_id}")
@@ -792,4 +876,51 @@ async def manage_sync_meta():
             "returncode": proc.returncode,
             "summary": summary_lines,
             "output": output[-3000:],  # last 3k chars
+        }
+
+
+_collection_refresh_lock = asyncio.Lock()
+
+
+@app.post("/api/manage/refresh-collection")
+async def manage_refresh_collection():
+    """Refresh local collection snapshot via the sudo-approved memory reader wrapper."""
+    if _collection_refresh_lock.locked():
+        return JSONResponse({"error": "Collection refresh already in progress"}, status_code=409)
+
+    async with _collection_refresh_lock:
+        script = Path(__file__).parent.parent / "tools" / "refresh_collection_snapshot.py"
+        proc = await asyncio.create_subprocess_exec(
+            sys.executable, str(script),
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+            cwd=str(script.parent.parent),
+        )
+        stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=180)
+        out_text = stdout.decode("utf-8", errors="replace") if stdout else ""
+        err_text = stderr.decode("utf-8", errors="replace") if stderr else ""
+
+        payload: dict | None = None
+        try:
+            payload = json.loads(out_text) if out_text.strip() else None
+        except json.JSONDecodeError:
+            payload = None
+
+        if proc.returncode != 0:
+            return JSONResponse(
+                {
+                    "status": "error",
+                    "returncode": proc.returncode,
+                    "detail": payload or out_text[-2000:] or err_text[-2000:] or "Collection refresh failed",
+                    "stdout": out_text[-2000:],
+                    "stderr": err_text[-2000:],
+                },
+                status_code=500,
+            )
+
+        return {
+            "status": "ok",
+            "returncode": proc.returncode,
+            "summary": payload or {},
+            "stderr": err_text[-2000:],
         }

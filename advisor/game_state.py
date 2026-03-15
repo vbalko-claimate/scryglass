@@ -40,6 +40,8 @@ class GameStateTracker:
         # the old_obj needed for entering-battlefield detection).
         self._seen_on_bf: set[int] = set()
         self._seen_on_stack: set[int] = set()
+        self._pending_connect_context: dict[str, object] = {}
+        self._last_decision_snapshot_key: tuple[int, str] = (-1, "")
 
     @property
     def match_active(self) -> bool:
@@ -73,18 +75,11 @@ class GameStateTracker:
             config = room_info.get("gameRoomConfig", {})
             match_id = config.get("matchId", "")
             players = room_info.get("players", [])
+            reserved = config.get("reservedPlayers", [])
+            pending_connect = dict(self._pending_connect_context)
 
-            # Find our seat and opponent
-            my_seat = 0
-            opp_seat = 0
-            opp_name = ""
-            for p in config.get("reservedPlayers", []):
-                if p.get("userId") == self.state.match_info.match_id:
-                    continue
-                # We detect our seat from ConnectResp, but set opp info here
-                for pl in players:
-                    if pl.get("userId") != p.get("userId"):
-                        continue
+            if match_id and self.state.match_info.match_id and match_id != self.state.match_info.match_id:
+                self.reset()
 
             # Store player names for later
             self._player_names = {
@@ -93,20 +88,35 @@ class GameStateTracker:
             }
 
             # Find our account name and opponent from reservedPlayers (has userId)
-            reserved = config.get("reservedPlayers", [])
             self._all_reserved = reserved
             my_user_id = getattr(self, "_my_user_id", None)
+            my_seat = 0
+            opp_seat = 0
 
             # Extract opponent name directly from reservedPlayers
             self._opp_name_from_room = ""
             self._my_account_name = ""
             for p in reserved:
+                seat = p.get("systemSeatId", 0)
                 if my_user_id and p.get("userId") == my_user_id:
                     self._my_account_name = p.get("playerName", "")
+                    my_seat = seat
                 elif my_user_id and p.get("userId") != my_user_id:
                     self._opp_name_from_room = p.get("playerName", "")
+                    opp_seat = seat
+
+            if not my_seat:
+                my_seat = int(pending_connect.get("my_seat_id", 0) or 0)
+            if my_seat and not opp_seat:
+                opp_seat = 1 if my_seat == 2 else 2
 
             self.state.match_info.match_id = match_id
+            if my_seat:
+                self.state.my_seat_id = my_seat
+            if opp_seat:
+                self.state.match_info.opponent_seat_id = opp_seat
+            if pending_connect.get("my_deck"):
+                self.state.my_deck = list(pending_connect.get("my_deck", []))
             self._match_active = True
             log.info("Match started: %s", match_id)
 
@@ -165,6 +175,7 @@ class GameStateTracker:
             "GREMessageType_ChooseStartingPlayerReq",
         ):
             self.state.pending_request = msg_type
+            self._save_decision_context(msg_type)
             if self.on_decision_point:
                 self.on_decision_point(self.state, msg_type)
         elif msg_type == "GREMessageType_IntermissionReq":
@@ -179,6 +190,10 @@ class GameStateTracker:
 
         deck_msg = resp.get("deckMessage", {})
         self.state.my_deck = deck_msg.get("deckCards", [])
+        self._pending_connect_context = {
+            "my_seat_id": self.state.my_seat_id,
+            "my_deck": list(self.state.my_deck),
+        }
 
         # Set opponent seat
         opp_seat = 1 if self.state.my_seat_id == 2 else 2
@@ -256,6 +271,10 @@ class GameStateTracker:
             self._apply_diff_state(gsm)
 
         self.state.game_state_id = state_id
+        # A new game state invalidates the previous explicit decision request.
+        # Decision-point handlers already receive a frozen snapshot, so clearing
+        # here prevents stale mulligan/attack prompts from leaking forward.
+        self.state.pending_request = None
 
         # Notify listener
         if self.on_state_change:
@@ -351,7 +370,7 @@ class GameStateTracker:
                 if new_life is not None and new_life != old_life:
                     mid = self.state.match_info.match_id
                     if mid:
-                        who = "me" if seat == self.state.my_seat_id else "opp"
+                        who = self._seat_role(seat)
                         save_match_event(mid, "life_change",
                             game_number=self.state.match_info.game_number,
                             turn_number=self.state.turn_info.turn_number,
@@ -435,23 +454,7 @@ class GameStateTracker:
                 lands = self.state.my_lands()
                 me = self.state.my_player()
                 opp = self.state.opp_player()
-                # B4: board state snapshot
-                my_creatures = []
-                for o in self.state.my_creatures():
-                    c = card_cache.get(o.grp_id)
-                    my_creatures.append({
-                        "name": c.name if c else o.name,
-                        "power": o.power, "toughness": o.toughness,
-                        "tapped": o.is_tapped,
-                    })
-                opp_creatures = []
-                for o in self.state.opp_creatures():
-                    c = card_cache.get(o.grp_id)
-                    opp_creatures.append({
-                        "name": c.name if c else o.name,
-                        "power": o.power, "toughness": o.toughness,
-                        "tapped": o.is_tapped,
-                    })
+                snapshot = self._build_state_snapshot(include_actions=False)
                 save_match_event(
                     self.state.match_info.match_id, "turn_start",
                     game_number=self.state.match_info.game_number,
@@ -459,8 +462,12 @@ class GameStateTracker:
                     phase="turn_start",
                     data={"available_mana": len(lands),
                           "total_lands": len(lands),
-                          "my_creatures": my_creatures,
-                          "opp_creatures": opp_creatures,
+                          "my_creatures": snapshot["my_creatures"],
+                          "opp_creatures": snapshot["opp_creatures"],
+                          "my_battlefield": snapshot["my_battlefield"],
+                          "opp_battlefield": snapshot["opp_battlefield"],
+                          "my_hand": snapshot["my_hand"],
+                          "stack": snapshot["stack"],
                           "my_hand_size": len(self.state.my_hand()),
                           "my_life": me.life_total if me else 0,
                           "opp_life": opp.life_total if opp else 0})
@@ -533,6 +540,29 @@ class GameStateTracker:
                 data={"name": card.name, "grp_id": grp_id,
                       "card_types": card.card_types,
                       "colors": card.colors})
+
+        if (on_battlefield and was_on_bf and old_obj and card
+                and self.state.match_info.match_id):
+            stats_changed = (
+                old_obj.power != game_obj.power
+                or old_obj.toughness != game_obj.toughness
+            )
+            if stats_changed:
+                save_match_event(
+                    self.state.match_info.match_id, "permanent_stats_changed",
+                    game_number=self.state.match_info.game_number,
+                    turn_number=self.state.turn_info.turn_number,
+                    phase=self.state.turn_info.phase,
+                    data={
+                        "name": card.name,
+                        "grp_id": grp_id,
+                        "controller": self._seat_role(game_obj.controller_seat_id),
+                        "owner": self._seat_role(owner),
+                        "old_power": old_obj.power,
+                        "new_power": game_obj.power,
+                        "old_toughness": old_obj.toughness,
+                        "new_toughness": game_obj.toughness,
+                    })
 
         # Set attack/block state from game object data
         game_obj.attack_state = obj.get("attackState")
@@ -644,17 +674,19 @@ class GameStateTracker:
                 "ZoneType_Graveyard": "discarded",
                 "ZoneType_Stack": None,      # being cast — ignore
                 "ZoneType_Battlefield": None, # played — ignore
-            }.get(dest_type_h, "removed")
+            }.get(dest_type_h)
             if dest_label_h:
                 caused_by_h = self._resolve_removal_cause(iid)
+                if not caused_by_h or caused_by_h.get("seat") != opp_seat:
+                    caused_by_h = None
+            if dest_label_h and caused_by_h:
                 event_data_h: dict = {
                     "name": card.name, "grp_id": grp_id,
                     "destination": dest_label_h,
                     "card_types": card.card_types,
                 }
-                if caused_by_h:
-                    event_data_h["caused_by"] = caused_by_h["name"]
-                    event_data_h["caused_by_type"] = caused_by_h["type"]
+                event_data_h["caused_by"] = caused_by_h["name"]
+                event_data_h["caused_by_type"] = caused_by_h["type"]
                 save_match_event(
                     self.state.match_info.match_id, "hand_disrupted",
                     game_number=self.state.match_info.game_number,
@@ -677,7 +709,7 @@ class GameStateTracker:
                 "ZoneType_Library": "tucked",
             }.get(dest_type, "removed")
 
-            who = "me" if owner == my_seat else "opp"
+            who = self._seat_role(owner)
             event_data = {
                 "name": card.name, "grp_id": grp_id,
                 "owner": who,
@@ -963,8 +995,133 @@ class GameStateTracker:
             if (any("DamageDealt" in t for t in ann_types)
                     and cause_type == "spell"):
                 cause_type = "combat"
-            return {"name": source_name, "type": cause_type}
+            return {
+                "name": source_name,
+                "type": cause_type,
+                "seat": source_obj.controller_seat_id if source_obj else 0,
+            }
         return None
+
+    def _seat_role(self, seat: int) -> str:
+        if seat and seat == self.state.my_seat_id:
+            return "me"
+        if seat and seat == self.state.match_info.opponent_seat_id:
+            return "opp"
+        return "unknown"
+
+    def _snapshot_battlefield(self, seat: int) -> list[dict]:
+        cards: list[dict] = []
+        for obj in self.state.objects_in_zone("ZoneType_Battlefield"):
+            if obj.controller_seat_id != seat:
+                continue
+            card = card_cache.get(obj.grp_id)
+            card_types = card.card_types if card else obj.card_types
+            cards.append({
+                "name": card.name if card else obj.name,
+                "grp_id": obj.grp_id,
+                "types": card_types,
+                "subtypes": card.subtypes if card else obj.subtypes,
+                "power": obj.power,
+                "toughness": obj.toughness,
+                "tapped": obj.is_tapped,
+                "summoning_sick": obj.has_summoning_sickness,
+            })
+        cards.sort(key=lambda c: (0 if "Creature" in c["types"] else 1, c["name"]))
+        return cards
+
+    def _snapshot_hand(self, seat: int) -> list[dict]:
+        cards: list[dict] = []
+        for obj in self.state.objects_in_zone("ZoneType_Hand", seat):
+            card = card_cache.get(obj.grp_id)
+            cards.append({
+                "name": card.name if card else obj.name,
+                "grp_id": obj.grp_id,
+                "cmc": card.cmc if card else 0,
+                "types": card.card_types if card else obj.card_types,
+                "mana_cost": card.mana_cost if card else "",
+            })
+        return cards
+
+    def _snapshot_actions(self, seat: int) -> list[dict]:
+        actions: list[dict] = []
+        for action in self.state.available_actions:
+            if action.seat_id != seat:
+                continue
+            obj = self.state.objects.get(action.instance_id or 0)
+            card = card_cache.get(obj.grp_id) if obj else (
+                card_cache.get(action.grp_id) if action.grp_id else None
+            )
+            actions.append({
+                "action_type": action.action_type,
+                "name": card.name if card else (obj.name if obj else ""),
+                "grp_id": action.grp_id or (obj.grp_id if obj else 0),
+                "instance_id": action.instance_id or 0,
+                "ability_grp_id": action.ability_grp_id or 0,
+            })
+        return actions
+
+    def _build_state_snapshot(self, include_actions: bool = True) -> dict:
+        my_seat = self.state.my_seat_id
+        opp_seat = self.state.match_info.opponent_seat_id
+        me = self.state.my_player()
+        opp = self.state.opp_player()
+        my_battlefield = self._snapshot_battlefield(my_seat) if my_seat else []
+        opp_battlefield = self._snapshot_battlefield(opp_seat) if opp_seat else []
+        stack_cards = []
+        for obj in self.state.stack():
+            card = card_cache.get(obj.grp_id)
+            stack_cards.append({
+                "name": card.name if card else obj.name,
+                "grp_id": obj.grp_id,
+                "controller": self._seat_role(obj.controller_seat_id),
+                "types": card.card_types if card else obj.card_types,
+            })
+
+        snapshot = {
+            "my_life": me.life_total if me else None,
+            "opp_life": opp.life_total if opp else None,
+            "my_hand_size": len(self.state.my_hand()),
+            "opp_hand_size": len(self.state.objects_in_zone("ZoneType_Hand", opp_seat)),
+            "my_battlefield": my_battlefield,
+            "opp_battlefield": opp_battlefield,
+            "my_creatures": [c for c in my_battlefield if "Creature" in c["types"]],
+            "opp_creatures": [c for c in opp_battlefield if "Creature" in c["types"]],
+            "my_hand": self._snapshot_hand(my_seat) if my_seat else [],
+            "stack": stack_cards,
+        }
+        if include_actions:
+            snapshot["legal_actions"] = self._snapshot_actions(my_seat) if my_seat else []
+        return snapshot
+
+    def _save_decision_context(self, request_type: str):
+        mid = self.state.match_info.match_id
+        if not mid:
+            return
+        key = (self.state.game_state_id, request_type)
+        if key == self._last_decision_snapshot_key:
+            return
+        self._last_decision_snapshot_key = key
+        save_match_event(
+            mid, "decision_context",
+            game_number=self.state.match_info.game_number,
+            turn_number=self.state.turn_info.turn_number,
+            phase=self.state.turn_info.phase,
+            data={
+                "request_type": request_type,
+                "phase_display": self.state.turn_info.phase_display,
+                "game_state_id": self.state.game_state_id,
+                "my_seat_id": self.state.my_seat_id,
+                "opp_seat_id": self.state.match_info.opponent_seat_id,
+                "active_player": self.state.turn_info.active_player,
+                "priority_player": self.state.turn_info.priority_player,
+                "decision_player": self.state.turn_info.decision_player,
+                "available_action_count": len(self.state.available_actions),
+                "my_action_count": len([
+                    a for a in self.state.available_actions
+                    if a.seat_id == self.state.my_seat_id
+                ]),
+                **self._build_state_snapshot(include_actions=True),
+            })
 
     def reset(self):
         """Reset state for a new match."""
@@ -972,10 +1129,12 @@ class GameStateTracker:
         self._match_active = False
         self._last_logged_turn = 0
         self._recent_annotations = []
+        self._attachment_map = {}
         self._last_auto_tap = {}
         self._seen_on_bf = set()
         self._seen_on_stack = set()
-        self._attachment_map = {}
+        self._pending_connect_context = {}
+        self._last_decision_snapshot_key = (-1, "")
 
 
 def _safe_int(val) -> int:

@@ -35,6 +35,31 @@ header a {
 header a:hover { color: #fff; }
 .nav-links { margin-left: auto; display: flex; gap: 16px; }
 
+.utility-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: #16213e;
+    border-radius: 8px;
+    border: 1px solid #0f3460;
+}
+.utility-bar .label {
+    font-size: 13px;
+    color: #e0e0e0;
+    font-weight: 600;
+}
+.utility-bar .hint {
+    font-size: 12px;
+    color: #888;
+}
+.utility-bar .status {
+    font-size: 12px;
+    color: #90caf9;
+    margin-left: auto;
+    text-align: right;
+}
+
 /* Tabs */
 .tabs {
     display: flex;
@@ -342,6 +367,13 @@ tr:hover { background: rgba(255,255,255,0.03); }
                 <a href="/stats">Stats</a>
             </div>
         </header>
+
+        <div class="utility-bar">
+            <div class="label">Collection</div>
+            <button id="refresh-collection-btn" class="btn btn-primary" onclick="refreshCollection()">Refresh from MTGA Memory</button>
+            <div class="hint">Requires the sudo wrapper setup from <code>docs/collection_refresh_setup.md</code>.</div>
+            <div id="refresh-collection-status" class="status">Idle</div>
+        </div>
 
         <div class="tabs">
             <button class="tab active" onclick="switchTab('strategies')">Strategies</button>
@@ -788,6 +820,49 @@ async function syncMeta() {
 
     btn.disabled = false;
     btn.textContent = 'Sync from MTGGoldfish';
+}
+
+// ── Collection Refresh ──
+async function refreshCollection() {
+    const btn = document.getElementById('refresh-collection-btn');
+    const status = document.getElementById('refresh-collection-status');
+    btn.disabled = true;
+    btn.textContent = 'Refreshing...';
+    status.textContent = 'Running memory reader wrapper...';
+    status.style.color = '#90caf9';
+
+    try {
+        const res = await fetch('/api/manage/refresh-collection', { method: 'POST' });
+        const data = await res.json();
+
+        if (res.status === 409) {
+            status.textContent = 'Refresh already running';
+            status.style.color = '#ffa500';
+            showToast('Collection refresh already running', true);
+        } else if (!res.ok || data.status !== 'ok') {
+            const detail = data.detail || data.stderr || 'Collection refresh failed';
+            status.textContent = typeof detail === 'string' ? detail.slice(0, 140) : 'Collection refresh failed';
+            status.style.color = '#f44336';
+            showToast('Collection refresh failed', true);
+            console.error('Collection refresh error:', data);
+        } else {
+            const summary = data.summary || {};
+            const inv = summary.inventory || {};
+            const wc = inv.wildcards
+                ? `${inv.wildcards.common}C/${inv.wildcards.uncommon}U/${inv.wildcards.rare}R/${inv.wildcards.mythic}M`
+                : 'WC unknown';
+            status.textContent = `${summary.unique_cards || '?'} cards synced · ${wc}`;
+            status.style.color = '#4caf50';
+            showToast('Collection refreshed');
+        }
+    } catch (e) {
+        status.textContent = `Error: ${e.message}`;
+        status.style.color = '#f44336';
+        showToast('Collection refresh error', true);
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'Refresh from MTGA Memory';
 }
 
 // ── Decks ──

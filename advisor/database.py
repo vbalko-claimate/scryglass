@@ -113,6 +113,30 @@ def init_db():
             timestamp TEXT DEFAULT CURRENT_TIMESTAMP
         );
 
+        CREATE TABLE IF NOT EXISTS llm_calls (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            match_id TEXT DEFAULT '',
+            game_number INTEGER DEFAULT 1,
+            turn_number INTEGER DEFAULT 0,
+            phase TEXT DEFAULT '',
+            request_type TEXT DEFAULT '',
+            source TEXT DEFAULT '',
+            backend TEXT DEFAULT '',
+            advice_mode TEXT DEFAULT '',
+            llm_scope TEXT DEFAULT '',
+            state_id INTEGER DEFAULT 0,
+            accepted INTEGER DEFAULT 1,
+            message TEXT DEFAULT '',
+            duration_ms INTEGER,
+            total_cost_usd REAL,
+            input_tokens INTEGER,
+            output_tokens INTEGER,
+            cache_creation_input_tokens INTEGER,
+            cache_read_input_tokens INTEGER,
+            session_id TEXT DEFAULT '',
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        );
+
         CREATE TABLE IF NOT EXISTS meta (
             key TEXT PRIMARY KEY,
             value TEXT,
@@ -121,6 +145,7 @@ def init_db():
 
         CREATE INDEX IF NOT EXISTS idx_match_events_match ON match_events(match_id);
         CREATE INDEX IF NOT EXISTS idx_advice_log_match ON advice_log(match_id);
+        CREATE INDEX IF NOT EXISTS idx_llm_calls_match ON llm_calls(match_id);
         CREATE INDEX IF NOT EXISTS idx_cards_name ON cards(name);
     """)
     # Add deck name columns (migration for existing DBs)
@@ -393,6 +418,8 @@ def clear_match_events():
     # Keep advice_compliance — can't be regenerated from log replay
     conn.execute(
         "DELETE FROM match_events WHERE event_type != 'advice_compliance'")
+    conn.execute("DELETE FROM advice_log")
+    conn.execute("DELETE FROM meta WHERE key LIKE 'summary_%'")
     conn.commit()
     conn.close()
 
@@ -400,15 +427,66 @@ def clear_match_events():
 def save_advice(match_id: str, advice_data: dict):
     """Log an advice entry."""
     conn = get_connection()
+    params = (
+        match_id,
+        advice_data.get("game_number", 1),
+        advice_data.get("turn_number", 0),
+        advice_data.get("phase", ""),
+        advice_data["source"],
+        advice_data.get("priority", "medium"),
+        advice_data["message"],
+    )
+    existing = conn.execute(
+        "SELECT 1 FROM advice_log WHERE match_id = ? AND game_number = ? "
+        "AND turn_number = ? AND phase = ? AND source = ? AND priority = ? "
+        "AND message = ? ORDER BY id DESC LIMIT 1",
+        params,
+    ).fetchone()
+    if existing:
+        conn.close()
+        return
     conn.execute(
         "INSERT INTO advice_log (match_id, game_number, turn_number, phase, "
         "source, priority, message, details, game_state_summary) "
         "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-        (match_id, advice_data.get("game_number", 1),
-         advice_data.get("turn_number", 0), advice_data.get("phase", ""),
-         advice_data["source"], advice_data.get("priority", "medium"),
-         advice_data["message"], advice_data.get("details", ""),
+        (params[0], params[1], params[2], params[3],
+         params[4], params[5], params[6], advice_data.get("details", ""),
          json.dumps(advice_data.get("game_state_summary", {}))),
+    )
+    conn.commit()
+    conn.close()
+
+
+def save_llm_call(call_data: dict):
+    """Persist LLM latency/token usage independently of replayed advice logs."""
+    conn = get_connection()
+    conn.execute(
+        "INSERT INTO llm_calls (match_id, game_number, turn_number, phase, request_type, "
+        "source, backend, advice_mode, llm_scope, state_id, accepted, message, duration_ms, "
+        "total_cost_usd, input_tokens, output_tokens, cache_creation_input_tokens, "
+        "cache_read_input_tokens, session_id) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        (
+            call_data.get("match_id", ""),
+            call_data.get("game_number", 1),
+            call_data.get("turn_number", 0),
+            call_data.get("phase", ""),
+            call_data.get("request_type", ""),
+            call_data.get("source", ""),
+            call_data.get("backend", ""),
+            call_data.get("advice_mode", ""),
+            call_data.get("llm_scope", ""),
+            call_data.get("state_id", 0),
+            1 if call_data.get("accepted", True) else 0,
+            call_data.get("message", ""),
+            call_data.get("duration_ms"),
+            call_data.get("total_cost_usd"),
+            call_data.get("input_tokens"),
+            call_data.get("output_tokens"),
+            call_data.get("cache_creation_input_tokens"),
+            call_data.get("cache_read_input_tokens"),
+            call_data.get("session_id", ""),
+        ),
     )
     conn.commit()
     conn.close()
@@ -425,6 +503,9 @@ def get_match_history(limit: int = 20) -> list[dict]:
         (limit,),
     )
     rows = cur.fetchall()
+    if not rows:
+        conn.close()
+        return []
     # Check which matches have cached summaries
     match_ids = [r[0] for r in rows]
     placeholders = ",".join("?" for _ in match_ids)
@@ -1104,7 +1185,7 @@ def get_match_data_for_summary(match_id: str) -> dict:
     # Advice log
     cur.execute(
         "SELECT turn_number, phase, source, priority, message "
-        "FROM advice_log WHERE match_id = ? ORDER BY id",
+        "FROM advice_log WHERE match_id = ? AND source != 'llm_summary' ORDER BY id",
         (match_id,))
     advice = [
         {"turn": r[0], "phase": r[1], "source": r[2],
@@ -1198,6 +1279,8 @@ def get_match_timeline(match_id: str) -> dict:
                 "attacks": [], "opp_attacks": [],
                 "removals": [], "life_changes": [],
                 "blocks": [], "enchantments": [],
+                "permanent_changes": [],
+                "decision_points": [],
                 "board_snapshot": None,
                 "compliance": None,
             }
@@ -1211,6 +1294,10 @@ def get_match_timeline(match_id: str) -> dict:
                 t["board_snapshot"] = {
                     "my_creatures": data.get("my_creatures", []),
                     "opp_creatures": data.get("opp_creatures", []),
+                    "my_battlefield": data.get("my_battlefield", []),
+                    "opp_battlefield": data.get("opp_battlefield", []),
+                    "my_hand": data.get("my_hand", []),
+                    "stack": data.get("stack", []),
                     "my_hand_size": data.get("my_hand_size", 0),
                     "my_life": data.get("my_life", 0),
                     "opp_life": data.get("opp_life", 0),
@@ -1275,6 +1362,28 @@ def get_match_timeline(match_id: str) -> dict:
                 "aura": data.get("aura", "?"),
                 "target": data.get("target", "?"),
                 "target_owner": data.get("target_owner", "?"),
+            })
+        elif etype == "permanent_stats_changed":
+            t["permanent_changes"].append({
+                "name": data.get("name", "?"),
+                "controller": data.get("controller", "?"),
+                "owner": data.get("owner", "?"),
+                "old_power": data.get("old_power", 0),
+                "new_power": data.get("new_power", 0),
+                "old_toughness": data.get("old_toughness", 0),
+                "new_toughness": data.get("new_toughness", 0),
+            })
+        elif etype == "decision_context":
+            t["decision_points"].append({
+                "request_type": data.get("request_type", ""),
+                "phase_display": data.get("phase_display", ""),
+                "my_life": data.get("my_life"),
+                "opp_life": data.get("opp_life"),
+                "my_hand": data.get("my_hand", []),
+                "my_battlefield": data.get("my_battlefield", []),
+                "opp_battlefield": data.get("opp_battlefield", []),
+                "stack": data.get("stack", []),
+                "legal_actions": data.get("legal_actions", []),
             })
         elif etype == "advice_compliance":
             t["compliance"] = {
