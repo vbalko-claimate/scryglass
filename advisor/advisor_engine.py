@@ -96,7 +96,7 @@ def _threat_role(card: CardInfo) -> str:
         return "kill-piece"
     if category == "engine":
         return "engine"
-    if "destroy target" in text or "exile target" in text or "counter target" in text:
+    if ("destroy target" in text or "exile target" in text or "counter target" in text) and "dies" not in text.lower():
         return "interaction"
     return "body"
 
