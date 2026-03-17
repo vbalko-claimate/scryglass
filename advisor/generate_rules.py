@@ -5,11 +5,13 @@ a deck_strategy.json with template rules + default weights.
 
 Usage:
     uv run python -m advisor.generate_rules --deck DECK.txt --name "Deck Name"
+    uv run python -m advisor.generate_rules --deck DECK.txt --name "Deck Name" --llm
     uv run python -m advisor.generate_rules --deck DECK.txt --name "Deck Name" --dry-run
 """
 from __future__ import annotations
 
 import argparse
+import asyncio
 import json
 import re
 import sys
@@ -442,15 +444,131 @@ def generate_strategy(deck_path: Path, deck_name: str) -> dict:
     }
 
 
+CONTRACT_PATH = RULES_DIR / "rule_contract.md"
+
+
+def _build_enrich_prompt(deck_path: Path, deck_name: str, strategy: dict) -> str:
+    existing_ids = [r["id"] for r in strategy["rules"]]
+    existing_summary = "\n".join(
+        f"  - [{r['layer']}] {r['id']}: {r['action']}" for r in strategy["rules"]
+    )
+    return "\n".join([
+        "You are an expert MTG Arena competitive coach.",
+        f"You are enriching the strategy for '{deck_name}' ({strategy['archetype']}).",
+        "",
+        f"Deck list: {deck_path}",
+        f"Rule contract: {CONTRACT_PATH}",
+        "",
+        "The deck already has these mechanically-generated rules:",
+        existing_summary,
+        "",
+        "Your job: ADD 8-15 NEW rules that the mechanical generator CANNOT create.",
+        "Focus on:",
+        "1. **Specific card sequencing** — which card to play before which and WHY",
+        "2. **Non-obvious synergies** — interactions the mechanical analyzer misses",
+        "3. **Matchup-specific tactics** — how to play vs aggro/control/combo specifically",
+        "4. **Timing decisions** — when to hold vs deploy, when to trade vs race",
+        "5. **Win condition protection** — how to play around specific removal/wipes",
+        "",
+        "IMPORTANT:",
+        f"- Do NOT duplicate existing rule IDs: {existing_ids}",
+        "- Follow the rule contract format EXACTLY",
+        "- Use layers: card_synergy, threat_response, situation, meta_gameplan",
+        "- Set weight to 1.0 for all new rules (GA will optimize later)",
+        "- Keep action text under 80 characters",
+        "",
+        "Return ONLY a JSON array of new Rule objects. No explanation, no markdown.",
+        "Example: [{\"id\": \"synergy_example\", \"layer\": \"card_synergy\", ...}, ...]",
+    ])
+
+
+async def _enrich_with_llm(
+    deck_path: Path,
+    deck_name: str,
+    strategy: dict,
+    backend: str = "claude_cli",
+) -> list[dict]:
+    """Call LLM to generate additional rules on top of mechanical base."""
+    from .compile_rules import _call_llm
+
+    prompt = _build_enrich_prompt(deck_path, deck_name, strategy)
+    print(f"  Calling LLM to enrich {len(strategy['rules'])} mechanical rules...")
+
+    response = await _call_llm(
+        prompt, backend, max_turns=5, timeout=300.0,
+        allow_web_search=False,
+    )
+
+    # Parse JSON array from response
+    text = response.strip()
+    # Strip markdown code fences
+    if text.startswith("```"):
+        text = text.split("\n", 1)[1] if "\n" in text else text[3:]
+    if text.endswith("```"):
+        text = text.rsplit("```", 1)[0]
+    text = text.strip()
+    if text.startswith("json"):
+        text = text[4:].strip()
+
+    try:
+        new_rules = json.loads(text)
+        if not isinstance(new_rules, list):
+            new_rules = [new_rules]
+    except json.JSONDecodeError:
+        # Try to find JSON array in response
+        match = re.search(r'\[.*\]', text, re.DOTALL)
+        if match:
+            try:
+                new_rules = json.loads(match.group())
+            except json.JSONDecodeError:
+                print("  WARNING: Could not parse LLM response as JSON")
+                return []
+        else:
+            print("  WARNING: No JSON array found in LLM response")
+            return []
+
+    # Validate and deduplicate
+    existing_ids = {r["id"] for r in strategy["rules"]}
+    valid_rules = []
+    for rule in new_rules:
+        if not isinstance(rule, dict):
+            continue
+        if "id" not in rule or "layer" not in rule or "action" not in rule:
+            continue
+        if rule["id"] in existing_ids:
+            continue
+        # Ensure defaults
+        rule.setdefault("weight", 1.0)
+        rule.setdefault("priority", "medium")
+        rule.setdefault("tags", [])
+        rule.setdefault("stats", {"fired": 0, "correct": 0})
+        rule.setdefault("conflicts_with", [])
+        valid_rules.append(rule)
+        existing_ids.add(rule["id"])
+
+    return valid_rules
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Generate strategy rules from deck + CardDB")
     parser.add_argument("--deck", required=True, type=Path, help="Path to Arena-format decklist")
     parser.add_argument("--name", required=True, help="Deck name")
     parser.add_argument("--output", type=Path, help="Output path (default: user strategies dir)")
     parser.add_argument("--dry-run", action="store_true", help="Print to stdout instead of writing")
+    parser.add_argument("--llm", action="store_true", help="Enrich with LLM-generated rules on top of mechanical base")
+    parser.add_argument("--backend", default="claude_cli", choices=["claude_cli", "anthropic_api", "ollama"],
+                        help="LLM backend for --llm")
     args = parser.parse_args()
 
     strategy = generate_strategy(args.deck, args.name)
+    mechanical_count = len(strategy["rules"])
+    print(f"Generated {mechanical_count} mechanical rules")
+
+    if args.llm:
+        llm_rules = asyncio.run(_enrich_with_llm(args.deck, args.name, strategy, args.backend))
+        strategy["rules"].extend(llm_rules)
+        strategy["_generated"]["llm_rules"] = len(llm_rules)
+        print(f"  LLM added {len(llm_rules)} rules → total {len(strategy['rules'])}")
 
     if args.dry_run:
         print(json.dumps(strategy, indent=2))
@@ -464,9 +582,9 @@ def main() -> None:
         out_path = USER_RULES_DIR / f"{safe_name}.json"
 
     out_path.write_text(json.dumps(strategy, indent=2) + "\n")
-    print(f"Generated {len(strategy['rules'])} rules → {out_path}")
+    print(f"Written {len(strategy['rules'])} rules → {out_path}")
     print(f"  Archetype: {strategy['archetype']}")
-    print(f"  Signature: {', '.join(strategy['deck_signature'])}")
+    print(f"  Mechanical: {mechanical_count}, LLM: {len(strategy['rules']) - mechanical_count}")
     print(f"  Vulnerabilities: {len(strategy['vulnerabilities'])}")
 
 
