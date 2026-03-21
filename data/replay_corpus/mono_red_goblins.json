@@ -1,0 +1,109 @@
+[
+  {
+    "state": {
+      "turn": 5,
+      "phase": "Phase_Combat",
+      "my_life": 14,
+      "opp_life": 10,
+      "hand": [
+        "Hidetsugu's Second Rite"
+      ],
+      "my_battlefield": [
+        "Courageous Goblin",
+        "Goblin Boarders",
+        "Mountain",
+        "Mountain",
+        "Mountain",
+        "Mountain"
+      ],
+      "opp_battlefield": [
+        "Island",
+        "Plains"
+      ]
+    },
+    "strategy_name": "Mono Red Goblins",
+    "opp_deck": null,
+    "expected": [
+      {
+        "rule_id": "synergy_second_rite_freeze",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "attack"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 5,
+      "phase": "Phase_Main1",
+      "my_life": 16,
+      "opp_life": 12,
+      "hand": [
+        "Burst Lightning",
+        "Mountain"
+      ],
+      "my_battlefield": [
+        "Imodane, the Pyrohammer",
+        "Mountain",
+        "Mountain",
+        "Mountain",
+        "Mountain"
+      ],
+      "opp_battlefield": [
+        "Grizzly Bears",
+        "Mountain",
+        "Mountain"
+      ]
+    },
+    "strategy_name": "Mono Red Goblins",
+    "opp_deck": null,
+    "expected": [
+      {
+        "rule_id": "threat_use_burst_lightning_topdeck",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "synergy_imodane_burn_combo",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 7,
+      "phase": "Phase_Main1",
+      "my_life": 8,
+      "opp_life": 5,
+      "hand": [
+        "Burst Lightning"
+      ],
+      "my_battlefield": [
+        "Courageous Goblin",
+        "Mountain",
+        "Mountain",
+        "Mountain"
+      ],
+      "opp_battlefield": [
+        "Mountain",
+        "Mountain"
+      ]
+    },
+    "strategy_name": "Mono Red Goblins",
+    "opp_deck": null,
+    "expected": [
+      {
+        "rule_id": "situation_burn_face_lethal",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  }
+]

@@ -156,7 +156,7 @@ def run_health_check(save: bool = False) -> dict:
             failed += 1
             failed_names.append(s.name)
 
-    results["tier1_engine"] = {
+    tier1 = {
         "regression_passed": passed,
         "regression_failed": failed,
         "regression_total": passed + failed,
@@ -166,6 +166,31 @@ def run_health_check(save: bool = False) -> dict:
 
     if failed > 0:
         results["warnings"].append(f"T1 ENGINE: {failed} regression tests failing")
+
+    # Replay diff stability
+    try:
+        from .replay_diff import run_replay_diff
+        replay = run_replay_diff()
+        agreement = replay.get("top_1_agreement")
+        if agreement is not None:
+            tier1["replay_agreement"] = agreement
+            tier1["replay_flips"] = replay.get("flips", 0)
+            tier1["replay_total"] = replay.get("total", 0)
+            if agreement < 0.90:
+                results["warnings"].append(
+                    f"T1 ENGINE: replay stability {agreement:.0%} < 90%"
+                    f" ({replay.get('flips', '?')} flips)")
+        else:
+            tier1["replay_agreement"] = None
+            tier1["replay_note"] = "No replay corpus found"
+    except ImportError:
+        tier1["replay_agreement"] = None
+        tier1["replay_note"] = "replay_diff module not available"
+    except Exception as e:
+        tier1["replay_agreement"] = None
+        tier1["replay_note"] = f"replay_diff error: {e}"
+
+    results["tier1_engine"] = tier1
 
     # ═══ TIER 2: Deck Structure (changes only with card changes) ═══
     tier2 = {}
@@ -283,6 +308,12 @@ def main():
     if t1["failed_tests"]:
         for name in t1["failed_tests"]:
             print(f"    ✗ {name}")
+    replay_agr = t1.get("replay_agreement")
+    if replay_agr is not None:
+        flips = t1.get("replay_flips", 0)
+        print(f"  Replay stability: {replay_agr:.0%} top-1 agreement ({flips} flips)")
+    elif t1.get("replay_note"):
+        print(f"  Replay stability: {t1['replay_note']}")
 
     print(f"\nTIER 2 — STRUCTURE (changes with deck edits):")
     for deck_name, deck in results["tier2_structure"].items():
