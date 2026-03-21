@@ -123,7 +123,8 @@ def export(output: Path, min_candidates: int = 2) -> None:
             continue
 
         ver = ev.get("engine_version", "")
-        if "phase1" not in ver:
+        # Accept phase1_v1 (old) and 2.x.x (new) engine versions
+        if "phase1" not in ver and not ver.startswith("2."):
             continue
 
         top_advice = [a for a in (ev.get("top_advice") or []) if a.get("rule_id")]
@@ -150,11 +151,13 @@ def export(output: Path, min_candidates: int = 2) -> None:
                    "creature_delta": outcome_data.get("creature_delta", 0)} if outcome_data else {}
 
         total_dec += 1
+        chosen_assigned = False  # only one chosen per decision
         for rank, adv in enumerate(top_advice):
             target = (adv.get("action_target") or adv.get("card") or "").lower()
-            chosen = bool(played and target and played in target)
+            chosen = bool(not chosen_assigned and played and target and played in target)
             if chosen:
                 chosen_count += 1
+                chosen_assigned = True
             src = adv.get("source", "strategy")
             source_counts[src] += 1
             row = {"decision_id": decision_id, "source": "live", "engine_version": ver,

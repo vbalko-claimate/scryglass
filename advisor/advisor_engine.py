@@ -26,6 +26,7 @@ from .llm_advisor import (
 )
 from .actions import tag_heuristic_advice
 from .models import Advice, CardInfo, GameState
+from .version import ENGINE_VERSION
 from .strategy import (
     MetaDeck, OpponentTracker, evaluate_rules, evaluate_rules_v2,
     get_or_create_strategy, learn_from_match, load_meta_decks,
@@ -884,7 +885,7 @@ class AdvisorEngine:
                             "advice_count": 0,
                             "top_advice": [],
                             "strategy_name": self._strategy.name if self._strategy else None,
-                            "engine_version": "phase1_v1",
+                            "engine_version": ENGINE_VERSION,
                             "no_advice": True,
                         },
                     )
@@ -1690,7 +1691,7 @@ class AdvisorEngine:
                 "strategy_name": self._strategy.name if self._strategy else None,
                 "opp_deck": (self._opp_tracker.identified_deck.name
                              if self._opp_tracker and self._opp_tracker.identified_deck else None),
-                "engine_version": "phase1_v1",
+                "engine_version": ENGINE_VERSION,
             }
             for a in merged[:5]:
                 # Prefer structured action_scores; fall back to regex for old-style advice
@@ -1795,7 +1796,8 @@ class AdvisorEngine:
             if state.turn_info.turn_number != self._pending_turn:
                 self._pending_recs = []
                 self._pending_turn = state.turn_info.turn_number
-                self._pending_game_state_id = state.game_state_id
+            # Always update game_state_id to latest decision point
+            self._pending_game_state_id = state.game_state_id
             for rec in recs:
                 if rec not in self._pending_recs:
                     self._pending_recs.append(rec)
