@@ -1494,12 +1494,14 @@ class AdvisorEngine:
             followed = False
             reason = "ignored_with_alternative"
 
+        decision_id = f"{match_id}_{game_number}_{self._pending_game_state_id}"
         save_match_event(
             match_id, "advice_compliance",
             game_number=game_number,
             turn_number=turn,
             phase="play",
-            data={"played": card_name,
+            data={"decision_id": decision_id,
+                  "played": card_name,
                   "recommended": self._pending_recs,
                   "followed": followed,
                   "reason": reason,
@@ -1530,12 +1532,14 @@ class AdvisorEngine:
                 my_creatures = len(state.my_creatures())
                 opp_creatures = len(state.opp_creatures())
                 try:
+                    decision_id = f"{mid}_{po.get('game_number', game_num)}_{po.get('game_state_id', -1)}"
                     save_match_event(
                         mid, "decision_outcome",
                         game_number=po.get("game_number", game_num),
                         turn_number=po["turn"],
                         phase=po["phase"],
                         data={
+                            "decision_id": decision_id,
                             "original_turn": po["turn"],
                             "resolved_turn": turn,
                             "game_number": po.get("game_number", game_num),
@@ -1562,6 +1566,7 @@ class AdvisorEngine:
             "turn": state.turn_info.turn_number,
             "phase": state.turn_info.phase,
             "game_number": state.match_info.game_number,
+            "game_state_id": state.game_state_id,
             "my_life": me.life_total if me else 0,
             "opp_life": opp.life_total if opp else 0,
             "my_creatures": len(state.my_creatures()),
@@ -1587,6 +1592,7 @@ class AdvisorEngine:
         self._last_advice = []
         self._pending_recs = []
         self._pending_turn = -1
+        self._pending_game_state_id = -1
         self._advice_spot = None
         self._advice_sent_this_spot = set()
         self._advice_generation = 0
@@ -1673,7 +1679,9 @@ class AdvisorEngine:
         # Log rule contributions, advice ranking, and canonical actions.
         if state.match_info.match_id and advice:
             import re as _re
+            decision_id = f"{state.match_info.match_id}_{state.match_info.game_number}_{state.game_state_id}"
             eval_data = {
+                "decision_id": decision_id,
                 "game_state_id": state.game_state_id,
                 "advice_count": len(merged),
                 "top_advice": [],
@@ -1733,6 +1741,7 @@ class AdvisorEngine:
             if state.turn_info.turn_number != self._pending_turn:
                 self._pending_recs = []
                 self._pending_turn = state.turn_info.turn_number
+                self._pending_game_state_id = state.game_state_id
             for rec in recs:
                 if rec not in self._pending_recs:
                     self._pending_recs.append(rec)

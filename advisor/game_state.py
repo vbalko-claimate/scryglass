@@ -1107,6 +1107,7 @@ class GameStateTracker:
             turn_number=self.state.turn_info.turn_number,
             phase=self.state.turn_info.phase,
             data={
+                "decision_id": f"{mid}_{self.state.match_info.game_number}_{self.state.game_state_id}",
                 "request_type": request_type,
                 "phase_display": self.state.turn_info.phase_display,
                 "game_state_id": self.state.game_state_id,
