@@ -86,6 +86,18 @@ def _lookup(idx: dict, key: tuple, match_id, gn, turn, phase) -> dict:
     return idx.get(key) or idx.get(("comp", match_id, gn, turn, phase)) or {}
 
 
+def _lookup_compliance(idx: dict, key: tuple, match_id, gn, turn) -> dict:
+    """Compliance has phase='play' (hardcoded), so fallback ignores phase."""
+    hit = idx.get(key)
+    if hit:
+        return hit
+    # Try all phases for this turn
+    for stored_key, data in idx.items():
+        if stored_key[0] == "comp" and stored_key[1] == match_id and stored_key[2] == gn and stored_key[3] == turn:
+            return data
+    return {}
+
+
 def export(output: Path, min_candidates: int = 2) -> None:
     if not DB_PATH.exists():
         print("No database found at", DB_PATH); sys.exit(1)
@@ -131,7 +143,7 @@ def export(output: Path, min_candidates: int = 2) -> None:
 
         state = _extract_state(ctx, turn, phase)
         outcome_data = _lookup(out_idx, key, match_id, gn, turn, phase)
-        compliance = _lookup(comp_idx, key, match_id, gn, turn, phase)
+        compliance = _lookup_compliance(comp_idx, key, match_id, gn, turn)
         played = (compliance.get("played") or "").lower()
         outcome = {"life_delta": outcome_data.get("life_delta", 0),
                    "opp_life_delta": outcome_data.get("opp_life_delta", 0),
@@ -139,8 +151,8 @@ def export(output: Path, min_candidates: int = 2) -> None:
 
         total_dec += 1
         for rank, adv in enumerate(top_advice):
-            card = (adv.get("card") or adv.get("card_name") or "").lower()
-            chosen = bool(played and card and played == card)
+            target = (adv.get("action_target") or adv.get("card") or "").lower()
+            chosen = bool(played and target and played in target)
             if chosen:
                 chosen_count += 1
             src = adv.get("source", "strategy")
@@ -149,7 +161,7 @@ def export(output: Path, min_candidates: int = 2) -> None:
                    "state": state,
                    "candidate": {"rank": rank, "rule_id": adv["rule_id"],
                                  "action_family": adv.get("action_family", ""),
-                                 "score": adv.get("score", 0.0),
+                                 "score": adv.get("action_score", adv.get("score", 0.0)),
                                  "priority": adv.get("priority", "medium"), "source": src},
                    "chosen": chosen, "outcome": outcome,
                    "match_result": results.get(match_id, ""),
