@@ -806,7 +806,6 @@ def evaluate_rules_v2(rules: list[Rule], state: GameState,
     # Auto-detect hold/use conflicts: if a "use" rule and a "hold" rule both
     # reference the same card, the more specific one (use) suppresses hold.
     _HOLD_WORDS = {"hold", "don't", "wait", "save"}
-    fired_ids = {r.id for r, _ in results}
     hold_rules: dict[str, list[str]] = {}  # card_name → [rule_ids]
     use_rules: dict[str, list[str]] = {}   # card_name → [rule_ids]
     for rule, hit in results:

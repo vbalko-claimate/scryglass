@@ -31,7 +31,7 @@ _PASS_WORDS = re.compile(
 _ATTACK_WORDS = re.compile(r"\b(attack|swing|alpha)\b", re.I)
 _BLOCK_WORDS = re.compile(r"\b(block|chump|trade)\b", re.I)
 _LAND_WORDS = re.compile(r"\b(play land|land drop)\b", re.I)
-_ACTIVATE_WORDS = re.compile(r"\b(activate|crew|equip|channel|sacrifice|sac )\b", re.I)
+_ACTIVATE_WORDS = re.compile(r"\b(activate|crew|equip|channel|sacrifice|sac)\b", re.I)
 
 
 def infer_action_family(

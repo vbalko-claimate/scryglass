@@ -850,7 +850,7 @@ class AdvisorEngine:
 
             # Run strategy rules
             if self._strategy:
-                rule_hits, strategy_advice = evaluate_rules_v2(
+                _, strategy_advice = evaluate_rules_v2(
                     self._strategy.rules, state, self._opp_tracker,
                     vulnerabilities=self._strategy.vulnerabilities)
                 heuristic_msgs = {a.message.lower() for a in base_advice}
@@ -883,7 +883,7 @@ class AdvisorEngine:
                             "advice_count": 0,
                             "top_advice": [],
                             "strategy_name": self._strategy.name if self._strategy else None,
-                            "engine_version": "phase0_v1",
+                            "engine_version": "phase1_v1",
                             "no_advice": True,
                         },
                     )
