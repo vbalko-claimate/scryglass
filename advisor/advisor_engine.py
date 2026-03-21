@@ -1789,6 +1789,9 @@ class AdvisorEngine:
             except Exception:
                 pass  # shadow must never break gameplay
 
+        # Always update game_state_id to latest decision point (even without recs)
+        self._pending_game_state_id = state.game_state_id
+
         recs = []
         for item in advice:
             recs.extend(item.recommended_cards)
@@ -1796,8 +1799,6 @@ class AdvisorEngine:
             if state.turn_info.turn_number != self._pending_turn:
                 self._pending_recs = []
                 self._pending_turn = state.turn_info.turn_number
-            # Always update game_state_id to latest decision point
-            self._pending_game_state_id = state.game_state_id
             for rec in recs:
                 if rec not in self._pending_recs:
                     self._pending_recs.append(rec)

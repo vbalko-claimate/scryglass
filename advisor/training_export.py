@@ -179,7 +179,7 @@ def export(output: Path, min_candidates: int = 2) -> None:
     print(f"  Chosen:     {chosen_count}")
     print(f"  Sources:    {dict(source_counts)}")
     if rows_written == 0:
-        print("\nNo qualifying rows. Need decision_eval events with engine_version containing 'phase1'.")
+        print("\nNo qualifying rows. Need decision_eval events with engine_version 'phase1_v1' or '2.x'.")
 
 
 def main():
