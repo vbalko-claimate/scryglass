@@ -4,7 +4,7 @@ Uses RuleMetrics (trigger_rate, selection_swing, redundancy) to find
 rules that should be pruned or demoted.
 
 Usage:
-    uv run python -m advisor.rule_pruning PATH [--apply] [--min-games N]
+    uv run python -m advisor.rule_pruning PATH [--apply] [--min-decisions N]
 """
 from __future__ import annotations
 
@@ -152,21 +152,22 @@ def prune_candidates(
             metric_value=metrics[rid].selection_swing,
         ))
 
-    # Also flag rules that have NEVER fired (stats.fired == 0) and have
-    # been through at least one GA cycle (weight != 1.0 or stats.fired exists)
-    for r in non_mulligan:
-        rid = r["id"]
-        rm = metrics[rid]
-        stats = r.get("stats", {})
-        total_fired = rm.fired + stats.get("fired", 0)
-        if total_fired == 0:
-            if any(c.rule_id == rid for c in candidates):
-                continue
-            candidates.append(PruneCandidate(
-                rule_id=rid,
-                reason="never_fired",
-                metric_value=0.0,
-            ))
+    # Flag rules that have NEVER fired — but only if the strategy has been
+    # through at least one GA/validation cycle (metrics.decisions > 0 on any rule).
+    # Fresh strategies with no evaluation data should not be pruned.
+    has_eval_data = any(rm.decisions > 0 for rm in metrics.values())
+    if has_eval_data:
+        for r in non_mulligan:
+            rid = r["id"]
+            rm = metrics[rid]
+            if rm.fired == 0 and rm.decisions >= min_decisions:
+                if any(c.rule_id == rid for c in candidates):
+                    continue
+                candidates.append(PruneCandidate(
+                    rule_id=rid,
+                    reason="never_fired",
+                    metric_value=0.0,
+                ))
 
     return candidates
 
