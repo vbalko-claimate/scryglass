@@ -78,23 +78,23 @@ def _run_regression_tests() -> dict:
 def _run_replay_diff() -> dict:
     """Run replay diff, return {top_1_agreement, threshold, ok}.
 
-    Imports replay_diff module if available. Skips gracefully if missing.
+    Non-skippable: missing corpus or module = FAIL.
     """
     try:
         from .replay_diff import run_replay_diff  # noqa: F401
     except ImportError:
         return {"top_1_agreement": None, "threshold": REPLAY_THRESHOLD,
-                "ok": True, "skipped": True, "reason": "replay_diff module not found"}
+                "ok": False, "skipped": True, "reason": "replay_diff module not found"}
     except Exception as e:
         return {"top_1_agreement": None, "threshold": REPLAY_THRESHOLD,
-                "ok": True, "skipped": True, "reason": str(e)}
+                "ok": False, "skipped": True, "reason": str(e)}
 
     try:
         result = run_replay_diff()
         agreement = result.get("top_1_agreement")
         if agreement is None:
             return {"top_1_agreement": None, "threshold": REPLAY_THRESHOLD,
-                    "ok": True, "skipped": True, "reason": "No replay corpus found"}
+                    "ok": False, "skipped": True, "reason": "No replay corpus found"}
         return {
             "top_1_agreement": agreement,
             "flips": result.get("flips", 0),
@@ -105,6 +105,30 @@ def _run_replay_diff() -> dict:
     except Exception as e:
         return {"top_1_agreement": None, "threshold": REPLAY_THRESHOLD,
                 "ok": True, "skipped": True, "reason": str(e)}
+
+
+def _run_schema_check() -> dict:
+    """Verify all tracked strategies have current schema/engine version."""
+    try:
+        from .version import ENGINE_VERSION, SCHEMA_VERSION
+        from .strategy import load_raw_strategy
+    except ImportError as e:
+        return {"ok": False, "error": str(e)}
+
+    tracked = ["Mono White Lifegain", "Mono Red Goblins", "Rakdos Midrange"]
+    mismatches = []
+    for name in tracked:
+        raw = load_raw_strategy(name)
+        if not raw:
+            continue
+        sv = raw.get("_engine_version", "")
+        ss = raw.get("_schema_version", "")
+        if sv and sv != ENGINE_VERSION:
+            mismatches.append(f"{name}: engine {sv} != {ENGINE_VERSION}")
+        if ss and ss != SCHEMA_VERSION:
+            mismatches.append(f"{name}: schema {ss} != {SCHEMA_VERSION}")
+
+    return {"ok": len(mismatches) == 0, "mismatches": mismatches}
 
 
 def _run_health_check() -> dict:
@@ -144,16 +168,22 @@ def run_ci(strict: bool = False) -> dict:
         print(f"3. Replay Diff: {agr:.0%} top-1 agreement {ok_mark}"
               f" (threshold: {REPLAY_THRESHOLD:.0%})")
 
-    # 4. Health check (informational)
+    # 4. Schema version check
+    schema = _run_schema_check()
+    ok_mark = "PASS" if schema["ok"] else "FAIL"
+    mismatches = schema.get("mismatches", [])
+    print(f"4. Schema Check: {ok_mark}" + (f" ({len(mismatches)} mismatches)" if mismatches else ""))
+
+    # 5. Health check (informational)
     health = _run_health_check()
     rate = health.get("regression_pass_rate")
     if rate is not None:
-        print(f"4. Health Check: {rate:.0%} regression pass rate (informational)")
+        print(f"5. Health Check: {rate:.0%} regression pass rate (informational)")
     else:
-        print(f"4. Health Check: error -- {health.get('error', 'unknown')}")
+        print(f"5. Health Check: error -- {health.get('error', 'unknown')}")
 
     # Determine overall result
-    gates = [canonical["ok"], regression["ok"], replay["ok"]]
+    gates = [canonical["ok"], regression["ok"], replay["ok"], schema["ok"]]
     all_pass = all(gates)
     gate_count = sum(gates)
     result_str = "PASS" if all_pass else "FAIL"
@@ -166,6 +196,7 @@ def run_ci(strict: bool = False) -> dict:
             "canonical_actions": canonical,
             "regression_tests": regression,
             "replay_diff": replay,
+            "schema": schema,
         },
         "health_check": health,
         "result": result_str,

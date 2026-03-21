@@ -172,6 +172,10 @@ def replay_entry(entry: dict, verbose: bool = False) -> DiffResult | None:
     expected = entry.get("expected", [])
     expected_ids = [e["rule_id"] for e in expected]
 
+    # Skip entries with empty expected — no baseline to compare against
+    if not expected_ids:
+        return DiffResult(deck=strategy_name, skipped=1)
+
     result = DiffResult(deck=strategy_name, total_states=1)
 
     # Top-1 match
@@ -355,6 +359,10 @@ def run_replay_diff() -> dict:
     total_flips = sum(r.flips for r in results)
 
     agreement = total_top1 / max(1, total_states)
+
+    # Always write artifact (ensures "every change produces diffs")
+    save_result(results, agreement)
+
     return {
         "top_1_agreement": agreement,
         "flips": total_flips,
