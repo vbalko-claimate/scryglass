@@ -369,6 +369,7 @@
       ],
       "opp_has_vulnerability": true,
       "action": "Opponent played a card that counters your strategy",
+      "action_family": "pass",
       "priority": "critical",
       "weight": 1.4,
       "stats": {

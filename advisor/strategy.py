@@ -769,34 +769,38 @@ def evaluate_rules_v2(rules: list[Rule], state: GameState,
             prio = prio_order[min(idx + 1, 3)]
 
         # --- Build ActionScore ---
-        # Schema-first: use declared action_family when available, infer as fallback
-        if rule.action_family:
-            try:
-                family = ActionFamily(rule.action_family)
-            except ValueError:
-                log.warning("Rule %s has invalid action_family=%r, falling back to inference",
-                            rule.id, rule.action_family)
-                family = infer_action_family(msg, phase=ti.phase, rule_tags=rule.tags)
+        # Mulligan rules don't produce game actions — skip ActionScore
+        if rule.layer == "mulligan":
+            action_score = None
         else:
-            family = infer_action_family(msg, phase=ti.phase, rule_tags=rule.tags)
-        target = matched_card_name or matched_threat_name
-        score = score_from_priority(prio, rule.weight)
-        action_score = ActionScore(
-            family=family,
-            score=score,
-            target=target,
-            source="strategy",
-            rule_id=rule.id,
-            rule_layer=rule.layer,
-            rule_weight=rule.weight,
-        )
+            # Schema-first: use declared action_family when available, infer as fallback
+            if rule.action_family:
+                try:
+                    family = ActionFamily(rule.action_family)
+                except ValueError:
+                    log.warning("Rule %s has invalid action_family=%r, falling back to inference",
+                                rule.id, rule.action_family)
+                    family = infer_action_family(msg, phase=ti.phase, rule_tags=rule.tags)
+            else:
+                family = infer_action_family(msg, phase=ti.phase, rule_tags=rule.tags)
+            target = matched_card_name or matched_threat_name
+            score = score_from_priority(prio, rule.weight)
+            action_score = ActionScore(
+                family=family,
+                score=score,
+                target=target,
+                source="strategy",
+                rule_id=rule.id,
+                rule_layer=rule.layer,
+                rule_weight=rule.weight,
+            )
 
         hit = RuleHit(
             rule_id=rule.id,
             layer=rule.layer,
             weight=rule.weight,
             priority=prio,
-            action_scores=[action_score],
+            action_scores=[action_score] if action_score else [],
             matched_card=matched_card_name,
             matched_threat=matched_threat_name,
             raw_message=msg,
