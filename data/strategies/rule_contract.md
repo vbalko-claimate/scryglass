@@ -110,6 +110,7 @@ These require an identified opponent deck (from meta_decks.json) to evaluate.
 
 **Output:**
 - `action` (string, required): Short advice. Supports `{card}` and `{threat}` placeholders.
+- `action_family` (string, optional): Canonical action type. One of: `cast_spell`, `play_land`, `attack`, `block`, `activate`, `pass`. When set, the engine uses it directly; when omitted, the engine infers from action text. Prefer setting explicitly for unambiguous rules.
 - `priority`: "critical" | "high" | "medium" | "low"
 - `conflicts_with` (string[]): Rule IDs this overrides
 

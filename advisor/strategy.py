@@ -17,7 +17,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from .database import card_cache, USER_DATA_DIR
-from .models import ActionScore, Advice, GameState, GameObject, RuleHit
+from .models import ActionFamily, ActionScore, Advice, GameState, GameObject, RuleHit
 from .actions import infer_action_family, score_from_priority, render_advice
 
 log = logging.getLogger(__name__)
@@ -137,6 +137,7 @@ class Rule:
 
     # Output
     action: str = ""  # advice text, supports {card}, {threat} placeholders
+    action_family: str | None = None  # canonical: cast_spell, play_land, attack, block, activate, pass
     priority: str = "medium"
     conflicts_with: list[str] = field(default_factory=list)
 
@@ -768,7 +769,14 @@ def evaluate_rules_v2(rules: list[Rule], state: GameState,
             prio = prio_order[min(idx + 1, 3)]
 
         # --- Build ActionScore ---
-        family = infer_action_family(msg, phase=ti.phase, rule_tags=rule.tags)
+        # Schema-first: use declared action_family when available, infer as fallback
+        if rule.action_family:
+            try:
+                family = ActionFamily(rule.action_family)
+            except ValueError:
+                family = infer_action_family(msg, phase=ti.phase, rule_tags=rule.tags)
+        else:
+            family = infer_action_family(msg, phase=ti.phase, rule_tags=rule.tags)
         target = matched_card_name or matched_threat_name
         score = score_from_priority(prio, rule.weight)
         action_score = ActionScore(
@@ -977,11 +985,11 @@ def generate_rules(archetype: str, info: dict) -> list[Rule]:
         Rule(id="gen_play_land", layer="general",
              phase=["Main"], my_turn=True,
              require=[ZoneCondition("hand", CardMatcher(card_type="Land"))],
-             action="Play a land", priority="low", weight=0.5),
+             action="Play a land", action_family="play_land", priority="low", weight=0.5),
         Rule(id="gen_attack_before_main2", layer="general", tags=["tempo"],
              phase=["Main"], my_turn=True, step="Phase_Main1",
              action="Attack before casting in Main 2 — don't reveal info",
-             priority="low", weight=0.6),
+             action_family="attack", priority="low", weight=0.6),
     ])
 
     # ── Layer 1: Archetype ──
@@ -990,39 +998,47 @@ def generate_rules(archetype: str, info: dict) -> list[Rule]:
             Rule(id="arch_curve_out", layer="archetype", tags=["tempo"],
                  phase=["Main"], my_turn=True, turn_max=4,
                  require=[ZoneCondition("hand", CardMatcher(card_type="Creature", castable=True))],
-                 action="Cast {card} — curve out early", priority="high", weight=1.2),
+                 action="Cast {card} — curve out early", action_family="cast_spell",
+                 priority="high", weight=1.2),
             Rule(id="arch_go_wide", layer="archetype", tags=["aggro"],
                  phase=["Combat"], my_turn=True, my_creatures_min=3,
-                 action="Attack with everything — go wide", priority="medium"),
+                 action="Attack with everything — go wide", action_family="attack",
+                 priority="medium"),
             Rule(id="arch_push_lethal", layer="archetype",
                  phase=["Main"], my_turn=True, opp_life_below=8,
-                 action="Opponent is low — push for lethal", priority="high", weight=1.3),
+                 action="Opponent is low — push for lethal", action_family="attack",
+                 priority="high", weight=1.3),
         ])
     elif archetype == "midrange":
         rules.extend([
             Rule(id="arch_biggest_threat", layer="archetype",
                  phase=["Main"], my_turn=True,
                  require=[ZoneCondition("hand", CardMatcher(card_type="Creature", castable=True, cmc_min=3))],
-                 action="Cast {card} — biggest threat", priority="medium"),
+                 action="Cast {card} — biggest threat", action_family="cast_spell",
+                 priority="medium"),
             Rule(id="arch_trade_up", layer="archetype", tags=["defensive"],
                  phase=["Combat"], my_turn=False,
                  require=[ZoneCondition("opp_battlefield", CardMatcher(card_type="Creature"))],
                  my_creatures_min=1,
-                 action="Look for favorable blocks — trade up", priority="medium"),
+                 action="Look for favorable blocks — trade up", action_family="block",
+                 priority="medium"),
         ])
     elif archetype == "control":
         rules.extend([
             Rule(id="arch_hold_mana", layer="archetype", tags=["reactive"],
                  phase=["Main"], my_turn=True, mana_min=2,
                  require=[ZoneCondition("hand", CardMatcher(card_type="Instant"))],
-                 action="Hold mana for {card} — don't tap out", priority="high", weight=1.2),
+                 action="Hold mana for {card} — don't tap out", action_family="pass",
+                 priority="high", weight=1.2),
             Rule(id="arch_boardwipe", layer="archetype",
                  phase=["Main"], my_turn=True, opp_creatures_min=3,
                  require=[ZoneCondition("hand", CardMatcher(card_type="Sorcery", castable=True))],
-                 action="Board wipe time — cast {card}", priority="high", weight=1.3),
+                 action="Board wipe time — cast {card}", action_family="cast_spell",
+                 priority="high", weight=1.3),
             Rule(id="arch_dont_overextend", layer="archetype",
                  phase=["Main"], my_turn=True, my_creatures_min=2,
-                 action="Don't overextend — opponent may have a wipe", priority="low"),
+                 action="Don't overextend — opponent may have a wipe", action_family="pass",
+                 priority="low"),
         ])
 
     # ── Layer 2: Mulligan ──
@@ -1247,6 +1263,8 @@ def _rule_to_dict(r: Rule) -> dict:
         if v is not None:
             d[attr] = v
     d["action"] = r.action
+    if r.action_family:
+        d["action_family"] = r.action_family
     d["priority"] = r.priority
     if r.conflicts_with:
         d["conflicts_with"] = r.conflicts_with
@@ -1293,6 +1311,7 @@ def _rule_from_dict(d: dict) -> Rule:
         opp_has_must_answer=d.get("opp_has_must_answer"),
         opp_has_vulnerability=d.get("opp_has_vulnerability"),
         action=d.get("action", ""),
+        action_family=d.get("action_family"),
         priority=d.get("priority", "medium"),
         conflicts_with=d.get("conflicts_with", []),
         weight=d.get("weight", 1.0),
