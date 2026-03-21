@@ -23,11 +23,12 @@ from .llm_advisor import (
     ollama_available,
     reset_sessions as reset_llm_sessions,
 )
+from .actions import tag_heuristic_advice
 from .models import Advice, CardInfo, GameState
 from .strategy import (
-    MetaDeck, OpponentTracker, evaluate_rules, get_or_create_strategy,
-    learn_from_match, load_meta_decks, save_meta_decks,
-    update_opponent_tracking, Strategy,
+    MetaDeck, OpponentTracker, evaluate_rules, evaluate_rules_v2,
+    get_or_create_strategy, learn_from_match, load_meta_decks,
+    save_meta_decks, update_opponent_tracking, Strategy,
 )
 
 log = logging.getLogger(__name__)
@@ -845,10 +846,11 @@ class AdvisorEngine:
         if self._advice_mode != "llm_only":
             # Run heuristics
             base_advice = heuristic_analyze(state)
+            base_advice = tag_heuristic_advice(base_advice, state)
 
             # Run strategy rules
             if self._strategy:
-                strategy_advice = evaluate_rules(
+                rule_hits, strategy_advice = evaluate_rules_v2(
                     self._strategy.rules, state, self._opp_tracker,
                     vulnerabilities=self._strategy.vulnerabilities)
                 heuristic_msgs = {a.message.lower() for a in base_advice}
@@ -1667,8 +1669,8 @@ class AdvisorEngine:
         merged.sort(key=lambda a: prio.get(a.priority, 4))
         self._last_advice = merged[:5]
 
-        # ── Phase 0 Telemetry: decision_eval ──
-        # Log rule contributions and advice ranking for the training contract.
+        # ── Phase 1 Telemetry: decision_eval ──
+        # Log rule contributions, advice ranking, and canonical actions.
         if state.match_info.match_id and advice:
             import re as _re
             eval_data = {
@@ -1679,19 +1681,25 @@ class AdvisorEngine:
                 "strategy_name": self._strategy.name if self._strategy else None,
                 "opp_deck": (self._opp_tracker.identified_deck.name
                              if self._opp_tracker and self._opp_tracker.identified_deck else None),
-                "engine_version": "phase0_v1",
+                "engine_version": "phase1_v1",
             }
             for a in merged[:5]:
-                rule_id = ""
-                weight = 0.0
-                if a.details:
-                    m = _re.search(r':(\w+)\]', a.details)
-                    if m:
-                        rule_id = m.group(1)
-                    w = _re.search(r'w:([\d.]+)', a.details)
-                    if w:
-                        weight = float(w.group(1))
-                eval_data["top_advice"].append({
+                # Prefer structured action_scores; fall back to regex for old-style advice
+                top_score = a.action_scores[0] if a.action_scores else None
+                if top_score:
+                    rule_id = top_score.rule_id
+                    weight = top_score.rule_weight
+                else:
+                    rule_id = ""
+                    weight = 0.0
+                    if a.details:
+                        m = _re.search(r':(\w+)\]', a.details)
+                        if m:
+                            rule_id = m.group(1)
+                        w = _re.search(r'w:([\d.]+)', a.details)
+                        if w:
+                            weight = float(w.group(1))
+                entry = {
                     "source": a.source,
                     "priority": a.priority,
                     "rule_id": rule_id,
@@ -1699,7 +1707,12 @@ class AdvisorEngine:
                     "message": a.message[:80],
                     "confidence": a.confidence,
                     "recommended_cards": a.recommended_cards,
-                })
+                }
+                if top_score:
+                    entry["action_family"] = top_score.family.value
+                    entry["action_target"] = top_score.target
+                    entry["action_score"] = top_score.score
+                eval_data["top_advice"].append(entry)
             try:
                 save_match_event(
                     state.match_info.match_id, "decision_eval",

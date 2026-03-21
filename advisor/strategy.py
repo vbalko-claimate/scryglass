@@ -17,7 +17,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from .database import card_cache, USER_DATA_DIR
-from .models import Advice, GameState, GameObject
+from .models import ActionScore, Advice, GameState, GameObject, RuleHit
+from .actions import infer_action_family, score_from_priority, render_advice
 
 log = logging.getLogger(__name__)
 
@@ -537,16 +538,18 @@ def _speed_category(speed: str) -> str:
     return "slow"  # medium_slow, slow
 
 
-def evaluate_rules(rules: list[Rule], state: GameState,
-                   opp_tracker: OpponentTracker | None = None,
-                   vulnerabilities: list[dict] | None = None,
-                   max_results: int = 5) -> list[Advice]:
-    """Evaluate all rules against current game state.
+def evaluate_rules_v2(rules: list[Rule], state: GameState,
+                      opp_tracker: OpponentTracker | None = None,
+                      vulnerabilities: list[dict] | None = None,
+                      max_results: int = 5) -> tuple[list[RuleHit], list[Advice]]:
+    """Evaluate all rules against current game state — structured output.
 
-    max_results: maximum number of advice items to return (0 = unlimited).
+    Returns (rule_hits, advice) where each RuleHit carries ActionScore objects
+    and advice is the rendered Advice list (backward-compatible).
+    max_results: maximum number of items to return (0 = unlimited).
     """
     if not rules:
-        return []
+        return [], []
 
     ti = state.turn_info
     is_my_turn = ti.active_player == state.my_seat_id
@@ -559,7 +562,7 @@ def evaluate_rules(rules: list[Rule], state: GameState,
     untapped_lands = state.my_untapped_lands()
     mana = len(untapped_lands)
 
-    results: list[tuple[Rule, Advice]] = []
+    results: list[tuple[Rule, RuleHit]] = []
     fired_ids: set[str] = set()
 
     for rule in rules:
@@ -676,12 +679,16 @@ def evaluate_rules(rules: list[Rule], state: GameState,
 
         # --- All conditions passed ---
         msg = rule.action
+        matched_card_name = ""
+        matched_threat_name = ""
         if matched_card:
             c = card_cache.get(matched_card.grp_id)
-            msg = msg.replace("{card}", c.name if c else matched_card.name)
+            matched_card_name = c.name if c else matched_card.name
+            msg = msg.replace("{card}", matched_card_name)
         if matched_threat:
             c = card_cache.get(matched_threat.grp_id)
-            msg = msg.replace("{threat}", c.name if c else matched_threat.name)
+            matched_threat_name = c.name if c else matched_threat.name
+            msg = msg.replace("{threat}", matched_threat_name)
 
         # Enrich meta_gameplan messages with specific card info
         if rule.opp_has_must_answer is True and opp_tracker and opp_tracker.identified_deck:
@@ -760,15 +767,32 @@ def evaluate_rules(rules: list[Rule], state: GameState,
             idx = prio_order.index(prio) if prio in prio_order else 1
             prio = prio_order[min(idx + 1, 3)]
 
-        confidence = min(0.9, 0.5 + rule.weight * 0.2)
-        advice = Advice(
+        # --- Build ActionScore ---
+        family = infer_action_family(msg, phase=ti.phase, rule_tags=rule.tags)
+        target = matched_card_name or matched_threat_name
+        score = score_from_priority(prio, rule.weight)
+        action_score = ActionScore(
+            family=family,
+            score=score,
+            target=target,
             source="strategy",
-            priority=prio,
-            message=msg,
-            details=f"[{rule.layer}:{rule.id}] w:{rule.weight:.2f}",
-            confidence=confidence,
+            rule_id=rule.id,
+            rule_layer=rule.layer,
+            rule_weight=rule.weight,
         )
-        results.append((rule, advice))
+
+        hit = RuleHit(
+            rule_id=rule.id,
+            layer=rule.layer,
+            weight=rule.weight,
+            priority=prio,
+            action_scores=[action_score],
+            matched_card=matched_card_name,
+            matched_threat=matched_threat_name,
+            raw_message=msg,
+            tags=list(rule.tags),
+        )
+        results.append((rule, hit))
         fired_ids.add(rule.id)
         rule.times_fired += 1
 
@@ -785,7 +809,7 @@ def evaluate_rules(rules: list[Rule], state: GameState,
     fired_ids = {r.id for r, _ in results}
     hold_rules: dict[str, list[str]] = {}  # card_name → [rule_ids]
     use_rules: dict[str, list[str]] = {}   # card_name → [rule_ids]
-    for rule, advice in results:
+    for rule, hit in results:
         action_lower = rule.action.lower()
         is_hold = any(w in action_lower for w in _HOLD_WORDS)
         for zc in rule.require:
@@ -797,7 +821,7 @@ def evaluate_rules(rules: list[Rule], state: GameState,
                     else:
                         use_rules.setdefault(n, []).append(rule.id)
     # When both hold and use fire for same card, suppress the lower-priority one.
-    rule_by_id = {r.id: (r, a) for r, a in results}
+    rule_by_id = {r.id: (r, h) for r, h in results}
     prio_rank = {"critical": 0, "high": 1, "medium": 2, "low": 3}
     for card, hold_ids in hold_rules.items():
         if card not in use_rules:
@@ -808,11 +832,11 @@ def evaluate_rules(rules: list[Rule], state: GameState,
         for hold_id in hold_ids:
             if hold_id not in fired_ids:
                 continue
-            hold_rule, hold_advice = rule_by_id[hold_id]
-            hold_score = (hold_rule.layer_priority, -prio_rank.get(hold_advice.priority, 4), hold_rule.weight)
+            hold_rule, hold_hit = rule_by_id[hold_id]
+            hold_score = (hold_rule.layer_priority, -prio_rank.get(hold_hit.priority, 4), hold_rule.weight)
             for uid in fired_use_ids:
-                use_rule, use_advice = rule_by_id[uid]
-                use_score = (use_rule.layer_priority, -prio_rank.get(use_advice.priority, 4), use_rule.weight)
+                use_rule, use_hit = rule_by_id[uid]
+                use_score = (use_rule.layer_priority, -prio_rank.get(use_hit.priority, 4), use_rule.weight)
                 if use_score >= hold_score:
                     suppressed.add(hold_id)
                 else:
@@ -821,7 +845,7 @@ def evaluate_rules(rules: list[Rule], state: GameState,
     # Remove suppressed and low-weight rules, sort by layer → priority → weight
     DISPLAY_WEIGHT_THRESHOLD = 0.3
     prio_map = {"critical": 0, "high": 1, "medium": 2, "low": 3}
-    filtered = [(r, a) for r, a in results
+    filtered = [(r, h) for r, h in results
                 if r.id not in suppressed and r.weight >= DISPLAY_WEIGHT_THRESHOLD]
     filtered.sort(key=lambda x: (
         -x[0].layer_priority,
@@ -831,7 +855,24 @@ def evaluate_rules(rules: list[Rule], state: GameState,
 
     if max_results:
         filtered = filtered[:max_results]
-    return [a for _, a in filtered]
+
+    hits = [h for _, h in filtered]
+    advice = render_advice(hits)
+    return hits, advice
+
+
+def evaluate_rules(rules: list[Rule], state: GameState,
+                   opp_tracker: OpponentTracker | None = None,
+                   vulnerabilities: list[dict] | None = None,
+                   max_results: int = 5) -> list[Advice]:
+    """Evaluate all rules against current game state (backward-compatible wrapper).
+
+    max_results: maximum number of advice items to return (0 = unlimited).
+    """
+    _, advice = evaluate_rules_v2(rules, state, opp_tracker=opp_tracker,
+                                  vulnerabilities=vulnerabilities,
+                                  max_results=max_results)
+    return advice
 
 
 # ─── Opponent Card Tracking ─────────────────────────────────────

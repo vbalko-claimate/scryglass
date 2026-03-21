@@ -2,7 +2,43 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from enum import Enum
 from typing import Any
+
+
+# ─── Canonical Actions ─────────────────────────────────────────
+
+class ActionFamily(str, Enum):
+    CAST_SPELL = "cast_spell"
+    PLAY_LAND = "play_land"
+    ATTACK = "attack"
+    BLOCK = "block"
+    ACTIVATE = "activate"
+    PASS = "pass"  # includes "hold" (don't cast X)
+
+
+@dataclass
+class ActionScore:
+    family: ActionFamily
+    score: float  # 0-1 normalized
+    target: str = ""  # card name
+    source: str = ""  # "heuristic" | "strategy"
+    rule_id: str = ""
+    rule_layer: str = ""
+    rule_weight: float = 1.0
+
+
+@dataclass
+class RuleHit:
+    rule_id: str
+    layer: str
+    weight: float
+    priority: str
+    action_scores: list[ActionScore] = field(default_factory=list)
+    matched_card: str = ""
+    matched_threat: str = ""
+    raw_message: str = ""
+    tags: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -246,3 +282,4 @@ class Advice:
     details: str = ""
     confidence: float = 0.0
     recommended_cards: list[str] = field(default_factory=list)
+    action_scores: list[ActionScore] = field(default_factory=list)
