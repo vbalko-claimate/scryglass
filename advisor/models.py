@@ -42,6 +42,29 @@ class RuleHit:
 
 
 @dataclass
+class RuleMetrics:
+    """Accumulated performance metrics for a rule."""
+    fired: int = 0
+    decisions: int = 0
+    selected: int = 0
+    wins_when_fired: int = 0
+    games_when_fired: int = 0
+    cofire_rules: dict[str, int] = field(default_factory=dict)
+
+    @property
+    def trigger_rate(self) -> float:
+        return self.fired / max(1, self.decisions)
+
+    @property
+    def selection_swing(self) -> float:
+        return self.selected / max(1, self.fired)
+
+    @property
+    def win_rate_when_fired(self) -> float:
+        return self.wins_when_fired / max(1, self.games_when_fired)
+
+
+@dataclass
 class CardInfo:
     """Resolved card information from DB/Scryfall."""
     grp_id: int

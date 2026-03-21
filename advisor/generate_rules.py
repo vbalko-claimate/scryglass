@@ -153,16 +153,20 @@ def _analyze_deck(resolved: list[tuple[str, int, CardInfo]]) -> dict:
 # ─── Rule Templates ─────────────────────────────────────────────
 
 def _make_rule(id: str, layer: str, action: str, priority: str = "medium",
-               weight: float = 1.0, tags: list[str] | None = None, **kwargs) -> dict:
+               weight: float = 1.0, tags: list[str] | None = None,
+               action_family: str = "cast_spell", source: str = "mechanical",
+               **kwargs) -> dict:
     rule: dict = {
         "id": id,
         "layer": layer,
         "tags": tags or [],
         "action": action,
+        "action_family": action_family,
         "priority": priority,
         "weight": weight,
         "stats": {"fired": 0, "correct": 0},
         "conflicts_with": [],
+        "_source": source,
     }
     rule.update(kwargs)
     return rule
@@ -177,23 +181,26 @@ def _generate_archetype_rules(analysis: dict) -> list[dict]:
         if analysis["cmc_counts"].get(1, 0) >= 4:
             rules.append(_make_rule(
                 "archetype_one_drop_t1", "archetype",
-                "Lead on a 1-drop — start pressure immediately",
+                "Cast 1-drop creature — on curve turn 1-2",
                 priority="high", weight=1.1, tags=["tempo"],
+                action_family="cast_spell",
                 phase=["Main"], step="Phase_Main1", my_turn=True,
                 turn_max=2,
                 require=[{"zone": "hand", "match": {"type": "Creature", "cmc_max": 1, "castable": True}, "min_count": 1}],
             ))
         rules.append(_make_rule(
             "archetype_attack_aggressively", "archetype",
-            "Attack with everything safe — race the opponent",
+            "Attack with all creatures",
             priority="medium", weight=1.0, tags=["aggro", "tempo"],
+            action_family="attack",
             phase=["Combat"], my_turn=True,
             my_creatures_min=1,
         ))
         rules.append(_make_rule(
             "archetype_spend_mana", "archetype",
-            "Spend all mana — don't hold back in aggro",
+            "Cast castable spell — spend all mana this turn",
             priority="medium", weight=0.9, tags=["tempo"],
+            action_family="cast_spell",
             phase=["Main"], my_turn=True,
             require=[{"zone": "hand", "match": {"castable": True}, "min_count": 1}],
             general_overrides=["general_hold_instant"],
@@ -202,30 +209,34 @@ def _generate_archetype_rules(analysis: dict) -> list[dict]:
     elif arch == "control":
         rules.append(_make_rule(
             "archetype_hold_mana", "archetype",
-            "Hold mana open — react on opponent's turn",
+            "Hold mana open — instant-speed option available",
             priority="medium", weight=1.1, tags=["reactive"],
+            action_family="pass",
             phase=["Main"], my_turn=True, mana_min=2,
             require=[{"zone": "hand", "match": {"type": "Instant", "castable": True}, "min_count": 1}],
         ))
         rules.append(_make_rule(
             "archetype_dont_tap_out", "archetype",
-            "Don't tap out — keep interaction available",
+            "Hold mana — keep instant-speed interaction open",
             priority="high", weight=1.0, tags=["reactive"],
+            action_family="pass",
             phase=["Main"], step="Phase_Main1", my_turn=True,
         ))
 
     elif arch == "midrange":
         rules.append(_make_rule(
             "archetype_develop_board", "archetype",
-            "Develop board — play threats on curve",
+            "Cast creature — highest-impact castable on curve",
             priority="medium", weight=1.0, tags=["tempo"],
+            action_family="cast_spell",
             phase=["Main"], my_turn=True,
             require=[{"zone": "hand", "match": {"type": "Creature", "castable": True}, "min_count": 1}],
         ))
         rules.append(_make_rule(
             "archetype_trade_up", "archetype",
-            "Trade favorably — 2-for-1 when possible",
+            "Block to trade — favorable exchange available",
             priority="medium", weight=1.0, tags=["value"],
+            action_family="block",
         ))
 
     return rules
@@ -249,8 +260,9 @@ def _generate_removal_rules(analysis: dict) -> list[dict]:
         if is_instant and analysis["archetype"] != "aggro":
             rules.append(_make_rule(
                 hold_id, "threat_response",
-                f"Hold {name} for high-value targets — don't waste removal",
+                f"Hold {name} — instant-speed removal in hand",
                 priority="high", weight=1.1, tags=["reactive", "removal"],
+                action_family="pass",
                 my_turn=True,
                 require=[
                     {"zone": "hand", "match": {"name": name, "castable": True}, "min_count": 1},
@@ -262,8 +274,9 @@ def _generate_removal_rules(analysis: dict) -> list[dict]:
             # Override: use removal when at low life vs big creature
             rules.append(_make_rule(
                 f"threat_use_{safe_id}_low_life", "threat_response",
-                f"Use {name} NOW — low life, must remove threat",
+                f"Cast {name} — life below 11, opponent creature power 3+",
                 priority="critical", weight=1.3, tags=["reactive", "removal", "survival"],
+                action_family="cast_spell",
                 my_turn=True,
                 life_below=11,
                 conflicts_with=[hold_id, "meta_save_removal_for_must_answer"],
@@ -276,8 +289,9 @@ def _generate_removal_rules(analysis: dict) -> list[dict]:
             # Override: use removal when topdecking (hand size 1 = just this card)
             rules.append(_make_rule(
                 f"threat_use_{safe_id}_topdeck", "threat_response",
-                f"Use {name} — topdecked removal, no reason to hold",
+                f"Cast {name} — hand size <=2, removal on board target",
                 priority="high", weight=1.2, tags=["reactive", "removal"],
+                action_family="cast_spell",
                 my_turn=True,
                 hand_size_max=2,
                 conflicts_with=[hold_id, "meta_save_removal_for_must_answer"],
@@ -289,8 +303,9 @@ def _generate_removal_rules(analysis: dict) -> list[dict]:
         else:
             rules.append(_make_rule(
                 f"threat_use_{safe_id}", "threat_response",
-                f"Use {name} on the biggest threat",
+                f"Cast {name} — removal on highest-power creature",
                 priority="medium", weight=1.0, tags=["removal"],
+                action_family="cast_spell",
                 my_turn=True,
                 require=[
                     {"zone": "hand", "match": {"name": name, "castable": True}, "min_count": 1},
@@ -312,8 +327,9 @@ def _generate_synergy_rules(analysis: dict) -> list[dict]:
     if lifelink_names and etb_names:
         rules.append(_make_rule(
             "synergy_lifelink_payoff", "card_synergy",
-            f"Cast lifegain payoff before attacking with lifelink creatures",
+            "Cast lifegain payoff in Main 1 — lifelink creatures on board",
             priority="high", weight=1.2, tags=["synergy", "sequence"],
+            action_family="cast_spell",
             phase=["Main"], step="Phase_Main1", my_turn=True,
         ))
 
@@ -324,8 +340,9 @@ def _generate_synergy_rules(analysis: dict) -> list[dict]:
         if fly_names:
             rules.append(_make_rule(
                 "synergy_flying_pressure", "card_synergy",
-                f"Deploy flyers — evasive damage wins races",
-                priority="medium", weight=1.1, tags=["evasion", "tempo"],
+                "Cast flying creature — no flying/reach on opponent board",
+                priority="medium", weight=1.1, tags=["evasion"],
+                action_family="cast_spell",
                 phase=["Main"], my_turn=True,
                 require=[
                     {"zone": "opp_battlefield", "match": {"keyword": "flying|reach"}, "absent": True},
@@ -339,8 +356,9 @@ def _generate_synergy_rules(analysis: dict) -> list[dict]:
         safe_id = re.sub(r"[^a-z0-9]", "_", name.lower()).strip("_")
         rules.append(_make_rule(
             f"synergy_hold_flash_{safe_id}", "card_synergy",
-            f"Hold {name} — cast on opponent's turn for surprise blocker",
+            f"Hold {name} — flash creature, castable on opponent turn",
             priority="medium", weight=1.0, tags=["reactive", "flash"],
+            action_family="pass",
             my_turn=True,
             require=[{"zone": "hand", "match": {"name": name, "castable": True}, "min_count": 1}],
         ))
@@ -354,8 +372,9 @@ def _generate_synergy_rules(analysis: dict) -> list[dict]:
         if "+1/+1 counter" in text or "gets +" in text:
             rules.append(_make_rule(
                 f"synergy_etb_{safe_id}_with_board", "card_synergy",
-                f"Cast {name} when you have creatures to buff",
+                f"Cast {name} — creatures on board to receive counters/buff",
                 priority="medium", weight=1.0, tags=["synergy"],
+                action_family="cast_spell",
                 phase=["Main"], my_turn=True,
                 require=[
                     {"zone": "hand", "match": {"name": name, "castable": True}, "min_count": 1},
@@ -374,8 +393,9 @@ def _generate_situation_rules(analysis: dict) -> list[dict]:
     if arch == "aggro" and analysis["creature_count"] >= 10:
         rules.append(_make_rule(
             "situation_low_creatures_deploy", "situation",
-            "Low board presence — deploy creatures over interaction",
+            "Cast creature — 0-1 creatures on board, creature in hand",
             priority="high", weight=1.1, tags=["tempo"],
+            action_family="cast_spell",
             phase=["Main"], my_turn=True,
             my_creatures_min=0,  # Will use max to check "few creatures"
             require=[
@@ -386,8 +406,9 @@ def _generate_situation_rules(analysis: dict) -> list[dict]:
 
     rules.append(_make_rule(
         "situation_flood_activate", "situation",
-        "Flooding — use activated abilities or hold interaction",
+        "Activate ability or hold — 4+ lands in hand, turn 4+",
         priority="medium", weight=0.9, tags=["defensive"],
+        action_family="activate",
         hand_lands_min=4, turn_min=4,
     ))
 
@@ -401,15 +422,17 @@ def _generate_meta_rules(analysis: dict) -> list[dict]:
 
     rules.append(_make_rule(
         "meta_vs_fast_preserve_life", "meta_gameplan",
-        "Vs fast decks — block aggressively, preserve life total",
+        "Block with available creatures — opponent deck is fast",
         priority="high", weight=1.1, tags=["defensive"],
+        action_family="block",
         phase=["Main"], step="Phase_Main1",
         opp_speed="fast",
     ))
     rules.append(_make_rule(
         "meta_vs_slow_push_damage", "meta_gameplan",
-        "Vs slow decks — push damage before they stabilize",
+        "Attack before Main 2 — opponent deck is slow",
         priority="high", weight=1.1, tags=["aggressive"],
+        action_family="attack",
         phase=["Main"], step="Phase_Main1",
         opp_speed="slow",
     ))
@@ -417,8 +440,9 @@ def _generate_meta_rules(analysis: dict) -> list[dict]:
     if analysis["removal"]:
         rules.append(_make_rule(
             "meta_save_removal_for_must_answer", "meta_gameplan",
-            "Save removal for must-answer threats",
+            "Hold removal — must-answer threat expected from opponent",
             priority="high", weight=1.2, tags=["reactive"],
+            action_family="pass",
             opp_has_must_answer=True,
             require=[
                 {"zone": "hand", "match": {"keyword": "destroy|exile", "castable": True}, "min_count": 1},
@@ -569,7 +593,7 @@ def _build_enrich_prompt(deck_path: Path, deck_name: str, strategy: dict) -> str
         f"  - [{r['layer']}] {r['id']}: {r['action']}" for r in strategy["rules"]
     )
     return "\n".join([
-        "You are an expert MTG Arena competitive coach.",
+        "You are an expert MTG Arena competitive analyst.",
         f"You are enriching the strategy for '{deck_name}' ({strategy['archetype']}).",
         "",
         f"Deck list: {deck_path}",
@@ -580,11 +604,11 @@ def _build_enrich_prompt(deck_path: Path, deck_name: str, strategy: dict) -> str
         "",
         "Your job: ADD 8-15 NEW rules that the mechanical generator CANNOT create.",
         "Focus on:",
-        "1. **Specific card sequencing** — which card to play before which and WHY",
+        "1. **Specific card sequencing** — which card to cast before which (factual order)",
         "2. **Non-obvious synergies** — interactions the mechanical analyzer misses",
-        "3. **Matchup-specific tactics** — how to play vs aggro/control/combo specifically",
-        "4. **Timing decisions** — when to hold vs deploy, when to trade vs race",
-        "5. **Win condition protection** — how to play around specific removal/wipes",
+        "3. **Matchup-specific tactics** — how to sequence vs aggro/control/combo",
+        "4. **Timing decisions** — when to hold vs deploy based on board state",
+        "5. **Win condition protection** — play around specific removal/wipes",
         "",
         "IMPORTANT:",
         f"- Do NOT duplicate existing rule IDs: {existing_ids}",
@@ -592,9 +616,14 @@ def _build_enrich_prompt(deck_path: Path, deck_name: str, strategy: dict) -> str
         "- Use layers: card_synergy, threat_response, situation, meta_gameplan",
         "- Set weight to 1.0 for all new rules (GA will optimize later)",
         "- Keep action text under 80 characters",
+        '- Every rule MUST have \"_source\": \"llm\"',
+        '- Every rule MUST have \"action_family\": one of cast_spell, play_land, attack, block, activate, pass',
+        "- Action text must be FACTUAL (describe board state, card properties, sequence).",
+        "  Do NOT use coaching language like: pressure, stabilize, race, tempo, aggressive push, threats.",
+        "  DO use factual words like: on curve, castable, instant-speed, on board, in hand.",
         "",
         "Return ONLY a JSON array of new Rule objects. No explanation, no markdown.",
-        "Example: [{\"id\": \"synergy_example\", \"layer\": \"card_synergy\", ...}, ...]",
+        'Example: [{"id": "synergy_example", "layer": "card_synergy", "action_family": "cast_spell", "_source": "llm", ...}, ...]',
     ])
 
 
@@ -659,6 +688,8 @@ async def _enrich_with_llm(
         rule.setdefault("tags", [])
         rule.setdefault("stats", {"fired": 0, "correct": 0})
         rule.setdefault("conflicts_with", [])
+        rule["_source"] = "llm"  # always mark LLM-generated rules
+        rule.setdefault("action_family", "cast_spell")
         valid_rules.append(rule)
         existing_ids.add(rule["id"])
 

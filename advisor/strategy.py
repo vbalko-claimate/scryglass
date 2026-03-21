@@ -146,6 +146,11 @@ class Rule:
     times_fired: int = 0
     times_correct: int = 0
 
+    metrics: dict = field(default_factory=dict)  # serialized RuleMetrics
+
+    # Provenance
+    source: str = ""  # "mechanical" | "llm" | "manual" | "ga"
+
     @property
     def layer_priority(self) -> int:
         return LAYERS.get(self.layer, 0)
@@ -1276,6 +1281,10 @@ def _rule_to_dict(r: Rule) -> dict:
         d["conflicts_with"] = r.conflicts_with
     d["weight"] = r.weight
     d["stats"] = {"fired": r.times_fired, "correct": r.times_correct}
+    if r.metrics:
+        d["metrics"] = r.metrics
+    if r.source:
+        d["_source"] = r.source
     return d
 
 
@@ -1323,6 +1332,8 @@ def _rule_from_dict(d: dict) -> Rule:
         weight=d.get("weight", 1.0),
         times_fired=stats.get("fired", 0),
         times_correct=stats.get("correct", 0),
+        metrics=d.get("metrics", {}),
+        source=d.get("_source", ""),
     )
 
 
@@ -1342,6 +1353,9 @@ def save_strategy(strategy: Strategy):
         "vulnerabilities": strategy.vulnerabilities,
         "stats": strategy.stats,
     }
+    from .version import ENGINE_VERSION, SCHEMA_VERSION
+    data["_engine_version"] = ENGINE_VERSION
+    data["_schema_version"] = SCHEMA_VERSION
     path = _strategy_path(strategy.name)
     path.write_text(json.dumps(data, indent=2))
     log.info("Strategy saved: %s → %s", strategy.name, path.name)
@@ -1357,6 +1371,11 @@ def load_strategy(name: str) -> Strategy | None:
 def _load_strategy_file(path: Path) -> Strategy | None:
     try:
         data = json.loads(path.read_text())
+        from .version import ENGINE_VERSION
+        saved_version = data.get("_engine_version", "")
+        if saved_version and saved_version != ENGINE_VERSION:
+            log.warning("Strategy %s was saved with engine %s (current: %s) — re-optimize recommended",
+                        path.stem, saved_version, ENGINE_VERSION)
         rules = [_rule_from_dict(r) for r in data.get("rules", [])]
         return Strategy(
             name=data["name"],

@@ -114,6 +114,14 @@ def validate_strategy(path: Path, fix: bool = False) -> list[str]:
             + ("" if fix else " (use --fix to auto-populate)")
         )
 
+    # ── Check 6: Missing _source ──
+    missing_source = [r for r in rules if not r.get("_source")]
+    if missing_source:
+        issues.append(
+            f"SOURCE: {len(missing_source)} rules missing _source"
+            + ("" if fix else " (use --fix to auto-populate)")
+        )
+
     if fix and issues:
         print(f"Fixing {len(issues)} issues...", file=sys.stderr)
         data["rules"] = _validate_and_fix_rules(rules)
@@ -130,6 +138,15 @@ def validate_strategy(path: Path, fix: bool = False) -> list[str]:
             family = infer_action_family(r.get("action", ""), rule_tags=r.get("tags", []))
             r["action_family"] = family.value
             print(f"  Added action_family={family.value} to rule {r['id']}", file=sys.stderr)
+
+        # Auto-populate _source on rules that lack it
+        source_added = 0
+        for r in data["rules"]:
+            if not r.get("_source"):
+                r["_source"] = "manual"
+                source_added += 1
+        if source_added:
+            print(f"  Added _source='manual' to {source_added} rules", file=sys.stderr)
 
         path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n")
         print(f"Written: {path}", file=sys.stderr)
