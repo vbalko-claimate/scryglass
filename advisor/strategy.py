@@ -19,6 +19,7 @@ from pathlib import Path
 from .database import card_cache, USER_DATA_DIR
 from .models import ActionFamily, ActionScore, Advice, GameState, GameObject, RuleHit
 from .actions import infer_action_family, score_from_priority, render_advice
+from .version import ENGINE_VERSION, SCHEMA_VERSION
 
 log = logging.getLogger(__name__)
 
@@ -1352,7 +1353,6 @@ def save_strategy(strategy: Strategy):
         "vulnerabilities": strategy.vulnerabilities,
         "stats": strategy.stats,
     }
-    from .version import ENGINE_VERSION, SCHEMA_VERSION
     data["_engine_version"] = ENGINE_VERSION
     data["_schema_version"] = SCHEMA_VERSION
     path = _strategy_path(strategy.name)
@@ -1367,10 +1367,17 @@ def load_strategy(name: str) -> Strategy | None:
     return _load_strategy_file(path)
 
 
+def load_raw_strategy(name: str) -> dict | None:
+    """Load raw JSON dict for a strategy file (no parsing into Strategy objects)."""
+    path = _strategy_path(name)
+    if not path.exists():
+        return None
+    return json.loads(path.read_text())
+
+
 def _load_strategy_file(path: Path) -> Strategy | None:
     try:
         data = json.loads(path.read_text())
-        from .version import ENGINE_VERSION, SCHEMA_VERSION
         saved_version = data.get("_engine_version", "")
         if saved_version and saved_version != ENGINE_VERSION:
             log.warning("Strategy %s was saved with engine %s (current: %s) — re-optimize recommended",

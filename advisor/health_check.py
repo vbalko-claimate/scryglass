@@ -20,7 +20,7 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-from .strategy import evaluate_rules, load_strategy, OpponentTracker, MetaDeck, _strategy_path
+from .strategy import evaluate_rules, load_strategy, load_raw_strategy, OpponentTracker, MetaDeck
 from .database import card_cache
 from .regression_tests import WHITE_LIFEGAIN_SCENARIOS, RED_GOBLINS_SCENARIOS, run_scenario
 
@@ -62,14 +62,6 @@ def _check_spam(strategy, state, opp_tracker) -> dict:
     }
 
 
-def _load_raw_strategy(deck_name: str) -> dict | None:
-    """Load raw JSON for a strategy file."""
-    path = _strategy_path(deck_name)
-    if not path.exists():
-        return None
-    return json.loads(path.read_text())
-
-
 def _evaluate_deck(deck_name: str) -> dict:
     """Evaluate one deck's rule health."""
     strategy = load_strategy(deck_name)
@@ -79,7 +71,7 @@ def _evaluate_deck(deck_name: str) -> dict:
     rule_counts = _count_rules(strategy)
 
     # Load raw JSON for pruned count and engine version
-    raw = _load_raw_strategy(deck_name) or {}
+    raw = load_raw_strategy(deck_name) or {}
     raw_rules = raw.get("rules", [])
     pruned_count = sum(1 for r in raw_rules if r.get("pruned"))
     engine_version = raw.get("_engine_version", "")

@@ -12,6 +12,7 @@ from pathlib import Path
 
 # Reuse the validator from the generator
 from .generate_rules import _validate_and_fix_rules
+from .version import ENGINE_VERSION
 
 
 def validate_strategy(path: Path, fix: bool = False) -> list[str]:
@@ -128,7 +129,6 @@ def validate_strategy(path: Path, fix: bool = False) -> list[str]:
             issues.append(f"PRUNED_WEIGHT: {r['id']} is pruned but weight={r.get('weight')}")
 
     # ── Check 8: Version check ──
-    from .version import ENGINE_VERSION
     saved_version = data.get("_engine_version", "")
     if saved_version and saved_version != ENGINE_VERSION:
         issues.append(f"VERSION: saved with engine {saved_version}, current is {ENGINE_VERSION}")
