@@ -6,6 +6,7 @@ import copy
 import json
 import logging
 import os
+from pathlib import Path
 from typing import Callable
 
 from .database import (
@@ -1733,6 +1734,59 @@ class AdvisorEngine:
                 pass  # telemetry must never break gameplay
             # Record snapshot for 2-turn outcome evaluation
             self._record_pending_outcome(state, len(merged))
+
+            # Shadow reranker (logs only, doesn't affect advice)
+            try:
+                if not hasattr(self, "_reranker"):
+                    self._reranker = None
+                if self._reranker is None:
+                    from .reranker import Reranker
+                    _model_path = Path(__file__).parent.parent / "data" / "models" / "reranker_v1.npz"
+                    if _model_path.exists():
+                        self._reranker = Reranker()
+                        self._reranker.load(_model_path)
+                    else:
+                        self._reranker = False  # sentinel: no model file
+                if self._reranker and self._reranker.trained:
+                    shadow_state = {
+                        "turn": state.turn_info.turn_number,
+                        "phase": state.turn_info.phase,
+                        "my_life": state.my_player().life_total if state.my_player() else 20,
+                        "opp_life": state.opp_player().life_total if state.opp_player() else 20,
+                        "hand_size": len(state.my_hand()),
+                        "board_creature_count": len(state.my_creatures()),
+                        "opp_creature_count": len(state.opp_creatures()),
+                        "mana_available": len(state.my_untapped_lands()),
+                    }
+                    shadow_candidates = []
+                    for a in merged[:5]:
+                        top_score = a.action_scores[0] if a.action_scores else None
+                        shadow_candidates.append({
+                            "rank": len(shadow_candidates),
+                            "rule_id": top_score.rule_id if top_score else "",
+                            "action_family": top_score.family.value if top_score else "",
+                            "score": top_score.score if top_score else 0.0,
+                            "priority": a.priority,
+                        })
+                    if len(shadow_candidates) >= 2:
+                        reranked = self._reranker.rerank(shadow_state, shadow_candidates)
+                        save_match_event(
+                            state.match_info.match_id, "reranker_shadow",
+                            game_number=state.match_info.game_number,
+                            turn_number=state.turn_info.turn_number,
+                            phase=state.turn_info.phase,
+                            data={
+                                "decision_id": decision_id,
+                                "engine_top": shadow_candidates[0].get("rule_id", ""),
+                                "reranker_top": reranked[0].get("rule_id", ""),
+                                "agreed": shadow_candidates[0].get("rule_id") == reranked[0].get("rule_id"),
+                                "reranker_scores": [
+                                    {"rule_id": c["rule_id"], "prob": c.get("reranker_prob", 0)}
+                                    for c in reranked[:3]
+                                ],
+                            })
+            except Exception:
+                pass  # shadow must never break gameplay
 
         recs = []
         for item in advice:
