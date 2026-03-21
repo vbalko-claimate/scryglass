@@ -1371,11 +1371,14 @@ def load_strategy(name: str) -> Strategy | None:
 def _load_strategy_file(path: Path) -> Strategy | None:
     try:
         data = json.loads(path.read_text())
-        from .version import ENGINE_VERSION
+        from .version import ENGINE_VERSION, SCHEMA_VERSION
         saved_version = data.get("_engine_version", "")
         if saved_version and saved_version != ENGINE_VERSION:
             log.warning("Strategy %s was saved with engine %s (current: %s) — re-optimize recommended",
                         path.stem, saved_version, ENGINE_VERSION)
+        saved_schema = data.get("_schema_version", "")
+        if saved_schema and saved_schema != SCHEMA_VERSION:
+            log.warning("Strategy %s uses schema %s (current: %s)", path.stem, saved_schema, SCHEMA_VERSION)
         rules = [_rule_from_dict(r) for r in data.get("rules", [])]
         return Strategy(
             name=data["name"],
