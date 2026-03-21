@@ -1281,8 +1281,7 @@ def _rule_to_dict(r: Rule) -> dict:
         d["conflicts_with"] = r.conflicts_with
     d["weight"] = r.weight
     d["stats"] = {"fired": r.times_fired, "correct": r.times_correct}
-    if r.metrics:
-        d["metrics"] = r.metrics
+    d["metrics"] = r.metrics
     if r.source:
         d["_source"] = r.source
     return d
