@@ -12,22 +12,17 @@ from __future__ import annotations
 import argparse
 import json
 import logging
-import re
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from .database import card_cache
-from .models import GameState, TurnInfo, PlayerState, MatchInfo, Zone, GameObject
 from .strategy import load_strategy, evaluate_rules_v2, OpponentTracker, MetaDeck
+from .test_utils import CORPUS_DIR, REPLAY_PASS_THRESHOLD, build_synthetic_state
 from .version import ENGINE_VERSION
 
 log = logging.getLogger(__name__)
 
-CORPUS_DIR = Path(__file__).parent.parent / "data" / "replay_corpus"
 RESULT_PATH = Path(__file__).parent.parent / "data" / "replay_diff_result.json"
-
-PASS_THRESHOLD = 0.90
 
 
 @dataclass
@@ -42,96 +37,20 @@ class DiffResult:
     skipped: int = 0
 
 
-# ─── State Builder (mirrors regression_tests._build_state) ──────
+# ─── State Builder ───────────────────────────────────────────────
 
-def _build_state_from_entry(entry: dict) -> GameState | None:
+def _build_state_from_entry(entry: dict):
     """Build a synthetic GameState from a corpus entry's state dict."""
-    card_cache.load()
     st = entry["state"]
-
-    state = GameState()
-    state.my_seat_id = 1
-    state.match_info = MatchInfo()
-    state.match_info.opponent_seat_id = 2
-
-    state.players = {
-        1: PlayerState(seat_id=1, life_total=st.get("my_life", 20)),
-        2: PlayerState(seat_id=2, life_total=st.get("opp_life", 20)),
-    }
-    state.turn_info = TurnInfo(
+    return build_synthetic_state(
+        turn=st.get("turn", 1),
         phase=st.get("phase", "Phase_Main1"),
-        step=st.get("phase", "Phase_Main1"),
-        turn_number=st.get("turn", 1),
-        active_player=1, priority_player=1, decision_player=1,
+        my_life=st.get("my_life", 20),
+        opp_life=st.get("opp_life", 20),
+        hand=st.get("hand", []),
+        my_battlefield=st.get("my_battlefield", []),
+        opp_battlefield=st.get("opp_battlefield", []),
     )
-
-    zone_id = 1
-    objects: dict[int, GameObject] = {}
-    instance_id = 1000
-
-    def make_obj(name: str, owner: int) -> GameObject | None:
-        nonlocal instance_id
-        card = None
-        for c in card_cache._cache.values():
-            if c.name == name:
-                card = c
-                break
-        if not card:
-            is_land = name in ("Plains", "Mountain", "Island", "Swamp", "Forest")
-            gre_types = ["CardType_Land"] if is_land else ["CardType_Creature"]
-            obj = GameObject(
-                instance_id=instance_id, grp_id=0, zone_id=0,
-                owner_seat_id=owner, controller_seat_id=owner,
-                card_types=gre_types, name=name,
-                power=2 if not is_land else 0,
-                toughness=2 if not is_land else 0,
-            )
-        else:
-            gre_types = [f"CardType_{t}" for t in card.card_types]
-            obj = GameObject(
-                instance_id=instance_id, grp_id=card.grp_id, zone_id=0,
-                owner_seat_id=owner, controller_seat_id=owner,
-                card_types=gre_types, name=card.name,
-                color=card.colors,
-                power=int(card.power) if card.power and card.power.isdigit() else 0,
-                toughness=int(card.toughness) if card.toughness and card.toughness.isdigit() else 0,
-            )
-        instance_id += 1
-        return obj
-
-    hand_zone = Zone(zone_id=zone_id, type="ZoneType_Hand", owner_seat_id=1)
-    zone_id += 1
-    bf_zone = Zone(zone_id=zone_id, type="ZoneType_Battlefield", owner_seat_id=0)
-    zone_id += 1
-
-    for name in st.get("hand", []):
-        obj = make_obj(name, 1)
-        if obj is None:
-            continue
-        obj.zone_id = hand_zone.zone_id
-        objects[obj.instance_id] = obj
-        hand_zone.object_instance_ids.append(obj.instance_id)
-
-    for name in st.get("my_battlefield", []):
-        obj = make_obj(name, 1)
-        if obj is None:
-            continue
-        obj.zone_id = bf_zone.zone_id
-        objects[obj.instance_id] = obj
-        bf_zone.object_instance_ids.append(obj.instance_id)
-
-    for name in st.get("opp_battlefield", []):
-        obj = make_obj(name, 2)
-        if obj is None:
-            continue
-        obj.zone_id = bf_zone.zone_id
-        objects[obj.instance_id] = obj
-        bf_zone.object_instance_ids.append(obj.instance_id)
-
-    state.zones = {hand_zone.zone_id: hand_zone, bf_zone.zone_id: bf_zone}
-    state.objects = objects
-    state.game_objects = objects
-    return state
 
 
 # ─── Replay & Compare ───────────────────────────────────────────
@@ -141,10 +60,11 @@ def _extract_rule_ids(hits) -> list[str]:
     return [h.rule_id for h in hits]
 
 
-def replay_entry(entry: dict, verbose: bool = False) -> DiffResult | None:
+def replay_entry(entry: dict, strategy=None, verbose: bool = False) -> DiffResult | None:
     """Replay a single corpus entry. Returns None if strategy can't load."""
     strategy_name = entry.get("strategy_name", "")
-    strategy = load_strategy(strategy_name)
+    if strategy is None:
+        strategy = load_strategy(strategy_name)
     if not strategy:
         return None
 
@@ -253,7 +173,7 @@ def replay_corpus(deck_filter: str | None = None, verbose: bool = False) -> list
         deck_result = DiffResult(deck=strategy_name)
 
         for entry in entries:
-            r = replay_entry(entry, verbose=verbose)
+            r = replay_entry(entry, strategy=strategy, verbose=verbose)
             if r is None:
                 deck_result.skipped += 1
                 continue
@@ -291,7 +211,7 @@ def print_report(results: list[DiffResult]) -> float:
     for r in results:
         t1 = r.top_1_match / max(1, r.total_states)
         flip = r.flips / max(1, r.total_states)
-        status = "OK" if t1 >= PASS_THRESHOLD else "DRIFT"
+        status = "OK" if t1 >= REPLAY_PASS_THRESHOLD else "DRIFT"
         skip_note = f" ({r.skipped} skipped)" if r.skipped else ""
         print(f"  {status:5s} {r.deck:30s}  top1={t1:.0%}  flips={flip:.0%}  n={r.total_states}{skip_note}")
 
@@ -302,9 +222,9 @@ def print_report(results: list[DiffResult]) -> float:
     print(f"  Flip rate:       {flip_rate:.1%}")
     print(f"  Avg score delta: {avg_delta:.3f}")
 
-    passed = top_1_agreement >= PASS_THRESHOLD
+    passed = top_1_agreement >= REPLAY_PASS_THRESHOLD
     verdict = "PASS" if passed else "FAIL"
-    print(f"\n  Verdict: {verdict} (threshold: {PASS_THRESHOLD:.0%})")
+    print(f"\n  Verdict: {verdict} (threshold: {REPLAY_PASS_THRESHOLD:.0%})")
     print(f"{'='*50}")
 
     return top_1_agreement
@@ -320,8 +240,8 @@ def save_result(results: list[DiffResult], top_1_agreement: float) -> None:
         "total_states": total_states,
         "top_1_agreement": round(top_1_agreement, 4),
         "flip_rate": round(total_flips / max(1, total_states), 4),
-        "threshold": PASS_THRESHOLD,
-        "passed": top_1_agreement >= PASS_THRESHOLD,
+        "threshold": REPLAY_PASS_THRESHOLD,
+        "passed": top_1_agreement >= REPLAY_PASS_THRESHOLD,
         "decks": [
             {
                 "deck": r.deck,
@@ -385,7 +305,7 @@ def main():
     top_1_agreement = print_report(results)
     save_result(results, top_1_agreement)
 
-    sys.exit(0 if top_1_agreement >= PASS_THRESHOLD else 1)
+    sys.exit(0 if top_1_agreement >= REPLAY_PASS_THRESHOLD else 1)
 
 
 if __name__ == "__main__":

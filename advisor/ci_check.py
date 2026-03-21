@@ -11,12 +11,14 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+from .test_utils import REPLAY_PASS_THRESHOLD
+
 CI_RESULT_PATH = Path(__file__).resolve().parent.parent / "data" / "ci_result.json"
 
 # Gate thresholds
 CANONICAL_THRESHOLD = 1.0       # 100% pass required
 REGRESSION_THRESHOLD = 7        # absolute count (3 known failures)
-REPLAY_THRESHOLD = 0.90         # 90% top-1 agreement
+REPLAY_THRESHOLD = REPLAY_PASS_THRESHOLD  # from shared constant
 
 
 def _run_canonical_actions() -> dict:
@@ -104,7 +106,7 @@ def _run_replay_diff() -> dict:
         }
     except Exception as e:
         return {"top_1_agreement": None, "threshold": REPLAY_THRESHOLD,
-                "ok": True, "skipped": True, "reason": str(e)}
+                "ok": False, "skipped": True, "reason": str(e)}
 
 
 def _run_schema_check() -> dict:
@@ -131,16 +133,12 @@ def _run_schema_check() -> dict:
     return {"ok": len(mismatches) == 0, "mismatches": mismatches}
 
 
-def _run_health_check() -> dict:
-    """Run health check (informational, never gates)."""
-    try:
-        from .health_check import run_health_check
-        results = run_health_check(save=False)
-        t1 = results.get("tier1_engine", {})
-        rate = t1.get("regression_pass_rate", 0)
-        return {"regression_pass_rate": rate}
-    except Exception as e:
-        return {"regression_pass_rate": None, "error": str(e)}
+def _run_health_check(regression_result: dict) -> dict:
+    """Derive health info from already-computed regression result (avoids double execution)."""
+    passed = regression_result.get("passed", 0)
+    total = regression_result.get("total", 0)
+    rate = passed / max(1, total)
+    return {"regression_pass_rate": round(rate, 2)}
 
 
 def run_ci(strict: bool = False) -> dict:
@@ -174,8 +172,8 @@ def run_ci(strict: bool = False) -> dict:
     mismatches = schema.get("mismatches", [])
     print(f"4. Schema Check: {ok_mark}" + (f" ({len(mismatches)} mismatches)" if mismatches else ""))
 
-    # 5. Health check (informational)
-    health = _run_health_check()
+    # 5. Health info (derived from regression result — no double execution)
+    health = _run_health_check(regression)
     rate = health.get("regression_pass_rate")
     if rate is not None:
         print(f"5. Health Check: {rate:.0%} regression pass rate (informational)")

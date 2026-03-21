@@ -11,20 +11,19 @@ from __future__ import annotations
 import argparse
 import json
 import logging
-import re
 import sys
 from collections import defaultdict
 from pathlib import Path
 
 from .database import get_connection, card_cache, DB_PATH
 from .regression_tests import WHITE_LIFEGAIN_SCENARIOS, RED_GOBLINS_SCENARIOS, Scenario
+from .test_utils import CORPUS_DIR
 from .strategy import load_strategy, evaluate_rules_v2, OpponentTracker, MetaDeck
 from .regression_tests import _build_state
 from .version import ENGINE_VERSION
 
 log = logging.getLogger(__name__)
 
-CORPUS_DIR = Path(__file__).parent.parent / "data" / "replay_corpus"
 
 
 def _slugify(name: str) -> str:
@@ -244,18 +243,15 @@ def export(min_states: int = 20, max_states: int = 100) -> None:
 
 def rebaseline() -> None:
     """Re-run current engine on existing corpus and update expected output."""
-    from .replay_diff import _build_state_from_entry, _extract_rule_ids
-    from .strategy import load_strategy, evaluate_rules_v2, OpponentTracker, MetaDeck
-
-    corpus_dir = Path(__file__).parent.parent / "data" / "replay_corpus"
-    if not corpus_dir.exists():
+    from .replay_diff import _build_state_from_entry
+    if not CORPUS_DIR.exists():
         print("No corpus directory found. Run --export first.")
         sys.exit(1)
 
     card_cache.load()
     total_updated = 0
 
-    for path in sorted(corpus_dir.glob("*.json")):
+    for path in sorted(CORPUS_DIR.glob("*.json")):
         entries = json.loads(path.read_text())
         updated = 0
         for entry in entries:

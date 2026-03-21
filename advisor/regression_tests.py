@@ -155,84 +155,13 @@ RED_GOBLINS_SCENARIOS = [
 
 def _build_state(scenario: Scenario) -> GameState:
     """Build a synthetic GameState from a scenario."""
-    card_cache.load()
-    state = GameState()
-    state.my_seat_id = 1
-    state.match_info = MatchInfo()
-    state.match_info.opponent_seat_id = 2
-
-    state.players = {
-        1: PlayerState(seat_id=1, life_total=scenario.my_life),
-        2: PlayerState(seat_id=2, life_total=scenario.opp_life),
-    }
-    state.turn_info = TurnInfo(
-        phase=scenario.phase, step=scenario.phase,
-        turn_number=scenario.turn,
-        active_player=1, priority_player=1, decision_player=1,
+    from .test_utils import build_synthetic_state
+    return build_synthetic_state(
+        turn=scenario.turn, phase=scenario.phase,
+        my_life=scenario.my_life, opp_life=scenario.opp_life,
+        hand=scenario.hand, my_battlefield=scenario.my_battlefield,
+        opp_battlefield=scenario.opp_battlefield,
     )
-
-    zone_id = 1
-    objects: dict[int, GameObject] = {}
-    instance_id = 1000
-
-    def make_obj(name, zone_type, owner):
-        nonlocal instance_id
-        card = None
-        for c in card_cache._cache.values():
-            if c.name == name:
-                card = c
-                break
-        if not card:
-            # Fallback
-            is_land = name in ("Plains", "Mountain", "Island", "Swamp", "Forest")
-            gre_types = ["CardType_Land"] if is_land else ["CardType_Creature"]
-            obj = GameObject(
-                instance_id=instance_id, grp_id=0, zone_id=0,
-                owner_seat_id=owner, controller_seat_id=owner,
-                card_types=gre_types, name=name,
-                power=2 if not is_land else 0,
-                toughness=2 if not is_land else 0,
-            )
-        else:
-            gre_types = [f"CardType_{t}" for t in card.card_types]
-            obj = GameObject(
-                instance_id=instance_id, grp_id=card.grp_id, zone_id=0,
-                owner_seat_id=owner, controller_seat_id=owner,
-                card_types=gre_types, name=card.name,
-                color=card.colors,
-                power=int(card.power) if card.power and card.power.isdigit() else 0,
-                toughness=int(card.toughness) if card.toughness and card.toughness.isdigit() else 0,
-            )
-        instance_id += 1
-        return obj
-
-    hand_zone = Zone(zone_id=zone_id, type="ZoneType_Hand", owner_seat_id=1)
-    zone_id += 1
-    bf_zone = Zone(zone_id=zone_id, type="ZoneType_Battlefield", owner_seat_id=0)
-    zone_id += 1
-
-    for name in scenario.hand:
-        obj = make_obj(name, "hand", 1)
-        obj.zone_id = hand_zone.zone_id
-        objects[obj.instance_id] = obj
-        hand_zone.object_instance_ids.append(obj.instance_id)
-
-    for name in scenario.my_battlefield:
-        obj = make_obj(name, "battlefield", 1)
-        obj.zone_id = bf_zone.zone_id
-        objects[obj.instance_id] = obj
-        bf_zone.object_instance_ids.append(obj.instance_id)
-
-    for name in scenario.opp_battlefield:
-        obj = make_obj(name, "battlefield", 2)
-        obj.zone_id = bf_zone.zone_id
-        objects[obj.instance_id] = obj
-        bf_zone.object_instance_ids.append(obj.instance_id)
-
-    state.zones = {hand_zone.zone_id: hand_zone, bf_zone.zone_id: bf_zone}
-    state.objects = objects
-    state.game_objects = objects
-    return state
 
 
 def run_scenario(scenario: Scenario, verbose: bool = False) -> tuple[bool, list[str]]:
