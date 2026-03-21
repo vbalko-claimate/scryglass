@@ -101,9 +101,36 @@ def validate_strategy(path: Path, fix: bool = False) -> list[str]:
             issues.append(f"DUPLICATE: {r['id']}")
         seen_ids.add(r["id"])
 
+    # ── Check 5: Missing action_family ──
+    missing_af = [
+        r for r in rules
+        if not r.get("action_family")
+        and r.get("layer") != "mulligan"
+        and not (r.get("phase") and "Mulligan" in r.get("phase", []))
+    ]
+    if missing_af:
+        issues.append(
+            f"ACTION_FAMILY: {len(missing_af)} rules missing action_family"
+            + ("" if fix else " (use --fix to auto-populate)")
+        )
+
     if fix and issues:
         print(f"Fixing {len(issues)} issues...", file=sys.stderr)
         data["rules"] = _validate_and_fix_rules(rules)
+
+        # Auto-populate action_family on rules that lack it
+        from .actions import infer_action_family
+        for r in data["rules"]:
+            if r.get("action_family"):
+                continue
+            if r.get("layer") == "mulligan":
+                continue
+            if r.get("phase") and "Mulligan" in r.get("phase", []):
+                continue
+            family = infer_action_family(r.get("action", ""), rule_tags=r.get("tags", []))
+            r["action_family"] = family.value
+            print(f"  Added action_family={family.value} to rule {r['id']}", file=sys.stderr)
+
         path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n")
         print(f"Written: {path}", file=sys.stderr)
 
