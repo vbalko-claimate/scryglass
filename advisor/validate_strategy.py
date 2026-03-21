@@ -122,6 +122,23 @@ def validate_strategy(path: Path, fix: bool = False) -> list[str]:
             + ("" if fix else " (use --fix to auto-populate)")
         )
 
+    # ── Check 7: Pruned rules should have weight 0.0 ──
+    for r in rules:
+        if r.get("pruned") and r.get("weight", 1.0) != 0.0:
+            issues.append(f"PRUNED_WEIGHT: {r['id']} is pruned but weight={r.get('weight')}")
+
+    # ── Check 8: Version check ──
+    from .version import ENGINE_VERSION
+    saved_version = data.get("_engine_version", "")
+    if saved_version and saved_version != ENGINE_VERSION:
+        issues.append(f"VERSION: saved with engine {saved_version}, current is {ENGINE_VERSION}")
+
+    # ── Check 9: Global biases range ──
+    biases = data.get("global_biases", {})
+    for family, value in biases.items():
+        if not -0.5 <= value <= 0.5:
+            issues.append(f"BIAS_RANGE: {family}={value} outside [-0.5, 0.5]")
+
     if fix and issues:
         print(f"Fixing {len(issues)} issues...", file=sys.stderr)
         data["rules"] = _validate_and_fix_rules(rules)
