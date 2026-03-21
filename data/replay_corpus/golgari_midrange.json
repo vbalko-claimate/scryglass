@@ -4135,5 +4135,3945 @@
       }
     ],
     "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 4,
+      "phase": "Phase_Main1",
+      "my_life": 20,
+      "opp_life": 20,
+      "hand": [
+        "Forest",
+        "Sanguine Syphoner",
+        "Forest",
+        "Hero's Downfall",
+        "Wardens of the Cycle",
+        "Mossborn Hydra"
+      ],
+      "my_battlefield": [
+        "Forest",
+        "Swamp"
+      ],
+      "opp_battlefield": [
+        "Floodfarm Verge",
+        "Island"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": null,
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_dont_tap_out",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 4,
+      "phase": "Phase_Main1",
+      "my_life": 20,
+      "opp_life": 20,
+      "hand": [
+        "Forest",
+        "Sanguine Syphoner",
+        "Forest",
+        "Hero's Downfall",
+        "Wardens of the Cycle",
+        "Mossborn Hydra"
+      ],
+      "my_battlefield": [
+        "Forest",
+        "Swamp"
+      ],
+      "opp_battlefield": [
+        "Floodfarm Verge",
+        "Island"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Azorius Tempo",
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_dont_tap_out",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 4,
+      "phase": "Phase_Main2",
+      "my_life": 20,
+      "opp_life": 20,
+      "hand": [],
+      "my_battlefield": [],
+      "opp_battlefield": []
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Azorius Tempo",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 8,
+      "phase": "Phase_Main1",
+      "my_life": 18,
+      "opp_life": 20,
+      "hand": [
+        "Spinner of Souls",
+        "Forest",
+        "Wardens of the Cycle"
+      ],
+      "my_battlefield": [
+        "Mossborn Hydra",
+        "Forest",
+        "Forest",
+        "Swamp",
+        "Swamp"
+      ],
+      "opp_battlefield": [
+        "Shrike Force",
+        "Floodfarm Verge",
+        "Island",
+        "Plains",
+        "Unable to Scream"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Azorius Tempo",
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_dont_tap_out",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 8,
+      "phase": "Phase_Main1",
+      "my_life": 18,
+      "opp_life": 20,
+      "hand": [
+        "Spinner of Souls",
+        "Forest",
+        "Wardens of the Cycle"
+      ],
+      "my_battlefield": [
+        "Mossborn Hydra",
+        "Forest",
+        "Forest",
+        "Swamp",
+        "Swamp"
+      ],
+      "opp_battlefield": [
+        "Shrike Force",
+        "Floodfarm Verge",
+        "Island",
+        "Plains",
+        "Unable to Scream"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Azorius Tempo",
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_dont_tap_out",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 12,
+      "phase": "Phase_Beginning",
+      "my_life": 20,
+      "opp_life": 20,
+      "hand": [],
+      "my_battlefield": [],
+      "opp_battlefield": []
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Azorius Tempo",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 12,
+      "phase": "Phase_Beginning",
+      "my_life": 20,
+      "opp_life": 20,
+      "hand": [],
+      "my_battlefield": [],
+      "opp_battlefield": []
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Azorius Tempo",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 12,
+      "phase": "Phase_Main1",
+      "my_life": 16,
+      "opp_life": 19,
+      "hand": [
+        "Wardens of the Cycle",
+        "Spinner of Souls"
+      ],
+      "my_battlefield": [
+        "Mossborn Hydra",
+        "Scavenging Ooze",
+        "Wardens of the Cycle",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp",
+        "Swamp"
+      ],
+      "opp_battlefield": [
+        "Empyrean Eagle",
+        "Empyrean Eagle",
+        "Floodfarm Verge",
+        "Island",
+        "Plains",
+        "Plains",
+        "Unable to Scream"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Azorius Tempo",
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_dont_tap_out",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 12,
+      "phase": "Phase_Main1",
+      "my_life": 16,
+      "opp_life": 19,
+      "hand": [
+        "Wardens of the Cycle",
+        "Spinner of Souls"
+      ],
+      "my_battlefield": [
+        "Mossborn Hydra",
+        "Scavenging Ooze",
+        "Wardens of the Cycle",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp",
+        "Swamp"
+      ],
+      "opp_battlefield": [
+        "Empyrean Eagle",
+        "Empyrean Eagle",
+        "Floodfarm Verge",
+        "Island",
+        "Plains",
+        "Plains",
+        "Unable to Scream"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Azorius Tempo",
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_dont_tap_out",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 14,
+      "phase": "Phase_Main1",
+      "my_life": 10,
+      "opp_life": 19,
+      "hand": [
+        "Spinner of Souls"
+      ],
+      "my_battlefield": [
+        "Mossborn Hydra",
+        "Scavenging Ooze",
+        "Wardens of the Cycle",
+        "Wardens of the Cycle",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp",
+        "Swamp",
+        "Swamp"
+      ],
+      "opp_battlefield": [
+        "Empyrean Eagle",
+        "Empyrean Eagle",
+        "Wan Shi Tong, Librarian",
+        "Floodfarm Verge",
+        "Island",
+        "Plains",
+        "Plains",
+        "Unable to Scream"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Azorius Tempo",
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_dont_tap_out",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 14,
+      "phase": "Phase_Main1",
+      "my_life": 10,
+      "opp_life": 19,
+      "hand": [
+        "Spinner of Souls"
+      ],
+      "my_battlefield": [
+        "Mossborn Hydra",
+        "Scavenging Ooze",
+        "Wardens of the Cycle",
+        "Wardens of the Cycle",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp",
+        "Swamp",
+        "Swamp"
+      ],
+      "opp_battlefield": [
+        "Empyrean Eagle",
+        "Empyrean Eagle",
+        "Wan Shi Tong, Librarian",
+        "Floodfarm Verge",
+        "Island",
+        "Plains",
+        "Plains",
+        "Unable to Scream"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Azorius Tempo",
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_dont_tap_out",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 14,
+      "phase": "Phase_Main1",
+      "my_life": 10,
+      "opp_life": 19,
+      "hand": [
+        "Spinner of Souls"
+      ],
+      "my_battlefield": [
+        "Mossborn Hydra",
+        "Scavenging Ooze",
+        "Wardens of the Cycle",
+        "Wardens of the Cycle",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp",
+        "Swamp",
+        "Swamp"
+      ],
+      "opp_battlefield": [
+        "Empyrean Eagle",
+        "Empyrean Eagle",
+        "Wan Shi Tong, Librarian",
+        "Floodfarm Verge",
+        "Island",
+        "Plains",
+        "Plains",
+        "Unable to Scream"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Azorius Tempo",
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_dont_tap_out",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 14,
+      "phase": "Phase_Combat",
+      "my_life": 10,
+      "opp_life": 19,
+      "hand": [
+        "Spinner of Souls"
+      ],
+      "my_battlefield": [
+        "Mossborn Hydra",
+        "Scavenging Ooze",
+        "Wardens of the Cycle",
+        "Wardens of the Cycle",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp",
+        "Swamp",
+        "Swamp"
+      ],
+      "opp_battlefield": [
+        "Empyrean Eagle",
+        "Empyrean Eagle",
+        "Wan Shi Tong, Librarian",
+        "Floodfarm Verge",
+        "Island",
+        "Plains",
+        "Plains",
+        "Unable to Scream"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Azorius Tempo",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 14,
+      "phase": "Phase_Combat",
+      "my_life": 10,
+      "opp_life": 19,
+      "hand": [
+        "Spinner of Souls"
+      ],
+      "my_battlefield": [
+        "Mossborn Hydra",
+        "Scavenging Ooze",
+        "Wardens of the Cycle",
+        "Wardens of the Cycle",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp",
+        "Swamp",
+        "Swamp"
+      ],
+      "opp_battlefield": [
+        "Empyrean Eagle",
+        "Empyrean Eagle",
+        "Wan Shi Tong, Librarian",
+        "Floodfarm Verge",
+        "Island",
+        "Plains",
+        "Plains",
+        "Unable to Scream"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Azorius Tempo",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 14,
+      "phase": "Phase_Main2",
+      "my_life": 10,
+      "opp_life": 19,
+      "hand": [
+        "Spinner of Souls"
+      ],
+      "my_battlefield": [
+        "Mossborn Hydra",
+        "Scavenging Ooze",
+        "Wardens of the Cycle",
+        "Wardens of the Cycle",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp",
+        "Swamp",
+        "Swamp"
+      ],
+      "opp_battlefield": [
+        "Empyrean Eagle",
+        "Empyrean Eagle",
+        "Wan Shi Tong, Librarian",
+        "Floodfarm Verge",
+        "Island",
+        "Plains",
+        "Plains",
+        "Unable to Scream"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Azorius Tempo",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 14,
+      "phase": "Phase_Main2",
+      "my_life": 10,
+      "opp_life": 19,
+      "hand": [
+        "Spinner of Souls"
+      ],
+      "my_battlefield": [
+        "Mossborn Hydra",
+        "Scavenging Ooze",
+        "Wardens of the Cycle",
+        "Wardens of the Cycle",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp",
+        "Swamp",
+        "Swamp"
+      ],
+      "opp_battlefield": [
+        "Empyrean Eagle",
+        "Empyrean Eagle",
+        "Wan Shi Tong, Librarian",
+        "Floodfarm Verge",
+        "Island",
+        "Plains",
+        "Plains",
+        "Unable to Scream"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Azorius Tempo",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 14,
+      "phase": "Phase_Main2",
+      "my_life": 10,
+      "opp_life": 19,
+      "hand": [
+        "Spinner of Souls"
+      ],
+      "my_battlefield": [
+        "Mossborn Hydra",
+        "Scavenging Ooze",
+        "Wardens of the Cycle",
+        "Wardens of the Cycle",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp",
+        "Swamp",
+        "Swamp"
+      ],
+      "opp_battlefield": [
+        "Empyrean Eagle",
+        "Empyrean Eagle",
+        "Wan Shi Tong, Librarian",
+        "Floodfarm Verge",
+        "Island",
+        "Plains",
+        "Plains",
+        "Unable to Scream"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Azorius Tempo",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 14,
+      "phase": "Phase_Ending",
+      "my_life": 20,
+      "opp_life": 20,
+      "hand": [],
+      "my_battlefield": [],
+      "opp_battlefield": []
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Azorius Tempo",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 15,
+      "phase": "Phase_Combat",
+      "my_life": 10,
+      "opp_life": 19,
+      "hand": [
+        "Spinner of Souls"
+      ],
+      "my_battlefield": [
+        "Mossborn Hydra",
+        "Scavenging Ooze",
+        "Wardens of the Cycle",
+        "Wardens of the Cycle",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp",
+        "Swamp",
+        "Swamp"
+      ],
+      "opp_battlefield": [
+        "Empyrean Eagle",
+        "Empyrean Eagle",
+        "Kastral, the Windcrested",
+        "Wan Shi Tong, Librarian",
+        "Cavern of Souls",
+        "Floodfarm Verge",
+        "Island",
+        "Plains",
+        "Plains",
+        "Unable to Scream"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Azorius Tempo",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 0,
+      "phase": "",
+      "my_life": 20,
+      "opp_life": 20,
+      "hand": [
+        "Midnight Reaper",
+        "Vampire Nighthawk",
+        "Forest",
+        "Vampire Nighthawk",
+        "Swamp",
+        "Forest",
+        "Reassembling Skeleton"
+      ],
+      "my_battlefield": [],
+      "opp_battlefield": []
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": null,
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 1,
+      "phase": "Phase_Main1",
+      "my_life": 20,
+      "opp_life": 20,
+      "hand": [
+        "Midnight Reaper",
+        "Vampire Nighthawk",
+        "Forest",
+        "Vampire Nighthawk",
+        "Swamp",
+        "Forest",
+        "Reassembling Skeleton"
+      ],
+      "my_battlefield": [],
+      "opp_battlefield": []
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": null,
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_dont_tap_out",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 1,
+      "phase": "Phase_Main1",
+      "my_life": 20,
+      "opp_life": 20,
+      "hand": [
+        "Midnight Reaper",
+        "Vampire Nighthawk",
+        "Forest",
+        "Vampire Nighthawk",
+        "Swamp",
+        "Forest",
+        "Reassembling Skeleton"
+      ],
+      "my_battlefield": [],
+      "opp_battlefield": []
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": null,
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_dont_tap_out",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 1,
+      "phase": "Phase_Main1",
+      "my_life": 20,
+      "opp_life": 20,
+      "hand": [
+        "Midnight Reaper",
+        "Vampire Nighthawk",
+        "Forest",
+        "Vampire Nighthawk",
+        "Swamp",
+        "Forest",
+        "Reassembling Skeleton"
+      ],
+      "my_battlefield": [],
+      "opp_battlefield": []
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": null,
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_dont_tap_out",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 1,
+      "phase": "Phase_Main2",
+      "my_life": 20,
+      "opp_life": 20,
+      "hand": [],
+      "my_battlefield": [],
+      "opp_battlefield": []
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": null,
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 3,
+      "phase": "Phase_Main1",
+      "my_life": 20,
+      "opp_life": 20,
+      "hand": [
+        "Midnight Reaper",
+        "Vampire Nighthawk",
+        "Forest",
+        "Vampire Nighthawk",
+        "Forest",
+        "Reassembling Skeleton"
+      ],
+      "my_battlefield": [
+        "Forest",
+        "Swamp"
+      ],
+      "opp_battlefield": [
+        "Turtle-Duck",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": null,
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_dont_tap_out",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 3,
+      "phase": "Phase_Main1",
+      "my_life": 20,
+      "opp_life": 20,
+      "hand": [
+        "Midnight Reaper",
+        "Vampire Nighthawk",
+        "Forest",
+        "Vampire Nighthawk",
+        "Forest",
+        "Reassembling Skeleton"
+      ],
+      "my_battlefield": [
+        "Forest",
+        "Swamp"
+      ],
+      "opp_battlefield": [
+        "Turtle-Duck",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": null,
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_dont_tap_out",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 3,
+      "phase": "Phase_Main1",
+      "my_life": 20,
+      "opp_life": 20,
+      "hand": [
+        "Midnight Reaper",
+        "Vampire Nighthawk",
+        "Forest",
+        "Vampire Nighthawk",
+        "Forest",
+        "Reassembling Skeleton"
+      ],
+      "my_battlefield": [
+        "Forest",
+        "Swamp"
+      ],
+      "opp_battlefield": [
+        "Turtle-Duck",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": null,
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_dont_tap_out",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 3,
+      "phase": "Phase_Main1",
+      "my_life": 20,
+      "opp_life": 20,
+      "hand": [
+        "Midnight Reaper",
+        "Vampire Nighthawk",
+        "Forest",
+        "Vampire Nighthawk",
+        "Forest",
+        "Reassembling Skeleton"
+      ],
+      "my_battlefield": [
+        "Forest",
+        "Swamp"
+      ],
+      "opp_battlefield": [
+        "Turtle-Duck",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": null,
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_dont_tap_out",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 3,
+      "phase": "Phase_Main1",
+      "my_life": 20,
+      "opp_life": 20,
+      "hand": [
+        "Midnight Reaper",
+        "Vampire Nighthawk",
+        "Forest",
+        "Vampire Nighthawk",
+        "Forest",
+        "Reassembling Skeleton"
+      ],
+      "my_battlefield": [
+        "Forest",
+        "Swamp"
+      ],
+      "opp_battlefield": [
+        "Turtle-Duck",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": null,
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_dont_tap_out",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 3,
+      "phase": "Phase_Main2",
+      "my_life": 20,
+      "opp_life": 20,
+      "hand": [],
+      "my_battlefield": [],
+      "opp_battlefield": []
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": null,
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 7,
+      "phase": "Phase_Beginning",
+      "my_life": 20,
+      "opp_life": 20,
+      "hand": [],
+      "my_battlefield": [],
+      "opp_battlefield": []
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 7,
+      "phase": "Phase_Beginning",
+      "my_life": 20,
+      "opp_life": 20,
+      "hand": [],
+      "my_battlefield": [],
+      "opp_battlefield": []
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 7,
+      "phase": "Phase_Main1",
+      "my_life": 17,
+      "opp_life": 22,
+      "hand": [
+        "Eager Trufflesnout",
+        "Vampire Nighthawk",
+        "Vampire Nighthawk"
+      ],
+      "my_battlefield": [
+        "Reassembling Skeleton",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp"
+      ],
+      "opp_battlefield": [
+        "Mikey & Leo, Chaos & Order",
+        "Turtle-Duck",
+        "Abandoned Air Temple",
+        "Plains",
+        "Sheltered by Ghosts",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_dont_tap_out",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 7,
+      "phase": "Phase_Main1",
+      "my_life": 17,
+      "opp_life": 22,
+      "hand": [
+        "Eager Trufflesnout",
+        "Vampire Nighthawk",
+        "Vampire Nighthawk"
+      ],
+      "my_battlefield": [
+        "Reassembling Skeleton",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp"
+      ],
+      "opp_battlefield": [
+        "Mikey & Leo, Chaos & Order",
+        "Turtle-Duck",
+        "Abandoned Air Temple",
+        "Plains",
+        "Sheltered by Ghosts",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_dont_tap_out",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 7,
+      "phase": "Phase_Main1",
+      "my_life": 17,
+      "opp_life": 22,
+      "hand": [
+        "Eager Trufflesnout",
+        "Vampire Nighthawk",
+        "Vampire Nighthawk"
+      ],
+      "my_battlefield": [
+        "Reassembling Skeleton",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp"
+      ],
+      "opp_battlefield": [
+        "Mikey & Leo, Chaos & Order",
+        "Turtle-Duck",
+        "Abandoned Air Temple",
+        "Plains",
+        "Sheltered by Ghosts",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_dont_tap_out",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 7,
+      "phase": "Phase_Main1",
+      "my_life": 17,
+      "opp_life": 22,
+      "hand": [
+        "Eager Trufflesnout",
+        "Vampire Nighthawk",
+        "Vampire Nighthawk"
+      ],
+      "my_battlefield": [
+        "Reassembling Skeleton",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp"
+      ],
+      "opp_battlefield": [
+        "Mikey & Leo, Chaos & Order",
+        "Turtle-Duck",
+        "Abandoned Air Temple",
+        "Plains",
+        "Sheltered by Ghosts",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_dont_tap_out",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 7,
+      "phase": "Phase_Main1",
+      "my_life": 17,
+      "opp_life": 22,
+      "hand": [
+        "Eager Trufflesnout",
+        "Vampire Nighthawk",
+        "Vampire Nighthawk"
+      ],
+      "my_battlefield": [
+        "Reassembling Skeleton",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp"
+      ],
+      "opp_battlefield": [
+        "Mikey & Leo, Chaos & Order",
+        "Turtle-Duck",
+        "Abandoned Air Temple",
+        "Plains",
+        "Sheltered by Ghosts",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_dont_tap_out",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 7,
+      "phase": "Phase_Main1",
+      "my_life": 17,
+      "opp_life": 22,
+      "hand": [
+        "Eager Trufflesnout",
+        "Vampire Nighthawk",
+        "Vampire Nighthawk"
+      ],
+      "my_battlefield": [
+        "Reassembling Skeleton",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp"
+      ],
+      "opp_battlefield": [
+        "Mikey & Leo, Chaos & Order",
+        "Turtle-Duck",
+        "Abandoned Air Temple",
+        "Plains",
+        "Sheltered by Ghosts",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_dont_tap_out",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 7,
+      "phase": "Phase_Main1",
+      "my_life": 17,
+      "opp_life": 22,
+      "hand": [
+        "Eager Trufflesnout",
+        "Vampire Nighthawk",
+        "Vampire Nighthawk"
+      ],
+      "my_battlefield": [
+        "Reassembling Skeleton",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp"
+      ],
+      "opp_battlefield": [
+        "Mikey & Leo, Chaos & Order",
+        "Turtle-Duck",
+        "Abandoned Air Temple",
+        "Plains",
+        "Sheltered by Ghosts",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_dont_tap_out",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 7,
+      "phase": "Phase_Main1",
+      "my_life": 17,
+      "opp_life": 22,
+      "hand": [
+        "Eager Trufflesnout",
+        "Vampire Nighthawk",
+        "Vampire Nighthawk"
+      ],
+      "my_battlefield": [
+        "Reassembling Skeleton",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp"
+      ],
+      "opp_battlefield": [
+        "Mikey & Leo, Chaos & Order",
+        "Turtle-Duck",
+        "Abandoned Air Temple",
+        "Plains",
+        "Sheltered by Ghosts",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_dont_tap_out",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 7,
+      "phase": "Phase_Main1",
+      "my_life": 17,
+      "opp_life": 22,
+      "hand": [
+        "Eager Trufflesnout",
+        "Vampire Nighthawk",
+        "Vampire Nighthawk"
+      ],
+      "my_battlefield": [
+        "Reassembling Skeleton",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp"
+      ],
+      "opp_battlefield": [
+        "Mikey & Leo, Chaos & Order",
+        "Turtle-Duck",
+        "Abandoned Air Temple",
+        "Plains",
+        "Sheltered by Ghosts",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_dont_tap_out",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 7,
+      "phase": "Phase_Main1",
+      "my_life": 17,
+      "opp_life": 22,
+      "hand": [
+        "Eager Trufflesnout",
+        "Vampire Nighthawk",
+        "Vampire Nighthawk"
+      ],
+      "my_battlefield": [
+        "Reassembling Skeleton",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp"
+      ],
+      "opp_battlefield": [
+        "Mikey & Leo, Chaos & Order",
+        "Turtle-Duck",
+        "Abandoned Air Temple",
+        "Plains",
+        "Sheltered by Ghosts",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_dont_tap_out",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 7,
+      "phase": "Phase_Main2",
+      "my_life": 20,
+      "opp_life": 20,
+      "hand": [],
+      "my_battlefield": [],
+      "opp_battlefield": []
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 9,
+      "phase": "Phase_Main1",
+      "my_life": 19,
+      "opp_life": 22,
+      "hand": [
+        "Tragic Banshee",
+        "Eager Trufflesnout",
+        "Vampire Nighthawk",
+        "Vampire Nighthawk"
+      ],
+      "my_battlefield": [
+        "Midnight Reaper",
+        "Reassembling Skeleton",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp"
+      ],
+      "opp_battlefield": [
+        "Michelangelo, Weirdness to 11",
+        "Turtle-Duck",
+        "Abandoned Air Temple",
+        "Plains",
+        "Plains",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_dont_tap_out",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 9,
+      "phase": "Phase_Main1",
+      "my_life": 19,
+      "opp_life": 22,
+      "hand": [
+        "Tragic Banshee",
+        "Eager Trufflesnout",
+        "Vampire Nighthawk",
+        "Vampire Nighthawk"
+      ],
+      "my_battlefield": [
+        "Midnight Reaper",
+        "Reassembling Skeleton",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp"
+      ],
+      "opp_battlefield": [
+        "Michelangelo, Weirdness to 11",
+        "Turtle-Duck",
+        "Abandoned Air Temple",
+        "Plains",
+        "Plains",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_dont_tap_out",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 9,
+      "phase": "Phase_Main1",
+      "my_life": 19,
+      "opp_life": 22,
+      "hand": [
+        "Tragic Banshee",
+        "Eager Trufflesnout",
+        "Vampire Nighthawk",
+        "Vampire Nighthawk"
+      ],
+      "my_battlefield": [
+        "Midnight Reaper",
+        "Reassembling Skeleton",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp"
+      ],
+      "opp_battlefield": [
+        "Michelangelo, Weirdness to 11",
+        "Turtle-Duck",
+        "Abandoned Air Temple",
+        "Plains",
+        "Plains",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_dont_tap_out",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 9,
+      "phase": "Phase_Main2",
+      "my_life": 19,
+      "opp_life": 21,
+      "hand": [
+        "Tragic Banshee",
+        "Eager Trufflesnout",
+        "Vampire Nighthawk",
+        "Vampire Nighthawk"
+      ],
+      "my_battlefield": [
+        "Midnight Reaper",
+        "Reassembling Skeleton",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp"
+      ],
+      "opp_battlefield": [
+        "Michelangelo, Weirdness to 11",
+        "Turtle-Duck",
+        "Abandoned Air Temple",
+        "Plains",
+        "Plains",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 9,
+      "phase": "Phase_Main2",
+      "my_life": 19,
+      "opp_life": 21,
+      "hand": [
+        "Tragic Banshee",
+        "Eager Trufflesnout",
+        "Vampire Nighthawk",
+        "Vampire Nighthawk"
+      ],
+      "my_battlefield": [
+        "Midnight Reaper",
+        "Reassembling Skeleton",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp"
+      ],
+      "opp_battlefield": [
+        "Michelangelo, Weirdness to 11",
+        "Turtle-Duck",
+        "Abandoned Air Temple",
+        "Plains",
+        "Plains",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 9,
+      "phase": "Phase_Main2",
+      "my_life": 19,
+      "opp_life": 21,
+      "hand": [
+        "Tragic Banshee",
+        "Eager Trufflesnout",
+        "Vampire Nighthawk",
+        "Vampire Nighthawk"
+      ],
+      "my_battlefield": [
+        "Midnight Reaper",
+        "Reassembling Skeleton",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp"
+      ],
+      "opp_battlefield": [
+        "Michelangelo, Weirdness to 11",
+        "Turtle-Duck",
+        "Abandoned Air Temple",
+        "Plains",
+        "Plains",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 11,
+      "phase": "Phase_Main1",
+      "my_life": 16,
+      "opp_life": 24,
+      "hand": [
+        "Temple of Malady",
+        "Tragic Banshee",
+        "Vampire Nighthawk",
+        "Vampire Nighthawk"
+      ],
+      "my_battlefield": [
+        "Eager Trufflesnout",
+        "Reassembling Skeleton",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp"
+      ],
+      "opp_battlefield": [
+        "Michelangelo, Weirdness to 11",
+        "Turtle-Duck",
+        "Abandoned Air Temple",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_dont_tap_out",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 11,
+      "phase": "Phase_Main1",
+      "my_life": 16,
+      "opp_life": 24,
+      "hand": [
+        "Temple of Malady",
+        "Tragic Banshee",
+        "Vampire Nighthawk",
+        "Vampire Nighthawk"
+      ],
+      "my_battlefield": [
+        "Eager Trufflesnout",
+        "Reassembling Skeleton",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp"
+      ],
+      "opp_battlefield": [
+        "Michelangelo, Weirdness to 11",
+        "Turtle-Duck",
+        "Abandoned Air Temple",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_dont_tap_out",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 11,
+      "phase": "Phase_Main1",
+      "my_life": 16,
+      "opp_life": 24,
+      "hand": [
+        "Temple of Malady",
+        "Tragic Banshee",
+        "Vampire Nighthawk",
+        "Vampire Nighthawk"
+      ],
+      "my_battlefield": [
+        "Eager Trufflesnout",
+        "Reassembling Skeleton",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp"
+      ],
+      "opp_battlefield": [
+        "Michelangelo, Weirdness to 11",
+        "Turtle-Duck",
+        "Abandoned Air Temple",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_dont_tap_out",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 11,
+      "phase": "Phase_Main2",
+      "my_life": 16,
+      "opp_life": 19,
+      "hand": [
+        "Tragic Banshee",
+        "Vampire Nighthawk",
+        "Vampire Nighthawk"
+      ],
+      "my_battlefield": [
+        "Eager Trufflesnout",
+        "Reassembling Skeleton",
+        "Food",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp",
+        "Temple of Malady"
+      ],
+      "opp_battlefield": [
+        "Michelangelo, Weirdness to 11",
+        "Turtle-Duck",
+        "Abandoned Air Temple",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 11,
+      "phase": "Phase_Main2",
+      "my_life": 16,
+      "opp_life": 19,
+      "hand": [
+        "Tragic Banshee",
+        "Vampire Nighthawk",
+        "Vampire Nighthawk"
+      ],
+      "my_battlefield": [
+        "Eager Trufflesnout",
+        "Reassembling Skeleton",
+        "Food",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp",
+        "Temple of Malady"
+      ],
+      "opp_battlefield": [
+        "Michelangelo, Weirdness to 11",
+        "Turtle-Duck",
+        "Abandoned Air Temple",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 11,
+      "phase": "Phase_Main2",
+      "my_life": 16,
+      "opp_life": 19,
+      "hand": [
+        "Tragic Banshee",
+        "Vampire Nighthawk",
+        "Vampire Nighthawk"
+      ],
+      "my_battlefield": [
+        "Eager Trufflesnout",
+        "Reassembling Skeleton",
+        "Food",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp",
+        "Temple of Malady"
+      ],
+      "opp_battlefield": [
+        "Michelangelo, Weirdness to 11",
+        "Turtle-Duck",
+        "Abandoned Air Temple",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 13,
+      "phase": "Phase_Main1",
+      "my_life": 16,
+      "opp_life": 22,
+      "hand": [
+        "Infernal Vessel",
+        "Tragic Banshee",
+        "Vampire Nighthawk",
+        "Vampire Nighthawk"
+      ],
+      "my_battlefield": [
+        "Eager Trufflesnout",
+        "Reassembling Skeleton",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp",
+        "Temple of Malady"
+      ],
+      "opp_battlefield": [
+        "Michelangelo, Weirdness to 11",
+        "Turtle-Duck",
+        "Abandoned Air Temple",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts",
+        "The Ooze",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_dont_tap_out",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 13,
+      "phase": "Phase_Main1",
+      "my_life": 16,
+      "opp_life": 22,
+      "hand": [
+        "Infernal Vessel",
+        "Tragic Banshee",
+        "Vampire Nighthawk",
+        "Vampire Nighthawk"
+      ],
+      "my_battlefield": [
+        "Eager Trufflesnout",
+        "Reassembling Skeleton",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp",
+        "Temple of Malady"
+      ],
+      "opp_battlefield": [
+        "Michelangelo, Weirdness to 11",
+        "Turtle-Duck",
+        "Abandoned Air Temple",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts",
+        "The Ooze",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_dont_tap_out",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 13,
+      "phase": "Phase_Main1",
+      "my_life": 16,
+      "opp_life": 22,
+      "hand": [
+        "Infernal Vessel",
+        "Tragic Banshee",
+        "Vampire Nighthawk",
+        "Vampire Nighthawk"
+      ],
+      "my_battlefield": [
+        "Eager Trufflesnout",
+        "Reassembling Skeleton",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp",
+        "Temple of Malady"
+      ],
+      "opp_battlefield": [
+        "Michelangelo, Weirdness to 11",
+        "Turtle-Duck",
+        "Abandoned Air Temple",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts",
+        "The Ooze",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_dont_tap_out",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 13,
+      "phase": "Phase_Main2",
+      "my_life": 16,
+      "opp_life": 17,
+      "hand": [
+        "Infernal Vessel",
+        "Tragic Banshee",
+        "Vampire Nighthawk"
+      ],
+      "my_battlefield": [
+        "Eager Trufflesnout",
+        "Reassembling Skeleton",
+        "Vampire Nighthawk",
+        "Food",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp",
+        "Temple of Malady"
+      ],
+      "opp_battlefield": [
+        "Michelangelo, Weirdness to 11",
+        "Turtle-Duck",
+        "Abandoned Air Temple",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts",
+        "The Ooze",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 13,
+      "phase": "Phase_Main2",
+      "my_life": 16,
+      "opp_life": 17,
+      "hand": [
+        "Infernal Vessel",
+        "Tragic Banshee",
+        "Vampire Nighthawk"
+      ],
+      "my_battlefield": [
+        "Eager Trufflesnout",
+        "Reassembling Skeleton",
+        "Vampire Nighthawk",
+        "Food",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp",
+        "Temple of Malady"
+      ],
+      "opp_battlefield": [
+        "Michelangelo, Weirdness to 11",
+        "Turtle-Duck",
+        "Abandoned Air Temple",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts",
+        "The Ooze",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 13,
+      "phase": "Phase_Main2",
+      "my_life": 16,
+      "opp_life": 17,
+      "hand": [
+        "Infernal Vessel",
+        "Tragic Banshee",
+        "Vampire Nighthawk"
+      ],
+      "my_battlefield": [
+        "Eager Trufflesnout",
+        "Reassembling Skeleton",
+        "Vampire Nighthawk",
+        "Food",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp",
+        "Temple of Malady"
+      ],
+      "opp_battlefield": [
+        "Michelangelo, Weirdness to 11",
+        "Turtle-Duck",
+        "Abandoned Air Temple",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts",
+        "The Ooze",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 13,
+      "phase": "Phase_Main2",
+      "my_life": 16,
+      "opp_life": 17,
+      "hand": [
+        "Infernal Vessel",
+        "Tragic Banshee",
+        "Vampire Nighthawk"
+      ],
+      "my_battlefield": [
+        "Eager Trufflesnout",
+        "Reassembling Skeleton",
+        "Vampire Nighthawk",
+        "Food",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp",
+        "Temple of Malady"
+      ],
+      "opp_battlefield": [
+        "Michelangelo, Weirdness to 11",
+        "Turtle-Duck",
+        "Abandoned Air Temple",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts",
+        "The Ooze",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 13,
+      "phase": "Phase_Main2",
+      "my_life": 16,
+      "opp_life": 17,
+      "hand": [
+        "Infernal Vessel",
+        "Tragic Banshee",
+        "Vampire Nighthawk"
+      ],
+      "my_battlefield": [
+        "Eager Trufflesnout",
+        "Reassembling Skeleton",
+        "Vampire Nighthawk",
+        "Food",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp",
+        "Temple of Malady"
+      ],
+      "opp_battlefield": [
+        "Michelangelo, Weirdness to 11",
+        "Turtle-Duck",
+        "Abandoned Air Temple",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts",
+        "The Ooze",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 15,
+      "phase": "Phase_Beginning",
+      "my_life": 20,
+      "opp_life": 20,
+      "hand": [],
+      "my_battlefield": [],
+      "opp_battlefield": []
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 15,
+      "phase": "Phase_Main1",
+      "my_life": 11,
+      "opp_life": 18,
+      "hand": [
+        "Bushwhack",
+        "Infernal Vessel",
+        "Tragic Banshee",
+        "Vampire Nighthawk"
+      ],
+      "my_battlefield": [
+        "Eager Trufflesnout",
+        "Reassembling Skeleton",
+        "Vampire Nighthawk",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp",
+        "Temple of Malady"
+      ],
+      "opp_battlefield": [
+        "Michelangelo, Weirdness to 11",
+        "Turtle-Duck",
+        "Abandoned Air Temple",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts",
+        "Temple Garden",
+        "The Ooze",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_dont_tap_out",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 15,
+      "phase": "Phase_Main1",
+      "my_life": 11,
+      "opp_life": 18,
+      "hand": [
+        "Bushwhack",
+        "Infernal Vessel",
+        "Tragic Banshee",
+        "Vampire Nighthawk"
+      ],
+      "my_battlefield": [
+        "Eager Trufflesnout",
+        "Reassembling Skeleton",
+        "Vampire Nighthawk",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp",
+        "Temple of Malady"
+      ],
+      "opp_battlefield": [
+        "Michelangelo, Weirdness to 11",
+        "Turtle-Duck",
+        "Abandoned Air Temple",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts",
+        "Temple Garden",
+        "The Ooze",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_dont_tap_out",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 15,
+      "phase": "Phase_Main1",
+      "my_life": 11,
+      "opp_life": 18,
+      "hand": [
+        "Bushwhack",
+        "Infernal Vessel",
+        "Tragic Banshee",
+        "Vampire Nighthawk"
+      ],
+      "my_battlefield": [
+        "Eager Trufflesnout",
+        "Reassembling Skeleton",
+        "Vampire Nighthawk",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp",
+        "Temple of Malady"
+      ],
+      "opp_battlefield": [
+        "Michelangelo, Weirdness to 11",
+        "Turtle-Duck",
+        "Abandoned Air Temple",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts",
+        "Temple Garden",
+        "The Ooze",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_dont_tap_out",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 15,
+      "phase": "Phase_Combat",
+      "my_life": 11,
+      "opp_life": 18,
+      "hand": [
+        "Bushwhack",
+        "Infernal Vessel",
+        "Tragic Banshee",
+        "Vampire Nighthawk"
+      ],
+      "my_battlefield": [
+        "Eager Trufflesnout",
+        "Reassembling Skeleton",
+        "Vampire Nighthawk",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp",
+        "Temple of Malady"
+      ],
+      "opp_battlefield": [
+        "Michelangelo, Weirdness to 11",
+        "Turtle-Duck",
+        "Abandoned Air Temple",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts",
+        "Temple Garden",
+        "The Ooze",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 15,
+      "phase": "Phase_Combat",
+      "my_life": 11,
+      "opp_life": 18,
+      "hand": [
+        "Bushwhack",
+        "Infernal Vessel",
+        "Tragic Banshee",
+        "Vampire Nighthawk"
+      ],
+      "my_battlefield": [
+        "Eager Trufflesnout",
+        "Reassembling Skeleton",
+        "Vampire Nighthawk",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp",
+        "Temple of Malady"
+      ],
+      "opp_battlefield": [
+        "Michelangelo, Weirdness to 11",
+        "Turtle-Duck",
+        "Abandoned Air Temple",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts",
+        "Temple Garden",
+        "The Ooze",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 15,
+      "phase": "Phase_Combat",
+      "my_life": 11,
+      "opp_life": 18,
+      "hand": [
+        "Bushwhack",
+        "Infernal Vessel",
+        "Tragic Banshee",
+        "Vampire Nighthawk"
+      ],
+      "my_battlefield": [
+        "Eager Trufflesnout",
+        "Reassembling Skeleton",
+        "Vampire Nighthawk",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp",
+        "Temple of Malady"
+      ],
+      "opp_battlefield": [
+        "Michelangelo, Weirdness to 11",
+        "Turtle-Duck",
+        "Abandoned Air Temple",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts",
+        "Temple Garden",
+        "The Ooze",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 15,
+      "phase": "Phase_Combat",
+      "my_life": 11,
+      "opp_life": 18,
+      "hand": [
+        "Bushwhack",
+        "Infernal Vessel",
+        "Tragic Banshee",
+        "Vampire Nighthawk"
+      ],
+      "my_battlefield": [
+        "Eager Trufflesnout",
+        "Reassembling Skeleton",
+        "Vampire Nighthawk",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp",
+        "Temple of Malady"
+      ],
+      "opp_battlefield": [
+        "Michelangelo, Weirdness to 11",
+        "Turtle-Duck",
+        "Abandoned Air Temple",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts",
+        "Temple Garden",
+        "The Ooze",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 15,
+      "phase": "Phase_Main2",
+      "my_life": 13,
+      "opp_life": 11,
+      "hand": [
+        "Bushwhack",
+        "Infernal Vessel",
+        "Tragic Banshee"
+      ],
+      "my_battlefield": [
+        "Eager Trufflesnout",
+        "Reassembling Skeleton",
+        "Vampire Nighthawk",
+        "Vampire Nighthawk",
+        "Food",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp",
+        "Temple of Malady"
+      ],
+      "opp_battlefield": [
+        "Michelangelo, Weirdness to 11",
+        "Turtle-Duck",
+        "Abandoned Air Temple",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts",
+        "Temple Garden",
+        "The Ooze",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 15,
+      "phase": "Phase_Main2",
+      "my_life": 13,
+      "opp_life": 11,
+      "hand": [
+        "Bushwhack",
+        "Infernal Vessel",
+        "Tragic Banshee"
+      ],
+      "my_battlefield": [
+        "Eager Trufflesnout",
+        "Reassembling Skeleton",
+        "Vampire Nighthawk",
+        "Vampire Nighthawk",
+        "Food",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp",
+        "Temple of Malady"
+      ],
+      "opp_battlefield": [
+        "Michelangelo, Weirdness to 11",
+        "Turtle-Duck",
+        "Abandoned Air Temple",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts",
+        "Temple Garden",
+        "The Ooze",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 15,
+      "phase": "Phase_Main2",
+      "my_life": 13,
+      "opp_life": 11,
+      "hand": [
+        "Bushwhack",
+        "Infernal Vessel",
+        "Tragic Banshee"
+      ],
+      "my_battlefield": [
+        "Eager Trufflesnout",
+        "Reassembling Skeleton",
+        "Vampire Nighthawk",
+        "Vampire Nighthawk",
+        "Food",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp",
+        "Temple of Malady"
+      ],
+      "opp_battlefield": [
+        "Michelangelo, Weirdness to 11",
+        "Turtle-Duck",
+        "Abandoned Air Temple",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts",
+        "Temple Garden",
+        "The Ooze",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 15,
+      "phase": "Phase_Main2",
+      "my_life": 13,
+      "opp_life": 11,
+      "hand": [
+        "Bushwhack",
+        "Infernal Vessel",
+        "Tragic Banshee"
+      ],
+      "my_battlefield": [
+        "Eager Trufflesnout",
+        "Reassembling Skeleton",
+        "Vampire Nighthawk",
+        "Vampire Nighthawk",
+        "Food",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp",
+        "Temple of Malady"
+      ],
+      "opp_battlefield": [
+        "Michelangelo, Weirdness to 11",
+        "Turtle-Duck",
+        "Abandoned Air Temple",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts",
+        "Temple Garden",
+        "The Ooze",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 15,
+      "phase": "Phase_Main2",
+      "my_life": 13,
+      "opp_life": 11,
+      "hand": [
+        "Bushwhack",
+        "Infernal Vessel",
+        "Tragic Banshee"
+      ],
+      "my_battlefield": [
+        "Eager Trufflesnout",
+        "Reassembling Skeleton",
+        "Vampire Nighthawk",
+        "Vampire Nighthawk",
+        "Food",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp",
+        "Temple of Malady"
+      ],
+      "opp_battlefield": [
+        "Michelangelo, Weirdness to 11",
+        "Turtle-Duck",
+        "Abandoned Air Temple",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts",
+        "Temple Garden",
+        "The Ooze",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 15,
+      "phase": "Phase_Main2",
+      "my_life": 13,
+      "opp_life": 11,
+      "hand": [
+        "Bushwhack",
+        "Infernal Vessel",
+        "Tragic Banshee"
+      ],
+      "my_battlefield": [
+        "Eager Trufflesnout",
+        "Reassembling Skeleton",
+        "Vampire Nighthawk",
+        "Vampire Nighthawk",
+        "Food",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp",
+        "Temple of Malady"
+      ],
+      "opp_battlefield": [
+        "Michelangelo, Weirdness to 11",
+        "Turtle-Duck",
+        "Abandoned Air Temple",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts",
+        "Temple Garden",
+        "The Ooze",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 15,
+      "phase": "Phase_Ending",
+      "my_life": 20,
+      "opp_life": 20,
+      "hand": [],
+      "my_battlefield": [],
+      "opp_battlefield": []
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 16,
+      "phase": "Phase_Combat",
+      "my_life": 16,
+      "opp_life": 11,
+      "hand": [
+        "Bushwhack",
+        "Infernal Vessel",
+        "Tragic Banshee"
+      ],
+      "my_battlefield": [
+        "Eager Trufflesnout",
+        "Reassembling Skeleton",
+        "Vampire Nighthawk",
+        "Vampire Nighthawk",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp",
+        "Temple of Malady"
+      ],
+      "opp_battlefield": [
+        "Michelangelo, Weirdness to 11",
+        "Turtle-Duck",
+        "Abandoned Air Temple",
+        "Forest",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts",
+        "Temple Garden",
+        "The Ooze",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 16,
+      "phase": "Phase_Combat",
+      "my_life": 16,
+      "opp_life": 11,
+      "hand": [
+        "Bushwhack",
+        "Infernal Vessel",
+        "Tragic Banshee"
+      ],
+      "my_battlefield": [
+        "Eager Trufflesnout",
+        "Reassembling Skeleton",
+        "Vampire Nighthawk",
+        "Vampire Nighthawk",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp",
+        "Temple of Malady"
+      ],
+      "opp_battlefield": [
+        "Michelangelo, Weirdness to 11",
+        "Turtle-Duck",
+        "Abandoned Air Temple",
+        "Forest",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts",
+        "Temple Garden",
+        "The Ooze",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 16,
+      "phase": "Phase_Main2",
+      "my_life": 20,
+      "opp_life": 20,
+      "hand": [],
+      "my_battlefield": [],
+      "opp_battlefield": []
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 16,
+      "phase": "Phase_Ending",
+      "my_life": 20,
+      "opp_life": 20,
+      "hand": [],
+      "my_battlefield": [],
+      "opp_battlefield": []
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 17,
+      "phase": "Phase_Beginning",
+      "my_life": 20,
+      "opp_life": 20,
+      "hand": [],
+      "my_battlefield": [],
+      "opp_battlefield": []
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 17,
+      "phase": "Phase_Beginning",
+      "my_life": 20,
+      "opp_life": 20,
+      "hand": [],
+      "my_battlefield": [],
+      "opp_battlefield": []
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 17,
+      "phase": "Phase_Main1",
+      "my_life": 2,
+      "opp_life": 20,
+      "hand": [
+        "Infernal Vessel",
+        "Tragic Banshee"
+      ],
+      "my_battlefield": [
+        "Eager Trufflesnout",
+        "Reassembling Skeleton",
+        "Vampire Nighthawk",
+        "Vampire Nighthawk",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp",
+        "Swamp",
+        "Temple of Malady"
+      ],
+      "opp_battlefield": [
+        "Michelangelo, Weirdness to 11",
+        "Turtle-Duck",
+        "Abandoned Air Temple",
+        "Forest",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts",
+        "Temple Garden",
+        "The Ooze",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_dont_tap_out",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 17,
+      "phase": "Phase_Main1",
+      "my_life": 2,
+      "opp_life": 20,
+      "hand": [
+        "Infernal Vessel",
+        "Tragic Banshee"
+      ],
+      "my_battlefield": [
+        "Eager Trufflesnout",
+        "Reassembling Skeleton",
+        "Vampire Nighthawk",
+        "Vampire Nighthawk",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp",
+        "Swamp",
+        "Temple of Malady"
+      ],
+      "opp_battlefield": [
+        "Michelangelo, Weirdness to 11",
+        "Turtle-Duck",
+        "Abandoned Air Temple",
+        "Forest",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts",
+        "Temple Garden",
+        "The Ooze",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_dont_tap_out",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 17,
+      "phase": "Phase_Main1",
+      "my_life": 2,
+      "opp_life": 20,
+      "hand": [
+        "Infernal Vessel",
+        "Tragic Banshee"
+      ],
+      "my_battlefield": [
+        "Eager Trufflesnout",
+        "Reassembling Skeleton",
+        "Vampire Nighthawk",
+        "Vampire Nighthawk",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp",
+        "Swamp",
+        "Temple of Malady"
+      ],
+      "opp_battlefield": [
+        "Michelangelo, Weirdness to 11",
+        "Turtle-Duck",
+        "Abandoned Air Temple",
+        "Forest",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts",
+        "Temple Garden",
+        "The Ooze",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_dont_tap_out",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 17,
+      "phase": "Phase_Main1",
+      "my_life": 2,
+      "opp_life": 20,
+      "hand": [
+        "Infernal Vessel",
+        "Tragic Banshee"
+      ],
+      "my_battlefield": [
+        "Eager Trufflesnout",
+        "Reassembling Skeleton",
+        "Vampire Nighthawk",
+        "Vampire Nighthawk",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp",
+        "Swamp",
+        "Temple of Malady"
+      ],
+      "opp_battlefield": [
+        "Michelangelo, Weirdness to 11",
+        "Turtle-Duck",
+        "Abandoned Air Temple",
+        "Forest",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts",
+        "Temple Garden",
+        "The Ooze",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_dont_tap_out",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 17,
+      "phase": "Phase_Main1",
+      "my_life": 2,
+      "opp_life": 20,
+      "hand": [
+        "Infernal Vessel",
+        "Tragic Banshee"
+      ],
+      "my_battlefield": [
+        "Eager Trufflesnout",
+        "Reassembling Skeleton",
+        "Vampire Nighthawk",
+        "Vampire Nighthawk",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp",
+        "Swamp",
+        "Temple of Malady"
+      ],
+      "opp_battlefield": [
+        "Michelangelo, Weirdness to 11",
+        "Turtle-Duck",
+        "Abandoned Air Temple",
+        "Forest",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts",
+        "Temple Garden",
+        "The Ooze",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_dont_tap_out",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 17,
+      "phase": "Phase_Main1",
+      "my_life": 2,
+      "opp_life": 20,
+      "hand": [
+        "Infernal Vessel",
+        "Tragic Banshee"
+      ],
+      "my_battlefield": [
+        "Eager Trufflesnout",
+        "Reassembling Skeleton",
+        "Vampire Nighthawk",
+        "Vampire Nighthawk",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp",
+        "Swamp",
+        "Temple of Malady"
+      ],
+      "opp_battlefield": [
+        "Michelangelo, Weirdness to 11",
+        "Turtle-Duck",
+        "Abandoned Air Temple",
+        "Forest",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts",
+        "Temple Garden",
+        "The Ooze",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_dont_tap_out",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 17,
+      "phase": "Phase_Main1",
+      "my_life": 2,
+      "opp_life": 20,
+      "hand": [
+        "Infernal Vessel",
+        "Tragic Banshee"
+      ],
+      "my_battlefield": [
+        "Eager Trufflesnout",
+        "Reassembling Skeleton",
+        "Vampire Nighthawk",
+        "Vampire Nighthawk",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp",
+        "Swamp",
+        "Temple of Malady"
+      ],
+      "opp_battlefield": [
+        "Michelangelo, Weirdness to 11",
+        "Turtle-Duck",
+        "Abandoned Air Temple",
+        "Forest",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts",
+        "Temple Garden",
+        "The Ooze",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_dont_tap_out",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 17,
+      "phase": "Phase_Main1",
+      "my_life": 2,
+      "opp_life": 20,
+      "hand": [
+        "Infernal Vessel",
+        "Tragic Banshee"
+      ],
+      "my_battlefield": [
+        "Eager Trufflesnout",
+        "Reassembling Skeleton",
+        "Vampire Nighthawk",
+        "Vampire Nighthawk",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp",
+        "Swamp",
+        "Temple of Malady"
+      ],
+      "opp_battlefield": [
+        "Michelangelo, Weirdness to 11",
+        "Turtle-Duck",
+        "Abandoned Air Temple",
+        "Forest",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts",
+        "Temple Garden",
+        "The Ooze",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_dont_tap_out",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 17,
+      "phase": "Phase_Main1",
+      "my_life": 2,
+      "opp_life": 20,
+      "hand": [
+        "Infernal Vessel",
+        "Tragic Banshee"
+      ],
+      "my_battlefield": [
+        "Eager Trufflesnout",
+        "Reassembling Skeleton",
+        "Vampire Nighthawk",
+        "Vampire Nighthawk",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp",
+        "Swamp",
+        "Temple of Malady"
+      ],
+      "opp_battlefield": [
+        "Michelangelo, Weirdness to 11",
+        "Turtle-Duck",
+        "Abandoned Air Temple",
+        "Forest",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts",
+        "Temple Garden",
+        "The Ooze",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_dont_tap_out",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 17,
+      "phase": "Phase_Main1",
+      "my_life": 2,
+      "opp_life": 20,
+      "hand": [
+        "Infernal Vessel",
+        "Tragic Banshee"
+      ],
+      "my_battlefield": [
+        "Eager Trufflesnout",
+        "Reassembling Skeleton",
+        "Vampire Nighthawk",
+        "Vampire Nighthawk",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp",
+        "Swamp",
+        "Temple of Malady"
+      ],
+      "opp_battlefield": [
+        "Michelangelo, Weirdness to 11",
+        "Turtle-Duck",
+        "Abandoned Air Temple",
+        "Forest",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts",
+        "Temple Garden",
+        "The Ooze",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_dont_tap_out",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 17,
+      "phase": "Phase_Main1",
+      "my_life": 2,
+      "opp_life": 20,
+      "hand": [
+        "Infernal Vessel",
+        "Tragic Banshee"
+      ],
+      "my_battlefield": [
+        "Eager Trufflesnout",
+        "Reassembling Skeleton",
+        "Vampire Nighthawk",
+        "Vampire Nighthawk",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp",
+        "Swamp",
+        "Temple of Malady"
+      ],
+      "opp_battlefield": [
+        "Michelangelo, Weirdness to 11",
+        "Turtle-Duck",
+        "Abandoned Air Temple",
+        "Forest",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts",
+        "Temple Garden",
+        "The Ooze",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_dont_tap_out",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 17,
+      "phase": "Phase_Main1",
+      "my_life": 2,
+      "opp_life": 20,
+      "hand": [
+        "Infernal Vessel",
+        "Tragic Banshee"
+      ],
+      "my_battlefield": [
+        "Eager Trufflesnout",
+        "Reassembling Skeleton",
+        "Vampire Nighthawk",
+        "Vampire Nighthawk",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp",
+        "Swamp",
+        "Temple of Malady"
+      ],
+      "opp_battlefield": [
+        "Michelangelo, Weirdness to 11",
+        "Turtle-Duck",
+        "Abandoned Air Temple",
+        "Forest",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts",
+        "Temple Garden",
+        "The Ooze",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_dont_tap_out",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 17,
+      "phase": "Phase_Main1",
+      "my_life": 2,
+      "opp_life": 20,
+      "hand": [
+        "Infernal Vessel",
+        "Tragic Banshee"
+      ],
+      "my_battlefield": [
+        "Eager Trufflesnout",
+        "Reassembling Skeleton",
+        "Vampire Nighthawk",
+        "Vampire Nighthawk",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp",
+        "Swamp",
+        "Temple of Malady"
+      ],
+      "opp_battlefield": [
+        "Michelangelo, Weirdness to 11",
+        "Turtle-Duck",
+        "Abandoned Air Temple",
+        "Forest",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts",
+        "Temple Garden",
+        "The Ooze",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_dont_tap_out",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 17,
+      "phase": "Phase_Main1",
+      "my_life": 2,
+      "opp_life": 20,
+      "hand": [
+        "Infernal Vessel",
+        "Tragic Banshee"
+      ],
+      "my_battlefield": [
+        "Eager Trufflesnout",
+        "Reassembling Skeleton",
+        "Vampire Nighthawk",
+        "Vampire Nighthawk",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp",
+        "Swamp",
+        "Temple of Malady"
+      ],
+      "opp_battlefield": [
+        "Michelangelo, Weirdness to 11",
+        "Turtle-Duck",
+        "Abandoned Air Temple",
+        "Forest",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts",
+        "Temple Garden",
+        "The Ooze",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_dont_tap_out",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 17,
+      "phase": "Phase_Combat",
+      "my_life": 2,
+      "opp_life": 20,
+      "hand": [
+        "Tragic Banshee"
+      ],
+      "my_battlefield": [
+        "Eager Trufflesnout",
+        "Infernal Vessel",
+        "Reassembling Skeleton",
+        "Vampire Nighthawk",
+        "Vampire Nighthawk",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp",
+        "Swamp",
+        "Temple of Malady"
+      ],
+      "opp_battlefield": [
+        "Michelangelo, Weirdness to 11",
+        "Turtle-Duck",
+        "Abandoned Air Temple",
+        "Forest",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts",
+        "Temple Garden",
+        "The Ooze",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 17,
+      "phase": "Phase_Combat",
+      "my_life": 2,
+      "opp_life": 20,
+      "hand": [
+        "Tragic Banshee"
+      ],
+      "my_battlefield": [
+        "Eager Trufflesnout",
+        "Infernal Vessel",
+        "Reassembling Skeleton",
+        "Vampire Nighthawk",
+        "Vampire Nighthawk",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Swamp",
+        "Swamp",
+        "Temple of Malady"
+      ],
+      "opp_battlefield": [
+        "Michelangelo, Weirdness to 11",
+        "Turtle-Duck",
+        "Abandoned Air Temple",
+        "Forest",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts",
+        "Temple Garden",
+        "The Ooze",
+        "Turtle Lair"
+      ]
+    },
+    "strategy_name": "Golgari Midrange",
+    "opp_deck": "Mono-White Aggro",
+    "expected": [],
+    "_engine_version": "2.0.0"
   }
 ]

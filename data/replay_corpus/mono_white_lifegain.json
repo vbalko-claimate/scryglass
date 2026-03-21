@@ -3440,5 +3440,3544 @@
     "opp_deck": "Jeskai Control",
     "expected": [],
     "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 17,
+      "phase": "Phase_Main1",
+      "my_life": 25,
+      "opp_life": 17,
+      "hand": [
+        "Plains",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Ajani's Pridemate",
+        "Ruin-Lurker Bat",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts"
+      ],
+      "opp_battlefield": [
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Island",
+        "Island",
+        "Plains",
+        "Plains",
+        "Temple of Enlightenment",
+        "Temple of Enlightenment",
+        "Tranquil Cove",
+        "Tranquil Cove"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 17,
+      "phase": "Phase_Main1",
+      "my_life": 25,
+      "opp_life": 17,
+      "hand": [
+        "Plains",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Ajani's Pridemate",
+        "Ruin-Lurker Bat",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts"
+      ],
+      "opp_battlefield": [
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Island",
+        "Island",
+        "Plains",
+        "Plains",
+        "Temple of Enlightenment",
+        "Temple of Enlightenment",
+        "Tranquil Cove",
+        "Tranquil Cove"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 17,
+      "phase": "Phase_Combat",
+      "my_life": 25,
+      "opp_life": 17,
+      "hand": [
+        "Plains",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Ajani's Pridemate",
+        "Ruin-Lurker Bat",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts"
+      ],
+      "opp_battlefield": [
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Island",
+        "Island",
+        "Plains",
+        "Plains",
+        "Temple of Enlightenment",
+        "Temple of Enlightenment",
+        "Tranquil Cove",
+        "Tranquil Cove"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [
+      {
+        "rule_id": "card_synergy_multiple_lifelink_payoffs",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "attack"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 17,
+      "phase": "Phase_Combat",
+      "my_life": 25,
+      "opp_life": 17,
+      "hand": [
+        "Plains",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Ajani's Pridemate",
+        "Ruin-Lurker Bat",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts"
+      ],
+      "opp_battlefield": [
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Island",
+        "Island",
+        "Plains",
+        "Plains",
+        "Temple of Enlightenment",
+        "Temple of Enlightenment",
+        "Tranquil Cove",
+        "Tranquil Cove"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [
+      {
+        "rule_id": "card_synergy_multiple_lifelink_payoffs",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "attack"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 17,
+      "phase": "Phase_Combat",
+      "my_life": 25,
+      "opp_life": 17,
+      "hand": [
+        "Plains",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Ajani's Pridemate",
+        "Ruin-Lurker Bat",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts"
+      ],
+      "opp_battlefield": [
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Island",
+        "Island",
+        "Plains",
+        "Plains",
+        "Temple of Enlightenment",
+        "Temple of Enlightenment",
+        "Tranquil Cove",
+        "Tranquil Cove"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [
+      {
+        "rule_id": "card_synergy_multiple_lifelink_payoffs",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "attack"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 17,
+      "phase": "Phase_Combat",
+      "my_life": 25,
+      "opp_life": 17,
+      "hand": [
+        "Plains",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Ajani's Pridemate",
+        "Ruin-Lurker Bat",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts"
+      ],
+      "opp_battlefield": [
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Island",
+        "Island",
+        "Plains",
+        "Plains",
+        "Temple of Enlightenment",
+        "Temple of Enlightenment",
+        "Tranquil Cove",
+        "Tranquil Cove"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [
+      {
+        "rule_id": "card_synergy_multiple_lifelink_payoffs",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "attack"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 17,
+      "phase": "Phase_Combat",
+      "my_life": 25,
+      "opp_life": 17,
+      "hand": [
+        "Plains",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Ajani's Pridemate",
+        "Ruin-Lurker Bat",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts"
+      ],
+      "opp_battlefield": [
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Island",
+        "Island",
+        "Plains",
+        "Plains",
+        "Temple of Enlightenment",
+        "Temple of Enlightenment",
+        "Tranquil Cove",
+        "Tranquil Cove"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [
+      {
+        "rule_id": "card_synergy_multiple_lifelink_payoffs",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "attack"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 17,
+      "phase": "Phase_Combat",
+      "my_life": 25,
+      "opp_life": 17,
+      "hand": [
+        "Plains",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Ajani's Pridemate",
+        "Ruin-Lurker Bat",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts"
+      ],
+      "opp_battlefield": [
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Island",
+        "Island",
+        "Plains",
+        "Plains",
+        "Temple of Enlightenment",
+        "Temple of Enlightenment",
+        "Tranquil Cove",
+        "Tranquil Cove"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [
+      {
+        "rule_id": "card_synergy_multiple_lifelink_payoffs",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "attack"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 17,
+      "phase": "Phase_Main2",
+      "my_life": 28,
+      "opp_life": 14,
+      "hand": [
+        "Plains",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Ajani's Pridemate",
+        "Ruin-Lurker Bat",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts"
+      ],
+      "opp_battlefield": [
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Island",
+        "Island",
+        "Plains",
+        "Plains",
+        "Temple of Enlightenment",
+        "Temple of Enlightenment",
+        "Tranquil Cove",
+        "Tranquil Cove"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 17,
+      "phase": "Phase_Main2",
+      "my_life": 28,
+      "opp_life": 14,
+      "hand": [
+        "Plains",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Ajani's Pridemate",
+        "Ruin-Lurker Bat",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts"
+      ],
+      "opp_battlefield": [
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Island",
+        "Island",
+        "Plains",
+        "Plains",
+        "Temple of Enlightenment",
+        "Temple of Enlightenment",
+        "Tranquil Cove",
+        "Tranquil Cove"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 17,
+      "phase": "Phase_Main2",
+      "my_life": 28,
+      "opp_life": 14,
+      "hand": [
+        "Plains",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Ajani's Pridemate",
+        "Ruin-Lurker Bat",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts"
+      ],
+      "opp_battlefield": [
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Island",
+        "Island",
+        "Plains",
+        "Plains",
+        "Temple of Enlightenment",
+        "Temple of Enlightenment",
+        "Tranquil Cove",
+        "Tranquil Cove"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 20,
+      "phase": "Phase_Main1",
+      "my_life": 28,
+      "opp_life": 23,
+      "hand": [
+        "Plains",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains"
+      ],
+      "opp_battlefield": [
+        "Robot",
+        "Robot",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Island",
+        "Island",
+        "Island",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Temple of Enlightenment",
+        "Temple of Enlightenment",
+        "Tranquil Cove",
+        "Tranquil Cove",
+        "Ugin, Eye of the Storms"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 20,
+      "phase": "Phase_Main1",
+      "my_life": 28,
+      "opp_life": 23,
+      "hand": [
+        "Plains",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains"
+      ],
+      "opp_battlefield": [
+        "Robot",
+        "Robot",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Island",
+        "Island",
+        "Island",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Temple of Enlightenment",
+        "Temple of Enlightenment",
+        "Tranquil Cove",
+        "Tranquil Cove",
+        "Ugin, Eye of the Storms"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 20,
+      "phase": "Phase_Main1",
+      "my_life": 28,
+      "opp_life": 23,
+      "hand": [
+        "Plains",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains"
+      ],
+      "opp_battlefield": [
+        "Robot",
+        "Robot",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Island",
+        "Island",
+        "Island",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Temple of Enlightenment",
+        "Temple of Enlightenment",
+        "Tranquil Cove",
+        "Tranquil Cove",
+        "Ugin, Eye of the Storms"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 20,
+      "phase": "Phase_Main1",
+      "my_life": 28,
+      "opp_life": 23,
+      "hand": [
+        "Plains",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains"
+      ],
+      "opp_battlefield": [
+        "Robot",
+        "Robot",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Island",
+        "Island",
+        "Island",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Temple of Enlightenment",
+        "Temple of Enlightenment",
+        "Tranquil Cove",
+        "Tranquil Cove",
+        "Ugin, Eye of the Storms"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 20,
+      "phase": "Phase_Main1",
+      "my_life": 28,
+      "opp_life": 23,
+      "hand": [
+        "Plains",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains"
+      ],
+      "opp_battlefield": [
+        "Robot",
+        "Robot",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Island",
+        "Island",
+        "Island",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Temple of Enlightenment",
+        "Temple of Enlightenment",
+        "Tranquil Cove",
+        "Tranquil Cove",
+        "Ugin, Eye of the Storms"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 20,
+      "phase": "Phase_Combat",
+      "my_life": 28,
+      "opp_life": 23,
+      "hand": [
+        "Plains",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains"
+      ],
+      "opp_battlefield": [
+        "Robot",
+        "Robot",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Elixir",
+        "Island",
+        "Island",
+        "Island",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Temple of Enlightenment",
+        "Temple of Enlightenment",
+        "Tranquil Cove",
+        "Tranquil Cove",
+        "Ugin, Eye of the Storms"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 20,
+      "phase": "Phase_Combat",
+      "my_life": 28,
+      "opp_life": 23,
+      "hand": [
+        "Plains",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains"
+      ],
+      "opp_battlefield": [
+        "Robot",
+        "Robot",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Elixir",
+        "Island",
+        "Island",
+        "Island",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Temple of Enlightenment",
+        "Temple of Enlightenment",
+        "Tranquil Cove",
+        "Tranquil Cove",
+        "Ugin, Eye of the Storms"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 20,
+      "phase": "Phase_Combat",
+      "my_life": 28,
+      "opp_life": 23,
+      "hand": [
+        "Plains",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains"
+      ],
+      "opp_battlefield": [
+        "Robot",
+        "Robot",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Elixir",
+        "Island",
+        "Island",
+        "Island",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Temple of Enlightenment",
+        "Temple of Enlightenment",
+        "Tranquil Cove",
+        "Tranquil Cove",
+        "Ugin, Eye of the Storms"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 20,
+      "phase": "Phase_Combat",
+      "my_life": 28,
+      "opp_life": 23,
+      "hand": [
+        "Plains",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains"
+      ],
+      "opp_battlefield": [
+        "Robot",
+        "Robot",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Elixir",
+        "Island",
+        "Island",
+        "Island",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Temple of Enlightenment",
+        "Temple of Enlightenment",
+        "Tranquil Cove",
+        "Tranquil Cove",
+        "Ugin, Eye of the Storms"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 20,
+      "phase": "Phase_Main2",
+      "my_life": 20,
+      "opp_life": 20,
+      "hand": [],
+      "my_battlefield": [],
+      "opp_battlefield": []
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 20,
+      "phase": "Phase_Ending",
+      "my_life": 28,
+      "opp_life": 23,
+      "hand": [
+        "Plains",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains"
+      ],
+      "opp_battlefield": [
+        "Robot",
+        "Robot",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Elixir",
+        "Island",
+        "Island",
+        "Island",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Temple of Enlightenment",
+        "Temple of Enlightenment",
+        "Tranquil Cove",
+        "Tranquil Cove",
+        "Ugin, Eye of the Storms"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 20,
+      "phase": "Phase_Ending",
+      "my_life": 28,
+      "opp_life": 23,
+      "hand": [
+        "Plains",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains"
+      ],
+      "opp_battlefield": [
+        "Robot",
+        "Robot",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Elixir",
+        "Island",
+        "Island",
+        "Island",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Temple of Enlightenment",
+        "Temple of Enlightenment",
+        "Tranquil Cove",
+        "Tranquil Cove",
+        "Ugin, Eye of the Storms"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 21,
+      "phase": "Phase_Beginning",
+      "my_life": 20,
+      "opp_life": 20,
+      "hand": [],
+      "my_battlefield": [],
+      "opp_battlefield": []
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 21,
+      "phase": "Phase_Beginning",
+      "my_life": 20,
+      "opp_life": 20,
+      "hand": [],
+      "my_battlefield": [],
+      "opp_battlefield": []
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 21,
+      "phase": "Phase_Main1",
+      "my_life": 28,
+      "opp_life": 23,
+      "hand": [
+        "Plains",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains"
+      ],
+      "opp_battlefield": [
+        "Robot",
+        "Robot",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Elixir",
+        "Island",
+        "Island",
+        "Island",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Temple of Enlightenment",
+        "Temple of Enlightenment",
+        "Tranquil Cove",
+        "Tranquil Cove",
+        "Ugin, Eye of the Storms"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 21,
+      "phase": "Phase_Main1",
+      "my_life": 28,
+      "opp_life": 23,
+      "hand": [
+        "Plains",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains"
+      ],
+      "opp_battlefield": [
+        "Robot",
+        "Robot",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Elixir",
+        "Island",
+        "Island",
+        "Island",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Temple of Enlightenment",
+        "Temple of Enlightenment",
+        "Tranquil Cove",
+        "Tranquil Cove",
+        "Ugin, Eye of the Storms"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 21,
+      "phase": "Phase_Main1",
+      "my_life": 28,
+      "opp_life": 23,
+      "hand": [
+        "Plains",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains"
+      ],
+      "opp_battlefield": [
+        "Robot",
+        "Robot",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Elixir",
+        "Island",
+        "Island",
+        "Island",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Temple of Enlightenment",
+        "Temple of Enlightenment",
+        "Tranquil Cove",
+        "Tranquil Cove",
+        "Ugin, Eye of the Storms"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 21,
+      "phase": "Phase_Main1",
+      "my_life": 28,
+      "opp_life": 23,
+      "hand": [
+        "Plains",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains"
+      ],
+      "opp_battlefield": [
+        "Robot",
+        "Robot",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Elixir",
+        "Island",
+        "Island",
+        "Island",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Temple of Enlightenment",
+        "Temple of Enlightenment",
+        "Tranquil Cove",
+        "Tranquil Cove",
+        "Ugin, Eye of the Storms"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 21,
+      "phase": "Phase_Main1",
+      "my_life": 28,
+      "opp_life": 23,
+      "hand": [
+        "Plains",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains"
+      ],
+      "opp_battlefield": [
+        "Robot",
+        "Robot",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Elixir",
+        "Island",
+        "Island",
+        "Island",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Temple of Enlightenment",
+        "Temple of Enlightenment",
+        "Tranquil Cove",
+        "Tranquil Cove",
+        "Ugin, Eye of the Storms"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 21,
+      "phase": "Phase_Combat",
+      "my_life": 20,
+      "opp_life": 20,
+      "hand": [],
+      "my_battlefield": [],
+      "opp_battlefield": []
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 21,
+      "phase": "Phase_Combat",
+      "my_life": 20,
+      "opp_life": 20,
+      "hand": [],
+      "my_battlefield": [],
+      "opp_battlefield": []
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 21,
+      "phase": "Phase_Main2",
+      "my_life": 28,
+      "opp_life": 23,
+      "hand": [
+        "Plains",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains"
+      ],
+      "opp_battlefield": [
+        "Robot",
+        "Robot",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Elixir",
+        "Island",
+        "Island",
+        "Island",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Temple of Enlightenment",
+        "Temple of Enlightenment",
+        "Tranquil Cove",
+        "Tranquil Cove",
+        "Ugin, Eye of the Storms"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 21,
+      "phase": "Phase_Main2",
+      "my_life": 28,
+      "opp_life": 23,
+      "hand": [
+        "Plains",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains"
+      ],
+      "opp_battlefield": [
+        "Robot",
+        "Robot",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Elixir",
+        "Island",
+        "Island",
+        "Island",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Temple of Enlightenment",
+        "Temple of Enlightenment",
+        "Tranquil Cove",
+        "Tranquil Cove",
+        "Ugin, Eye of the Storms"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 21,
+      "phase": "Phase_Main2",
+      "my_life": 28,
+      "opp_life": 23,
+      "hand": [
+        "Plains",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains"
+      ],
+      "opp_battlefield": [
+        "Robot",
+        "Robot",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Elixir",
+        "Island",
+        "Island",
+        "Island",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Temple of Enlightenment",
+        "Temple of Enlightenment",
+        "Tranquil Cove",
+        "Tranquil Cove",
+        "Ugin, Eye of the Storms"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 21,
+      "phase": "Phase_Ending",
+      "my_life": 20,
+      "opp_life": 20,
+      "hand": [],
+      "my_battlefield": [],
+      "opp_battlefield": []
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 22,
+      "phase": "Phase_Beginning",
+      "my_life": 20,
+      "opp_life": 20,
+      "hand": [],
+      "my_battlefield": [],
+      "opp_battlefield": []
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 22,
+      "phase": "Phase_Beginning",
+      "my_life": 20,
+      "opp_life": 20,
+      "hand": [],
+      "my_battlefield": [],
+      "opp_battlefield": []
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 22,
+      "phase": "Phase_Main1",
+      "my_life": 28,
+      "opp_life": 26,
+      "hand": [
+        "Plains",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains"
+      ],
+      "opp_battlefield": [
+        "Robot",
+        "Robot",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Island",
+        "Island",
+        "Island",
+        "Island",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Temple of Enlightenment",
+        "Temple of Enlightenment",
+        "Tranquil Cove",
+        "Tranquil Cove",
+        "Ugin, Eye of the Storms"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 22,
+      "phase": "Phase_Main1",
+      "my_life": 28,
+      "opp_life": 26,
+      "hand": [
+        "Plains",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains"
+      ],
+      "opp_battlefield": [
+        "Robot",
+        "Robot",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Island",
+        "Island",
+        "Island",
+        "Island",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Temple of Enlightenment",
+        "Temple of Enlightenment",
+        "Tranquil Cove",
+        "Tranquil Cove",
+        "Ugin, Eye of the Storms"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 22,
+      "phase": "Phase_Main1",
+      "my_life": 28,
+      "opp_life": 26,
+      "hand": [
+        "Plains",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains"
+      ],
+      "opp_battlefield": [
+        "Robot",
+        "Robot",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Island",
+        "Island",
+        "Island",
+        "Island",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Temple of Enlightenment",
+        "Temple of Enlightenment",
+        "Tranquil Cove",
+        "Tranquil Cove",
+        "Ugin, Eye of the Storms"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 22,
+      "phase": "Phase_Main1",
+      "my_life": 28,
+      "opp_life": 26,
+      "hand": [
+        "Plains",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains"
+      ],
+      "opp_battlefield": [
+        "Robot",
+        "Robot",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Island",
+        "Island",
+        "Island",
+        "Island",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Temple of Enlightenment",
+        "Temple of Enlightenment",
+        "Tranquil Cove",
+        "Tranquil Cove",
+        "Ugin, Eye of the Storms"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 22,
+      "phase": "Phase_Main1",
+      "my_life": 28,
+      "opp_life": 26,
+      "hand": [
+        "Plains",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains"
+      ],
+      "opp_battlefield": [
+        "Robot",
+        "Robot",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Island",
+        "Island",
+        "Island",
+        "Island",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Temple of Enlightenment",
+        "Temple of Enlightenment",
+        "Tranquil Cove",
+        "Tranquil Cove",
+        "Ugin, Eye of the Storms"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 22,
+      "phase": "Phase_Main1",
+      "my_life": 28,
+      "opp_life": 26,
+      "hand": [
+        "Plains",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains"
+      ],
+      "opp_battlefield": [
+        "Robot",
+        "Robot",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Island",
+        "Island",
+        "Island",
+        "Island",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Temple of Enlightenment",
+        "Temple of Enlightenment",
+        "Tranquil Cove",
+        "Tranquil Cove",
+        "Ugin, Eye of the Storms"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 22,
+      "phase": "Phase_Main1",
+      "my_life": 28,
+      "opp_life": 26,
+      "hand": [
+        "Plains",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains"
+      ],
+      "opp_battlefield": [
+        "Robot",
+        "Robot",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Island",
+        "Island",
+        "Island",
+        "Island",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Temple of Enlightenment",
+        "Temple of Enlightenment",
+        "Tranquil Cove",
+        "Tranquil Cove",
+        "Ugin, Eye of the Storms"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 22,
+      "phase": "Phase_Main1",
+      "my_life": 28,
+      "opp_life": 26,
+      "hand": [
+        "Plains",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains"
+      ],
+      "opp_battlefield": [
+        "Robot",
+        "Robot",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Island",
+        "Island",
+        "Island",
+        "Island",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Temple of Enlightenment",
+        "Temple of Enlightenment",
+        "Tranquil Cove",
+        "Tranquil Cove",
+        "Ugin, Eye of the Storms"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 22,
+      "phase": "Phase_Main1",
+      "my_life": 28,
+      "opp_life": 26,
+      "hand": [
+        "Plains",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains"
+      ],
+      "opp_battlefield": [
+        "Robot",
+        "Robot",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Island",
+        "Island",
+        "Island",
+        "Island",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Temple of Enlightenment",
+        "Temple of Enlightenment",
+        "Tranquil Cove",
+        "Tranquil Cove",
+        "Ugin, Eye of the Storms"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 22,
+      "phase": "Phase_Main1",
+      "my_life": 28,
+      "opp_life": 26,
+      "hand": [
+        "Plains",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains"
+      ],
+      "opp_battlefield": [
+        "Robot",
+        "Robot",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Island",
+        "Island",
+        "Island",
+        "Island",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Temple of Enlightenment",
+        "Temple of Enlightenment",
+        "Tranquil Cove",
+        "Tranquil Cove",
+        "Ugin, Eye of the Storms"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 22,
+      "phase": "Phase_Main1",
+      "my_life": 28,
+      "opp_life": 26,
+      "hand": [
+        "Plains",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains"
+      ],
+      "opp_battlefield": [
+        "Robot",
+        "Robot",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Island",
+        "Island",
+        "Island",
+        "Island",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Temple of Enlightenment",
+        "Temple of Enlightenment",
+        "Tranquil Cove",
+        "Tranquil Cove",
+        "Ugin, Eye of the Storms"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 22,
+      "phase": "Phase_Main1",
+      "my_life": 28,
+      "opp_life": 26,
+      "hand": [
+        "Plains",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains"
+      ],
+      "opp_battlefield": [
+        "Robot",
+        "Robot",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Island",
+        "Island",
+        "Island",
+        "Island",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Temple of Enlightenment",
+        "Temple of Enlightenment",
+        "Tranquil Cove",
+        "Tranquil Cove",
+        "Ugin, Eye of the Storms"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 22,
+      "phase": "Phase_Main1",
+      "my_life": 28,
+      "opp_life": 26,
+      "hand": [
+        "Plains",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains"
+      ],
+      "opp_battlefield": [
+        "Robot",
+        "Robot",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Island",
+        "Island",
+        "Island",
+        "Island",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Temple of Enlightenment",
+        "Temple of Enlightenment",
+        "Tranquil Cove",
+        "Tranquil Cove",
+        "Ugin, Eye of the Storms"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 22,
+      "phase": "Phase_Main1",
+      "my_life": 28,
+      "opp_life": 26,
+      "hand": [
+        "Plains",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains"
+      ],
+      "opp_battlefield": [
+        "Robot",
+        "Robot",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Island",
+        "Island",
+        "Island",
+        "Island",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Temple of Enlightenment",
+        "Temple of Enlightenment",
+        "Tranquil Cove",
+        "Tranquil Cove",
+        "Ugin, Eye of the Storms"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 22,
+      "phase": "Phase_Combat",
+      "my_life": 28,
+      "opp_life": 33,
+      "hand": [
+        "Plains",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains"
+      ],
+      "opp_battlefield": [
+        "Robot",
+        "Robot",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Island",
+        "Island",
+        "Island",
+        "Island",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Temple of Enlightenment",
+        "Temple of Enlightenment",
+        "Tranquil Cove",
+        "Tranquil Cove",
+        "Ugin, Eye of the Storms"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 22,
+      "phase": "Phase_Combat",
+      "my_life": 28,
+      "opp_life": 33,
+      "hand": [
+        "Plains",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains"
+      ],
+      "opp_battlefield": [
+        "Robot",
+        "Robot",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Island",
+        "Island",
+        "Island",
+        "Island",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Temple of Enlightenment",
+        "Temple of Enlightenment",
+        "Tranquil Cove",
+        "Tranquil Cove",
+        "Ugin, Eye of the Storms"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 22,
+      "phase": "Phase_Combat",
+      "my_life": 28,
+      "opp_life": 33,
+      "hand": [
+        "Plains",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains"
+      ],
+      "opp_battlefield": [
+        "Robot",
+        "Robot",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Island",
+        "Island",
+        "Island",
+        "Island",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Temple of Enlightenment",
+        "Temple of Enlightenment",
+        "Tranquil Cove",
+        "Tranquil Cove",
+        "Ugin, Eye of the Storms"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 22,
+      "phase": "Phase_Combat",
+      "my_life": 28,
+      "opp_life": 33,
+      "hand": [
+        "Plains",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains"
+      ],
+      "opp_battlefield": [
+        "Robot",
+        "Robot",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Island",
+        "Island",
+        "Island",
+        "Island",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Temple of Enlightenment",
+        "Temple of Enlightenment",
+        "Tranquil Cove",
+        "Tranquil Cove",
+        "Ugin, Eye of the Storms"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 22,
+      "phase": "Phase_Combat",
+      "my_life": 28,
+      "opp_life": 33,
+      "hand": [
+        "Plains",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains"
+      ],
+      "opp_battlefield": [
+        "Robot",
+        "Robot",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Island",
+        "Island",
+        "Island",
+        "Island",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Temple of Enlightenment",
+        "Temple of Enlightenment",
+        "Tranquil Cove",
+        "Tranquil Cove",
+        "Ugin, Eye of the Storms"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 22,
+      "phase": "Phase_Combat",
+      "my_life": 28,
+      "opp_life": 33,
+      "hand": [
+        "Plains",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains"
+      ],
+      "opp_battlefield": [
+        "Robot",
+        "Robot",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Island",
+        "Island",
+        "Island",
+        "Island",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Temple of Enlightenment",
+        "Temple of Enlightenment",
+        "Tranquil Cove",
+        "Tranquil Cove",
+        "Ugin, Eye of the Storms"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 22,
+      "phase": "Phase_Combat",
+      "my_life": 28,
+      "opp_life": 33,
+      "hand": [
+        "Plains",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains"
+      ],
+      "opp_battlefield": [
+        "Robot",
+        "Robot",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Island",
+        "Island",
+        "Island",
+        "Island",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Temple of Enlightenment",
+        "Temple of Enlightenment",
+        "Tranquil Cove",
+        "Tranquil Cove",
+        "Ugin, Eye of the Storms"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 22,
+      "phase": "Phase_Main2",
+      "my_life": 20,
+      "opp_life": 20,
+      "hand": [],
+      "my_battlefield": [],
+      "opp_battlefield": []
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 22,
+      "phase": "Phase_Ending",
+      "my_life": 24,
+      "opp_life": 33,
+      "hand": [
+        "Plains",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains"
+      ],
+      "opp_battlefield": [
+        "Robot",
+        "Robot",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Island",
+        "Island",
+        "Island",
+        "Island",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Temple of Enlightenment",
+        "Temple of Enlightenment",
+        "Tranquil Cove",
+        "Tranquil Cove",
+        "Ugin, Eye of the Storms"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 22,
+      "phase": "Phase_Ending",
+      "my_life": 24,
+      "opp_life": 33,
+      "hand": [
+        "Plains",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains"
+      ],
+      "opp_battlefield": [
+        "Robot",
+        "Robot",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Island",
+        "Island",
+        "Island",
+        "Island",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Temple of Enlightenment",
+        "Temple of Enlightenment",
+        "Tranquil Cove",
+        "Tranquil Cove",
+        "Ugin, Eye of the Storms"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 23,
+      "phase": "Phase_Beginning",
+      "my_life": 20,
+      "opp_life": 20,
+      "hand": [],
+      "my_battlefield": [],
+      "opp_battlefield": []
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 23,
+      "phase": "Phase_Beginning",
+      "my_life": 20,
+      "opp_life": 20,
+      "hand": [],
+      "my_battlefield": [],
+      "opp_battlefield": []
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 23,
+      "phase": "Phase_Main1",
+      "my_life": 24,
+      "opp_life": 33,
+      "hand": [
+        "Plains",
+        "Plains",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains"
+      ],
+      "opp_battlefield": [
+        "Robot",
+        "Robot",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Island",
+        "Island",
+        "Island",
+        "Island",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Temple of Enlightenment",
+        "Temple of Enlightenment",
+        "Tranquil Cove",
+        "Tranquil Cove",
+        "Ugin, Eye of the Storms"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 23,
+      "phase": "Phase_Main1",
+      "my_life": 24,
+      "opp_life": 33,
+      "hand": [
+        "Plains",
+        "Plains",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains"
+      ],
+      "opp_battlefield": [
+        "Robot",
+        "Robot",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Island",
+        "Island",
+        "Island",
+        "Island",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Temple of Enlightenment",
+        "Temple of Enlightenment",
+        "Tranquil Cove",
+        "Tranquil Cove",
+        "Ugin, Eye of the Storms"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 23,
+      "phase": "Phase_Main1",
+      "my_life": 24,
+      "opp_life": 33,
+      "hand": [
+        "Plains",
+        "Plains",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains"
+      ],
+      "opp_battlefield": [
+        "Robot",
+        "Robot",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Authority of the Consuls",
+        "Island",
+        "Island",
+        "Island",
+        "Island",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Temple of Enlightenment",
+        "Temple of Enlightenment",
+        "Tranquil Cove",
+        "Tranquil Cove",
+        "Ugin, Eye of the Storms"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": "Jeskai Control",
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 0,
+      "phase": "",
+      "my_life": 20,
+      "opp_life": 20,
+      "hand": [
+        "Plains",
+        "Sheltered by Ghosts",
+        "Essence Channeler",
+        "Valorous Stance",
+        "Sheltered by Ghosts",
+        "Healer's Hawk",
+        "Plains"
+      ],
+      "my_battlefield": [],
+      "opp_battlefield": []
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": null,
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 1,
+      "phase": "Phase_Main1",
+      "my_life": 20,
+      "opp_life": 20,
+      "hand": [
+        "Plains",
+        "Sheltered by Ghosts",
+        "Essence Channeler",
+        "Valorous Stance",
+        "Sheltered by Ghosts",
+        "Healer's Hawk"
+      ],
+      "my_battlefield": [
+        "Plains"
+      ],
+      "opp_battlefield": []
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": null,
+    "expected": [
+      {
+        "rule_id": "archetype_curve_one_drop",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 1,
+      "phase": "Phase_Main1",
+      "my_life": 20,
+      "opp_life": 20,
+      "hand": [
+        "Plains",
+        "Sheltered by Ghosts",
+        "Essence Channeler",
+        "Valorous Stance",
+        "Sheltered by Ghosts",
+        "Healer's Hawk"
+      ],
+      "my_battlefield": [
+        "Plains"
+      ],
+      "opp_battlefield": []
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": null,
+    "expected": [
+      {
+        "rule_id": "archetype_curve_one_drop",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 3,
+      "phase": "Phase_Main1",
+      "my_life": 20,
+      "opp_life": 20,
+      "hand": [
+        "Plains",
+        "Sheltered by Ghosts",
+        "Essence Channeler",
+        "Valorous Stance",
+        "Sheltered by Ghosts"
+      ],
+      "my_battlefield": [
+        "Healer's Hawk",
+        "Plains",
+        "Plains"
+      ],
+      "opp_battlefield": [
+        "Swamp"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": null,
+    "expected": [
+      {
+        "rule_id": "card_synergy_ghosts_hold_for_exile",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "card_synergy_flyer_payoff_turn2",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 3,
+      "phase": "Phase_Main1",
+      "my_life": 20,
+      "opp_life": 20,
+      "hand": [
+        "Plains",
+        "Sheltered by Ghosts",
+        "Essence Channeler",
+        "Valorous Stance",
+        "Sheltered by Ghosts"
+      ],
+      "my_battlefield": [
+        "Healer's Hawk",
+        "Plains",
+        "Plains"
+      ],
+      "opp_battlefield": [
+        "Swamp"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": null,
+    "expected": [
+      {
+        "rule_id": "card_synergy_ghosts_hold_for_exile",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "card_synergy_flyer_payoff_turn2",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 3,
+      "phase": "Phase_Combat",
+      "my_life": 20,
+      "opp_life": 20,
+      "hand": [
+        "Plains",
+        "Sheltered by Ghosts",
+        "Valorous Stance",
+        "Sheltered by Ghosts"
+      ],
+      "my_battlefield": [
+        "Essence Channeler",
+        "Healer's Hawk",
+        "Plains",
+        "Plains"
+      ],
+      "opp_battlefield": [
+        "Swamp"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": null,
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 3,
+      "phase": "Phase_Combat",
+      "my_life": 20,
+      "opp_life": 20,
+      "hand": [
+        "Plains",
+        "Sheltered by Ghosts",
+        "Valorous Stance",
+        "Sheltered by Ghosts"
+      ],
+      "my_battlefield": [
+        "Essence Channeler",
+        "Healer's Hawk",
+        "Plains",
+        "Plains"
+      ],
+      "opp_battlefield": [
+        "Swamp"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": null,
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 4,
+      "phase": "Phase_Combat",
+      "my_life": 20,
+      "opp_life": 20,
+      "hand": [],
+      "my_battlefield": [],
+      "opp_battlefield": []
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": null,
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 4,
+      "phase": "Phase_Combat",
+      "my_life": 20,
+      "opp_life": 20,
+      "hand": [],
+      "my_battlefield": [],
+      "opp_battlefield": []
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": null,
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 4,
+      "phase": "Phase_Combat",
+      "my_life": 20,
+      "opp_life": 20,
+      "hand": [],
+      "my_battlefield": [],
+      "opp_battlefield": []
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": null,
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 5,
+      "phase": "Phase_Beginning",
+      "my_life": 20,
+      "opp_life": 20,
+      "hand": [],
+      "my_battlefield": [],
+      "opp_battlefield": []
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": null,
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 5,
+      "phase": "Phase_Beginning",
+      "my_life": 20,
+      "opp_life": 20,
+      "hand": [],
+      "my_battlefield": [],
+      "opp_battlefield": []
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": null,
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 5,
+      "phase": "Phase_Main1",
+      "my_life": 21,
+      "opp_life": 19,
+      "hand": [
+        "Plains",
+        "Sheltered by Ghosts",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Essence Channeler",
+        "Healer's Hawk",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts"
+      ],
+      "opp_battlefield": [
+        "Starscape Cleric",
+        "Swamp",
+        "Swamp"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": null,
+    "expected": [
+      {
+        "rule_id": "card_synergy_stance_protect",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "card_synergy_ghosts_flyer_engine",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 5,
+      "phase": "Phase_Main1",
+      "my_life": 21,
+      "opp_life": 19,
+      "hand": [
+        "Plains",
+        "Sheltered by Ghosts",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Essence Channeler",
+        "Healer's Hawk",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts"
+      ],
+      "opp_battlefield": [
+        "Starscape Cleric",
+        "Swamp",
+        "Swamp"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": null,
+    "expected": [
+      {
+        "rule_id": "card_synergy_stance_protect",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "card_synergy_ghosts_flyer_engine",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 5,
+      "phase": "Phase_Main1",
+      "my_life": 21,
+      "opp_life": 19,
+      "hand": [
+        "Plains",
+        "Sheltered by Ghosts",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Essence Channeler",
+        "Healer's Hawk",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts"
+      ],
+      "opp_battlefield": [
+        "Starscape Cleric",
+        "Swamp",
+        "Swamp"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": null,
+    "expected": [
+      {
+        "rule_id": "card_synergy_stance_protect",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "card_synergy_ghosts_flyer_engine",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 5,
+      "phase": "Phase_Main1",
+      "my_life": 21,
+      "opp_life": 19,
+      "hand": [
+        "Plains",
+        "Sheltered by Ghosts",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Essence Channeler",
+        "Healer's Hawk",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts"
+      ],
+      "opp_battlefield": [
+        "Starscape Cleric",
+        "Swamp",
+        "Swamp"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": null,
+    "expected": [
+      {
+        "rule_id": "card_synergy_stance_protect",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "card_synergy_ghosts_flyer_engine",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 5,
+      "phase": "Phase_Main1",
+      "my_life": 21,
+      "opp_life": 19,
+      "hand": [
+        "Plains",
+        "Sheltered by Ghosts",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Essence Channeler",
+        "Healer's Hawk",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts"
+      ],
+      "opp_battlefield": [
+        "Starscape Cleric",
+        "Swamp",
+        "Swamp"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": null,
+    "expected": [
+      {
+        "rule_id": "card_synergy_stance_protect",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "card_synergy_ghosts_flyer_engine",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 5,
+      "phase": "Phase_Main1",
+      "my_life": 21,
+      "opp_life": 19,
+      "hand": [
+        "Plains",
+        "Sheltered by Ghosts",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Essence Channeler",
+        "Healer's Hawk",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts"
+      ],
+      "opp_battlefield": [
+        "Starscape Cleric",
+        "Swamp",
+        "Swamp"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": null,
+    "expected": [
+      {
+        "rule_id": "card_synergy_stance_protect",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "card_synergy_ghosts_flyer_engine",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 5,
+      "phase": "Phase_Main1",
+      "my_life": 21,
+      "opp_life": 19,
+      "hand": [
+        "Plains",
+        "Sheltered by Ghosts",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Essence Channeler",
+        "Healer's Hawk",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts"
+      ],
+      "opp_battlefield": [
+        "Starscape Cleric",
+        "Swamp",
+        "Swamp"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": null,
+    "expected": [
+      {
+        "rule_id": "card_synergy_stance_protect",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "card_synergy_ghosts_flyer_engine",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 5,
+      "phase": "Phase_Main1",
+      "my_life": 21,
+      "opp_life": 19,
+      "hand": [
+        "Plains",
+        "Sheltered by Ghosts",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Essence Channeler",
+        "Healer's Hawk",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts"
+      ],
+      "opp_battlefield": [
+        "Starscape Cleric",
+        "Swamp",
+        "Swamp"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": null,
+    "expected": [
+      {
+        "rule_id": "card_synergy_stance_protect",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "card_synergy_ghosts_flyer_engine",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 5,
+      "phase": "Phase_Combat",
+      "my_life": 21,
+      "opp_life": 19,
+      "hand": [
+        "Plains",
+        "Sheltered by Ghosts",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Essence Channeler",
+        "Healer's Hawk",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts"
+      ],
+      "opp_battlefield": [
+        "Swamp",
+        "Swamp"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": null,
+    "expected": [
+      {
+        "rule_id": "card_synergy_multiple_lifelink_payoffs",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "attack"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 5,
+      "phase": "Phase_Combat",
+      "my_life": 21,
+      "opp_life": 19,
+      "hand": [
+        "Plains",
+        "Sheltered by Ghosts",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Essence Channeler",
+        "Healer's Hawk",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts"
+      ],
+      "opp_battlefield": [
+        "Swamp",
+        "Swamp"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": null,
+    "expected": [
+      {
+        "rule_id": "card_synergy_multiple_lifelink_payoffs",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "attack"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 5,
+      "phase": "Phase_Combat",
+      "my_life": 21,
+      "opp_life": 19,
+      "hand": [
+        "Plains",
+        "Sheltered by Ghosts",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Essence Channeler",
+        "Healer's Hawk",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts"
+      ],
+      "opp_battlefield": [
+        "Swamp",
+        "Swamp"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": null,
+    "expected": [
+      {
+        "rule_id": "card_synergy_multiple_lifelink_payoffs",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "attack"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 5,
+      "phase": "Phase_Combat",
+      "my_life": 21,
+      "opp_life": 19,
+      "hand": [
+        "Plains",
+        "Sheltered by Ghosts",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Essence Channeler",
+        "Healer's Hawk",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts"
+      ],
+      "opp_battlefield": [
+        "Swamp",
+        "Swamp"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": null,
+    "expected": [
+      {
+        "rule_id": "card_synergy_multiple_lifelink_payoffs",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "attack"
+      }
+    ],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 6,
+      "phase": "Phase_Combat",
+      "my_life": 20,
+      "opp_life": 20,
+      "hand": [],
+      "my_battlefield": [],
+      "opp_battlefield": []
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": null,
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 6,
+      "phase": "Phase_Combat",
+      "my_life": 20,
+      "opp_life": 20,
+      "hand": [],
+      "my_battlefield": [],
+      "opp_battlefield": []
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": null,
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 6,
+      "phase": "Phase_Combat",
+      "my_life": 20,
+      "opp_life": 20,
+      "hand": [],
+      "my_battlefield": [],
+      "opp_battlefield": []
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": null,
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 7,
+      "phase": "Phase_Beginning",
+      "my_life": 20,
+      "opp_life": 20,
+      "hand": [],
+      "my_battlefield": [],
+      "opp_battlefield": []
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": null,
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 7,
+      "phase": "Phase_Beginning",
+      "my_life": 20,
+      "opp_life": 20,
+      "hand": [],
+      "my_battlefield": [],
+      "opp_battlefield": []
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": null,
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 7,
+      "phase": "Phase_Main1",
+      "my_life": 26,
+      "opp_life": 14,
+      "hand": [
+        "Healer's Hawk",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Essence Channeler",
+        "Healer's Hawk",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts",
+        "Sheltered by Ghosts"
+      ],
+      "opp_battlefield": [
+        "Swamp",
+        "Swamp",
+        "Swamp"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": null,
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 7,
+      "phase": "Phase_Main1",
+      "my_life": 26,
+      "opp_life": 14,
+      "hand": [
+        "Healer's Hawk",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Essence Channeler",
+        "Healer's Hawk",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts",
+        "Sheltered by Ghosts"
+      ],
+      "opp_battlefield": [
+        "Swamp",
+        "Swamp",
+        "Swamp"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": null,
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 7,
+      "phase": "Phase_Main1",
+      "my_life": 26,
+      "opp_life": 14,
+      "hand": [
+        "Healer's Hawk",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Essence Channeler",
+        "Healer's Hawk",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts",
+        "Sheltered by Ghosts"
+      ],
+      "opp_battlefield": [
+        "Swamp",
+        "Swamp",
+        "Swamp"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": null,
+    "expected": [],
+    "_engine_version": "2.0.0"
+  },
+  {
+    "state": {
+      "turn": 7,
+      "phase": "Phase_Main1",
+      "my_life": 26,
+      "opp_life": 14,
+      "hand": [
+        "Healer's Hawk",
+        "Valorous Stance"
+      ],
+      "my_battlefield": [
+        "Essence Channeler",
+        "Healer's Hawk",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Plains",
+        "Sheltered by Ghosts",
+        "Sheltered by Ghosts"
+      ],
+      "opp_battlefield": [
+        "Swamp",
+        "Swamp",
+        "Swamp"
+      ]
+    },
+    "strategy_name": "Mono White Lifegain",
+    "opp_deck": null,
+    "expected": [],
+    "_engine_version": "2.0.0"
   }
 ]

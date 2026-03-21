@@ -1,6 +1,6 @@
 {
   "engine_version": "2.0.0",
-  "total_states": 108,
+  "total_states": 183,
   "top_1_agreement": 1.0,
   "flip_rate": 0.0,
   "threshold": 0.9,
@@ -8,9 +8,9 @@
   "decks": [
     {
       "deck": "Golgari Midrange",
-      "total": 69,
-      "top_1_match": 69,
-      "top_3_match": 69,
+      "total": 122,
+      "top_1_match": 122,
+      "top_3_match": 122,
       "flips": 0,
       "skipped": 0,
       "mismatches": []
@@ -26,9 +26,9 @@
     },
     {
       "deck": "Mono White Lifegain",
-      "total": 36,
-      "top_1_match": 36,
-      "top_3_match": 36,
+      "total": 58,
+      "top_1_match": 58,
+      "top_3_match": 58,
       "flips": 0,
       "skipped": 0,
       "mismatches": []
