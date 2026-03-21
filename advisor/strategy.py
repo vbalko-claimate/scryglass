@@ -774,6 +774,8 @@ def evaluate_rules_v2(rules: list[Rule], state: GameState,
             try:
                 family = ActionFamily(rule.action_family)
             except ValueError:
+                log.warning("Rule %s has invalid action_family=%r, falling back to inference",
+                            rule.id, rule.action_family)
                 family = infer_action_family(msg, phase=ti.phase, rule_tags=rule.tags)
         else:
             family = infer_action_family(msg, phase=ti.phase, rule_tags=rule.tags)

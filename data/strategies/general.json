@@ -27,6 +27,7 @@
         }
       ],
       "action": "Play a land before committing spells",
+      "action_family": "play_land",
       "priority": "low",
       "weight": 1.0,
       "stats": {
@@ -48,6 +49,7 @@
       "my_turn": true,
       "my_creatures_min": 1,
       "action": "Attack before Main 2 — hide your post-combat plays",
+      "action_family": "attack",
       "priority": "medium",
       "weight": 1.0,
       "stats": {
@@ -74,6 +76,7 @@
         }
       ],
       "action": "Hold instant-speed spells — cast on opponent's turn if possible",
+      "action_family": "pass",
       "priority": "low",
       "weight": 0.8,
       "stats": {
@@ -91,6 +94,7 @@
       "my_turn": true,
       "my_creatures_min": 4,
       "action": "4+ creatures on board — consider holding back vs board wipes",
+      "action_family": "pass",
       "priority": "medium",
       "weight": 1.0,
       "stats": {
@@ -107,6 +111,7 @@
       ],
       "life_below": 6,
       "action": "Low life — prioritize blocking and removal over attacking",
+      "action_family": "block",
       "priority": "high",
       "weight": 1.1,
       "stats": {
@@ -124,6 +129,7 @@
       "opp_life_below": 6,
       "my_creatures_min": 1,
       "action": "Opponent low — push damage, force trades",
+      "action_family": "attack",
       "priority": "high",
       "weight": 1.1,
       "stats": {
@@ -236,6 +242,7 @@
         }
       ],
       "action": "Save removal for their biggest threat",
+      "action_family": "pass",
       "priority": "medium",
       "weight": 1.0,
       "stats": {
@@ -265,6 +272,7 @@
         }
       ],
       "action": "Spend all your mana — curve out in early turns",
+      "action_family": "cast_spell",
       "priority": "medium",
       "weight": 1.0,
       "stats": {
@@ -287,6 +295,7 @@
       "opp_speed": "fast",
       "my_creatures_min": 1,
       "action": "Fast opponent — hold blockers back, don't tap out",
+      "action_family": "pass",
       "priority": "high",
       "weight": 1.2,
       "stats": {
@@ -310,6 +319,7 @@
       "opp_speed": "slow",
       "my_creatures_min": 1,
       "action": "Slow opponent — push damage aggressively before they stabilize",
+      "action_family": "attack",
       "priority": "high",
       "weight": 1.2,
       "stats": {
@@ -337,6 +347,7 @@
         }
       ],
       "action": "MUST-ANSWER threat on board — remove it NOW or lose",
+      "action_family": "cast_spell",
       "priority": "critical",
       "weight": 1.5,
       "stats": {
