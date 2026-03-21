@@ -351,14 +351,36 @@ async def startup():
     prev_log = watcher.log_path.parent / "Player-prev.log"
     _archive_player_log(prev_log)
 
-    # Catch up on current log (clear events first to avoid duplicates on restart)
-    log.info("Reading existing log...")
+    # Catch up on current log — resume from last known position
+    # IMPORTANT: Disable auto-LLM during replay to prevent hundreds of Claude CLI calls
+    prev_auto_llm = advisor.auto_llm_enabled
+    advisor.set_auto_llm(False)
+
+    # Get saved log position from DB (if any)
+    from .database import get_connection
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT value FROM meta WHERE key = 'log_position'")
+    row = cur.fetchone()
+    resume_pos = int(row[0]) if row else 0
+    conn.close()
+
     clear_match_events()
-    messages = watcher.read_from_beginning()
+    log.info("Reading log from position %d (LLM disabled during replay)...", resume_pos)
+    messages = watcher.read_from_beginning(resume_position=resume_pos)
     for msg in messages:
         tracker.process_message(msg)
-    log.info("Processed %d existing messages. Match active: %s",
+    advisor.set_auto_llm(prev_auto_llm)
+    log.info("Processed %d new messages. Match active: %s",
              len(messages), tracker.match_active)
+
+    # Save current position for next startup
+    conn = get_connection()
+    conn.execute(
+        "INSERT OR REPLACE INTO meta (key, value) VALUES ('log_position', ?)",
+        (str(watcher._position),))
+    conn.commit()
+    conn.close()
 
     # Backfill opponent deck names from match event data
     _backfill_opp_decks()

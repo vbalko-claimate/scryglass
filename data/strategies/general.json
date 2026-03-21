@@ -8,126 +8,192 @@
     {
       "id": "general_play_land",
       "layer": "general",
-      "tags": ["tempo"],
-      "phase": ["Main"],
+      "tags": [
+        "tempo"
+      ],
+      "phase": [
+        "Main"
+      ],
+      "step": "Phase_Main1",
       "my_turn": true,
+      "turn_max": 5,
       "require": [
-        {"zone": "hand", "match": {"type": "Land"}, "min_count": 1}
+        {
+          "zone": "hand",
+          "match": {
+            "type": "Land"
+          },
+          "min_count": 1
+        }
       ],
       "action": "Play a land before committing spells",
-      "priority": "high",
+      "priority": "low",
       "weight": 1.0,
-      "stats": {"fired": 0, "correct": 0},
+      "stats": {
+        "fired": 0,
+        "correct": 0
+      },
       "conflicts_with": []
     },
     {
       "id": "general_attack_before_main2",
       "layer": "general",
-      "tags": ["tempo"],
-      "phase": ["Main"],
+      "tags": [
+        "tempo"
+      ],
+      "phase": [
+        "Main"
+      ],
       "step": "Phase_Main1",
       "my_turn": true,
       "my_creatures_min": 1,
       "action": "Attack before Main 2 — hide your post-combat plays",
       "priority": "medium",
       "weight": 1.0,
-      "stats": {"fired": 0, "correct": 0},
+      "stats": {
+        "fired": 0,
+        "correct": 0
+      },
       "conflicts_with": []
     },
     {
       "id": "general_hold_instant",
       "layer": "general",
-      "tags": ["reactive"],
+      "tags": [
+        "reactive"
+      ],
       "my_turn": true,
       "require": [
-        {"zone": "hand", "match": {"type": "Instant", "castable": true}, "min_count": 1}
+        {
+          "zone": "hand",
+          "match": {
+            "type": "Instant",
+            "castable": true
+          },
+          "min_count": 1
+        }
       ],
       "action": "Hold instant-speed spells — cast on opponent's turn if possible",
       "priority": "low",
       "weight": 0.8,
-      "stats": {"fired": 0, "correct": 0},
+      "stats": {
+        "fired": 0,
+        "correct": 0
+      },
       "conflicts_with": []
     },
     {
       "id": "general_dont_overextend",
       "layer": "situation",
-      "tags": ["protect"],
+      "tags": [
+        "protect"
+      ],
       "my_turn": true,
       "my_creatures_min": 4,
       "action": "4+ creatures on board — consider holding back vs board wipes",
       "priority": "medium",
       "weight": 1.0,
-      "stats": {"fired": 0, "correct": 0},
+      "stats": {
+        "fired": 0,
+        "correct": 0
+      },
       "conflicts_with": []
     },
     {
       "id": "general_low_life_caution",
       "layer": "situation",
-      "tags": ["defensive"],
+      "tags": [
+        "defensive"
+      ],
       "life_below": 6,
       "action": "Low life — prioritize blocking and removal over attacking",
       "priority": "high",
       "weight": 1.1,
-      "stats": {"fired": 0, "correct": 0},
+      "stats": {
+        "fired": 0,
+        "correct": 0
+      },
       "conflicts_with": []
     },
     {
       "id": "general_opp_low_life",
       "layer": "situation",
-      "tags": ["aggressive"],
+      "tags": [
+        "aggressive"
+      ],
       "opp_life_below": 6,
       "my_creatures_min": 1,
       "action": "Opponent low — push damage, force trades",
       "priority": "high",
       "weight": 1.1,
-      "stats": {"fired": 0, "correct": 0},
+      "stats": {
+        "fired": 0,
+        "correct": 0
+      },
       "conflicts_with": []
     },
     {
       "id": "mulligan_no_lands",
       "layer": "mulligan",
       "tags": [],
-      "phase": ["Mulligan"],
+      "phase": [
+        "Mulligan"
+      ],
       "hand_lands_max": 0,
       "hand_size_min": 6,
       "action": "No lands — MULLIGAN",
       "priority": "critical",
       "weight": 1.5,
-      "stats": {"fired": 0, "correct": 0},
+      "stats": {
+        "fired": 0,
+        "correct": 0
+      },
       "conflicts_with": []
     },
     {
       "id": "mulligan_one_land",
       "layer": "mulligan",
       "tags": [],
-      "phase": ["Mulligan"],
+      "phase": [
+        "Mulligan"
+      ],
       "hand_lands_min": 1,
       "hand_lands_max": 1,
       "hand_size_min": 7,
       "action": "Only 1 land in 7 — mulligan unless you have multiple 1-drops",
       "priority": "high",
       "weight": 1.2,
-      "stats": {"fired": 0, "correct": 0},
+      "stats": {
+        "fired": 0,
+        "correct": 0
+      },
       "conflicts_with": []
     },
     {
       "id": "mulligan_flood",
       "layer": "mulligan",
       "tags": [],
-      "phase": ["Mulligan"],
+      "phase": [
+        "Mulligan"
+      ],
       "hand_lands_min": 5,
       "hand_size_min": 7,
       "action": "5+ lands in 7 — MULLIGAN (flood)",
       "priority": "critical",
       "weight": 1.5,
-      "stats": {"fired": 0, "correct": 0},
+      "stats": {
+        "fired": 0,
+        "correct": 0
+      },
       "conflicts_with": []
     },
     {
       "id": "mulligan_good_hand",
       "layer": "mulligan",
       "tags": [],
-      "phase": ["Mulligan"],
+      "phase": [
+        "Mulligan"
+      ],
       "hand_lands_min": 2,
       "hand_lands_max": 4,
       "hand_castable_min": 2,
@@ -135,92 +201,199 @@
       "action": "Good hand — 2-4 lands + castable spells, KEEP",
       "priority": "high",
       "weight": 1.2,
-      "stats": {"fired": 0, "correct": 0},
-      "conflicts_with": ["mulligan_no_lands", "mulligan_flood", "mulligan_one_land"]
+      "stats": {
+        "fired": 0,
+        "correct": 0
+      },
+      "conflicts_with": [
+        "mulligan_no_lands",
+        "mulligan_flood",
+        "mulligan_one_land"
+      ]
     },
     {
       "id": "general_save_removal",
       "layer": "general",
-      "tags": ["reactive"],
+      "tags": [
+        "reactive"
+      ],
       "require": [
-        {"zone": "hand", "match": {"type": "Instant", "keyword": "destroy|exile|damage|return target|-X/-X", "castable": true}, "min_count": 1},
-        {"zone": "opp_battlefield", "match": {"type": "Creature"}, "min_count": 1}
+        {
+          "zone": "hand",
+          "match": {
+            "type": "Instant",
+            "keyword": "destroy|exile|damage|return target|-X/-X",
+            "castable": true
+          },
+          "min_count": 1
+        },
+        {
+          "zone": "opp_battlefield",
+          "match": {
+            "type": "Creature"
+          },
+          "min_count": 1
+        }
       ],
       "action": "Save removal for their biggest threat",
       "priority": "medium",
       "weight": 1.0,
-      "stats": {"fired": 0, "correct": 0},
+      "stats": {
+        "fired": 0,
+        "correct": 0
+      },
       "conflicts_with": []
     },
     {
       "id": "general_curve_out",
       "layer": "archetype",
-      "tags": ["tempo"],
-      "phase": ["Main"],
+      "tags": [
+        "tempo"
+      ],
+      "phase": [
+        "Main"
+      ],
       "my_turn": true,
       "turn_max": 4,
       "require": [
-        {"zone": "hand", "match": {"castable": true}, "min_count": 1}
+        {
+          "zone": "hand",
+          "match": {
+            "castable": true
+          },
+          "min_count": 1
+        }
       ],
       "action": "Spend all your mana — curve out in early turns",
       "priority": "medium",
       "weight": 1.0,
-      "stats": {"fired": 0, "correct": 0},
+      "stats": {
+        "fired": 0,
+        "correct": 0
+      },
       "conflicts_with": []
     },
     {
       "id": "meta_vs_fast_hold_blockers",
       "layer": "meta_gameplan",
-      "tags": ["defensive", "meta"],
-      "phase": ["Main"],
+      "tags": [
+        "defensive",
+        "meta"
+      ],
+      "phase": [
+        "Main"
+      ],
       "my_turn": true,
       "opp_speed": "fast",
       "my_creatures_min": 1,
       "action": "Fast opponent — hold blockers back, don't tap out",
       "priority": "high",
       "weight": 1.2,
-      "stats": {"fired": 0, "correct": 0},
-      "conflicts_with": []
+      "stats": {
+        "fired": 0,
+        "correct": 0
+      },
+      "conflicts_with": [],
+      "step": "Phase_Main1"
     },
     {
       "id": "meta_vs_slow_push_damage",
       "layer": "meta_gameplan",
-      "tags": ["aggressive", "meta"],
-      "phase": ["Main", "Combat"],
+      "tags": [
+        "aggressive",
+        "meta"
+      ],
+      "phase": [
+        "Main"
+      ],
       "my_turn": true,
       "opp_speed": "slow",
       "my_creatures_min": 1,
       "action": "Slow opponent — push damage aggressively before they stabilize",
       "priority": "high",
       "weight": 1.2,
-      "stats": {"fired": 0, "correct": 0},
-      "conflicts_with": []
+      "stats": {
+        "fired": 0,
+        "correct": 0
+      },
+      "conflicts_with": [],
+      "step": "Phase_Main1"
     },
     {
       "id": "meta_must_answer_on_board",
       "layer": "meta_gameplan",
-      "tags": ["removal", "meta"],
+      "tags": [
+        "removal",
+        "meta"
+      ],
       "opp_has_must_answer": true,
       "require": [
-        {"zone": "hand", "match": {"castable": true}, "min_count": 1}
+        {
+          "zone": "hand",
+          "match": {
+            "castable": true
+          },
+          "min_count": 1
+        }
       ],
       "action": "MUST-ANSWER threat on board — remove it NOW or lose",
       "priority": "critical",
       "weight": 1.5,
-      "stats": {"fired": 0, "correct": 0},
-      "conflicts_with": []
+      "stats": {
+        "fired": 0,
+        "correct": 0
+      },
+      "conflicts_with": [],
+      "phase": [
+        "Main"
+      ],
+      "step": "Phase_Main1"
     },
     {
       "id": "meta_vulnerability_warning",
       "layer": "meta_gameplan",
-      "tags": ["warning", "meta"],
+      "tags": [
+        "warning",
+        "meta"
+      ],
       "opp_has_vulnerability": true,
       "action": "Opponent played a card that counters your strategy",
       "priority": "critical",
       "weight": 1.4,
-      "stats": {"fired": 0, "correct": 0},
-      "conflicts_with": []
+      "stats": {
+        "fired": 0,
+        "correct": 0
+      },
+      "conflicts_with": [],
+      "phase": [
+        "Main"
+      ],
+      "step": "Phase_Main1"
+    },
+    {
+      "id": "mulligan_color_screw",
+      "layer": "mulligan",
+      "tags": [
+        "mana"
+      ],
+      "phase": [
+        "Mulligan"
+      ],
+      "action": "Color screw — all lands produce same color but spells need different colors. MULLIGAN",
+      "priority": "high",
+      "weight": 1.3,
+      "stats": {
+        "fired": 0,
+        "correct": 0
+      },
+      "conflicts_with": [
+        "mulligan_good_hand"
+      ]
     }
   ],
-  "stats": {"games": 0, "wins": 0, "losses": 0}
+  "stats": {
+    "games": 0,
+    "wins": 0,
+    "losses": 0
+  }
 }

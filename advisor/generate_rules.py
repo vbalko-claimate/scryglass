@@ -232,21 +232,58 @@ def _generate_archetype_rules(analysis: dict) -> list[dict]:
 
 
 def _generate_removal_rules(analysis: dict) -> list[dict]:
-    """Generate threat_response rules for removal spells."""
+    """Generate threat_response rules for removal spells.
+
+    For each instant removal spell, generates a hold rule (save it) AND
+    override rules that fire when it's clearly time to use it:
+    - Opponent has a big creature and we're at low life
+    - We topdeck removal with an empty/near-empty hand
+    """
     rules = []
+    hold_ids = []
     for name, count, info in analysis["removal"]:
         safe_id = re.sub(r"[^a-z0-9]", "_", name.lower()).strip("_")
         is_instant = "Instant" in info.card_types
+        hold_id = f"threat_hold_{safe_id}"
 
         if is_instant and analysis["archetype"] != "aggro":
             rules.append(_make_rule(
-                f"threat_hold_{safe_id}", "threat_response",
+                hold_id, "threat_response",
                 f"Hold {name} for high-value targets — don't waste removal",
                 priority="high", weight=1.1, tags=["reactive", "removal"],
                 my_turn=True,
                 require=[
                     {"zone": "hand", "match": {"name": name, "castable": True}, "min_count": 1},
                     {"zone": "opp_battlefield", "match": {"type": "Creature"}, "min_count": 1},
+                ],
+            ))
+            hold_ids.append(hold_id)
+
+            # Override: use removal when at low life vs big creature
+            rules.append(_make_rule(
+                f"threat_use_{safe_id}_low_life", "threat_response",
+                f"Use {name} NOW — low life, must remove threat",
+                priority="critical", weight=1.3, tags=["reactive", "removal", "survival"],
+                my_turn=True,
+                life_below=11,
+                conflicts_with=[hold_id, "meta_save_removal_for_must_answer"],
+                require=[
+                    {"zone": "hand", "match": {"name": name, "castable": True}, "min_count": 1},
+                    {"zone": "opp_battlefield", "match": {"type": "Creature", "power_min": 3}, "min_count": 1},
+                ],
+            ))
+
+            # Override: use removal when topdecking (hand size 1 = just this card)
+            rules.append(_make_rule(
+                f"threat_use_{safe_id}_topdeck", "threat_response",
+                f"Use {name} — topdecked removal, no reason to hold",
+                priority="high", weight=1.2, tags=["reactive", "removal"],
+                my_turn=True,
+                hand_size_max=2,
+                conflicts_with=[hold_id, "meta_save_removal_for_must_answer"],
+                require=[
+                    {"zone": "hand", "match": {"name": name, "castable": True}, "min_count": 1},
+                    {"zone": "opp_battlefield", "match": {"type": "Creature", "power_min": 2}, "min_count": 1},
                 ],
             ))
         else:
@@ -351,7 +388,7 @@ def _generate_situation_rules(analysis: dict) -> list[dict]:
         "situation_flood_activate", "situation",
         "Flooding — use activated abilities or hold interaction",
         priority="medium", weight=0.9, tags=["defensive"],
-        hand_lands_min=3,
+        hand_lands_min=4, turn_min=4,
     ))
 
     return rules
@@ -366,12 +403,14 @@ def _generate_meta_rules(analysis: dict) -> list[dict]:
         "meta_vs_fast_preserve_life", "meta_gameplan",
         "Vs fast decks — block aggressively, preserve life total",
         priority="high", weight=1.1, tags=["defensive"],
+        phase=["Main"], step="Phase_Main1",
         opp_speed="fast",
     ))
     rules.append(_make_rule(
         "meta_vs_slow_push_damage", "meta_gameplan",
         "Vs slow decks — push damage before they stabilize",
         priority="high", weight=1.1, tags=["aggressive"],
+        phase=["Main"], step="Phase_Main1",
         opp_speed="slow",
     ))
 
@@ -385,6 +424,80 @@ def _generate_meta_rules(analysis: dict) -> list[dict]:
                 {"zone": "hand", "match": {"keyword": "destroy|exile", "castable": True}, "min_count": 1},
             ],
         ))
+
+    return rules
+
+
+def _validate_and_fix_rules(rules: list[dict]) -> list[dict]:
+    """Post-process rules: auto-detect conflicts, add missing phase restrictions.
+
+    1. Hold/use conflict detection: when rules reference the same card with
+       opposite intent (hold vs cast/use), add conflicts_with so the engine
+       can resolve them at runtime.
+    2. Combat-only synergies: rules about dying/trading/blocking get phase
+       restrictions if they don't already have them.
+    """
+    from collections import defaultdict
+
+    _HOLD_WORDS = {"hold", "don't", "wait", "save"}
+    _COMBAT_WORDS = {"die", "dying", "block", "trade", "combat damage", "attacks"}
+
+    rule_by_id = {r["id"]: r for r in rules}
+
+    # ── 1. Auto-detect hold/use conflicts ──
+    # Index: card_name → [(rule_id, is_hold)]
+    card_refs: dict[str, list[tuple[str, bool]]] = defaultdict(list)
+    for r in rules:
+        # Skip mulligan rules — they don't conflict with in-game hold/use
+        if r.get("layer") == "mulligan" or (r.get("phase") and "Mulligan" in r.get("phase", [])):
+            continue
+        action_lower = r.get("action", "").lower()
+        is_hold = any(w in action_lower for w in _HOLD_WORDS)
+        for zc in r.get("require", []):
+            # Only consider hand-zone requires (cards you're deciding to cast/hold)
+            if zc.get("zone") != "hand":
+                continue
+            match = zc.get("match", {})
+            names = match.get("name", [])
+            if isinstance(names, str):
+                names = [names]
+            if not names:
+                continue
+            for name in names:
+                card_refs[name].append((r["id"], is_hold))
+
+    conflicts_added = 0
+    for card, refs in card_refs.items():
+        hold_ids = [rid for rid, is_h in refs if is_h]
+        use_ids = [rid for rid, is_h in refs if not is_h]
+        if not hold_ids or not use_ids:
+            continue
+        # Use rules suppress hold rules (one-directional).
+        # When a "use" rule fires, it means conditions justify using the card NOW,
+        # overriding the "hold" advice. The reverse (hold suppressing use) is
+        # handled by the runtime auto-conflict detector which compares layer/priority.
+        for uid in use_ids:
+            existing = set(rule_by_id[uid].get("conflicts_with", []))
+            for hid in hold_ids:
+                if hid not in existing:
+                    rule_by_id[uid].setdefault("conflicts_with", []).append(hid)
+                    conflicts_added += 1
+
+    # ── 2. Phase restrictions for combat-only synergies ──
+    phase_added = 0
+    for r in rules:
+        if r.get("phase"):
+            continue  # already has phase restriction
+        action_lower = r.get("action", "").lower()
+        # If the action text mentions combat-specific concepts, restrict to Combat
+        if r.get("layer") == "card_synergy" and any(w in action_lower for w in _COMBAT_WORDS):
+            r["phase"] = ["Combat"]
+            phase_added += 1
+
+    if conflicts_added or phase_added:
+        import sys
+        print(f"  Rule validation: added {conflicts_added} conflict links, "
+              f"{phase_added} phase restrictions", file=sys.stderr)
 
     return rules
 
@@ -421,6 +534,9 @@ def generate_strategy(deck_path: Path, deck_name: str) -> dict:
     rules.extend(_generate_synergy_rules(analysis))
     rules.extend(_generate_situation_rules(analysis))
     rules.extend(_generate_meta_rules(analysis))
+
+    # Post-processing: fix conflicts, add missing overrides
+    rules = _validate_and_fix_rules(rules)
 
     overrides = []
     if analysis["archetype"] == "aggro":

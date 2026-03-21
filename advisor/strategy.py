@@ -419,8 +419,28 @@ def _card_matches(obj: GameObject, matcher: CardMatcher, mana: int = 99,
                    untapped_lands: list[GameObject] | None = None) -> bool:
     """Check if a game object matches a CardMatcher."""
     card = card_cache.get(obj.grp_id)
+
     if not card:
-        return False
+        # Fallback for objects not in card cache (e.g. Forge-only cards with grp_id=0).
+        # Use data directly from the GameObject for basic matching.
+        if matcher.name:
+            names = matcher.name if isinstance(matcher.name, list) else [matcher.name]
+            if obj.name not in names:
+                return False
+        if matcher.card_type:
+            # Check against GRE-format types on the object (e.g. "CardType_Creature")
+            gre_type = f"CardType_{matcher.card_type}"
+            if gre_type not in obj.card_types:
+                return False
+        if matcher.keyword:
+            return False  # can't check keywords without card data
+        if matcher.castable:
+            return False  # can't verify castability without cmc
+        if matcher.power_min is not None and obj.power < matcher.power_min:
+            return False
+        if matcher.toughness_min is not None and obj.toughness < matcher.toughness_min:
+            return False
+        return True
 
     if matcher.name:
         names = matcher.name if isinstance(matcher.name, list) else [matcher.name]
@@ -519,8 +539,12 @@ def _speed_category(speed: str) -> str:
 
 def evaluate_rules(rules: list[Rule], state: GameState,
                    opp_tracker: OpponentTracker | None = None,
-                   vulnerabilities: list[dict] | None = None) -> list[Advice]:
-    """Evaluate all rules against current game state."""
+                   vulnerabilities: list[dict] | None = None,
+                   max_results: int = 5) -> list[Advice]:
+    """Evaluate all rules against current game state.
+
+    max_results: maximum number of advice items to return (0 = unlimited).
+    """
     if not rules:
         return []
 
@@ -541,6 +565,9 @@ def evaluate_rules(rules: list[Rule], state: GameState,
     for rule in rules:
         if rule.weight < MIN_WEIGHT:
             continue
+
+        # Initialize effective priority — branches below may downgrade it
+        prio = rule.priority
 
         # --- Phase / timing ---
         is_mull_rule = rule.phase and "Mulligan" in rule.phase
@@ -639,9 +666,11 @@ def evaluate_rules(rules: list[Rule], state: GameState,
                 break
             if card_obj:
                 if zc.zone.startswith("opp"):
-                    matched_threat = card_obj
+                    if not matched_threat:  # keep first opp match for {threat}
+                        matched_threat = card_obj
                 else:
-                    matched_card = card_obj
+                    if not matched_card:  # keep first own match for {card}
+                        matched_card = card_obj
         if not zone_ok:
             continue
 
@@ -723,8 +752,9 @@ def evaluate_rules(rules: list[Rule], state: GameState,
                         if "ward" in prot:
                             msg += " (has ward — extra mana needed)"
 
-        # Effective priority (weight boosts it)
-        prio = rule.priority
+        # Effective priority — prio was set to rule.priority at the top of this
+        # loop iteration and may have been downgraded by the must-answer branch.
+        # Apply weight boost on top of whatever prio currently is.
         if rule.weight > 1.5:
             prio_order = ["low", "medium", "high", "critical"]
             idx = prio_order.index(prio) if prio in prio_order else 1
@@ -744,16 +774,64 @@ def evaluate_rules(rules: list[Rule], state: GameState,
 
     # --- Conflict resolution ---
     suppressed: set[str] = set()
+    # Explicit conflicts
     for rule, _ in results:
         for cid in rule.conflicts_with:
             suppressed.add(cid)
 
-    # Remove suppressed, sort by layer (desc) then priority
-    prio_map = {"critical": 0, "high": 1, "medium": 2, "low": 3}
-    filtered = [(r, a) for r, a in results if r.id not in suppressed]
-    filtered.sort(key=lambda x: (-x[0].layer_priority, prio_map.get(x[1].priority, 4)))
+    # Auto-detect hold/use conflicts: if a "use" rule and a "hold" rule both
+    # reference the same card, the more specific one (use) suppresses hold.
+    _HOLD_WORDS = {"hold", "don't", "wait", "save"}
+    fired_ids = {r.id for r, _ in results}
+    hold_rules: dict[str, list[str]] = {}  # card_name → [rule_ids]
+    use_rules: dict[str, list[str]] = {}   # card_name → [rule_ids]
+    for rule, advice in results:
+        action_lower = rule.action.lower()
+        is_hold = any(w in action_lower for w in _HOLD_WORDS)
+        for zc in rule.require:
+            if zc.match.name:
+                names = zc.match.name if isinstance(zc.match.name, list) else [zc.match.name]
+                for n in names:
+                    if is_hold:
+                        hold_rules.setdefault(n, []).append(rule.id)
+                    else:
+                        use_rules.setdefault(n, []).append(rule.id)
+    # When both hold and use fire for same card, suppress the lower-priority one.
+    rule_by_id = {r.id: (r, a) for r, a in results}
+    prio_rank = {"critical": 0, "high": 1, "medium": 2, "low": 3}
+    for card, hold_ids in hold_rules.items():
+        if card not in use_rules:
+            continue
+        fired_use_ids = [uid for uid in use_rules[card] if uid in fired_ids]
+        if not fired_use_ids:
+            continue
+        for hold_id in hold_ids:
+            if hold_id not in fired_ids:
+                continue
+            hold_rule, hold_advice = rule_by_id[hold_id]
+            hold_score = (hold_rule.layer_priority, -prio_rank.get(hold_advice.priority, 4), hold_rule.weight)
+            for uid in fired_use_ids:
+                use_rule, use_advice = rule_by_id[uid]
+                use_score = (use_rule.layer_priority, -prio_rank.get(use_advice.priority, 4), use_rule.weight)
+                if use_score >= hold_score:
+                    suppressed.add(hold_id)
+                else:
+                    suppressed.add(uid)
 
-    return [a for _, a in filtered[:3]]
+    # Remove suppressed and low-weight rules, sort by layer → priority → weight
+    DISPLAY_WEIGHT_THRESHOLD = 0.3
+    prio_map = {"critical": 0, "high": 1, "medium": 2, "low": 3}
+    filtered = [(r, a) for r, a in results
+                if r.id not in suppressed and r.weight >= DISPLAY_WEIGHT_THRESHOLD]
+    filtered.sort(key=lambda x: (
+        -x[0].layer_priority,
+        prio_map.get(x[1].priority, 4),
+        -x[0].weight,
+    ))
+
+    if max_results:
+        filtered = filtered[:max_results]
+    return [a for _, a in filtered]
 
 
 # ─── Opponent Card Tracking ─────────────────────────────────────

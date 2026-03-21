@@ -413,11 +413,22 @@ def save_match_event(match_id: str, event_type: str, **kwargs):
 
 
 def clear_match_events():
-    """Clear log-derived events (rebuilt from log). Preserve real-time-only events."""
+    """Clear log-derived events (rebuilt from log). Preserve real-time-only events.
+
+    Keeps: advice_compliance, decision_eval, decision_outcome — these are
+    generated at runtime and cannot be reconstructed from log replay.
+    They form the training contract for the data flywheel.
+    """
     conn = get_connection()
-    # Keep advice_compliance — can't be regenerated from log replay
+    PRESERVE_TYPES = (
+        'advice_compliance',
+        'decision_eval',
+        'decision_outcome',
+    )
+    placeholders = ",".join("?" for _ in PRESERVE_TYPES)
     conn.execute(
-        "DELETE FROM match_events WHERE event_type != 'advice_compliance'")
+        f"DELETE FROM match_events WHERE event_type NOT IN ({placeholders})",
+        PRESERVE_TYPES)
     conn.execute("DELETE FROM advice_log")
     conn.execute("DELETE FROM meta WHERE key LIKE 'summary_%'")
     conn.commit()

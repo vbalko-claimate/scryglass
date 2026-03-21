@@ -1859,6 +1859,57 @@
       "typical_kill_turn": 10,
       "hidden_reach": 0,
       "description": ""
+    },
+    {
+      "name": "Golgari (observed)",
+      "archetype": "unknown",
+      "colors": [
+        "B",
+        "G"
+      ],
+      "signal_cards": {
+        "Dawn's Light Archer": 0.3,
+        "Morcant's Loyalist": 0.3,
+        "Moldering Gym // Weight Room": 0.15,
+        "Slavering Branchsnapper": 0.15,
+        "Eclipsed Elf": 0.15,
+        "Creakwood Safewright": 0.15,
+        "Scarblade Scout": 0.15,
+        "Gloom Ripper": 0.15,
+        "Wary Watchdog": 0.15,
+        "Patchwork Beastie": 0.15
+      },
+      "key_threats": [],
+      "speed": "medium",
+      "typical_kill_turn": 10,
+      "hidden_reach": 0,
+      "description": ""
+    },
+    {
+      "name": "BGU (observed)",
+      "archetype": "unknown",
+      "colors": [
+        "B",
+        "G",
+        "U"
+      ],
+      "signal_cards": {
+        "Donatello, Turtle Techie": 0.3,
+        "Leatherhead, Swamp Stalker": 0.15,
+        "Krang & Shredder": 0.15,
+        "Genghis Frog": 0.15,
+        "Mutagen": 0.15,
+        "Michelangelo, Game Master": 0.15,
+        "Crustacean Commando": 0.15,
+        "Ice Cream Kitty": 0.15,
+        "Guac & Marshmallow Pizza": 0.15,
+        "Putrid Pals": 0.15
+      },
+      "key_threats": [],
+      "speed": "medium",
+      "typical_kill_turn": 10,
+      "hidden_reach": 0,
+      "description": ""
     }
   ]
 }

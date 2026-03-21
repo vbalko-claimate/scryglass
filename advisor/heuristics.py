@@ -893,6 +893,31 @@ def _check_mulligan(state: GameState) -> list[Advice]:
                            f"Risky keep — {lands} lands, only {hand_size - lands} "
                            f"spells for aggro: {hand_str}",
                            confidence=0.6)]
+        # Color screw: lands missing a color that most spells need
+        if lands >= 2 and len(nonlands) >= 3:
+            # Check how many spells are castable even with 3+ lands (by T3)
+            castable_by_t3 = 0
+            for obj in nonlands:
+                card = card_cache.get(obj.grp_id)
+                if card:
+                    pips, _ = _parse_mana_pips(card.mana_cost)
+                    if not pips or all(c in hand_land_colors_t2 for c in set(pips)):
+                        castable_by_t3 += 1
+            missing_colors = set()
+            for obj in nonlands:
+                card = card_cache.get(obj.grp_id)
+                if card and card.mana_cost:
+                    pips, _ = _parse_mana_pips(card.mana_cost)
+                    for p in set(pips):
+                        if p not in hand_land_colors_t2:
+                            missing_colors.add(p)
+            if missing_colors and castable_by_t3 <= 1:
+                missing_str = "/".join(sorted(missing_colors))
+                return [Advice("heuristic", "high",
+                               f"Color screw — lands don't produce {missing_str}. "
+                               f"Only {castable_by_t3}/{len(nonlands)} spells castable: {hand_str}",
+                               confidence=0.85)]
+
         # All lands ETB tapped — no play until T2+ (devastating for aggro)
         if tapped_lands > 0 and untapped_lands == 0 and lands <= 3:
             return [Advice("heuristic", "high",
@@ -1154,8 +1179,21 @@ def _suggest_plays(state: GameState) -> list[Advice]:
                 warn += " (gains indestructible — remove now!)"
                 is_urgent = True
             valid_removal = [r for r in available_removal
-                             if _removal_can_target(r, top_threat)]
+                             if _removal_kills_creature(r, top_threat)]
             if not valid_removal:
+                # No removal can kill it — check if we can at least target it
+                # (e.g. damage spell that won't kill but might be useful with combat)
+                targetable = [r for r in available_removal
+                              if _removal_can_target(r, top_threat)]
+                if targetable and threat_score >= 8:
+                    # High-value target: mention it but note it won't kill
+                    best = targetable[0]
+                    advice.append(Advice("heuristic", "low",
+                        f"{best.name} can't kill {threat_card.name} "
+                        f"({top_threat.power}/{top_threat.toughness}) alone "
+                        f"— need combat damage first",
+                        confidence=0.4,
+                        recommended_cards=[best.name]))
                 continue
             if "ward" in combined_abs:
                 ward_cost = _parse_ward_cost(combined_abs)
@@ -2594,6 +2632,27 @@ def _removal_can_target(removal_card, target: GameObject) -> bool:
         if direction == "greater" and target.power < threshold:
             return False
         if direction == "less" and target.power > threshold:
+            return False
+    return True
+
+
+def _removal_kills_creature(removal_card, target: GameObject) -> bool:
+    """Check if a removal spell can actually KILL a creature, not just target it.
+
+    For destroy/exile removal, this is the same as can_target.
+    For damage-based removal (burn), checks if damage >= toughness.
+    """
+    if not _removal_can_target(removal_card, target):
+        return False
+    # Check if this is damage-based removal — if so, verify it deals enough
+    import re
+    combined = " ".join(a.lower() for a in removal_card.abilities)
+    oracle = (removal_card.oracle_text or "").lower()
+    combined = f"{oracle} {combined}"
+    dmg_match = re.search(r"deals? (\d+) damage", combined)
+    if dmg_match:
+        damage = int(dmg_match.group(1))
+        if damage < target.toughness:
             return False
     return True
 

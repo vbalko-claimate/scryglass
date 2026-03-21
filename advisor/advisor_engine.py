@@ -839,6 +839,9 @@ class AdvisorEngine:
 
         advice: list[Advice] = []
 
+        # Phase 0: check pending decision outcomes (2-turn delta)
+        self._check_decision_outcomes(state)
+
         if self._advice_mode != "llm_only":
             # Run heuristics
             base_advice = heuristic_analyze(state)
@@ -865,6 +868,25 @@ class AdvisorEngine:
 
         if self._advice_mode == "hybrid":
             committed = self._finalize_advice(state, advice) if advice else []
+            # Phase 0: log no-advice decision points for coverage analysis
+            if not advice and state.match_info.match_id:
+                try:
+                    save_match_event(
+                        state.match_info.match_id, "decision_eval",
+                        game_number=state.match_info.game_number,
+                        turn_number=state.turn_info.turn_number,
+                        phase=state.turn_info.phase,
+                        data={
+                            "game_state_id": state.game_state_id,
+                            "advice_count": 0,
+                            "top_advice": [],
+                            "strategy_name": self._strategy.name if self._strategy else None,
+                            "engine_version": "phase0_v1",
+                            "no_advice": True,
+                        },
+                    )
+                except Exception:
+                    pass
             llm_advice: Advice | None = None
             llm_usage: dict | None = None
             llm_state = copy.deepcopy(state) if allow_auto_llm else None
@@ -1075,6 +1097,7 @@ class AdvisorEngine:
                 turn_number=llm_state.turn_info.turn_number,
                 phase_display=llm_state.turn_info.phase_display,
             )
+
         return advice
 
     def _update_threats(self, state: GameState):
@@ -1452,12 +1475,23 @@ class AdvisorEngine:
     def check_card_played(self, card_name: str, match_id: str,
                            turn: int, game_number: int):
         """Called when player plays a non-land card. Compare with recommendations."""
-        if not self._pending_recs or not match_id:
+        if not match_id:
             return
         # Only compare plays on the same turn as the advice
-        if turn != self._pending_turn:
+        if self._pending_recs and turn != self._pending_turn:
             return
-        followed = card_name in self._pending_recs
+
+        # Determine compliance
+        if not self._pending_recs:
+            followed = False
+            reason = "no_advice"
+        elif card_name in self._pending_recs:
+            followed = True
+            reason = "followed"
+        else:
+            followed = False
+            reason = "ignored_with_alternative"
+
         save_match_event(
             match_id, "advice_compliance",
             game_number=game_number,
@@ -1465,12 +1499,81 @@ class AdvisorEngine:
             phase="play",
             data={"played": card_name,
                   "recommended": self._pending_recs,
-                  "followed": followed})
-        self._pending_recs = []  # Clear after first play on this turn
+                  "followed": followed,
+                  "reason": reason,
+                  "rec_count": len(self._pending_recs)})
+        if self._pending_recs:
+            self._pending_recs = []  # Clear after first play on this turn
+
+    def _check_decision_outcomes(self, state: GameState):
+        """Check if any pending decision outcomes can be resolved (2 turns later)."""
+        if not hasattr(self, '_pending_outcomes'):
+            self._pending_outcomes = []
+        turn = state.turn_info.turn_number
+        mid = state.match_info.match_id
+        if not mid:
+            return
+
+        resolved = []
+        game_num = state.match_info.game_number
+        for po in self._pending_outcomes:
+            # Only resolve within same game (BO3 boundary check)
+            if po.get("game_number") != game_num:
+                resolved.append(po)  # discard cross-game outcomes
+                continue
+            if turn >= po["turn"] + 2:
+                # 2 turns have passed — compute delta
+                me = state.my_player()
+                opp = state.opp_player()
+                my_creatures = len(state.my_creatures())
+                opp_creatures = len(state.opp_creatures())
+                try:
+                    save_match_event(
+                        mid, "decision_outcome",
+                        game_number=po.get("game_number", game_num),
+                        turn_number=po["turn"],
+                        phase=po["phase"],
+                        data={
+                            "original_turn": po["turn"],
+                            "resolved_turn": turn,
+                            "game_number": po.get("game_number", game_num),
+                            "life_delta": (me.life_total if me else 0) - po["my_life"],
+                            "opp_life_delta": (opp.life_total if opp else 0) - po["opp_life"],
+                            "creature_delta": my_creatures - po["my_creatures"],
+                            "opp_creature_delta": opp_creatures - po["opp_creatures"],
+                            "advice_count": po["advice_count"],
+                        },
+                    )
+                except Exception:
+                    pass
+                resolved.append(po)
+        for r in resolved:
+            self._pending_outcomes.remove(r)
+
+    def _record_pending_outcome(self, state: GameState, advice_count: int):
+        """Record a snapshot for future outcome evaluation."""
+        if not hasattr(self, '_pending_outcomes'):
+            self._pending_outcomes = []
+        me = state.my_player()
+        opp = state.opp_player()
+        self._pending_outcomes.append({
+            "turn": state.turn_info.turn_number,
+            "phase": state.turn_info.phase,
+            "game_number": state.match_info.game_number,
+            "my_life": me.life_total if me else 0,
+            "opp_life": opp.life_total if opp else 0,
+            "my_creatures": len(state.my_creatures()),
+            "opp_creatures": len(state.opp_creatures()),
+            "advice_count": advice_count,
+        })
+        # Keep max 10 pending
+        if len(self._pending_outcomes) > 10:
+            self._pending_outcomes = self._pending_outcomes[-10:]
 
     def on_match_start(self):
         """Called when a new match starts — force fresh strategy detection."""
         log.info("New match — resetting strategy and trackers")
+        self._pending_outcomes = []
         reset_llm_sessions()
         self._strategy = None
         self._strategy_loaded = False
@@ -1563,6 +1666,52 @@ class AdvisorEngine:
         prio = {"critical": 0, "high": 1, "medium": 2, "low": 3}
         merged.sort(key=lambda a: prio.get(a.priority, 4))
         self._last_advice = merged[:5]
+
+        # ── Phase 0 Telemetry: decision_eval ──
+        # Log rule contributions and advice ranking for the training contract.
+        if state.match_info.match_id and advice:
+            import re as _re
+            eval_data = {
+                "game_state_id": state.game_state_id,
+                "advice_count": len(merged),
+                "top_advice": [],
+                "recommended_cards": [],
+                "strategy_name": self._strategy.name if self._strategy else None,
+                "opp_deck": (self._opp_tracker.identified_deck.name
+                             if self._opp_tracker and self._opp_tracker.identified_deck else None),
+                "engine_version": "phase0_v1",
+            }
+            for a in merged[:5]:
+                rule_id = ""
+                weight = 0.0
+                if a.details:
+                    m = _re.search(r':(\w+)\]', a.details)
+                    if m:
+                        rule_id = m.group(1)
+                    w = _re.search(r'w:([\d.]+)', a.details)
+                    if w:
+                        weight = float(w.group(1))
+                eval_data["top_advice"].append({
+                    "source": a.source,
+                    "priority": a.priority,
+                    "rule_id": rule_id,
+                    "weight": weight,
+                    "message": a.message[:80],
+                    "confidence": a.confidence,
+                    "recommended_cards": a.recommended_cards,
+                })
+            try:
+                save_match_event(
+                    state.match_info.match_id, "decision_eval",
+                    game_number=state.match_info.game_number,
+                    turn_number=turn_num,
+                    phase=state.turn_info.phase,
+                    data=eval_data,
+                )
+            except Exception:
+                pass  # telemetry must never break gameplay
+            # Record snapshot for 2-turn outcome evaluation
+            self._record_pending_outcome(state, len(merged))
 
         recs = []
         for item in advice:

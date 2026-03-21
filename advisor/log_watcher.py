@@ -17,12 +17,28 @@ class LogWatcher:
         self._position = 0
         self._running = False
 
-    def read_from_beginning(self) -> list[dict]:
-        """Read and parse the entire log file (for catching up on current match)."""
+    def read_from_beginning(self, resume_position: int = 0) -> list[dict]:
+        """Read and parse the log file for catching up.
+
+        If resume_position > 0, seeks to that byte offset first (skipping
+        already-processed content). Otherwise reads the last 10MB as a
+        safe default to avoid multi-minute startup on huge logs.
+        """
         if not self.log_path.exists():
             return []
 
+        file_size = os.path.getsize(self.log_path)
+
+        if resume_position > 0 and resume_position < file_size:
+            skip = resume_position
+        else:
+            # Fallback: read last 10MB
+            skip = max(0, file_size - 10 * 1024 * 1024)
+
         with open(self.log_path, "r", encoding="utf-8", errors="replace") as f:
+            if skip > 0:
+                f.seek(skip)
+                f.readline()  # skip partial line after seek
             content = f.read()
             self._position = f.tell()
 
