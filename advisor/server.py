@@ -334,6 +334,11 @@ async def startup():
     card_cache.load()
     log.info("Card cache loaded: %d cards", card_cache.size)
 
+    # Export card cache to JSON for Forge/Docker (no MTGA DB there)
+    if card_cache.size > 0:
+        exported = card_cache.export_json()
+        log.info("Card cache exported to JSON: %d cards", exported)
+
     # Set up callbacks
     tracker.on_state_change = on_state_change
     tracker.on_decision_point = on_decision_point

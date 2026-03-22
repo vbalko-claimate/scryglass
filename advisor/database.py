@@ -337,15 +337,29 @@ def get_card(grp_id: int) -> CardInfo | None:
     )
 
 
+CARDS_JSON_PATH = Path(__file__).parent.parent / "data" / "cards_cache.json"
+
+
 class CardCache:
-    """In-memory card cache backed by persistent DB."""
+    """In-memory card cache backed by persistent DB, with JSON fallback."""
 
     def __init__(self):
         self._cache: dict[int, CardInfo] = {}
         self._loaded = False
 
     def load(self):
-        """Load all cards into memory from persistent DB."""
+        """Load all cards into memory. Tries DB first, falls back to JSON."""
+        if self._loaded:
+            return
+        try:
+            self._load_from_db()
+        except Exception:
+            pass
+        if not self._cache:
+            self._load_from_json()
+        self._loaded = True
+
+    def _load_from_db(self):
         conn = get_connection()
         cur = conn.cursor()
         cur.execute("SELECT grp_id, name, mana_cost, cmc, colors, card_types, "
@@ -359,8 +373,36 @@ class CardCache:
                 rarity=row[9], expansion=row[10], abilities=json.loads(row[11]),
                 oracle_text=row[12],
             )
-        self._loaded = True
         conn.close()
+
+    def _load_from_json(self):
+        if not CARDS_JSON_PATH.exists():
+            return
+        cards = json.loads(CARDS_JSON_PATH.read_text())
+        for c in cards:
+            self._cache[c["grp_id"]] = CardInfo(
+                grp_id=c["grp_id"], name=c["name"], mana_cost=c.get("mana_cost", ""),
+                cmc=c.get("cmc", 0), colors=c.get("colors", []),
+                card_types=c.get("card_types", []), subtypes=c.get("subtypes", []),
+                power=c.get("power", ""), toughness=c.get("toughness", ""),
+                rarity=c.get("rarity", ""), expansion=c.get("expansion", ""),
+                abilities=c.get("abilities", []), oracle_text=c.get("oracle_text", ""),
+            )
+
+    def export_json(self):
+        """Export current cache to JSON for use in environments without DB."""
+        cards = []
+        for card in self._cache.values():
+            cards.append({
+                "grp_id": card.grp_id, "name": card.name, "mana_cost": card.mana_cost,
+                "cmc": card.cmc, "colors": card.colors, "card_types": card.card_types,
+                "subtypes": card.subtypes, "power": card.power, "toughness": card.toughness,
+                "rarity": card.rarity, "expansion": card.expansion,
+                "abilities": card.abilities, "oracle_text": card.oracle_text,
+            })
+        CARDS_JSON_PATH.parent.mkdir(parents=True, exist_ok=True)
+        CARDS_JSON_PATH.write_text(json.dumps(cards, ensure_ascii=False))
+        return len(cards)
 
     def get(self, grp_id: int) -> CardInfo | None:
         if not self._loaded:
