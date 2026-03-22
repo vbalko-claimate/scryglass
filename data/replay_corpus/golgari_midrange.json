@@ -20,7 +20,7 @@
     "strategy_name": "Golgari Midrange",
     "opp_deck": null,
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -43,21 +43,8 @@
     },
     "strategy_name": "Golgari Midrange",
     "opp_deck": null,
-    "expected": [
-      {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      }
-    ],
-    "_engine_version": "2.0.0"
+    "expected": [],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -80,21 +67,8 @@
     },
     "strategy_name": "Golgari Midrange",
     "opp_deck": null,
-    "expected": [
-      {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      }
-    ],
-    "_engine_version": "2.0.0"
+    "expected": [],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -117,21 +91,8 @@
     },
     "strategy_name": "Golgari Midrange",
     "opp_deck": null,
-    "expected": [
-      {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      }
-    ],
-    "_engine_version": "2.0.0"
+    "expected": [],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -154,21 +115,8 @@
     },
     "strategy_name": "Golgari Midrange",
     "opp_deck": null,
-    "expected": [
-      {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      }
-    ],
-    "_engine_version": "2.0.0"
+    "expected": [],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -191,21 +139,8 @@
     },
     "strategy_name": "Golgari Midrange",
     "opp_deck": null,
-    "expected": [
-      {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      }
-    ],
-    "_engine_version": "2.0.0"
+    "expected": [],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -228,21 +163,8 @@
     },
     "strategy_name": "Golgari Midrange",
     "opp_deck": null,
-    "expected": [
-      {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      }
-    ],
-    "_engine_version": "2.0.0"
+    "expected": [],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -257,7 +179,7 @@
     "strategy_name": "Golgari Midrange",
     "opp_deck": null,
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -285,25 +207,19 @@
     "opp_deck": null,
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
+        "rule_id": "archetype_hold_mana_for_instants",
+        "priority": "medium",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
-        "rule_id": "archetype_hold_mana",
+        "rule_id": "archetype_deploy_main2",
         "priority": "medium",
         "source": "strategy",
         "action_family": "pass"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -331,25 +247,19 @@
     "opp_deck": null,
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
+        "rule_id": "archetype_hold_mana_for_instants",
+        "priority": "medium",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
-        "rule_id": "archetype_hold_mana",
+        "rule_id": "archetype_deploy_main2",
         "priority": "medium",
         "source": "strategy",
         "action_family": "pass"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -377,25 +287,19 @@
     "opp_deck": null,
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
+        "rule_id": "archetype_hold_mana_for_instants",
+        "priority": "medium",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
-        "rule_id": "archetype_hold_mana",
+        "rule_id": "archetype_deploy_main2",
         "priority": "medium",
         "source": "strategy",
         "action_family": "pass"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -423,25 +327,19 @@
     "opp_deck": null,
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
+        "rule_id": "archetype_hold_mana_for_instants",
+        "priority": "medium",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
-        "rule_id": "archetype_hold_mana",
+        "rule_id": "archetype_deploy_main2",
         "priority": "medium",
         "source": "strategy",
         "action_family": "pass"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -469,25 +367,19 @@
     "opp_deck": null,
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
+        "rule_id": "archetype_hold_mana_for_instants",
+        "priority": "medium",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
-        "rule_id": "archetype_hold_mana",
+        "rule_id": "archetype_deploy_main2",
         "priority": "medium",
         "source": "strategy",
         "action_family": "pass"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -502,7 +394,7 @@
     "strategy_name": "Golgari Midrange",
     "opp_deck": null,
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -517,7 +409,7 @@
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Sultai (unknown)",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -532,7 +424,7 @@
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Sultai (unknown)",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -563,25 +455,25 @@
     "opp_deck": "Sultai (unknown)",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
+        "rule_id": "synergy_deploy_sac_outlet_before_fodder",
+        "priority": "medium",
         "source": "strategy",
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
+        "rule_id": "archetype_hold_mana_for_instants",
+        "priority": "medium",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       },
       {
-        "rule_id": "archetype_hold_mana",
+        "rule_id": "archetype_deploy_main2",
         "priority": "medium",
         "source": "strategy",
         "action_family": "pass"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -612,25 +504,25 @@
     "opp_deck": "Sultai (unknown)",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
+        "rule_id": "synergy_deploy_sac_outlet_before_fodder",
+        "priority": "medium",
         "source": "strategy",
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
+        "rule_id": "archetype_hold_mana_for_instants",
+        "priority": "medium",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       },
       {
-        "rule_id": "archetype_hold_mana",
+        "rule_id": "archetype_deploy_main2",
         "priority": "medium",
         "source": "strategy",
         "action_family": "pass"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -661,25 +553,25 @@
     "opp_deck": "Sultai (unknown)",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
+        "rule_id": "synergy_deploy_sac_outlet_before_fodder",
+        "priority": "medium",
         "source": "strategy",
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
+        "rule_id": "archetype_hold_mana_for_instants",
+        "priority": "medium",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       },
       {
-        "rule_id": "archetype_hold_mana",
+        "rule_id": "archetype_deploy_main2",
         "priority": "medium",
         "source": "strategy",
         "action_family": "pass"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -710,25 +602,25 @@
     "opp_deck": "Sultai (unknown)",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
+        "rule_id": "synergy_deploy_sac_outlet_before_fodder",
+        "priority": "medium",
         "source": "strategy",
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
+        "rule_id": "archetype_hold_mana_for_instants",
+        "priority": "medium",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       },
       {
-        "rule_id": "archetype_hold_mana",
+        "rule_id": "archetype_deploy_main2",
         "priority": "medium",
         "source": "strategy",
         "action_family": "pass"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -743,7 +635,7 @@
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Sultai (unknown)",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -758,7 +650,7 @@
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Sultai (unknown)",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -792,31 +684,31 @@
     "opp_deck": "Sultai (unknown)",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
-        "rule_id": "synergy_etb_mossborn_hydra_with_board",
+        "rule_id": "situation_dont_attack_into_open_mana",
         "priority": "medium",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
+        "rule_id": "threat_use_moment_of_craving",
         "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "archetype_hold_mana",
+        "rule_id": "archetype_hold_mana_for_instants",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "archetype_deploy_main2",
         "priority": "medium",
         "source": "strategy",
         "action_family": "pass"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -850,31 +742,31 @@
     "opp_deck": "Sultai (unknown)",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
-        "rule_id": "synergy_etb_mossborn_hydra_with_board",
+        "rule_id": "situation_dont_attack_into_open_mana",
         "priority": "medium",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
+        "rule_id": "threat_use_moment_of_craving",
         "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "archetype_hold_mana",
+        "rule_id": "archetype_hold_mana_for_instants",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "archetype_deploy_main2",
         "priority": "medium",
         "source": "strategy",
         "action_family": "pass"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -889,7 +781,7 @@
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Dimir Flash",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -904,7 +796,7 @@
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Dimir Flash",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -941,25 +833,37 @@
     "opp_deck": "Dimir Flash",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "threat_use_moment_of_craving",
         "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
+        "rule_id": "threat_tribute_to_hunger",
         "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "archetype_hold_mana",
+        "rule_id": "archetype_hold_mana_for_instants",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "archetype_deploy_main2",
         "priority": "medium",
         "source": "strategy",
         "action_family": "pass"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -996,25 +900,37 @@
     "opp_deck": "Dimir Flash",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "threat_use_moment_of_craving",
         "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
+        "rule_id": "threat_tribute_to_hunger",
         "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "archetype_hold_mana",
+        "rule_id": "archetype_hold_mana_for_instants",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "archetype_deploy_main2",
         "priority": "medium",
         "source": "strategy",
         "action_family": "pass"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -1051,25 +967,37 @@
     "opp_deck": "Dimir Flash",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "threat_use_moment_of_craving",
         "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
+        "rule_id": "threat_tribute_to_hunger",
         "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "archetype_hold_mana",
+        "rule_id": "archetype_hold_mana_for_instants",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "archetype_deploy_main2",
         "priority": "medium",
         "source": "strategy",
         "action_family": "pass"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -1104,8 +1032,21 @@
     },
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Dimir Flash",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "threat_use_moment_of_craving",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "threat_tribute_to_hunger",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -1140,8 +1081,21 @@
     },
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Dimir Flash",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "threat_use_moment_of_craving",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "threat_tribute_to_hunger",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -1176,8 +1130,21 @@
     },
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Dimir Flash",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "threat_use_moment_of_craving",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "threat_tribute_to_hunger",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -1212,8 +1179,21 @@
     },
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Dimir Flash",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "threat_use_moment_of_craving",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "threat_tribute_to_hunger",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -1228,7 +1208,7 @@
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Dimir Flash",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -1243,7 +1223,7 @@
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Dimir Flash",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -1258,7 +1238,7 @@
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Dimir Flash",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -1273,7 +1253,7 @@
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Dimir Flash",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -1311,25 +1291,37 @@
     "opp_deck": "Dimir Flash",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "threat_tribute_to_hunger",
         "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
+        "rule_id": "synergy_infernal_vessel_draw",
         "priority": "high",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "activate"
       },
       {
-        "rule_id": "archetype_hold_mana",
+        "rule_id": "archetype_hold_mana_for_instants",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "archetype_deploy_main2",
         "priority": "medium",
         "source": "strategy",
         "action_family": "pass"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -1367,25 +1359,37 @@
     "opp_deck": "Dimir Flash",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "threat_tribute_to_hunger",
         "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
+        "rule_id": "synergy_infernal_vessel_draw",
         "priority": "high",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "activate"
       },
       {
-        "rule_id": "archetype_hold_mana",
+        "rule_id": "archetype_hold_mana_for_instants",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "archetype_deploy_main2",
         "priority": "medium",
         "source": "strategy",
         "action_family": "pass"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -1423,25 +1427,37 @@
     "opp_deck": "Dimir Flash",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "threat_tribute_to_hunger",
         "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
+        "rule_id": "synergy_infernal_vessel_draw",
         "priority": "high",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "activate"
       },
       {
-        "rule_id": "archetype_hold_mana",
+        "rule_id": "archetype_hold_mana_for_instants",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "archetype_deploy_main2",
         "priority": "medium",
         "source": "strategy",
         "action_family": "pass"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -1479,25 +1495,37 @@
     "opp_deck": "Dimir Flash",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "threat_tribute_to_hunger",
         "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
+        "rule_id": "synergy_infernal_vessel_draw",
         "priority": "high",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "activate"
       },
       {
-        "rule_id": "archetype_hold_mana",
+        "rule_id": "archetype_hold_mana_for_instants",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "archetype_deploy_main2",
         "priority": "medium",
         "source": "strategy",
         "action_family": "pass"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -1535,25 +1563,37 @@
     "opp_deck": "Dimir Flash",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "threat_tribute_to_hunger",
         "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
+        "rule_id": "synergy_infernal_vessel_draw",
         "priority": "high",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "activate"
       },
       {
-        "rule_id": "archetype_hold_mana",
+        "rule_id": "archetype_hold_mana_for_instants",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "archetype_deploy_main2",
         "priority": "medium",
         "source": "strategy",
         "action_family": "pass"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -1591,25 +1631,37 @@
     "opp_deck": "Dimir Flash",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "threat_tribute_to_hunger",
         "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
+        "rule_id": "synergy_infernal_vessel_draw",
         "priority": "high",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "activate"
       },
       {
-        "rule_id": "archetype_hold_mana",
+        "rule_id": "archetype_hold_mana_for_instants",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "archetype_deploy_main2",
         "priority": "medium",
         "source": "strategy",
         "action_family": "pass"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -1647,25 +1699,37 @@
     "opp_deck": "Dimir Flash",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "threat_tribute_to_hunger",
         "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
+        "rule_id": "synergy_infernal_vessel_draw",
         "priority": "high",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "activate"
       },
       {
-        "rule_id": "archetype_hold_mana",
+        "rule_id": "archetype_hold_mana_for_instants",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "archetype_deploy_main2",
         "priority": "medium",
         "source": "strategy",
         "action_family": "pass"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -1703,25 +1767,37 @@
     "opp_deck": "Dimir Flash",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "threat_tribute_to_hunger",
         "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
+        "rule_id": "synergy_infernal_vessel_draw",
         "priority": "high",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "activate"
       },
       {
-        "rule_id": "archetype_hold_mana",
+        "rule_id": "archetype_hold_mana_for_instants",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "archetype_deploy_main2",
         "priority": "medium",
         "source": "strategy",
         "action_family": "pass"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -1759,25 +1835,37 @@
     "opp_deck": "Dimir Flash",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "threat_tribute_to_hunger",
         "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
+        "rule_id": "synergy_infernal_vessel_draw",
         "priority": "high",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "activate"
       },
       {
-        "rule_id": "archetype_hold_mana",
+        "rule_id": "archetype_hold_mana_for_instants",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "archetype_deploy_main2",
         "priority": "medium",
         "source": "strategy",
         "action_family": "pass"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -1815,25 +1903,37 @@
     "opp_deck": "Dimir Flash",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "threat_tribute_to_hunger",
         "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
+        "rule_id": "synergy_infernal_vessel_draw",
         "priority": "high",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "activate"
       },
       {
-        "rule_id": "archetype_hold_mana",
+        "rule_id": "archetype_hold_mana_for_instants",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "archetype_deploy_main2",
         "priority": "medium",
         "source": "strategy",
         "action_family": "pass"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -1871,25 +1971,37 @@
     "opp_deck": "Dimir Flash",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "threat_tribute_to_hunger",
         "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
+        "rule_id": "synergy_infernal_vessel_draw",
         "priority": "high",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "activate"
       },
       {
-        "rule_id": "archetype_hold_mana",
+        "rule_id": "archetype_hold_mana_for_instants",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "archetype_deploy_main2",
         "priority": "medium",
         "source": "strategy",
         "action_family": "pass"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -1927,25 +2039,37 @@
     "opp_deck": "Dimir Flash",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "threat_tribute_to_hunger",
         "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
+        "rule_id": "synergy_infernal_vessel_draw",
         "priority": "high",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "activate"
       },
       {
-        "rule_id": "archetype_hold_mana",
+        "rule_id": "archetype_hold_mana_for_instants",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "archetype_deploy_main2",
         "priority": "medium",
         "source": "strategy",
         "action_family": "pass"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -1981,8 +2105,21 @@
     },
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Dimir Flash",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "threat_tribute_to_hunger",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_infernal_vessel_draw",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "activate"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -2018,8 +2155,21 @@
     },
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Dimir Flash",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "threat_tribute_to_hunger",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_infernal_vessel_draw",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "activate"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -2055,8 +2205,21 @@
     },
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Dimir Flash",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "threat_tribute_to_hunger",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_infernal_vessel_draw",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "activate"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -2092,8 +2255,21 @@
     },
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Dimir Flash",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "threat_tribute_to_hunger",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_infernal_vessel_draw",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "activate"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -2131,13 +2307,19 @@
     "opp_deck": "Dimir Flash",
     "expected": [
       {
-        "rule_id": "archetype_hold_mana",
-        "priority": "medium",
+        "rule_id": "threat_tribute_to_hunger",
+        "priority": "high",
         "source": "strategy",
-        "action_family": "pass"
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_infernal_vessel_draw",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "activate"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -2175,13 +2357,19 @@
     "opp_deck": "Dimir Flash",
     "expected": [
       {
-        "rule_id": "archetype_hold_mana",
-        "priority": "medium",
+        "rule_id": "threat_tribute_to_hunger",
+        "priority": "high",
         "source": "strategy",
-        "action_family": "pass"
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_infernal_vessel_draw",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "activate"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -2219,13 +2407,19 @@
     "opp_deck": "Dimir Flash",
     "expected": [
       {
-        "rule_id": "archetype_hold_mana",
-        "priority": "medium",
+        "rule_id": "threat_tribute_to_hunger",
+        "priority": "high",
         "source": "strategy",
-        "action_family": "pass"
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_infernal_vessel_draw",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "activate"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -2240,7 +2434,7 @@
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Dimir Flash",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -2255,7 +2449,7 @@
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Dimir Flash",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -2270,7 +2464,7 @@
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Dimir Flash",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -2309,19 +2503,19 @@
     "opp_deck": "Dimir Flash",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
+        "rule_id": "synergy_infernal_vessel_draw",
         "priority": "high",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "activate"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -2360,19 +2554,19 @@
     "opp_deck": "Dimir Flash",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
+        "rule_id": "synergy_infernal_vessel_draw",
         "priority": "high",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "activate"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -2411,19 +2605,19 @@
     "opp_deck": "Dimir Flash",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
+        "rule_id": "synergy_infernal_vessel_draw",
         "priority": "high",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "activate"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -2462,19 +2656,19 @@
     "opp_deck": "Dimir Flash",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
+        "rule_id": "synergy_infernal_vessel_draw",
         "priority": "high",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "activate"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -2513,19 +2707,19 @@
     "opp_deck": "Dimir Flash",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
+        "rule_id": "synergy_infernal_vessel_draw",
         "priority": "high",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "activate"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -2564,19 +2758,19 @@
     "opp_deck": "Dimir Flash",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
+        "rule_id": "synergy_infernal_vessel_draw",
         "priority": "high",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "activate"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -2615,19 +2809,19 @@
     "opp_deck": "Dimir Flash",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
+        "rule_id": "synergy_infernal_vessel_draw",
         "priority": "high",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "activate"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -2666,19 +2860,19 @@
     "opp_deck": "Dimir Flash",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
+        "rule_id": "synergy_infernal_vessel_draw",
         "priority": "high",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "activate"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -2717,19 +2911,19 @@
     "opp_deck": "Dimir Flash",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
+        "rule_id": "synergy_infernal_vessel_draw",
         "priority": "high",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "activate"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -2768,19 +2962,19 @@
     "opp_deck": "Dimir Flash",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
+        "rule_id": "synergy_infernal_vessel_draw",
         "priority": "high",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "activate"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -2819,19 +3013,19 @@
     "opp_deck": "Dimir Flash",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
+        "rule_id": "synergy_infernal_vessel_draw",
         "priority": "high",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "activate"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -2870,19 +3064,19 @@
     "opp_deck": "Dimir Flash",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
+        "rule_id": "synergy_infernal_vessel_draw",
         "priority": "high",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "activate"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -2921,19 +3115,19 @@
     "opp_deck": "Dimir Flash",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
+        "rule_id": "synergy_infernal_vessel_draw",
         "priority": "high",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "activate"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -2972,19 +3166,19 @@
     "opp_deck": "Dimir Flash",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
+        "rule_id": "synergy_infernal_vessel_draw",
         "priority": "high",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "activate"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -3023,19 +3217,19 @@
     "opp_deck": "Dimir Flash",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
+        "rule_id": "synergy_infernal_vessel_draw",
         "priority": "high",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "activate"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -3074,19 +3268,19 @@
     "opp_deck": "Dimir Flash",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
+        "rule_id": "synergy_infernal_vessel_draw",
         "priority": "high",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "activate"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -3125,19 +3319,19 @@
     "opp_deck": "Dimir Flash",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
+        "rule_id": "synergy_infernal_vessel_draw",
         "priority": "high",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "activate"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -3176,19 +3370,19 @@
     "opp_deck": "Dimir Flash",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
+        "rule_id": "synergy_infernal_vessel_draw",
         "priority": "high",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "activate"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -3227,19 +3421,19 @@
     "opp_deck": "Dimir Flash",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
+        "rule_id": "synergy_infernal_vessel_draw",
         "priority": "high",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "activate"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -3278,19 +3472,19 @@
     "opp_deck": "Dimir Flash",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
+        "rule_id": "synergy_infernal_vessel_draw",
         "priority": "high",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "activate"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -3329,19 +3523,19 @@
     "opp_deck": "Dimir Flash",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
+        "rule_id": "synergy_infernal_vessel_draw",
         "priority": "high",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "activate"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -3380,19 +3574,19 @@
     "opp_deck": "Dimir Flash",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
+        "rule_id": "synergy_infernal_vessel_draw",
         "priority": "high",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "activate"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -3431,19 +3625,19 @@
     "opp_deck": "Dimir Flash",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
+        "rule_id": "synergy_infernal_vessel_draw",
         "priority": "high",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "activate"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -3482,19 +3676,19 @@
     "opp_deck": "Dimir Flash",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
+        "rule_id": "synergy_infernal_vessel_draw",
         "priority": "high",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "activate"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -3533,19 +3727,19 @@
     "opp_deck": "Dimir Flash",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
+        "rule_id": "synergy_infernal_vessel_draw",
         "priority": "high",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "activate"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -3584,19 +3778,19 @@
     "opp_deck": "Dimir Flash",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
+        "rule_id": "synergy_infernal_vessel_draw",
         "priority": "high",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "activate"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -3635,19 +3829,19 @@
     "opp_deck": "Dimir Flash",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
+        "rule_id": "synergy_infernal_vessel_draw",
         "priority": "high",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "activate"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -3683,8 +3877,15 @@
     },
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Dimir Flash",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_infernal_vessel_draw",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "activate"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -3720,8 +3921,15 @@
     },
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Dimir Flash",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_infernal_vessel_draw",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "activate"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -3757,8 +3965,15 @@
     },
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Dimir Flash",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_infernal_vessel_draw",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "activate"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -3794,8 +4009,15 @@
     },
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Dimir Flash",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_infernal_vessel_draw",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "activate"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -3818,7 +4040,7 @@
     "strategy_name": "Golgari Midrange",
     "opp_deck": null,
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -3841,7 +4063,7 @@
     "strategy_name": "Golgari Midrange",
     "opp_deck": null,
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -3865,21 +4087,8 @@
     },
     "strategy_name": "Golgari Midrange",
     "opp_deck": null,
-    "expected": [
-      {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      }
-    ],
-    "_engine_version": "2.0.0"
+    "expected": [],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -3903,21 +4112,8 @@
     },
     "strategy_name": "Golgari Midrange",
     "opp_deck": null,
-    "expected": [
-      {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      }
-    ],
-    "_engine_version": "2.0.0"
+    "expected": [],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -3941,21 +4137,8 @@
     },
     "strategy_name": "Golgari Midrange",
     "opp_deck": null,
-    "expected": [
-      {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      }
-    ],
-    "_engine_version": "2.0.0"
+    "expected": [],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -3970,7 +4153,7 @@
     "strategy_name": "Golgari Midrange",
     "opp_deck": null,
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -3997,21 +4180,8 @@
     },
     "strategy_name": "Golgari Midrange",
     "opp_deck": null,
-    "expected": [
-      {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      }
-    ],
-    "_engine_version": "2.0.0"
+    "expected": [],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -4038,21 +4208,8 @@
     },
     "strategy_name": "Golgari Midrange",
     "opp_deck": null,
-    "expected": [
-      {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      }
-    ],
-    "_engine_version": "2.0.0"
+    "expected": [],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -4079,21 +4236,8 @@
     },
     "strategy_name": "Golgari Midrange",
     "opp_deck": null,
-    "expected": [
-      {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      }
-    ],
-    "_engine_version": "2.0.0"
+    "expected": [],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -4120,21 +4264,8 @@
     },
     "strategy_name": "Golgari Midrange",
     "opp_deck": null,
-    "expected": [
-      {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      }
-    ],
-    "_engine_version": "2.0.0"
+    "expected": [],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -4161,21 +4292,8 @@
     },
     "strategy_name": "Golgari Midrange",
     "opp_deck": null,
-    "expected": [
-      {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      }
-    ],
-    "_engine_version": "2.0.0"
+    "expected": [],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -4202,21 +4320,8 @@
     },
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Azorius Tempo",
-    "expected": [
-      {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      }
-    ],
-    "_engine_version": "2.0.0"
+    "expected": [],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -4231,7 +4336,7 @@
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Azorius Tempo",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -4263,19 +4368,13 @@
     "opp_deck": "Azorius Tempo",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
         "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -4307,19 +4406,13 @@
     "opp_deck": "Azorius Tempo",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
         "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -4334,7 +4427,7 @@
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Azorius Tempo",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -4349,7 +4442,7 @@
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Azorius Tempo",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -4385,19 +4478,13 @@
     "opp_deck": "Azorius Tempo",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
         "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -4433,19 +4520,13 @@
     "opp_deck": "Azorius Tempo",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
         "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -4483,19 +4564,13 @@
     "opp_deck": "Azorius Tempo",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
         "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -4533,19 +4608,13 @@
     "opp_deck": "Azorius Tempo",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
         "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -4583,19 +4652,13 @@
     "opp_deck": "Azorius Tempo",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
         "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -4632,7 +4695,7 @@
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Azorius Tempo",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -4669,7 +4732,7 @@
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Azorius Tempo",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -4706,7 +4769,7 @@
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Azorius Tempo",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -4743,7 +4806,7 @@
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Azorius Tempo",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -4780,7 +4843,7 @@
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Azorius Tempo",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -4795,7 +4858,7 @@
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Azorius Tempo",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -4834,7 +4897,7 @@
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Azorius Tempo",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -4857,7 +4920,7 @@
     "strategy_name": "Golgari Midrange",
     "opp_deck": null,
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -4879,21 +4942,8 @@
     },
     "strategy_name": "Golgari Midrange",
     "opp_deck": null,
-    "expected": [
-      {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      }
-    ],
-    "_engine_version": "2.0.0"
+    "expected": [],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -4915,21 +4965,8 @@
     },
     "strategy_name": "Golgari Midrange",
     "opp_deck": null,
-    "expected": [
-      {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      }
-    ],
-    "_engine_version": "2.0.0"
+    "expected": [],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -4951,21 +4988,8 @@
     },
     "strategy_name": "Golgari Midrange",
     "opp_deck": null,
-    "expected": [
-      {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      }
-    ],
-    "_engine_version": "2.0.0"
+    "expected": [],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -4980,7 +5004,7 @@
     "strategy_name": "Golgari Midrange",
     "opp_deck": null,
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -5007,21 +5031,8 @@
     },
     "strategy_name": "Golgari Midrange",
     "opp_deck": null,
-    "expected": [
-      {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      }
-    ],
-    "_engine_version": "2.0.0"
+    "expected": [],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -5048,21 +5059,8 @@
     },
     "strategy_name": "Golgari Midrange",
     "opp_deck": null,
-    "expected": [
-      {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      }
-    ],
-    "_engine_version": "2.0.0"
+    "expected": [],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -5089,21 +5087,8 @@
     },
     "strategy_name": "Golgari Midrange",
     "opp_deck": null,
-    "expected": [
-      {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      }
-    ],
-    "_engine_version": "2.0.0"
+    "expected": [],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -5130,21 +5115,8 @@
     },
     "strategy_name": "Golgari Midrange",
     "opp_deck": null,
-    "expected": [
-      {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      }
-    ],
-    "_engine_version": "2.0.0"
+    "expected": [],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -5171,21 +5143,8 @@
     },
     "strategy_name": "Golgari Midrange",
     "opp_deck": null,
-    "expected": [
-      {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      }
-    ],
-    "_engine_version": "2.0.0"
+    "expected": [],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -5200,7 +5159,7 @@
     "strategy_name": "Golgari Midrange",
     "opp_deck": null,
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -5215,7 +5174,7 @@
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Mono-White Aggro",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -5230,7 +5189,7 @@
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Mono-White Aggro",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -5263,19 +5222,13 @@
     "opp_deck": "Mono-White Aggro",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
         "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -5308,19 +5261,13 @@
     "opp_deck": "Mono-White Aggro",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
         "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -5353,19 +5300,13 @@
     "opp_deck": "Mono-White Aggro",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
         "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -5398,19 +5339,13 @@
     "opp_deck": "Mono-White Aggro",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
         "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -5443,19 +5378,13 @@
     "opp_deck": "Mono-White Aggro",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
         "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -5488,19 +5417,13 @@
     "opp_deck": "Mono-White Aggro",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
         "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -5533,19 +5456,13 @@
     "opp_deck": "Mono-White Aggro",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
         "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -5578,19 +5495,13 @@
     "opp_deck": "Mono-White Aggro",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
         "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -5623,19 +5534,13 @@
     "opp_deck": "Mono-White Aggro",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
         "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -5668,19 +5573,13 @@
     "opp_deck": "Mono-White Aggro",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
         "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -5695,7 +5594,7 @@
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Mono-White Aggro",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -5730,19 +5629,13 @@
     "opp_deck": "Mono-White Aggro",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
         "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -5777,19 +5670,13 @@
     "opp_deck": "Mono-White Aggro",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
         "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -5824,19 +5711,13 @@
     "opp_deck": "Mono-White Aggro",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
         "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -5870,7 +5751,7 @@
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Mono-White Aggro",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -5904,7 +5785,7 @@
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Mono-White Aggro",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -5938,7 +5819,7 @@
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Mono-White Aggro",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -5974,19 +5855,13 @@
     "opp_deck": "Mono-White Aggro",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
         "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -6022,19 +5897,13 @@
     "opp_deck": "Mono-White Aggro",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
         "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -6070,19 +5939,13 @@
     "opp_deck": "Mono-White Aggro",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
         "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
-        "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -6118,7 +5981,7 @@
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Mono-White Aggro",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -6154,7 +6017,7 @@
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Mono-White Aggro",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -6190,7 +6053,7 @@
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Mono-White Aggro",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -6228,19 +6091,19 @@
     "opp_deck": "Mono-White Aggro",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
+        "rule_id": "synergy_deploy_sac_outlet_before_fodder",
+        "priority": "medium",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -6278,19 +6141,19 @@
     "opp_deck": "Mono-White Aggro",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
+        "rule_id": "synergy_deploy_sac_outlet_before_fodder",
+        "priority": "medium",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -6328,19 +6191,19 @@
     "opp_deck": "Mono-White Aggro",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "high",
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
+        "rule_id": "synergy_deploy_sac_outlet_before_fodder",
+        "priority": "medium",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -6377,8 +6240,21 @@
     },
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Mono-White Aggro",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "situation_hold_wipe_when_ahead",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "synergy_deploy_sac_outlet_before_fodder",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -6415,8 +6291,21 @@
     },
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Mono-White Aggro",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "situation_hold_wipe_when_ahead",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "synergy_deploy_sac_outlet_before_fodder",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -6453,8 +6342,21 @@
     },
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Mono-White Aggro",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "situation_hold_wipe_when_ahead",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "synergy_deploy_sac_outlet_before_fodder",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -6491,8 +6393,21 @@
     },
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Mono-White Aggro",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "situation_hold_wipe_when_ahead",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "synergy_deploy_sac_outlet_before_fodder",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -6529,8 +6444,21 @@
     },
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Mono-White Aggro",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "situation_hold_wipe_when_ahead",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "synergy_deploy_sac_outlet_before_fodder",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -6545,7 +6473,7 @@
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Mono-White Aggro",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -6585,19 +6513,31 @@
     "opp_deck": "Mono-White Aggro",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
+        "rule_id": "situation_hold_wipe_when_ahead",
         "priority": "high",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
+        "rule_id": "situation_nighthawk_attack",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "attack"
+      },
+      {
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "synergy_deploy_sac_outlet_before_fodder",
+        "priority": "medium",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -6637,19 +6577,31 @@
     "opp_deck": "Mono-White Aggro",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
+        "rule_id": "situation_hold_wipe_when_ahead",
         "priority": "high",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
+        "rule_id": "situation_nighthawk_attack",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "attack"
+      },
+      {
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "synergy_deploy_sac_outlet_before_fodder",
+        "priority": "medium",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -6689,19 +6641,31 @@
     "opp_deck": "Mono-White Aggro",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
+        "rule_id": "situation_hold_wipe_when_ahead",
         "priority": "high",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
+        "rule_id": "situation_nighthawk_attack",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "attack"
+      },
+      {
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "synergy_deploy_sac_outlet_before_fodder",
+        "priority": "medium",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -6740,7 +6704,7 @@
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Mono-White Aggro",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -6779,7 +6743,7 @@
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Mono-White Aggro",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -6818,7 +6782,7 @@
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Mono-White Aggro",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -6857,7 +6821,7 @@
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Mono-White Aggro",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -6896,8 +6860,21 @@
     },
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Mono-White Aggro",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "situation_hold_wipe_when_ahead",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "synergy_deploy_sac_outlet_before_fodder",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -6936,8 +6913,21 @@
     },
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Mono-White Aggro",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "situation_hold_wipe_when_ahead",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "synergy_deploy_sac_outlet_before_fodder",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -6976,8 +6966,21 @@
     },
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Mono-White Aggro",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "situation_hold_wipe_when_ahead",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "synergy_deploy_sac_outlet_before_fodder",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -7016,8 +7019,21 @@
     },
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Mono-White Aggro",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "situation_hold_wipe_when_ahead",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "synergy_deploy_sac_outlet_before_fodder",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -7056,8 +7072,21 @@
     },
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Mono-White Aggro",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "situation_hold_wipe_when_ahead",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "synergy_deploy_sac_outlet_before_fodder",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -7096,8 +7125,21 @@
     },
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Mono-White Aggro",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "situation_hold_wipe_when_ahead",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "synergy_deploy_sac_outlet_before_fodder",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -7112,7 +7154,7 @@
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Mono-White Aggro",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -7152,7 +7194,7 @@
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Mono-White Aggro",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -7192,7 +7234,7 @@
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Mono-White Aggro",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -7207,7 +7249,7 @@
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Mono-White Aggro",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -7222,7 +7264,7 @@
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Mono-White Aggro",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -7237,7 +7279,7 @@
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Mono-White Aggro",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -7252,7 +7294,7 @@
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Mono-White Aggro",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -7293,19 +7335,31 @@
     "opp_deck": "Mono-White Aggro",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
+        "rule_id": "situation_hold_wipe_when_ahead",
         "priority": "high",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
+        "rule_id": "situation_nighthawk_attack",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "attack"
+      },
+      {
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "synergy_deploy_sac_outlet_before_fodder",
+        "priority": "medium",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -7346,19 +7400,31 @@
     "opp_deck": "Mono-White Aggro",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
+        "rule_id": "situation_hold_wipe_when_ahead",
         "priority": "high",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
+        "rule_id": "situation_nighthawk_attack",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "attack"
+      },
+      {
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "synergy_deploy_sac_outlet_before_fodder",
+        "priority": "medium",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -7399,19 +7465,31 @@
     "opp_deck": "Mono-White Aggro",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
+        "rule_id": "situation_hold_wipe_when_ahead",
         "priority": "high",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
+        "rule_id": "situation_nighthawk_attack",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "attack"
+      },
+      {
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "synergy_deploy_sac_outlet_before_fodder",
+        "priority": "medium",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -7452,19 +7530,31 @@
     "opp_deck": "Mono-White Aggro",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
+        "rule_id": "situation_hold_wipe_when_ahead",
         "priority": "high",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
+        "rule_id": "situation_nighthawk_attack",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "attack"
+      },
+      {
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "synergy_deploy_sac_outlet_before_fodder",
+        "priority": "medium",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -7505,19 +7595,31 @@
     "opp_deck": "Mono-White Aggro",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
+        "rule_id": "situation_hold_wipe_when_ahead",
         "priority": "high",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
+        "rule_id": "situation_nighthawk_attack",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "attack"
+      },
+      {
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "synergy_deploy_sac_outlet_before_fodder",
+        "priority": "medium",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -7558,19 +7660,31 @@
     "opp_deck": "Mono-White Aggro",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
+        "rule_id": "situation_hold_wipe_when_ahead",
         "priority": "high",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
+        "rule_id": "situation_nighthawk_attack",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "attack"
+      },
+      {
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "synergy_deploy_sac_outlet_before_fodder",
+        "priority": "medium",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -7611,19 +7725,31 @@
     "opp_deck": "Mono-White Aggro",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
+        "rule_id": "situation_hold_wipe_when_ahead",
         "priority": "high",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
+        "rule_id": "situation_nighthawk_attack",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "attack"
+      },
+      {
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "synergy_deploy_sac_outlet_before_fodder",
+        "priority": "medium",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -7664,19 +7790,31 @@
     "opp_deck": "Mono-White Aggro",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
+        "rule_id": "situation_hold_wipe_when_ahead",
         "priority": "high",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
+        "rule_id": "situation_nighthawk_attack",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "attack"
+      },
+      {
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "synergy_deploy_sac_outlet_before_fodder",
+        "priority": "medium",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -7717,19 +7855,31 @@
     "opp_deck": "Mono-White Aggro",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
+        "rule_id": "situation_hold_wipe_when_ahead",
         "priority": "high",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
+        "rule_id": "situation_nighthawk_attack",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "attack"
+      },
+      {
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "synergy_deploy_sac_outlet_before_fodder",
+        "priority": "medium",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -7770,19 +7920,31 @@
     "opp_deck": "Mono-White Aggro",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
+        "rule_id": "situation_hold_wipe_when_ahead",
         "priority": "high",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
+        "rule_id": "situation_nighthawk_attack",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "attack"
+      },
+      {
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "synergy_deploy_sac_outlet_before_fodder",
+        "priority": "medium",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -7823,19 +7985,31 @@
     "opp_deck": "Mono-White Aggro",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
+        "rule_id": "situation_hold_wipe_when_ahead",
         "priority": "high",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
+        "rule_id": "situation_nighthawk_attack",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "attack"
+      },
+      {
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "synergy_deploy_sac_outlet_before_fodder",
+        "priority": "medium",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -7876,19 +8050,31 @@
     "opp_deck": "Mono-White Aggro",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
+        "rule_id": "situation_hold_wipe_when_ahead",
         "priority": "high",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
+        "rule_id": "situation_nighthawk_attack",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "attack"
+      },
+      {
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "synergy_deploy_sac_outlet_before_fodder",
+        "priority": "medium",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -7929,19 +8115,31 @@
     "opp_deck": "Mono-White Aggro",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
+        "rule_id": "situation_hold_wipe_when_ahead",
         "priority": "high",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
+        "rule_id": "situation_nighthawk_attack",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "attack"
+      },
+      {
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "synergy_deploy_sac_outlet_before_fodder",
+        "priority": "medium",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -7982,19 +8180,31 @@
     "opp_deck": "Mono-White Aggro",
     "expected": [
       {
-        "rule_id": "synergy_lifelink_payoff",
+        "rule_id": "situation_hold_wipe_when_ahead",
         "priority": "high",
         "source": "strategy",
-        "action_family": "cast_spell"
+        "action_family": "pass"
       },
       {
-        "rule_id": "archetype_dont_tap_out",
-        "priority": "high",
+        "rule_id": "situation_nighthawk_attack",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "attack"
+      },
+      {
+        "rule_id": "situation_dont_attack_into_open_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "synergy_deploy_sac_outlet_before_fodder",
+        "priority": "medium",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -8033,8 +8243,21 @@
     },
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Mono-White Aggro",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_sac_skeleton",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "activate"
+      },
+      {
+        "rule_id": "synergy_infernal_vessel_draw",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "activate"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -8073,7 +8296,20 @@
     },
     "strategy_name": "Golgari Midrange",
     "opp_deck": "Mono-White Aggro",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_sac_skeleton",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "activate"
+      },
+      {
+        "rule_id": "synergy_infernal_vessel_draw",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "activate"
+      }
+    ],
+    "_engine_version": "2.1.0"
   }
 ]

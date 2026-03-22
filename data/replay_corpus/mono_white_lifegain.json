@@ -20,7 +20,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": null,
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -43,7 +43,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": null,
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -67,13 +67,37 @@
     "opp_deck": null,
     "expected": [
       {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
         "rule_id": "archetype_curve_one_drop",
         "priority": "critical",
         "source": "strategy",
         "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_one_drop_t1",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -97,13 +121,37 @@
     "opp_deck": null,
     "expected": [
       {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
         "rule_id": "archetype_curve_one_drop",
         "priority": "critical",
         "source": "strategy",
         "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_one_drop_t1",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -130,6 +178,18 @@
     "opp_deck": null,
     "expected": [
       {
+        "rule_id": "situation_low_creatures_deploy",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
         "rule_id": "archetype_pridemate_fast_clock",
         "priority": "critical",
         "source": "strategy",
@@ -140,9 +200,15 @@
         "priority": "critical",
         "source": "strategy",
         "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -169,6 +235,18 @@
     "opp_deck": null,
     "expected": [
       {
+        "rule_id": "situation_low_creatures_deploy",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
         "rule_id": "archetype_pridemate_fast_clock",
         "priority": "critical",
         "source": "strategy",
@@ -179,9 +257,15 @@
         "priority": "critical",
         "source": "strategy",
         "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -209,8 +293,15 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": null,
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "archetype_attack_aggressively",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "attack"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -238,8 +329,15 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": null,
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "archetype_attack_aggressively",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "attack"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -254,7 +352,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Azorius (unknown)",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -269,7 +367,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Azorius (unknown)",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -284,7 +382,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Azorius (unknown)",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -317,12 +415,30 @@
     "expected": [
       {
         "rule_id": "situation_hold_one_back",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "synergy_lifelink_payoff",
         "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -355,12 +471,30 @@
     "expected": [
       {
         "rule_id": "situation_hold_one_back",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "synergy_lifelink_payoff",
         "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -393,12 +527,30 @@
     "expected": [
       {
         "rule_id": "situation_hold_one_back",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "synergy_lifelink_payoff",
         "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -431,12 +583,30 @@
     "expected": [
       {
         "rule_id": "situation_hold_one_back",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "synergy_lifelink_payoff",
         "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -469,12 +639,30 @@
     "expected": [
       {
         "rule_id": "situation_hold_one_back",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "synergy_lifelink_payoff",
         "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -504,8 +692,15 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Azorius (unknown)",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "archetype_attack_aggressively",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "attack"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -535,8 +730,15 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Azorius (unknown)",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "archetype_attack_aggressively",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "attack"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -566,8 +768,15 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Azorius (unknown)",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "archetype_attack_aggressively",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "attack"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -597,8 +806,15 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Azorius (unknown)",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "archetype_attack_aggressively",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "attack"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -628,8 +844,15 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Azorius (unknown)",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "archetype_attack_aggressively",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "attack"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -659,8 +882,15 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Azorius (unknown)",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "archetype_attack_aggressively",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "attack"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -693,12 +923,24 @@
     "expected": [
       {
         "rule_id": "situation_hold_one_back",
-        "priority": "critical",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -731,12 +973,24 @@
     "expected": [
       {
         "rule_id": "situation_hold_one_back",
-        "priority": "critical",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -769,12 +1023,24 @@
     "expected": [
       {
         "rule_id": "situation_hold_one_back",
-        "priority": "critical",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -789,7 +1055,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Azorius (unknown)",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -804,7 +1070,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Azorius (unknown)",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -818,8 +1084,21 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Azorius (unknown)",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -856,9 +1135,15 @@
         "priority": "critical",
         "source": "strategy",
         "action_family": "attack"
+      },
+      {
+        "rule_id": "archetype_attack_aggressively",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "attack"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -895,9 +1180,15 @@
         "priority": "critical",
         "source": "strategy",
         "action_family": "attack"
+      },
+      {
+        "rule_id": "archetype_attack_aggressively",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "attack"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -934,9 +1225,15 @@
         "priority": "critical",
         "source": "strategy",
         "action_family": "attack"
+      },
+      {
+        "rule_id": "archetype_attack_aggressively",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "attack"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -973,9 +1270,15 @@
         "priority": "critical",
         "source": "strategy",
         "action_family": "attack"
+      },
+      {
+        "rule_id": "archetype_attack_aggressively",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "attack"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -989,8 +1292,15 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Azorius (unknown)",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -1022,7 +1332,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Azorius (unknown)",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -1054,7 +1364,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Azorius (unknown)",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -1089,12 +1399,30 @@
     "expected": [
       {
         "rule_id": "situation_hold_one_back",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "synergy_lifelink_payoff",
         "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -1129,12 +1457,30 @@
     "expected": [
       {
         "rule_id": "situation_hold_one_back",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "synergy_lifelink_payoff",
         "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -1169,12 +1515,30 @@
     "expected": [
       {
         "rule_id": "situation_hold_one_back",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "synergy_lifelink_payoff",
         "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -1209,12 +1573,30 @@
     "expected": [
       {
         "rule_id": "situation_hold_one_back",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "synergy_lifelink_payoff",
         "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -1249,12 +1631,30 @@
     "expected": [
       {
         "rule_id": "situation_hold_one_back",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "synergy_lifelink_payoff",
         "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -1292,9 +1692,15 @@
         "priority": "critical",
         "source": "strategy",
         "action_family": "attack"
+      },
+      {
+        "rule_id": "archetype_attack_aggressively",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "attack"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -1332,9 +1738,21 @@
         "priority": "critical",
         "source": "strategy",
         "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -1372,9 +1790,21 @@
         "priority": "critical",
         "source": "strategy",
         "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -1412,9 +1842,21 @@
         "priority": "critical",
         "source": "strategy",
         "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -1452,9 +1894,21 @@
         "priority": "critical",
         "source": "strategy",
         "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -1492,9 +1946,21 @@
         "priority": "critical",
         "source": "strategy",
         "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -1532,9 +1998,21 @@
         "priority": "critical",
         "source": "strategy",
         "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -1572,9 +2050,21 @@
         "priority": "critical",
         "source": "strategy",
         "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -1612,9 +2102,21 @@
         "priority": "critical",
         "source": "strategy",
         "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -1652,9 +2154,21 @@
         "priority": "critical",
         "source": "strategy",
         "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -1692,9 +2206,21 @@
         "priority": "critical",
         "source": "strategy",
         "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -1724,8 +2250,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Azorius (unknown)",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -1755,8 +2300,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Azorius (unknown)",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -1786,8 +2350,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Azorius (unknown)",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -1817,8 +2400,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Azorius (unknown)",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -1848,8 +2450,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Azorius (unknown)",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -1879,8 +2500,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Azorius (unknown)",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -1910,8 +2550,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Azorius (unknown)",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -1926,7 +2585,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Azorius (unknown)",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -1941,7 +2600,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Azorius (unknown)",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -1978,10 +2637,16 @@
         "rule_id": "situation_topdeck_preserve_flyer",
         "priority": "critical",
         "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_attack_aggressively",
+        "priority": "medium",
+        "source": "strategy",
         "action_family": "attack"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -2018,10 +2683,16 @@
         "rule_id": "situation_topdeck_preserve_flyer",
         "priority": "critical",
         "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_attack_aggressively",
+        "priority": "medium",
+        "source": "strategy",
         "action_family": "attack"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -2058,10 +2729,16 @@
         "rule_id": "situation_topdeck_preserve_flyer",
         "priority": "critical",
         "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_attack_aggressively",
+        "priority": "medium",
+        "source": "strategy",
         "action_family": "attack"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -2098,10 +2775,16 @@
         "rule_id": "situation_topdeck_preserve_flyer",
         "priority": "critical",
         "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_attack_aggressively",
+        "priority": "medium",
+        "source": "strategy",
         "action_family": "attack"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -2134,8 +2817,15 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "archetype_attack_aggressively",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "attack"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -2168,8 +2858,15 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "archetype_attack_aggressively",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "attack"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -2202,8 +2899,15 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "archetype_attack_aggressively",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "attack"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -2236,8 +2940,15 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "archetype_attack_aggressively",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "attack"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -2270,8 +2981,15 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "archetype_attack_aggressively",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "attack"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -2304,8 +3022,15 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "archetype_attack_aggressively",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "attack"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -2340,8 +3065,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -2376,8 +3120,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -2412,8 +3175,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -2448,8 +3230,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -2484,8 +3285,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -2520,8 +3340,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -2556,8 +3395,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -2592,8 +3450,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -2628,8 +3505,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -2664,8 +3560,21 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -2700,8 +3609,21 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -2736,8 +3658,21 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -2775,8 +3710,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -2814,8 +3768,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -2853,8 +3826,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -2892,8 +3884,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -2931,8 +3942,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -2970,8 +4000,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -3009,8 +4058,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -3048,8 +4116,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -3087,8 +4174,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -3126,8 +4232,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -3165,8 +4290,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -3204,8 +4348,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -3243,8 +4406,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -3282,8 +4464,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -3321,8 +4522,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -3360,8 +4580,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -3399,8 +4638,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -3438,8 +4696,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -3477,8 +4754,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -3516,8 +4812,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -3561,9 +4876,15 @@
         "priority": "critical",
         "source": "strategy",
         "action_family": "attack"
+      },
+      {
+        "rule_id": "archetype_attack_aggressively",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "attack"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -3607,9 +4928,15 @@
         "priority": "critical",
         "source": "strategy",
         "action_family": "attack"
+      },
+      {
+        "rule_id": "archetype_attack_aggressively",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "attack"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -3653,9 +4980,15 @@
         "priority": "critical",
         "source": "strategy",
         "action_family": "attack"
+      },
+      {
+        "rule_id": "archetype_attack_aggressively",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "attack"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -3699,9 +5032,15 @@
         "priority": "critical",
         "source": "strategy",
         "action_family": "attack"
+      },
+      {
+        "rule_id": "archetype_attack_aggressively",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "attack"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -3745,9 +5084,15 @@
         "priority": "critical",
         "source": "strategy",
         "action_family": "attack"
+      },
+      {
+        "rule_id": "archetype_attack_aggressively",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "attack"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -3791,9 +5136,15 @@
         "priority": "critical",
         "source": "strategy",
         "action_family": "attack"
+      },
+      {
+        "rule_id": "archetype_attack_aggressively",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "attack"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -3831,8 +5182,21 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -3870,8 +5234,21 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -3909,8 +5286,21 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -3950,8 +5340,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -3991,8 +5400,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -4032,8 +5460,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -4073,8 +5520,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -4114,8 +5580,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -4157,7 +5642,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -4199,7 +5684,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -4241,7 +5726,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -4283,7 +5768,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -4297,8 +5782,15 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -4340,7 +5832,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -4382,7 +5874,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -4397,7 +5889,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -4412,7 +5904,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -4454,8 +5946,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -4497,8 +6008,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -4540,8 +6070,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -4583,8 +6132,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -4626,8 +6194,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -4642,7 +6229,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -4657,7 +6244,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -4699,8 +6286,21 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -4742,8 +6342,21 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -4785,8 +6398,21 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -4801,7 +6427,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -4816,7 +6442,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -4831,7 +6457,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -4873,8 +6499,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -4916,8 +6561,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -4959,8 +6623,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -5002,8 +6685,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -5045,8 +6747,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -5088,8 +6809,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -5131,8 +6871,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -5174,8 +6933,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -5217,8 +6995,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -5260,8 +7057,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -5303,8 +7119,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -5346,8 +7181,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -5389,8 +7243,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -5432,8 +7305,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -5476,7 +7368,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -5519,7 +7411,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -5562,7 +7454,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -5605,7 +7497,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -5648,7 +7540,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -5691,7 +7583,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -5734,7 +7626,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -5748,8 +7640,15 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -5792,7 +7691,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -5835,7 +7734,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -5850,7 +7749,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -5865,7 +7764,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -5908,8 +7807,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -5952,8 +7870,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -5996,8 +7933,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -6020,7 +7976,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": null,
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -6045,13 +8001,37 @@
     "opp_deck": null,
     "expected": [
       {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
         "rule_id": "archetype_curve_one_drop",
         "priority": "critical",
         "source": "strategy",
         "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_one_drop_t1",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -6076,13 +8056,37 @@
     "opp_deck": null,
     "expected": [
       {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
         "rule_id": "archetype_curve_one_drop",
         "priority": "critical",
         "source": "strategy",
         "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_one_drop_t1",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -6110,19 +8114,37 @@
     "opp_deck": null,
     "expected": [
       {
-        "rule_id": "card_synergy_ghosts_hold_for_exile",
+        "rule_id": "situation_low_creatures_deploy",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_lifelink_payoff",
         "priority": "critical",
         "source": "strategy",
-        "action_family": "pass"
+        "action_family": "cast_spell"
       },
       {
         "rule_id": "card_synergy_flyer_payoff_turn2",
         "priority": "critical",
         "source": "strategy",
         "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "card_synergy_ghosts_hold_for_exile",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -6150,19 +8172,37 @@
     "opp_deck": null,
     "expected": [
       {
-        "rule_id": "card_synergy_ghosts_hold_for_exile",
+        "rule_id": "situation_low_creatures_deploy",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_lifelink_payoff",
         "priority": "critical",
         "source": "strategy",
-        "action_family": "pass"
+        "action_family": "cast_spell"
       },
       {
         "rule_id": "card_synergy_flyer_payoff_turn2",
         "priority": "critical",
         "source": "strategy",
         "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "card_synergy_ghosts_hold_for_exile",
+        "priority": "high",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -6188,8 +8228,15 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": null,
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "archetype_attack_aggressively",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "attack"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -6215,8 +8262,15 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": null,
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "archetype_attack_aggressively",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "attack"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -6231,7 +8285,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": null,
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -6246,7 +8300,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": null,
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -6261,7 +8315,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": null,
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -6276,7 +8330,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": null,
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -6291,7 +8345,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": null,
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -6328,13 +8382,25 @@
         "action_family": "pass"
       },
       {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
         "rule_id": "card_synergy_ghosts_flyer_engine",
-        "priority": "high",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -6371,13 +8437,25 @@
         "action_family": "pass"
       },
       {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
         "rule_id": "card_synergy_ghosts_flyer_engine",
-        "priority": "high",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -6414,13 +8492,25 @@
         "action_family": "pass"
       },
       {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
         "rule_id": "card_synergy_ghosts_flyer_engine",
-        "priority": "high",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -6457,13 +8547,25 @@
         "action_family": "pass"
       },
       {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
         "rule_id": "card_synergy_ghosts_flyer_engine",
-        "priority": "high",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -6500,13 +8602,25 @@
         "action_family": "pass"
       },
       {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
         "rule_id": "card_synergy_ghosts_flyer_engine",
-        "priority": "high",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -6543,13 +8657,25 @@
         "action_family": "pass"
       },
       {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
         "rule_id": "card_synergy_ghosts_flyer_engine",
-        "priority": "high",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -6586,13 +8712,25 @@
         "action_family": "pass"
       },
       {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
         "rule_id": "card_synergy_ghosts_flyer_engine",
-        "priority": "high",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -6629,13 +8767,25 @@
         "action_family": "pass"
       },
       {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
         "rule_id": "card_synergy_ghosts_flyer_engine",
-        "priority": "high",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -6669,9 +8819,15 @@
         "priority": "critical",
         "source": "strategy",
         "action_family": "attack"
+      },
+      {
+        "rule_id": "archetype_attack_aggressively",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "attack"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -6705,9 +8861,15 @@
         "priority": "critical",
         "source": "strategy",
         "action_family": "attack"
+      },
+      {
+        "rule_id": "archetype_attack_aggressively",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "attack"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -6741,9 +8903,15 @@
         "priority": "critical",
         "source": "strategy",
         "action_family": "attack"
+      },
+      {
+        "rule_id": "archetype_attack_aggressively",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "attack"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -6777,9 +8945,15 @@
         "priority": "critical",
         "source": "strategy",
         "action_family": "attack"
+      },
+      {
+        "rule_id": "archetype_attack_aggressively",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "attack"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -6794,7 +8968,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": null,
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -6809,7 +8983,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": null,
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -6824,7 +8998,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": null,
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -6839,7 +9013,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": null,
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -6854,7 +9028,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": null,
     "expected": [],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -6884,8 +9058,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": null,
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -6915,8 +9108,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": null,
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -6946,8 +9158,27 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": null,
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -6977,7 +9208,26 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": null,
-    "expected": [],
-    "_engine_version": "2.0.0"
+    "expected": [
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "archetype_spend_mana",
+        "priority": "medium",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      }
+    ],
+    "_engine_version": "2.1.0"
   }
 ]

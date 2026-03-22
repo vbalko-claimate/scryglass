@@ -25,13 +25,13 @@
     "opp_deck": null,
     "expected": [
       {
-        "rule_id": "synergy_second_rite_freeze",
-        "priority": "critical",
+        "rule_id": "synergy_second_rite_setup",
+        "priority": "high",
         "source": "strategy",
-        "action_family": "attack"
+        "action_family": "pass"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -63,16 +63,22 @@
         "rule_id": "threat_use_burst_lightning_topdeck",
         "priority": "high",
         "source": "strategy",
-        "action_family": "pass"
+        "action_family": "cast_spell"
       },
       {
         "rule_id": "synergy_imodane_burn_combo",
-        "priority": "high",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_imodane_target_creature",
+        "priority": "critical",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   },
   {
     "state": {
@@ -104,6 +110,6 @@
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.0.0"
+    "_engine_version": "2.1.0"
   }
 ]

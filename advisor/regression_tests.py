@@ -125,7 +125,7 @@ RED_GOBLINS_SCENARIOS = [
     Scenario(
         name="RG-02: Don't attack before Second Rite",
         deck="Mono Red Goblins",
-        turn=5, phase="Phase_Combat", my_life=14, opp_life=10,
+        turn=5, phase="Phase_Main1", my_life=14, opp_life=10,
         hand=["Hidetsugu's Second Rite"],
         my_battlefield=["Courageous Goblin", "Goblin Boarders", "Mountain", "Mountain", "Mountain", "Mountain"],
         opp_battlefield=["Island", "Plains"],
