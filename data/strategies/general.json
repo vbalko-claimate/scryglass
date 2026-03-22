@@ -279,7 +279,8 @@
         "fired": 0,
         "correct": 0
       },
-      "conflicts_with": []
+      "conflicts_with": [],
+      "mana_min": 1
     },
     {
       "id": "meta_vs_fast_hold_blockers",

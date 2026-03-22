@@ -1782,6 +1782,18 @@ def _check_combat_blocks(state: GameState) -> list[Advice]:
                     confidence=0.85))
             continue
 
+        # Flying check: only flying/reach creatures can block flyers
+        att_flying = _has_keyword(attacker, "Flying")
+        if att_flying:
+            available = [b for b in available
+                         if _has_keyword(b, "Flying") or _has_keyword(b, "Reach")]
+            if not available:
+                if lethal or near_lethal:
+                    advice.append(Advice("heuristic", "medium",
+                        f"Can't block {attacker.name} — flying (no flyers/reach)",
+                        confidence=0.9))
+                continue
+
         best_block = None
         best_type = ""  # "clean_kill", "trade", "chump"
         for blocker in available:
