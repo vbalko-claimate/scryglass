@@ -15,11 +15,27 @@ from pathlib import Path
 
 import numpy as np
 
-ACTION_FAMILIES = ["cast_spell", "play_land", "attack", "block", "activate", "pass"]
+from .models import ActionFamily
+
+ACTION_FAMILIES = [f.value for f in ActionFamily]
 N_FEATURES = 16
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 DEFAULT_DATA = DATA_DIR / "training" / "reranker_v1.jsonl"
 DEFAULT_MODEL = DATA_DIR / "models" / "reranker_v1.npz"
+
+
+def build_state_dict(
+    turn: int, phase: str, my_life: int, opp_life: int,
+    hand_size: int, board_creature_count: int, opp_creature_count: int,
+    mana_available: int,
+) -> dict:
+    """Build normalized state dict for reranker features."""
+    return {
+        "turn": turn, "phase": phase,
+        "my_life": my_life, "opp_life": opp_life,
+        "hand_size": hand_size, "board_creature_count": board_creature_count,
+        "opp_creature_count": opp_creature_count, "mana_available": mana_available,
+    }
 
 
 def extract_features(state: dict, candidate: dict, n_candidates: int) -> list[float]:
@@ -106,6 +122,20 @@ class Reranker:
         self.bias: float = 0.0
         self.trained: bool = False
 
+    def fit(self, X: np.ndarray, y: np.ndarray, lr: float = 0.1,
+            epochs: int = 100, reg: float = 0.01) -> None:
+        """Fit on feature matrix X and label vector y."""
+        n_samples, n_feats = X.shape
+        self.weights = np.zeros(n_feats, dtype=np.float64)
+        self.bias = 0.0
+        for _ in range(epochs):
+            z = X @ self.weights + self.bias
+            preds = _sigmoid(z)
+            error = preds - y
+            self.weights -= lr * ((X.T @ error) / n_samples + reg * self.weights)
+            self.bias -= lr * error.mean()
+        self.trained = True
+
     def train(self, data_path: Path, lr: float = 0.1, epochs: int = 100,
               reg: float = 0.01) -> dict:
         """Train on JSONL, return metrics dict."""
@@ -115,20 +145,7 @@ class Reranker:
         if len(X) == 0:
             print("No training data."); return {}
 
-        n_samples, n_feats = X.shape
-        self.weights = np.zeros(n_feats, dtype=np.float64)
-        self.bias = 0.0
-
-        for epoch in range(epochs):
-            z = X @ self.weights + self.bias
-            preds = _sigmoid(z)
-            error = preds - y  # (n,)
-            grad_w = (X.T @ error) / n_samples + reg * self.weights
-            grad_b = error.mean()
-            self.weights -= lr * grad_w
-            self.bias -= lr * grad_b
-
-        self.trained = True
+        self.fit(X, y, lr=lr, epochs=epochs, reg=reg)
         # Compute metrics
         metrics = {"train_samples": len(X), "test_samples": 0}
         train_preds = _sigmoid(X @ self.weights + self.bias)

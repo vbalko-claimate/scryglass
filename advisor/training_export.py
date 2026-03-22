@@ -86,16 +86,20 @@ def _lookup(idx: dict, key: tuple, match_id, gn, turn, phase) -> dict:
     return idx.get(key) or idx.get(("comp", match_id, gn, turn, phase)) or {}
 
 
-def _lookup_compliance(idx: dict, key: tuple, match_id, gn, turn) -> dict:
+def _build_compliance_turn_index(idx: dict) -> dict[tuple, dict]:
+    """Build secondary index keyed by (match_id, game_number, turn) for O(1) fallback."""
+    turn_idx: dict[tuple, dict] = {}
+    for key, data in idx.items():
+        if key[0] == "comp":
+            turn_key = (key[1], key[2], key[3])  # match_id, gn, turn
+            if turn_key not in turn_idx:
+                turn_idx[turn_key] = data
+    return turn_idx
+
+
+def _lookup_compliance(idx: dict, turn_idx: dict, key: tuple, match_id, gn, turn) -> dict:
     """Compliance has phase='play' (hardcoded), so fallback ignores phase."""
-    hit = idx.get(key)
-    if hit:
-        return hit
-    # Try all phases for this turn
-    for stored_key, data in idx.items():
-        if stored_key[0] == "comp" and stored_key[1] == match_id and stored_key[2] == gn and stored_key[3] == turn:
-            return data
-    return {}
+    return idx.get(key) or turn_idx.get((match_id, gn, turn)) or {}
 
 
 def export(output: Path, min_candidates: int = 2) -> None:
@@ -110,6 +114,7 @@ def export(output: Path, min_candidates: int = 2) -> None:
     ctx_idx = _index_by_key(events["decision_context"])
     out_idx = _index_by_key(events["decision_outcome"])
     comp_idx = _index_by_key(events["advice_compliance"])
+    comp_turn_idx = _build_compliance_turn_index(comp_idx)
 
     seen, rows_written, total_dec, chosen_count = set(), 0, 0, 0
     source_counts: dict[str, int] = defaultdict(int)
@@ -144,7 +149,7 @@ def export(output: Path, min_candidates: int = 2) -> None:
 
         state = _extract_state(ctx, turn, phase)
         outcome_data = _lookup(out_idx, key, match_id, gn, turn, phase)
-        compliance = _lookup_compliance(comp_idx, key, match_id, gn, turn)
+        compliance = _lookup_compliance(comp_idx, comp_turn_idx, key, match_id, gn, turn)
         played = (compliance.get("played") or "").lower()
         outcome = {"life_delta": outcome_data.get("life_delta", 0),
                    "opp_life_delta": outcome_data.get("opp_life_delta", 0),

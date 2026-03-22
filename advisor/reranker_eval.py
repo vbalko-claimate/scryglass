@@ -10,8 +10,6 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-import numpy as np
-
 from .reranker import (
     Reranker, _load_jsonl, _split_by_match, _group_by_decision,
     DEFAULT_DATA, DEFAULT_MODEL,
@@ -31,21 +29,12 @@ def evaluate(data_path: Path, model_path: Path | None = None) -> None:
 
     # Train fresh model on train split only
     rr = Reranker()
-    from .reranker import _build_matrices, _sigmoid
+    from .reranker import _build_matrices
     X, y = _build_matrices(train_rows)
     if len(X) == 0:
         print("No training samples."); return
 
-    n_samples, n_feats = X.shape
-    rr.weights = np.zeros(n_feats, dtype=np.float64)
-    rr.bias = 0.0
-    for _ in range(100):
-        z = X @ rr.weights + rr.bias
-        preds = _sigmoid(z)
-        error = preds - y
-        rr.weights -= 0.1 * ((X.T @ error) / n_samples + 0.01 * rr.weights)
-        rr.bias -= 0.1 * error.mean()
-    rr.trained = True
+    rr.fit(X, y)
 
     # Evaluate on test decisions
     test_groups = _group_by_decision(test_rows)

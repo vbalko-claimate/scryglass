@@ -1749,16 +1749,17 @@ class AdvisorEngine:
                     else:
                         self._reranker = False  # sentinel: no model file
                 if self._reranker and self._reranker.trained:
-                    shadow_state = {
-                        "turn": state.turn_info.turn_number,
-                        "phase": state.turn_info.phase,
-                        "my_life": state.my_player().life_total if state.my_player() else 20,
-                        "opp_life": state.opp_player().life_total if state.opp_player() else 20,
-                        "hand_size": len(state.my_hand()),
-                        "board_creature_count": len(state.my_creatures()),
-                        "opp_creature_count": len(state.opp_creatures()),
-                        "mana_available": len(state.my_untapped_lands()),
-                    }
+                    from .reranker import build_state_dict
+                    shadow_state = build_state_dict(
+                        turn=state.turn_info.turn_number,
+                        phase=state.turn_info.phase,
+                        my_life=state.my_player().life_total if state.my_player() else 20,
+                        opp_life=state.opp_player().life_total if state.opp_player() else 20,
+                        hand_size=len(state.my_hand()),
+                        board_creature_count=len(state.my_creatures()),
+                        opp_creature_count=len(state.opp_creatures()),
+                        mana_available=len(state.my_untapped_lands()),
+                    )
                     shadow_candidates = []
                     for a in merged[:5]:
                         top_score = a.action_scores[0] if a.action_scores else None
