@@ -712,6 +712,9 @@ function spotlightScore(item) {
         const maxActionScore = Math.max(...actionScores.map(a => a.score));
         // Scale 0-1 action score into 0-200 range, added on top of priority
         score += maxActionScore * 200;
+        // Prefer specific advice (names a card) over generic ("spend all mana")
+        const hasTarget = actionScores.some(a => a.target && a.target.length > 0);
+        if (hasTarget) score += 50;
         return score;
     }
 
