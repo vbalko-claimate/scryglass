@@ -407,11 +407,22 @@ tr:hover { background: rgba(255,255,255,0.03); }
             </div>
         </header>
 
-        <div class="utility-bar">
+        <div class="utility-bar" style="flex-wrap: wrap; gap: 8px;">
             <div class="label">Collection</div>
             <button id="refresh-collection-btn" class="btn btn-primary" onclick="refreshCollection()">Refresh from MTGA Memory</button>
             <div class="hint">Requires the sudo wrapper setup from <code>docs/collection_refresh_setup.md</code>.</div>
             <div id="refresh-collection-status" class="status">Idle</div>
+            <div id="collection-stats" style="width:100%; display:none; margin-top:4px;">
+                <div style="display:flex; gap:16px; flex-wrap:wrap; font-size:13px;">
+                    <div id="cs-total" style="color:#e0e0e0;"></div>
+                    <div id="cs-common" style="color:#b0b0b0;"></div>
+                    <div id="cs-uncommon" style="color:#b0c4de;"></div>
+                    <div id="cs-rare" style="color:#ffd700;"></div>
+                    <div id="cs-mythic" style="color:#e94560;"></div>
+                    <div id="cs-wildcards" style="color:#90caf9; margin-left:auto;"></div>
+                </div>
+                <div id="cs-date" style="font-size:11px; color:#555; margin-top:2px;"></div>
+            </div>
         </div>
 
         <div class="tabs">
@@ -902,7 +913,51 @@ async function refreshCollection() {
 
     btn.disabled = false;
     btn.textContent = 'Refresh from MTGA Memory';
+    loadCollectionStats();
 }
+
+async function loadCollectionStats() {
+    try {
+        const res = await fetch('/api/manage/collection-stats');
+        const data = await res.json();
+        const panel = document.getElementById('collection-stats');
+        if (data.status !== 'ok') {
+            panel.style.display = 'none';
+            return;
+        }
+        panel.style.display = '';
+        const r = data.rarities || {};
+        document.getElementById('cs-total').textContent =
+            `${data.total_unique} unique · ${data.total_copies} copies`;
+        document.getElementById('cs-common').textContent =
+            `Common: ${(r.Common || r.common || {}).copies || 0}`;
+        document.getElementById('cs-uncommon').textContent =
+            `Uncommon: ${(r.Uncommon || r.uncommon || {}).copies || 0}`;
+        document.getElementById('cs-rare').textContent =
+            `Rare: ${(r.Rare || r.rare || {}).unique || 0} unique / ${(r.Rare || r.rare || {}).copies || 0}`;
+        document.getElementById('cs-mythic').textContent =
+            `Mythic: ${(r.Mythic || r.mythic || {}).unique || 0} unique / ${(r.Mythic || r.mythic || {}).copies || 0}`;
+
+        const wc = data.wildcards || {};
+        if (Object.keys(wc).length) {
+            document.getElementById('cs-wildcards').textContent =
+                `WC: ${wc.common || 0}C / ${wc.uncommon || 0}U / ${wc.rare || 0}R / ${wc.mythic || 0}M`;
+        } else {
+            document.getElementById('cs-wildcards').textContent = '';
+        }
+
+        if (data.snapshot_date) {
+            const d = new Date(data.snapshot_date * 1000);
+            document.getElementById('cs-date').textContent =
+                `Snapshot: ${d.toLocaleDateString()} ${d.toLocaleTimeString()}`;
+        }
+    } catch (e) {
+        console.error('Failed to load collection stats:', e);
+    }
+}
+
+// Load stats on page load
+document.addEventListener('DOMContentLoaded', loadCollectionStats);
 
 // ── Decks ──
 async function loadDecks() {

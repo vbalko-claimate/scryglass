@@ -951,3 +951,48 @@ async def manage_refresh_collection():
             "summary": payload or {},
             "stderr": err_text[-2000:],
         }
+
+
+@app.get("/api/manage/collection-stats")
+async def manage_collection_stats():
+    """Return current collection stats from the raw snapshot."""
+    raw_path = Path(__file__).parent.parent / "mtga_collection_raw.json"
+    if not raw_path.exists():
+        return {"status": "no_data", "message": "No collection snapshot found. Run Refresh first."}
+
+    import json as _json
+    data = _json.loads(raw_path.read_text())
+    if not data or not isinstance(data, dict):
+        return {"status": "no_data", "message": "Collection snapshot is empty."}
+
+    total_unique = len(data)
+    total_copies = sum(data.values())
+
+    # Analyze by rarity using card cache
+    rarities: dict[str, dict] = {}
+    for grp_id_str, count in data.items():
+        card = card_cache.get(int(grp_id_str))
+        r = (card.rarity if card else "unknown") or "unknown"
+        if r not in rarities:
+            rarities[r] = {"unique": 0, "copies": 0}
+        rarities[r]["unique"] += 1
+        rarities[r]["copies"] += count
+
+    # Read wildcards from Untapped inventory if available
+    wildcards = {}
+    inv_path = Path(__file__).parent.parent / "mtga_inventory.json"
+    if inv_path.exists():
+        try:
+            inv = _json.loads(inv_path.read_text())
+            wildcards = inv.get("wildcards", {})
+        except Exception:
+            pass
+
+    return {
+        "status": "ok",
+        "total_unique": total_unique,
+        "total_copies": total_copies,
+        "rarities": rarities,
+        "wildcards": wildcards,
+        "snapshot_date": raw_path.stat().st_mtime,
+    }
