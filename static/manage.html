@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MTGA Advisor — Manage</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { background: #1a1a2e; color: #e0e0e0; font-family: 'Segoe UI', system-ui, sans-serif; }
@@ -257,7 +258,7 @@ tr:hover { background: rgba(255,255,255,0.03); }
     white-space: pre;
 }
 
-/* Guide content */
+/* Guide content (rendered markdown) */
 .guide-content {
     background: #0d1b2a;
     border: 1px solid #0f3460;
@@ -267,8 +268,46 @@ tr:hover { background: rgba(255,255,255,0.03); }
     line-height: 1.6;
     max-height: 600px;
     overflow-y: auto;
-    white-space: pre-wrap;
 }
+.guide-content h1, .guide-content h2, .guide-content h3 {
+    color: #e94560;
+    margin: 16px 0 8px;
+}
+.guide-content h1 { font-size: 18px; }
+.guide-content h2 { font-size: 15px; }
+.guide-content h3 { font-size: 13px; }
+.guide-content p { margin: 6px 0; }
+.guide-content ul, .guide-content ol { margin: 6px 0 6px 20px; }
+.guide-content li { margin: 2px 0; }
+.guide-content code {
+    background: #16213e;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+}
+.guide-content pre {
+    background: #16213e;
+    padding: 10px;
+    border-radius: 4px;
+    overflow-x: auto;
+    margin: 8px 0;
+}
+.guide-content pre code { background: none; padding: 0; }
+.guide-content strong { color: #ffb052; }
+.guide-content blockquote {
+    border-left: 3px solid #0f3460;
+    padding-left: 12px;
+    color: #97a9c4;
+    margin: 8px 0;
+}
+.guide-content table { border-collapse: collapse; margin: 8px 0; width: 100%; }
+.guide-content th, .guide-content td {
+    border: 1px solid #0f3460;
+    padding: 4px 8px;
+    font-size: 12px;
+}
+.guide-content th { background: #16213e; color: #e94560; }
 
 /* Search */
 .search-bar {
@@ -914,7 +953,7 @@ async function viewGuide(filename) {
     const panel = document.getElementById('guide-detail');
     panel.innerHTML = `
         <h3>${filename}</h3>
-        <div class="guide-content">${escapeHtml(data.content)}</div>
+        <div class="guide-content">${marked.parse(data.content)}</div>
         <div class="btn-row" style="margin-top:8px">
             <button class="btn btn-secondary" onclick="document.getElementById('guide-detail').classList.remove('open')">Close</button>
         </div>
