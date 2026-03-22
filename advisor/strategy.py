@@ -18,7 +18,7 @@ from pathlib import Path
 
 from .database import card_cache, USER_DATA_DIR
 from .models import ActionFamily, ActionScore, Advice, GameState, GameObject, RuleHit
-from .actions import infer_action_family, score_from_priority, render_advice
+from .actions import infer_action_family, is_hold_rule, score_from_priority, render_advice
 from .version import ENGINE_VERSION, SCHEMA_VERSION
 
 log = logging.getLogger(__name__)
@@ -819,19 +819,20 @@ def evaluate_rules_v2(rules: list[Rule], state: GameState,
 
     # --- Conflict resolution ---
     suppressed: set[str] = set()
-    # Explicit conflicts
+    # Explicit conflicts — only for mulligan layer (legacy)
     for rule, _ in results:
-        for cid in rule.conflicts_with:
-            suppressed.add(cid)
+        if rule.layer == "mulligan":
+            for cid in rule.conflicts_with:
+                suppressed.add(cid)
 
     # Auto-detect hold/use conflicts: if a "use" rule and a "hold" rule both
     # reference the same card, the more specific one (use) suppresses hold.
-    _HOLD_WORDS = {"hold", "don't", "wait", "save"}
     hold_rules: dict[str, list[str]] = {}  # card_name → [rule_ids]
     use_rules: dict[str, list[str]] = {}   # card_name → [rule_ids]
     for rule, hit in results:
-        action_lower = rule.action.lower()
-        is_hold = any(w in action_lower for w in _HOLD_WORDS)
+        # Use action_family from RuleHit (already resolved with fallback)
+        family_value = hit.action_scores[0].family.value if hit.action_scores else ""
+        is_hold = is_hold_rule(family_value, rule.action)
         for zc in rule.require:
             if zc.match.name:
                 names = zc.match.name if isinstance(zc.match.name, list) else [zc.match.name]

@@ -34,6 +34,14 @@ _LAND_WORDS = re.compile(r"\b(play (?:a )?land|land drop)\b", re.I)
 _ACTIVATE_WORDS = re.compile(r"\b(activate|crew|equip|channel|sacrifice|sac)\b", re.I)
 
 
+def is_hold_rule(action_family_value: str = "", action_text: str = "") -> bool:
+    """Check if a rule is a hold/pass rule. Uses action_family (preferred) or text fallback."""
+    if action_family_value:
+        return action_family_value == ActionFamily.PASS.value or action_family_value == "pass"
+    # Fallback for rules without action_family
+    return bool(_PASS_WORDS.search(action_text))
+
+
 def infer_action_family(
     text: str,
     phase: str = "",

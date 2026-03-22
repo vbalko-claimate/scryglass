@@ -453,59 +453,31 @@ def _generate_meta_rules(analysis: dict) -> list[dict]:
 
 
 def _validate_and_fix_rules(rules: list[dict]) -> list[dict]:
-    """Post-process rules: auto-detect conflicts, add missing phase restrictions.
+    """Post-process rules: add missing phase restrictions, clean up conflicts.
 
-    1. Hold/use conflict detection: when rules reference the same card with
-       opposite intent (hold vs cast/use), add conflicts_with so the engine
-       can resolve them at runtime.
+    1. Hold/use conflict detection is now handled at runtime by the engine's
+       auto-conflict detector using action_family. We only preserve explicit
+       conflicts_with for mulligan-layer rules.
     2. Combat-only synergies: rules about dying/trading/blocking get phase
        restrictions if they don't already have them.
     """
     from collections import defaultdict
+    from .actions import is_hold_rule
 
-    _HOLD_WORDS = {"hold", "don't", "wait", "save"}
     _COMBAT_WORDS = {"die", "dying", "block", "trade", "combat damage", "attacks"}
 
     rule_by_id = {r["id"]: r for r in rules}
 
-    # ── 1. Auto-detect hold/use conflicts ──
-    # Index: card_name → [(rule_id, is_hold)]
-    card_refs: dict[str, list[tuple[str, bool]]] = defaultdict(list)
+    # ── 1. Strip conflicts_with from non-mulligan rules ──
+    # The engine auto-detects hold/use conflicts via action_family at runtime.
+    conflicts_stripped = 0
     for r in rules:
-        # Skip mulligan rules — they don't conflict with in-game hold/use
-        if r.get("layer") == "mulligan" or (r.get("phase") and "Mulligan" in r.get("phase", [])):
-            continue
-        action_lower = r.get("action", "").lower()
-        is_hold = any(w in action_lower for w in _HOLD_WORDS)
-        for zc in r.get("require", []):
-            # Only consider hand-zone requires (cards you're deciding to cast/hold)
-            if zc.get("zone") != "hand":
-                continue
-            match = zc.get("match", {})
-            names = match.get("name", [])
-            if isinstance(names, str):
-                names = [names]
-            if not names:
-                continue
-            for name in names:
-                card_refs[name].append((r["id"], is_hold))
-
-    conflicts_added = 0
-    for card, refs in card_refs.items():
-        hold_ids = [rid for rid, is_h in refs if is_h]
-        use_ids = [rid for rid, is_h in refs if not is_h]
-        if not hold_ids or not use_ids:
-            continue
-        # Use rules suppress hold rules (one-directional).
-        # When a "use" rule fires, it means conditions justify using the card NOW,
-        # overriding the "hold" advice. The reverse (hold suppressing use) is
-        # handled by the runtime auto-conflict detector which compares layer/priority.
-        for uid in use_ids:
-            existing = set(rule_by_id[uid].get("conflicts_with", []))
-            for hid in hold_ids:
-                if hid not in existing:
-                    rule_by_id[uid].setdefault("conflicts_with", []).append(hid)
-                    conflicts_added += 1
+        if r.get("layer") == "mulligan":
+            continue  # preserve mulligan conflicts
+        cw = r.get("conflicts_with", [])
+        if cw:
+            conflicts_stripped += len(cw)
+            r["conflicts_with"] = []
 
     # ── 2. Phase restrictions for combat-only synergies ──
     phase_added = 0

@@ -24,38 +24,17 @@ def validate_strategy(path: Path, fix: bool = False) -> list[str]:
     rules = data.get("rules", [])
     issues: list[str] = []
 
-    # ── Check 1: Hold/use conflicts ──
+    # ── Check 1: Hold/use pair detection (informational) ──
+    # NOTE: conflicts_with is deprecated for non-mulligan rules.
+    # The engine auto-detects hold/use conflicts via action_family at runtime.
+    # This check only warns about stale conflicts_with on non-mulligan rules.
     from collections import defaultdict
-    _HOLD_WORDS = {"hold", "don't", "wait", "save"}
-    card_refs: dict[str, list[tuple[str, bool]]] = defaultdict(list)
-
+    from .actions import is_hold_rule
     for r in rules:
-        # Skip mulligan rules
-        if r.get("layer") == "mulligan" or (r.get("phase") and "Mulligan" in r.get("phase", [])):
+        if r.get("layer") == "mulligan":
             continue
-        action_lower = r.get("action", "").lower()
-        is_hold = any(w in action_lower for w in _HOLD_WORDS)
-        for zc in r.get("require", []):
-            if zc.get("zone") != "hand":
-                continue
-            match = zc.get("match", {})
-            names = match.get("name", [])
-            if isinstance(names, str):
-                names = [names]
-            for name in names:
-                card_refs[name].append((r["id"], is_hold))
-
-    for card, refs in card_refs.items():
-        hold_ids = [rid for rid, is_h in refs if is_h]
-        use_ids = [rid for rid, is_h in refs if not is_h]
-        if not hold_ids or not use_ids:
-            continue
-        # Only check use→hold direction (use suppresses hold, not vice versa)
-        for uid in use_ids:
-            existing = set(next(r for r in rules if r["id"] == uid).get("conflicts_with", []))
-            missing = [hid for hid in hold_ids if hid not in existing]
-            if missing:
-                issues.append(f"CONFLICT: {uid} (use) missing conflicts_with {missing} for card '{card}'")
+        if r.get("conflicts_with"):
+            issues.append(f"STALE: {r['id']} has conflicts_with (deprecated for non-mulligan rules)")
 
     # ── Check 2: Rules without any conditions ──
     for r in rules:
@@ -73,26 +52,18 @@ def validate_strategy(path: Path, fix: bool = False) -> list[str]:
     # ── Check 3: Hold rules without use overrides ──
     rule_ids = {r["id"] for r in rules}
     for r in rules:
-        if not any(w in r.get("action", "").lower() for w in _HOLD_WORDS):
+        if not is_hold_rule(r.get("action_family", ""), r.get("action", "")):
             continue
         rid = r["id"]
-        # Check if there's a corresponding _low_life or _topdeck override
-        base = rid.replace("threat_hold_", "threat_use_").replace("situation_hold_", "situation_use_")
-        has_low_life = f"{base}_low_life" in rule_ids or any(
-            uid.endswith("_low_life") and rid in next(
-                (rr for rr in rules if rr["id"] == uid), {}
-            ).get("conflicts_with", [])
-            for uid in rule_ids
-        )
-        has_topdeck = f"{base}_topdeck" in rule_ids or any(
-            uid.endswith("_topdeck") and rid in next(
-                (rr for rr in rules if rr["id"] == uid), {}
-            ).get("conflicts_with", [])
-            for uid in rule_ids
-        )
-        if not has_low_life and "threat_hold" in rid:
+        if "threat_hold" not in rid:
+            continue
+        # Check if there's a corresponding _low_life or _topdeck override by ID convention
+        base = rid.replace("threat_hold_", "threat_use_")
+        has_low_life = f"{base}_low_life" in rule_ids
+        has_topdeck = f"{base}_topdeck" in rule_ids
+        if not has_low_life:
             issues.append(f"MISSING_OVERRIDE: {rid} has no _low_life override")
-        if not has_topdeck and "threat_hold" in rid:
+        if not has_topdeck:
             issues.append(f"MISSING_OVERRIDE: {rid} has no _topdeck override")
 
     # ── Check 4: Duplicate IDs ──

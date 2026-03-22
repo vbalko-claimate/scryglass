@@ -596,9 +596,9 @@ class AdvisorEngine:
         prio = {"critical": 0, "high": 1, "medium": 2, "low": 3}
         primary = [a for a in base_advice if is_primary(a)]
         secondary = [a for a in base_advice if a not in primary]
-        primary.sort(key=lambda a: prio.get(a.priority, 4))
-        secondary.sort(key=lambda a: prio.get(a.priority, 4))
-        intel_sorted = sorted(intel_advice, key=lambda a: prio.get(a.priority, 4))
+        primary.sort(key=lambda a: (prio.get(a.priority, 4), -(a.action_scores[0].score if a.action_scores else 0.0)))
+        secondary.sort(key=lambda a: (prio.get(a.priority, 4), -(a.action_scores[0].score if a.action_scores else 0.0)))
+        intel_sorted = sorted(intel_advice, key=lambda a: (prio.get(a.priority, 4), -(a.action_scores[0].score if a.action_scores else 0.0)))
 
         if not primary and secondary:
             primary = secondary[:1]
@@ -876,7 +876,7 @@ class AdvisorEngine:
                 advice = base_advice + intel_advice
 
             prio = {"critical": 0, "high": 1, "medium": 2, "low": 3}
-            advice.sort(key=lambda a: prio.get(a.priority, 4))
+            advice.sort(key=lambda a: (prio.get(a.priority, 4), -(a.action_scores[0].score if a.action_scores else 0.0)))
             advice = advice[:3 if self._advice_mode == "hybrid" and self._auto_llm else 4]
 
         if self._advice_mode == "hybrid":
@@ -956,7 +956,7 @@ class AdvisorEngine:
                     )
                     merged = self._last_advice + [llm_item]
                     prio = {"critical": 0, "high": 1, "medium": 2, "low": 3}
-                    merged.sort(key=lambda a: prio.get(a.priority, 4))
+                    merged.sort(key=lambda a: (prio.get(a.priority, 4), -(a.action_scores[0].score if a.action_scores else 0.0)))
                     self._last_advice = merged[:5]
                     if self.on_advice:
                         self.on_advice(self._last_advice)
@@ -1040,7 +1040,7 @@ class AdvisorEngine:
                     confidence=llm_advice.confidence,
                 ))
             prio = {"critical": 0, "high": 1, "medium": 2, "low": 3}
-            advice.sort(key=lambda a: prio.get(a.priority, 4))
+            advice.sort(key=lambda a: (prio.get(a.priority, 4), -(a.action_scores[0].score if a.action_scores else 0.0)))
             advice = advice[:4]
 
         if not advice and llm_advice and llm_advice.message:
@@ -1082,7 +1082,7 @@ class AdvisorEngine:
             if all(a.message.lower() != advice.message.lower() for a in base):
                 base.append(advice)
             prio = {"critical": 0, "high": 1, "medium": 2, "low": 3}
-            base.sort(key=lambda a: prio.get(a.priority, 4))
+            base.sort(key=lambda a: (prio.get(a.priority, 4), -(a.action_scores[0].score if a.action_scores else 0.0)))
             self._last_advice = base[:5]
             if llm_state.match_info.match_id:
                 save_advice(llm_state.match_info.match_id, {
@@ -1684,7 +1684,7 @@ class AdvisorEngine:
             seen_messages.add(key)
 
         prio = {"critical": 0, "high": 1, "medium": 2, "low": 3}
-        merged.sort(key=lambda a: prio.get(a.priority, 4))
+        merged.sort(key=lambda a: (prio.get(a.priority, 4), -(a.action_scores[0].score if a.action_scores else 0.0)))
         self._last_advice = merged[:5]
 
         # ── Phase 1 Telemetry: decision_eval ──

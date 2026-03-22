@@ -112,7 +112,7 @@ These require an identified opponent deck (from meta_decks.json) to evaluate.
 - `action` (string, required): Short advice. Supports `{card}` and `{threat}` placeholders.
 - `action_family` (string, optional): Canonical action type. One of: `cast_spell`, `play_land`, `attack`, `block`, `activate`, `pass`. When set, the engine uses it directly; when omitted, the engine infers from action text. Prefer setting explicitly for unambiguous rules.
 - `priority`: "critical" | "high" | "medium" | "low"
-- `conflicts_with` (string[]): Rule IDs this overrides
+- `conflicts_with` (string[], DEPRECATED): Legacy field. Only used for mulligan rules. For non-mulligan hold/use conflicts, the engine auto-detects via action_family. New rules should NOT include conflicts_with.
 
 **Learning (set defaults):**
 - `weight` (float): 1.0 neutral. 1.2-1.5 for confident rules.
@@ -185,7 +185,7 @@ The rule engine applies these checks after a rule fires:
 
 1. Rules fire every ~100ms. Keep them simple.
 2. More conditions = less false positives. Under-trigger > wrong advice.
-3. Use `conflicts_with` for mutually exclusive advice.
+3. Hold/use conflicts are auto-detected via `action_family`. Only use `conflicts_with` for mulligan rules.
 4. Action text SHORT (<80 chars). Displayed in compact overlay.
 5. Mulligan rules: always include `hand_lands_min/max` + `hand_size_min`.
 6. Meta decks: 3-5 signal cards, weights sum to ~1.0.
