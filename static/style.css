@@ -1132,3 +1132,69 @@ footer {
         padding: 12px;
     }
 }
+
+/* ═══ Profile System ═══ */
+
+/* Vital bar — compact life/mana strip for boardless modes */
+#vital-bar {
+    display: none;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 14px;
+    background: var(--panel);
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    font-size: 13px;
+    margin-bottom: 8px;
+}
+.vb-life { font-weight: 700; font-size: 16px; }
+.vb-opp { color: #f44336; }
+.vb-label { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; }
+.vb-sep { color: var(--line); }
+.vb-mana { color: var(--accent); font-weight: 600; }
+.vb-meta { color: var(--muted); font-size: 11px; margin-left: auto; }
+
+/* Profile switcher */
+#profile-switcher {
+    display: flex;
+    gap: 3px;
+    margin-right: 12px;
+}
+.profile-btn {
+    width: 26px; height: 26px;
+    border-radius: 5px;
+    border: 1px solid var(--line);
+    background: var(--panel-soft);
+    color: var(--muted);
+    font-size: 11px; font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.profile-btn:hover { border-color: var(--accent); color: var(--text); }
+.profile-btn.active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+
+/* --- FOCUS profile --- */
+.profile-focus #main-layout { grid-template-columns: 1fr !important; max-width: 560px; }
+.profile-focus #board-column > .zone { display: none !important; }
+.profile-focus #vital-bar { display: flex; }
+.profile-focus #hand-zone { order: 10; }
+.profile-focus .advice-section.context { display: none !important; }
+.profile-focus #threat-radar-panel { display: none !important; }
+.profile-focus #strategy-info { display: none !important; }
+.profile-focus #opp-meta-details { display: none !important; }
+.profile-focus #decision-column { position: static; }
+.profile-focus .advice-spotlight-message { font-size: 18px; }
+.profile-focus #advice-subtitle { display: none; }
+.profile-focus footer { display: none; }
+
+/* --- FULL profile (default — no overrides needed) --- */
+
+/* --- TACTICAL profile --- */
+.profile-tactical #main-layout { grid-template-columns: 1fr !important; max-width: 640px; }
+.profile-tactical #board-column > .zone { display: none !important; }
+.profile-tactical #vital-bar { display: flex; }
+.profile-tactical #hand-zone { display: none !important; }
+.profile-tactical #decision-column { position: static; }
+.profile-tactical #strategy-info { display: none !important; }
+.profile-tactical #advice-subtitle { display: none; }
+.profile-tactical .radar-item.watch { display: none; }

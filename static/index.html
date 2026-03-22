@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MTGA Play Advisor</title>
-    <link rel="stylesheet" href="/static/style.css?v=11">
+    <link rel="stylesheet" href="/static/style.css?v=12">
+    <script>document.documentElement.className='profile-'+(localStorage.getItem('scry-profile')||'full');</script>
 </head>
 <body>
     <div id="app">
@@ -17,6 +18,11 @@
                 </div>
             </div>
             <div class="header-status">
+                <div id="profile-switcher">
+                    <button class="profile-btn" data-profile="focus" title="Focus — just the play (Ctrl+1)">F</button>
+                    <button class="profile-btn" data-profile="full" title="Full — everything (Ctrl+2)">A</button>
+                    <button class="profile-btn" data-profile="tactical" title="Tactical — advice + threats (Ctrl+3)">T</button>
+                </div>
                 <div id="status">
                     <span id="connection-status" class="status-dot disconnected"></span>
                     <span id="match-status">Waiting for match...</span>
@@ -27,6 +33,13 @@
         </header>
 
         <main id="main-layout">
+            <div id="vital-bar">
+                <span class="vb-label">You:</span> <span id="vb-my-life" class="vb-life">20</span>
+                <span id="vb-mana" class="vb-mana"></span>
+                <span class="vb-sep">|</span>
+                <span class="vb-label">Opp:</span> <span id="vb-opp-life" class="vb-life vb-opp">20</span>
+                <span id="vb-opp-meta" class="vb-meta"></span>
+            </div>
             <div id="board-column">
                 <section id="opponent-zone" class="zone">
                     <div class="zone-header">
@@ -128,6 +141,6 @@
         </footer>
     </div>
 
-    <script src="/static/app.js?v=11"></script>
+    <script src="/static/app.js?v=12"></script>
 </body>
 </html>

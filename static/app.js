@@ -7,6 +7,42 @@ let currentThreats = [];
 let currentStrategyInfo = null;
 let currentLlmStatus = null;
 
+// ─── Profile System ───
+const PROFILES = ['focus', 'full', 'tactical'];
+const PROFILE_MAX_SUPPORT = { focus: 2, full: 3, tactical: 5 };
+let currentProfile = localStorage.getItem('scry-profile') || 'full';
+
+function setProfile(profile) {
+    if (!PROFILES.includes(profile)) return;
+    currentProfile = profile;
+    localStorage.setItem('scry-profile', profile);
+    document.documentElement.className = 'profile-' + profile;
+    document.querySelectorAll('.profile-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.profile === profile);
+    });
+    syncVitalBar();
+    if (currentAdvice.length) renderAdvice(currentAdvice);
+}
+
+function syncVitalBar() {
+    if (!currentState) return;
+    const el = (id) => document.getElementById(id);
+    const vbMy = el('vb-my-life');
+    const vbMana = el('vb-mana');
+    const vbOpp = el('vb-opp-life');
+    const vbMeta = el('vb-opp-meta');
+    if (vbMy) vbMy.textContent = currentState.my_life ?? 20;
+    if (vbOpp) vbOpp.textContent = currentState.opp_life ?? 20;
+    if (vbMana) {
+        const manaEl = el('mana-info');
+        if (manaEl) vbMana.textContent = manaEl.textContent;
+    }
+    if (vbMeta) {
+        const metaEl = el('opp-meta');
+        if (metaEl) vbMeta.innerHTML = metaEl.innerHTML;
+    }
+}
+
 function connect() {
     const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
     ws = new WebSocket(`${protocol}//${location.host}/ws`);
@@ -121,6 +157,7 @@ function renderState(state) {
     document.getElementById('game-state-id').textContent =
         `State #${state.game_state_id || 0}`;
     updateAdviceSubtitle();
+    syncVitalBar();
 }
 
 function renderCardRow(containerId, cards, isHand = false) {
@@ -239,6 +276,13 @@ function renderStrategyInfo(info) {
     }
 
     renderThreatRadar(currentThreats, info);
+
+    // Sync vital bar opp meta
+    const vbOppMeta = document.getElementById('vb-opp-meta');
+    if (vbOppMeta) {
+        const metaEl = document.getElementById('opp-meta');
+        if (metaEl) vbOppMeta.innerHTML = metaEl.innerHTML;
+    }
 }
 
 function buildThreatRadarItems(threats, info) {
@@ -787,7 +831,7 @@ function renderAdvice(adviceList) {
         spotlightContainer.innerHTML = '';
     }
 
-    nowItems = supportItems.slice(0, 3);
+    nowItems = supportItems.slice(0, PROFILE_MAX_SUPPORT[currentProfile] || 3);
     contextItems = contextItems.slice(0, 5);
 
     nowContainer.innerHTML = renderAdviceItems(
@@ -884,6 +928,23 @@ async function exportLastGame() {
         resetReportButton();
     }
 }
+
+// ─── Profile Switcher Init ───
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.profile-btn').forEach(btn => {
+        btn.addEventListener('click', () => setProfile(btn.dataset.profile));
+    });
+    setProfile(currentProfile);
+});
+
+document.addEventListener('keydown', (e) => {
+    if (e.target.matches('input, textarea, select')) return;
+    if (e.ctrlKey && !e.shiftKey && !e.altKey) {
+        if (e.key === '1') { e.preventDefault(); setProfile('focus'); }
+        if (e.key === '2') { e.preventDefault(); setProfile('full'); }
+        if (e.key === '3') { e.preventDefault(); setProfile('tactical'); }
+    }
+});
 
 // Init
 connect();
