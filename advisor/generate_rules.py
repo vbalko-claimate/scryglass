@@ -490,9 +490,9 @@ def _validate_and_fix_rules(rules: list[dict]) -> list[dict]:
             r["phase"] = ["Combat"]
             phase_added += 1
 
-    if conflicts_added or phase_added:
+    if conflicts_stripped or phase_added:
         import sys
-        print(f"  Rule validation: added {conflicts_added} conflict links, "
+        print(f"  Rule validation: stripped {conflicts_stripped} stale conflicts, "
               f"{phase_added} phase restrictions", file=sys.stderr)
 
     return rules
