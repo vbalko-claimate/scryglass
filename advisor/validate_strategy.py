@@ -49,24 +49,10 @@ def validate_strategy(path: Path, fix: bool = False) -> list[str]:
         if not has_conditions:
             issues.append(f"SPAM: {r['id']} has no conditions — will fire every phase")
 
-    # ── Check 3: Hold rules without use overrides ──
-    rule_ids = {r["id"] for r in rules}
-    for r in rules:
-        if not is_hold_rule(r.get("action_family", ""), r.get("action", "")):
-            continue
-        rid = r["id"]
-        if "threat_hold" not in rid:
-            continue
-        # Check if there's a corresponding _low_life or _topdeck override by ID convention
-        base = rid.replace("threat_hold_", "threat_use_")
-        has_low_life = f"{base}_low_life" in rule_ids
-        has_topdeck = f"{base}_topdeck" in rule_ids
-        if not has_low_life:
-            issues.append(f"MISSING_OVERRIDE: {rid} has no _low_life override")
-        if not has_topdeck:
-            issues.append(f"MISSING_OVERRIDE: {rid} has no _topdeck override")
+    # Check 3 removed: hold/use override pattern deprecated.
+    # Engine auto-detects hold/use conflicts via action_family.
 
-    # ── Check 4: Duplicate IDs ──
+    # ── Check 3: Duplicate IDs ──
     seen_ids: set[str] = set()
     for r in rules:
         if r["id"] in seen_ids:
