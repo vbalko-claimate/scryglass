@@ -1174,7 +1174,9 @@ footer {
 .profile-btn.active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
 
 /* --- FOCUS profile --- */
-.profile-focus #main-layout { grid-template-columns: 1fr !important; max-width: 560px; }
+
+/* Layout: single column, wider than before */
+.profile-focus #main-layout { grid-template-columns: 1fr !important; max-width: 700px; }
 .profile-focus #board-column > .zone { display: none !important; }
 .profile-focus #vital-bar { display: flex; }
 .profile-focus #hand-zone { order: 10; }
@@ -1183,14 +1185,75 @@ footer {
 .profile-focus #strategy-info { display: none !important; }
 .profile-focus #opp-meta-details { display: none !important; }
 .profile-focus #decision-column { position: static; }
-.profile-focus .advice-spotlight-message { font-size: 18px; }
-.profile-focus #advice-subtitle { display: none; }
 .profile-focus footer { display: none; }
+
+/* Header: collapse to single compact line — keep switcher + status, hide branding */
+.profile-focus header {
+    padding: 4px 12px;
+    min-height: unset;
+    gap: 8px;
+    align-items: center;
+    border-radius: 8px;
+}
+.profile-focus .brand-block { display: none !important; }
+.profile-focus .header-links { display: none !important; }
+.profile-focus .header-status {
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    margin-left: 0;
+    width: 100%;
+}
+.profile-focus #turn-info {
+    margin-left: auto;
+    font-size: 12px;
+}
+
+/* Hide ALL toolbars — never needed mid-game in Focus */
+.profile-focus .advice-toolbar.primary { display: none !important; }
+.profile-focus .advice-toolbar.secondary { display: none !important; }
+
+/* Hide Decision HUD heading, subtitle, LLM pill */
+.profile-focus .advice-headline { display: none !important; }
+
+/* Hide "Do Now" section header + subtitle — spotlight speaks for itself */
+.profile-focus .advice-section-header { display: none !important; }
+
+/* Hide hand section header + subtitle — just show cards */
+.profile-focus .hand-header { display: none !important; }
+
+/* Hide decision summary "Choose: ATK" — spotlight badge already shows action */
+.profile-focus #decision-actions-summary { display: none !important; }
+
+/* Reduce padding/margins throughout — every pixel counts */
+.profile-focus #app { padding: 6px; gap: 6px; }
+.profile-focus #advice-panel { padding: 8px; border-radius: 10px; }
+.profile-focus .advice-section { padding: 6px; margin: 0; border-radius: 8px; }
+.profile-focus .advice-groups { gap: 6px; }
+.profile-focus .advice-spotlight { margin-bottom: 6px; }
+.profile-focus .advice-spotlight-card { padding: 8px 12px; border-radius: 8px; }
+.profile-focus .advice-list { gap: 4px; }
+.profile-focus .advice-item { padding: 6px 8px; }
+.profile-focus #hand-zone { padding: 6px 10px; border-radius: 8px; }
+.profile-focus .card-row { min-height: 40px; gap: 6px; }
+.profile-focus #vital-bar { margin-bottom: 2px; padding: 6px 12px; border-radius: 8px; }
+
+/* Spotlight: make it pop — this is the hero element */
+.profile-focus .advice-spotlight-message { font-size: 18px; }
+.profile-focus .advice-spotlight-label { margin-bottom: 4px; }
+.profile-focus .advice-spotlight-meta { margin-top: 4px; }
+
+/* Cards in hand: more compact */
+.profile-focus .card { min-width: 100px; padding: 6px 8px; border-radius: 6px; }
+.profile-focus .card .card-name { font-size: 12px; margin-bottom: 1px; }
+.profile-focus .card .card-stats { font-size: 10px; }
 
 /* --- FULL profile (default — no overrides needed) --- */
 
 /* --- TACTICAL profile --- */
-.profile-tactical #main-layout { grid-template-columns: 1fr !important; max-width: 640px; }
+
+/* Layout */
+.profile-tactical #main-layout { grid-template-columns: 1fr !important; max-width: 700px; }
 .profile-tactical #board-column > .zone { display: none !important; }
 .profile-tactical #vital-bar { display: flex; }
 .profile-tactical #hand-zone { display: none !important; }
@@ -1198,3 +1261,38 @@ footer {
 .profile-tactical #strategy-info { display: none !important; }
 .profile-tactical #advice-subtitle { display: none; }
 .profile-tactical .radar-item.watch { display: none; }
+
+/* Header: compact single line (same as Focus) */
+.profile-tactical header {
+    padding: 4px 12px;
+    min-height: unset;
+    gap: 8px;
+    align-items: center;
+    border-radius: 8px;
+}
+.profile-tactical .brand-block { display: none !important; }
+.profile-tactical .header-links { display: none !important; }
+.profile-tactical .header-status {
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    margin-left: 0;
+    width: 100%;
+}
+.profile-tactical #turn-info {
+    margin-left: auto;
+    font-size: 12px;
+}
+
+/* Hide toolbars in Tactical too */
+.profile-tactical .advice-toolbar.primary { display: none !important; }
+.profile-tactical .advice-toolbar.secondary { display: none !important; }
+
+/* Hide Decision HUD heading in Tactical */
+.profile-tactical .advice-headline { display: none !important; }
+
+/* Reduce padding */
+.profile-tactical #app { padding: 6px; gap: 6px; }
+.profile-tactical #advice-panel { padding: 10px; }
+.profile-tactical .advice-section { padding: 8px; }
+.profile-tactical .advice-groups { gap: 8px; }
