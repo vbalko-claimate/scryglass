@@ -381,26 +381,6 @@
         "Main"
       ],
       "step": "Phase_Main1"
-    },
-    {
-      "id": "mulligan_color_screw",
-      "layer": "mulligan",
-      "tags": [
-        "mana"
-      ],
-      "phase": [
-        "Mulligan"
-      ],
-      "action": "Color screw — all lands produce same color but spells need different colors. MULLIGAN",
-      "priority": "high",
-      "weight": 1.3,
-      "stats": {
-        "fired": 0,
-        "correct": 0
-      },
-      "conflicts_with": [
-        "mulligan_good_hand"
-      ]
     }
   ],
   "stats": {
