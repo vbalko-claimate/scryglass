@@ -82,7 +82,7 @@ Each rule is a JSON object:
       "keyword": "Lifelink",    // ability keyword (supports pipe: "destroy|exile|damage")
       "type": "Creature",       // Creature, Instant, Sorcery, Enchantment, Artifact, Land
       "cmc_min": 3, "cmc_max": 2,
-      "power_min": 4, "toughness_min": 3,  // uses LIVE power/toughness (with buffs)
+      "power_min": 4, "toughness_min": 3, "toughness_max": 5,  // uses LIVE power/toughness (with buffs)
       "castable": true,         // castable with current mana (checks BOTH CMC and color match)
       "color": "R"
     },

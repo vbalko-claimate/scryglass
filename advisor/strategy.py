@@ -56,6 +56,7 @@ class CardMatcher:
     cmc_max: int | None = None
     power_min: int | None = None
     toughness_min: int | None = None
+    toughness_max: int | None = None
     castable: bool = False  # must be castable with current mana
     color: str | None = None
 
@@ -71,6 +72,7 @@ class CardMatcher:
             cmc_max=d.get("cmc_max"),
             power_min=d.get("power_min"),
             toughness_min=d.get("toughness_min"),
+            toughness_max=d.get("toughness_max"),
             castable=d.get("castable", False),
             color=d.get("color"),
         )
@@ -469,6 +471,8 @@ def _card_matches(obj: GameObject, matcher: CardMatcher, mana: int = 99,
     if matcher.power_min is not None and obj.power < matcher.power_min:
         return False
     if matcher.toughness_min is not None and obj.toughness < matcher.toughness_min:
+        return False
+    if matcher.toughness_max is not None and obj.toughness > matcher.toughness_max:
         return False
     if matcher.castable and card.cmc > mana:
         return False
@@ -1274,6 +1278,7 @@ def _rule_to_dict(r: Rule) -> dict:
                  "type": zc.match.card_type, "cmc_min": zc.match.cmc_min,
                  "cmc_max": zc.match.cmc_max, "power_min": zc.match.power_min,
                  "toughness_min": zc.match.toughness_min,
+                 "toughness_max": zc.match.toughness_max,
                  "castable": zc.match.castable or None,
                  "color": zc.match.color,
              }.items() if v is not None and v is not False},
