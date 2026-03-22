@@ -990,6 +990,76 @@ footer {
     color: #fff;
 }
 
+/* Action family badges (A1) — inline badges before advice message text */
+.advice-action-badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    padding: 1px 6px;
+    border-radius: 3px;
+    margin-right: 6px;
+    vertical-align: middle;
+    text-transform: uppercase;
+    line-height: 1.4;
+}
+
+.advice-action-badge.action-cast_spell {
+    background: #2196f3;
+    color: #fff;
+}
+
+.advice-action-badge.action-play_land {
+    background: #795548;
+    color: #fff;
+}
+
+.advice-action-badge.action-attack {
+    background: #e53935;
+    color: #fff;
+}
+
+.advice-action-badge.action-block {
+    background: #43a047;
+    color: #fff;
+}
+
+.advice-action-badge.action-activate {
+    background: #8e24aa;
+    color: #fff;
+}
+
+.advice-action-badge.action-pass {
+    background: #f9a825;
+    color: #1a1a2e;
+}
+
+/* Decision-point action summary bar (A4) */
+#decision-actions-summary {
+    font-size: 12px;
+    font-weight: 700;
+    color: #ffd8cf;
+    padding: 0 0 8px 0;
+    letter-spacing: 0.02em;
+    line-height: 1.5;
+}
+
+#decision-actions-summary:empty {
+    display: none;
+}
+
+#decision-actions-summary .summary-family {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    padding: 1px 6px;
+    border-radius: 3px;
+    margin: 0 2px;
+    vertical-align: middle;
+    text-transform: uppercase;
+}
+
 /* Empty state */
 .empty-state {
     color: #555;

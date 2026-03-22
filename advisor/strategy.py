@@ -182,6 +182,7 @@ class Strategy:
     general_overrides: list[str] = field(default_factory=list)  # general rule IDs replaced by deck rules
     vulnerabilities: list[dict] = field(default_factory=list)  # cards that specifically threaten THIS deck
     stats: dict = field(default_factory=lambda: {"games": 0, "wins": 0, "losses": 0})
+    global_biases: dict[str, float] = field(default_factory=dict)
 
     def win_rate(self) -> float:
         return self.stats["wins"] / self.stats["games"] if self.stats["games"] else 0.0
@@ -1353,6 +1354,8 @@ def save_strategy(strategy: Strategy):
         "vulnerabilities": strategy.vulnerabilities,
         "stats": strategy.stats,
     }
+    if strategy.global_biases:
+        data["global_biases"] = strategy.global_biases
     data["_engine_version"] = ENGINE_VERSION
     data["_schema_version"] = SCHEMA_VERSION
     path = _strategy_path(strategy.name)
@@ -1395,6 +1398,7 @@ def _load_strategy_file(path: Path) -> Strategy | None:
             general_overrides=data.get("general_overrides", []),
             vulnerabilities=data.get("vulnerabilities", []),
             stats=data.get("stats", {"games": 0, "wins": 0, "losses": 0}),
+            global_biases=data.get("global_biases", {}),
         )
     except Exception as e:
         log.error("Failed to load strategy %s: %s", path, e)

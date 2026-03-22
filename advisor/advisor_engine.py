@@ -860,6 +860,15 @@ class AdvisorEngine:
                     if sa.message.lower() not in heuristic_msgs:
                         base_advice.append(sa)
 
+            # Apply GA-optimized global biases
+            if self._strategy and self._strategy.global_biases:
+                for adv in base_advice:
+                    if adv.action_scores:
+                        family = adv.action_scores[0].family.value
+                        bias = self._strategy.global_biases.get(family, 0.0)
+                        if bias:
+                            adv.action_scores[0].score = max(0.0, min(1.0, adv.action_scores[0].score + bias))
+
             intel_advice = self._build_intel_advice(state, base_advice)
             if self._is_combat_focus_spot(state):
                 advice = self._combat_primary_advice(state, base_advice, intel_advice)
@@ -1306,6 +1315,7 @@ class AdvisorEngine:
             "opp_cards_seen": list(self._opp_tracker.seen_cards.keys()),
             "matchup_wr": self._matchup_wr.get("win_rate") if self._matchup_wr else None,
             "matchup_games": self._matchup_wr.get("total", 0) if self._matchup_wr else 0,
+            "global_biases": self._strategy.global_biases if self._strategy else {},
         }
 
     def _build_intel_advice(self, state: GameState,

@@ -342,6 +342,16 @@ function renderThreats(threats) {
     highlightCards();
 }
 
+// A2: Map action family to highlight CSS class and badge text
+const FAMILY_HIGHLIGHT = {
+    cast_spell: { css: 'highlight-cast',   badge: 'CAST' },
+    play_land:  { css: 'highlight-cast',   badge: 'LAND' },
+    attack:     { css: 'highlight-attack',  badge: 'ATK'  },
+    block:      { css: 'highlight-block',   badge: 'BLK'  },
+    activate:   { css: 'highlight-cast',   badge: 'ACT'  },
+    pass:       { css: 'highlight-cast',   badge: 'HOLD' },
+};
+
 function highlightCards() {
     // Clear all existing highlights
     document.querySelectorAll('.card').forEach(el => {
@@ -353,73 +363,99 @@ function highlightCards() {
 
     if (!currentState) return;
 
-    // Collect known card names by zone
-    const myBfNames = new Set((currentState.my_battlefield || []).map(c => c.name));
-    const oppBfNames = new Set((currentState.opp_battlefield || []).map(c => c.name));
-    const handNames = new Set((currentState.hand || []).map(c => c.name));
+    // A2: Check if any advice has structured action_scores
+    const hasStructuredScores = currentAdvice.some(a =>
+        a.action_scores && a.action_scores.length > 0);
 
-    // Parse advice to find mentioned cards and actions
-    for (const a of currentAdvice) {
-        const msg = (a.message || '').toLowerCase();
+    if (hasStructuredScores) {
+        // Structured path: use action_scores.target to find cards by data-name
+        for (const a of currentAdvice) {
+            const scores = a.action_scores || [];
+            for (const actionScore of scores) {
+                const target = actionScore.target;
+                if (!target) continue;
+                const family = actionScore.family || 'cast_spell';
+                const mapping = FAMILY_HIGHLIGHT[family] || FAMILY_HIGHLIGHT.cast_spell;
 
-        // Attack advice
-        if (msg.includes('attack with') || msg.includes('lethal')) {
-            for (const name of myBfNames) {
-                if (msg.toLowerCase().includes(name.toLowerCase())) {
-                    addHighlight('my-battlefield', name, 'highlight-attack', 'ATK');
+                // Try hand first (cast_spell, play_land, activate)
+                if (family === 'cast_spell' || family === 'play_land' || family === 'activate') {
+                    addHighlight('hand-cards', target, mapping.css, mapping.badge);
+                }
+                // Attack: highlight on my battlefield
+                if (family === 'attack') {
+                    addHighlight('my-battlefield', target, mapping.css, mapping.badge);
+                }
+                // Block: highlight blocker on my battlefield
+                if (family === 'block') {
+                    addHighlight('my-battlefield', target, mapping.css, mapping.badge);
+                }
+                // Also try my battlefield for cast targets already in play (auras, equipment)
+                if (family === 'cast_spell' || family === 'activate') {
+                    addHighlight('my-battlefield', target, mapping.css, mapping.badge);
                 }
             }
-            // "attack with all" — highlight all untapped creatures
-            if (msg.includes('attack with all') || msg.includes('lethal')) {
-                (currentState.my_battlefield || []).forEach(c => {
-                    if ((c.card_types || []).includes('Creature') && !c.is_tapped && !c.has_summoning_sickness) {
-                        addHighlight('my-battlefield', c.name, 'highlight-attack', 'ATK');
+        }
+    } else {
+        // Fallback: legacy regex-based highlighting for backward compat
+        const myBfNames = new Set((currentState.my_battlefield || []).map(c => c.name));
+        const oppBfNames = new Set((currentState.opp_battlefield || []).map(c => c.name));
+        const handNames = new Set((currentState.hand || []).map(c => c.name));
+
+        for (const a of currentAdvice) {
+            const msg = (a.message || '').toLowerCase();
+
+            if (msg.includes('attack with') || msg.includes('lethal')) {
+                for (const name of myBfNames) {
+                    if (msg.toLowerCase().includes(name.toLowerCase())) {
+                        addHighlight('my-battlefield', name, 'highlight-attack', 'ATK');
                     }
-                });
+                }
+                if (msg.includes('attack with all') || msg.includes('lethal')) {
+                    (currentState.my_battlefield || []).forEach(c => {
+                        if ((c.card_types || []).includes('Creature') && !c.is_tapped && !c.has_summoning_sickness) {
+                            addHighlight('my-battlefield', c.name, 'highlight-attack', 'ATK');
+                        }
+                    });
+                }
             }
-        }
 
-        // Block advice
-        if (msg.includes('block') && !msg.includes("can't block")) {
-            for (const name of myBfNames) {
-                if (msg.toLowerCase().includes(name.toLowerCase()) && !msg.startsWith('block ' + name.toLowerCase())) {
-                    addHighlight('my-battlefield', name, 'highlight-block', 'BLK');
+            if (msg.includes('block') && !msg.includes("can't block")) {
+                for (const name of myBfNames) {
+                    if (msg.toLowerCase().includes(name.toLowerCase()) && !msg.startsWith('block ' + name.toLowerCase())) {
+                        addHighlight('my-battlefield', name, 'highlight-block', 'BLK');
+                    }
+                }
+                for (const name of oppBfNames) {
+                    if (msg.toLowerCase().includes(name.toLowerCase())) {
+                        addHighlight('opp-battlefield', name, 'highlight-target', 'TGT');
+                    }
                 }
             }
-            // Highlight the attacker being blocked on opponent side
-            for (const name of oppBfNames) {
-                if (msg.toLowerCase().includes(name.toLowerCase())) {
-                    addHighlight('opp-battlefield', name, 'highlight-target', 'TGT');
-                }
-            }
-        }
 
-        // Removal advice
-        if (msg.includes('remove') || msg.includes('destroy') || msg.includes('exile')) {
-            for (const name of oppBfNames) {
-                if (msg.toLowerCase().includes(name.toLowerCase())) {
-                    addHighlight('opp-battlefield', name, 'highlight-target', 'TGT');
+            if (msg.includes('remove') || msg.includes('destroy') || msg.includes('exile')) {
+                for (const name of oppBfNames) {
+                    if (msg.toLowerCase().includes(name.toLowerCase())) {
+                        addHighlight('opp-battlefield', name, 'highlight-target', 'TGT');
+                    }
+                }
+                for (const name of handNames) {
+                    if (msg.toLowerCase().includes(name.toLowerCase())) {
+                        addHighlight('hand-cards', name, 'highlight-cast', 'CAST');
+                    }
                 }
             }
-            // Highlight the removal spell in hand
-            for (const name of handNames) {
-                if (msg.toLowerCase().includes(name.toLowerCase())) {
-                    addHighlight('hand-cards', name, 'highlight-cast', 'CAST');
-                }
-            }
-        }
 
-        // Cast advice
-        if (msg.includes('cast ')) {
-            for (const name of handNames) {
-                if (msg.toLowerCase().includes(name.toLowerCase())) {
-                    addHighlight('hand-cards', name, 'highlight-cast', 'CAST');
+            if (msg.includes('cast ')) {
+                for (const name of handNames) {
+                    if (msg.toLowerCase().includes(name.toLowerCase())) {
+                        addHighlight('hand-cards', name, 'highlight-cast', 'CAST');
+                    }
                 }
             }
         }
     }
 
-    // Highlight opponent permanents from threat panel (danger >= 4)
+    // Highlight opponent permanents from threat panel (danger >= 4) — always active
     for (const t of currentThreats) {
         if (t.danger >= 4) {
             addHighlight('opp-battlefield', t.name, 'highlight-threat',
@@ -459,6 +495,7 @@ function clearScreen() {
     document.getElementById('opp-battlefield').innerHTML = '<span class="empty-state">Empty</span>';
     document.getElementById('my-battlefield').innerHTML = '<span class="empty-state">Empty</span>';
     document.getElementById('hand-cards').innerHTML = '<span class="empty-state">Empty</span>';
+    document.getElementById('decision-actions-summary').innerHTML = '';
     document.getElementById('advice-key-play').style.display = 'none';
     document.getElementById('advice-key-play').innerHTML = '';
     document.getElementById('advice-now-list').innerHTML = '<span class="empty-state">New match — good luck!</span>';
@@ -561,25 +598,67 @@ function isContextAdvice(item) {
     );
 }
 
+// A1: Family label map for action badges
+const ACTION_FAMILY_LABELS = {
+    cast_spell: 'CAST',
+    play_land:  'LAND',
+    attack:     'ATK',
+    block:      'BLK',
+    activate:   'ACT',
+    pass:       'HOLD',
+};
+
 function renderAdviceItems(items, emptyText) {
     if (!items.length) {
         return `<span class="empty-state">${emptyText}</span>`;
     }
 
-    return items.map(a => `
-        <div class="advice-item ${a.priority}">
-            <div class="advice-message">${formatMessage(a.message)}</div>
+    return items.map(a => {
+        // A1: Build action badge from first action_score family
+        let badgeHtml = '';
+        const scores = a.action_scores || [];
+        if (scores.length) {
+            const topFamily = scores.reduce((best, cur) =>
+                cur.score > best.score ? cur : best, scores[0]).family;
+            const label = ACTION_FAMILY_LABELS[topFamily] || topFamily.toUpperCase();
+            badgeHtml = `<span class="advice-action-badge action-${topFamily}">${label}</span>`;
+        }
+
+        // A5: Rule provenance tooltip
+        let titleAttr = '';
+        const ruledScores = scores.filter(s => s.rule_id);
+        if (ruledScores.length) {
+            const tips = ruledScores.map(s =>
+                `[${s.rule_layer || '?'}] ${s.rule_id} w:${s.rule_weight ?? '?'}`);
+            titleAttr = ` title="${tips.join(' | ').replace(/"/g, '&quot;')}"`;
+        }
+
+        return `
+        <div class="advice-item ${a.priority}"${titleAttr}>
+            <div class="advice-message">${badgeHtml}${formatMessage(a.message)}</div>
             <span class="advice-source">[${a.source}]</span>
             ${a.details ? `<div class="advice-details">${a.details}</div>` : ''}
         </div>
-    `).join('');
+    `;
+    }).join('');
 }
 
 function spotlightScore(item) {
     const priorityScore = { critical: 400, high: 300, medium: 200, low: 100 };
+    let score = priorityScore[item.priority] || 0;
+
+    // A3: If action_scores exist, use max score from them as the primary signal
+    const actionScores = item.action_scores || [];
+    if (actionScores.length) {
+        const maxActionScore = Math.max(...actionScores.map(a => a.score));
+        // Scale 0-1 action score into 0-200 range, added on top of priority
+        score += maxActionScore * 200;
+        return score;
+    }
+
+    // Fallback: existing text heuristic when no action_scores
     const source = (item.source || '').toLowerCase();
     const msg = (item.message || '').toLowerCase();
-    let score = priorityScore[item.priority] || 0;
 
     if (source === 'heuristic') score += 40;
     else if (source === 'strategy') score += 25;
@@ -596,9 +675,29 @@ function spotlightScore(item) {
 
 function renderSpotlightAdvice(item) {
     if (!item) return '';
+
+    // A1: Badge for spotlight
+    let badgeHtml = '';
+    const scores = item.action_scores || [];
+    if (scores.length) {
+        const topFamily = scores.reduce((best, cur) =>
+            cur.score > best.score ? cur : best, scores[0]).family;
+        const label = ACTION_FAMILY_LABELS[topFamily] || topFamily.toUpperCase();
+        badgeHtml = `<span class="advice-action-badge action-${topFamily}">${label}</span> `;
+    }
+
+    // A5: Rule provenance tooltip on spotlight
+    let titleAttr = '';
+    const ruledScores = scores.filter(s => s.rule_id);
+    if (ruledScores.length) {
+        const tips = ruledScores.map(s =>
+            `[${s.rule_layer || '?'}] ${s.rule_id} w:${s.rule_weight ?? '?'}`);
+        titleAttr = ` title="${tips.join(' | ').replace(/"/g, '&quot;')}"`;
+    }
+
     return `
-        <div class="advice-spotlight-card ${item.priority}">
-            <div class="advice-spotlight-label">Key Play</div>
+        <div class="advice-spotlight-card ${item.priority}"${titleAttr}>
+            <div class="advice-spotlight-label">${badgeHtml}Key Play</div>
             <div class="advice-spotlight-message">${formatMessage(item.message)}</div>
             <div class="advice-spotlight-meta">
                 <span class="advice-spotlight-source">${item.source}</span>
@@ -608,6 +707,40 @@ function renderSpotlightAdvice(item) {
     `;
 }
 
+function renderDecisionSummary(adviceList) {
+    const el = document.getElementById('decision-actions-summary');
+    if (!el) return;
+
+    if (!adviceList || !adviceList.length) {
+        el.innerHTML = '';
+        return;
+    }
+
+    // Collect all action families with their best score
+    const familyBest = {};
+    for (const a of adviceList) {
+        for (const s of (a.action_scores || [])) {
+            if (!familyBest[s.family] || s.score > familyBest[s.family]) {
+                familyBest[s.family] = s.score;
+            }
+        }
+    }
+
+    const families = Object.entries(familyBest);
+    if (!families.length) {
+        el.innerHTML = '';
+        return;
+    }
+
+    // Sort by score descending
+    families.sort((a, b) => b[1] - a[1]);
+    const badges = families.map(([family]) => {
+        const label = ACTION_FAMILY_LABELS[family] || family.toUpperCase();
+        return `<span class="summary-family advice-action-badge action-${family}">${label}</span>`;
+    });
+    el.innerHTML = `Choose: ${badges.join(' ')}`;
+}
+
 function renderAdvice(adviceList) {
     resetAskButton();
     resetSummaryButton();
@@ -615,6 +748,9 @@ function renderAdvice(adviceList) {
     const nowContainer = document.getElementById('advice-now-list');
     const contextContainer = document.getElementById('advice-context-list');
     if (!spotlightContainer || !nowContainer || !contextContainer) return;
+
+    // A4: Update decision action summary
+    renderDecisionSummary(adviceList);
 
     if (!adviceList || !adviceList.length) {
         currentAdvice = [];
