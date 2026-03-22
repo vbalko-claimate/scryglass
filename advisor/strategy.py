@@ -751,6 +751,21 @@ def evaluate_rules_v2(rules: list[Rule], state: GameState,
                         if "attack" in action_lower and not matched_card.can_attack:
                             continue
 
+            # If rendered message names a specific card, verify it's in hand and castable.
+            # This catches rules that match by keyword/type but mention a specific card.
+            if not matched_card and matched_card_name:
+                # Message names a card from {card} placeholder — check it's actually available
+                found_in_hand = False
+                for h_obj in hand:
+                    hc = card_cache.get(h_obj.grp_id)
+                    if hc and hc.name == matched_card_name:
+                        found_in_hand = True
+                        if hc.cmc > mana:
+                            found_in_hand = False  # can't afford it
+                        break
+                if not found_in_hand:
+                    continue  # suppress: card not in hand or not castable
+
             # If rule targets an opponent's creature, check for hexproof/indestructible
             if matched_threat and rule.layer in ("threat_response", "meta_gameplan"):
                 tc = card_cache.get(matched_threat.grp_id)
