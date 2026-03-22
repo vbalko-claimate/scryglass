@@ -20,6 +20,21 @@ function setProfile(profile) {
     document.querySelectorAll('.profile-btn').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.profile === profile);
     });
+
+    // Move vital bar into/out of header based on profile
+    const vitalBar = document.getElementById('vital-bar');
+    const header = document.querySelector('header');
+    const mainLayout = document.getElementById('main-layout');
+    if (vitalBar && header && mainLayout) {
+        if (profile === 'focus' || profile === 'tactical') {
+            // Move vital bar inside header
+            header.appendChild(vitalBar);
+        } else {
+            // Move vital bar back before board-column inside main layout
+            mainLayout.insertBefore(vitalBar, mainLayout.firstChild);
+        }
+    }
+
     syncVitalBar();
     if (currentAdvice.length) renderAdvice(currentAdvice);
 }
