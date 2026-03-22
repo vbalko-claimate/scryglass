@@ -1692,6 +1692,8 @@ class AdvisorEngine:
         if state.match_info.match_id and advice:
             import re as _re
             decision_id = f"{state.match_info.match_id}_{state.match_info.game_number}_{state.game_state_id}"
+            me = state.my_player()
+            opp = state.opp_player()
             eval_data = {
                 "decision_id": decision_id,
                 "game_state_id": state.game_state_id,
@@ -1702,6 +1704,18 @@ class AdvisorEngine:
                 "opp_deck": (self._opp_tracker.identified_deck.name
                              if self._opp_tracker and self._opp_tracker.identified_deck else None),
                 "engine_version": ENGINE_VERSION,
+                "spot_key": f"{turn_num}_{state.turn_info.phase}_{self._normalized_advice_spot(state)}",
+                "mini_ctx": {
+                    "my_life": me.life_total if me else 20,
+                    "opp_life": opp.life_total if opp else 20,
+                    "hand_size": len(state.my_hand()),
+                    "board_creature_count": len(state.my_creatures()),
+                    "opp_creature_count": len(state.opp_creatures()),
+                    "untapped_land_count": len(state.my_untapped_lands()),
+                    "turn": turn_num,
+                    "phase": state.turn_info.phase,
+                },
+                "mini_ctx_v": 1,
             }
             for a in merged[:5]:
                 # Prefer structured action_scores; fall back to regex for old-style advice

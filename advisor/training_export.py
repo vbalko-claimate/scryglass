@@ -116,7 +116,7 @@ def export(output: Path, min_candidates: int = 2) -> None:
     comp_idx = _index_by_key(events["advice_compliance"])
     comp_turn_idx = _build_compliance_turn_index(comp_idx)
 
-    seen, rows_written, total_dec, chosen_count = set(), 0, 0, 0
+    seen, seen_spots, rows_written, total_dec, chosen_count = set(), set(), 0, 0, 0
     source_counts: dict[str, int] = defaultdict(int)
     output.parent.mkdir(parents=True, exist_ok=True)
     fh = output.open("w", encoding="utf-8")
@@ -142,12 +142,34 @@ def export(output: Path, min_candidates: int = 2) -> None:
             continue
         seen.add(decision_id)
 
+        # Dedup near-duplicates by spot_key (same turn+phase+spot)
+        spot_key = ev.get("spot_key", "")
+        if spot_key and spot_key in seen_spots:
+            continue
+        if spot_key:
+            seen_spots.add(spot_key)
+
+        # Try full context first, fall back to mini_ctx from eval
         key = _join_key(ev)
         ctx = _lookup(ctx_idx, key, match_id, gn, turn, phase)
-        if not ctx:
+        mini_ctx = ev.get("mini_ctx")
+        if not ctx and not mini_ctx:
             continue
 
-        state = _extract_state(ctx, turn, phase)
+        if ctx:
+            state = _extract_state(ctx, turn, phase)
+        else:
+            # Use mini_ctx — rename untapped_land_count to mana_available for compat
+            state = {
+                "turn": mini_ctx.get("turn", turn),
+                "phase": mini_ctx.get("phase", phase),
+                "my_life": mini_ctx.get("my_life", 20),
+                "opp_life": mini_ctx.get("opp_life", 20),
+                "hand_size": mini_ctx.get("hand_size", 0),
+                "board_creature_count": mini_ctx.get("board_creature_count", 0),
+                "opp_creature_count": mini_ctx.get("opp_creature_count", 0),
+                "mana_available": mini_ctx.get("untapped_land_count", mini_ctx.get("mana_available", 0)),
+            }
         outcome_data = _lookup(out_idx, key, match_id, gn, turn, phase)
         compliance = _lookup_compliance(comp_idx, comp_turn_idx, key, match_id, gn, turn)
         played = (compliance.get("played") or "").lower()
