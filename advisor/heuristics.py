@@ -1008,9 +1008,15 @@ def _suggest_plays(state: GameState) -> list[Advice]:
     )
     seen_cast_name_counts: Counter[str] = Counter()
 
-    # Account for land drop: if we have a land in hand, we'll play it first
-    # But tapped lands (Guildgates, temples) don't add mana this turn
-    effective_mana = max((len(option) for option in land_options), default=mana)
+    # Account for land drop: only if MTGA says land play is still available
+    land_drop_available = any(
+        a.action_type == "ActionType_Play" for a in state.available_actions
+        if a.seat_id == state.my_seat_id
+    )
+    if land_drop_available and land_options:
+        effective_mana = max((len(option) for option in land_options), default=mana)
+    else:
+        effective_mana = mana  # no land drop left — use actual untapped mana
 
     advice = []
 
