@@ -159,17 +159,8 @@ def export(output: Path, min_candidates: int = 2) -> None:
         if ctx:
             state = _extract_state(ctx, turn, phase)
         else:
-            # Use mini_ctx — rename untapped_land_count to mana_available for compat
-            state = {
-                "turn": mini_ctx.get("turn", turn),
-                "phase": mini_ctx.get("phase", phase),
-                "my_life": mini_ctx.get("my_life", 20),
-                "opp_life": mini_ctx.get("opp_life", 20),
-                "hand_size": mini_ctx.get("hand_size", 0),
-                "board_creature_count": mini_ctx.get("board_creature_count", 0),
-                "opp_creature_count": mini_ctx.get("opp_creature_count", 0),
-                "mana_available": mini_ctx.get("untapped_land_count", mini_ctx.get("mana_available", 0)),
-            }
+            # Use mini_ctx directly — same schema as build_state_dict output
+            state = dict(mini_ctx)
         outcome_data = _lookup(out_idx, key, match_id, gn, turn, phase)
         compliance = _lookup_compliance(comp_idx, comp_turn_idx, key, match_id, gn, turn)
         played = (compliance.get("played") or "").lower()

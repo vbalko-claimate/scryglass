@@ -38,6 +38,22 @@ def build_state_dict(
     }
 
 
+def build_mini_ctx_from_state(state) -> dict:
+    """Build mini_ctx dict from a GameState object. Single source of truth."""
+    me = state.my_player()
+    opp = state.opp_player()
+    return build_state_dict(
+        turn=state.turn_info.turn_number,
+        phase=state.turn_info.phase,
+        my_life=me.life_total if me else 20,
+        opp_life=opp.life_total if opp else 20,
+        hand_size=len(state.my_hand()),
+        board_creature_count=len(state.my_creatures()),
+        opp_creature_count=len(state.opp_creatures()),
+        mana_available=len(state.my_untapped_lands()),
+    )
+
+
 def extract_features(state: dict, candidate: dict, n_candidates: int) -> list[float]:
     """Extract 16-dim feature vector for one candidate."""
     # State features (7)

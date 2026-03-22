@@ -1691,9 +1691,9 @@ class AdvisorEngine:
         # Log rule contributions, advice ranking, and canonical actions.
         if state.match_info.match_id and advice:
             import re as _re
+            from .reranker import build_mini_ctx_from_state
             decision_id = f"{state.match_info.match_id}_{state.match_info.game_number}_{state.game_state_id}"
-            me = state.my_player()
-            opp = state.opp_player()
+            spot_key_str = f"{turn_num}_{state.turn_info.phase}_{self._normalized_advice_spot(state)}"
             eval_data = {
                 "decision_id": decision_id,
                 "game_state_id": state.game_state_id,
@@ -1704,17 +1704,8 @@ class AdvisorEngine:
                 "opp_deck": (self._opp_tracker.identified_deck.name
                              if self._opp_tracker and self._opp_tracker.identified_deck else None),
                 "engine_version": ENGINE_VERSION,
-                "spot_key": f"{turn_num}_{state.turn_info.phase}_{self._normalized_advice_spot(state)}",
-                "mini_ctx": {
-                    "my_life": me.life_total if me else 20,
-                    "opp_life": opp.life_total if opp else 20,
-                    "hand_size": len(state.my_hand()),
-                    "board_creature_count": len(state.my_creatures()),
-                    "opp_creature_count": len(state.opp_creatures()),
-                    "untapped_land_count": len(state.my_untapped_lands()),
-                    "turn": turn_num,
-                    "phase": state.turn_info.phase,
-                },
+                "spot_key": spot_key_str,
+                "mini_ctx": build_mini_ctx_from_state(state),
                 "mini_ctx_v": 1,
             }
             for a in merged[:5]:
@@ -1773,17 +1764,7 @@ class AdvisorEngine:
                     else:
                         self._reranker = False  # sentinel: no model file
                 if self._reranker and self._reranker.trained:
-                    from .reranker import build_state_dict
-                    shadow_state = build_state_dict(
-                        turn=state.turn_info.turn_number,
-                        phase=state.turn_info.phase,
-                        my_life=state.my_player().life_total if state.my_player() else 20,
-                        opp_life=state.opp_player().life_total if state.opp_player() else 20,
-                        hand_size=len(state.my_hand()),
-                        board_creature_count=len(state.my_creatures()),
-                        opp_creature_count=len(state.opp_creatures()),
-                        mana_available=len(state.my_untapped_lands()),
-                    )
+                    shadow_state = eval_data["mini_ctx"]  # reuse already-computed mini_ctx
                     shadow_candidates = []
                     for a in merged[:5]:
                         top_score = a.action_scores[0] if a.action_scores else None
