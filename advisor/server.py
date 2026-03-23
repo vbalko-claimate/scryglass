@@ -721,6 +721,12 @@ async def manage_page():
                         headers={"Cache-Control": "no-cache, no-store, must-revalidate"})
 
 
+@app.get("/decks")
+async def decks_page():
+    return FileResponse(str(STATIC_DIR / "decks.html"),
+                        headers={"Cache-Control": "no-cache, no-store, must-revalidate"})
+
+
 @app.get("/api/manage/strategies")
 async def manage_strategies():
     """List all strategies from both built-in and user dirs."""
