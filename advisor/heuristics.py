@@ -1042,6 +1042,7 @@ def _suggest_plays(state: GameState) -> list[Advice]:
     # Suggest castable spells (biggest first)
     my_creatures = state.my_creatures()
     castable = []
+    needs_land_first: set[str] = set()  # card names that require playing a land first
     for obj in hand:
         if obj.is_land:
             continue
@@ -1070,6 +1071,9 @@ def _suggest_plays(state: GameState) -> list[Advice]:
         # Skip reactive instants in Main phase — they're combat tricks / protection / counters
         if _is_reactive_instant(card):
             continue
+        # Track cards that need a land drop first (CMC > current mana)
+        if card.cmc > mana and land_drop_available:
+            needs_land_first.add(card.name)
         castable.append(card)
 
     # Check if we have removal and opponent has threats
@@ -1342,17 +1346,25 @@ def _suggest_plays(state: GameState) -> list[Advice]:
             ))
         else:
             active_creatures.sort(key=lambda c: (-c.cmc, -_card_score(c.name)))
+        # Prefer creatures castable NOW over those needing a land drop
+        castable_now = [c for c in active_creatures if c.name not in needs_land_first]
+        if castable_now:
+            active_creatures = castable_now
         best = active_creatures[0]
         wr = _get_card_wr()
         wr_note = f" [{wr[best.name]:.0f}% WR]" if best.name in wr else ""
+        land_note = " (play land first)" if best.name in needs_land_first else ""
         # Upgrade priority vs fast decks when we have no board
         prio = "medium"
         conf = 0.6
         if opp_is_fast and not my_creatures:
             prio = "high"
             conf = 0.75
+        # Downgrade confidence if land drop required
+        if best.name in needs_land_first:
+            conf *= 0.8
         advice.append(Advice("heuristic", prio,
-                              f"Cast {best.name} ({best.mana_cost}){wr_note}",
+                              f"Cast {best.name} ({best.mana_cost}){wr_note}{land_note}",
                               confidence=conf,
                               recommended_cards=[best.name]))
 
@@ -1415,13 +1427,18 @@ def _suggest_plays(state: GameState) -> list[Advice]:
 
     # Non-flash spells only
     if non_flash_spells and not advice:
-        non_flash_spells.sort(key=lambda c: (-c.cmc, -_card_score(c.name)))
-        best = non_flash_spells[0]
+        # Prefer spells castable now
+        spells_now = [c for c in non_flash_spells if c.name not in needs_land_first]
+        spell_list = spells_now if spells_now else non_flash_spells
+        spell_list.sort(key=lambda c: (-c.cmc, -_card_score(c.name)))
+        best = spell_list[0]
         wr = _get_card_wr()
         wr_note = f" [{wr[best.name]:.0f}% WR]" if best.name in wr else ""
+        land_note = " (play land first)" if best.name in needs_land_first else ""
+        conf = 0.4 if best.name in needs_land_first else 0.5
         advice.append(Advice("heuristic", "medium",
-                              f"Cast {best.name} ({best.mana_cost}){wr_note}",
-                              confidence=0.5,
+                              f"Cast {best.name} ({best.mana_cost}){wr_note}{land_note}",
+                              confidence=conf,
                               recommended_cards=[best.name]))
 
     # Suggest activated abilities on battlefield creatures
