@@ -338,6 +338,14 @@ check("promoted deck has v1 strategy", (stub_dir / "versions" / "v1_strategy.jso
 found = [d for d in svc.list_decks() if d["deck_id"] == stub_id]
 check("promoted deck in list_decks", len(found) == 1)
 
+# Set decklist on promoted stub
+update = svc.update_decklist(stub_id, 1, DECK_LIST_V1)
+check("update_decklist returns card_count=40", update.get("card_count") == 40)
+promoted_detail = svc.get_deck(stub_id)
+v1 = [v for v in promoted_detail["versions"] if v["version_number"] == 1][0]
+check("v1 now has card_count=40", v1["card_count"] == 40)
+check("v1 has decklist text", len(v1["deck_list"]) > 0)
+
 # Can't promote again
 try:
     svc.promote_stub(stub_id)

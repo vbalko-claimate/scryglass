@@ -92,6 +92,15 @@ async def undeploy_version(deck_id: str):
         raise HTTPException(status_code=404, detail=str(e))
 
 
+@router.put("/{deck_id}/versions/{v}/decklist")
+async def update_decklist(deck_id: str, v: int, req: AddVersionRequest):
+    svc = DeckService()
+    try:
+        return svc.update_decklist(deck_id, v, req.deck_list)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
 @router.post("/{deck_id}/promote")
 async def promote_stub(deck_id: str):
     svc = DeckService()

@@ -320,6 +320,40 @@ class DeckService:
 
         return deck
 
+    # ─── update_decklist ───────────────────────────────────────────
+
+    def update_decklist(self, deck_id: str, version: int, deck_list: str) -> dict:
+        """Update decklist on an existing version (e.g. after promoting a stub)."""
+        data = storage.read_deck(deck_id)
+        if not data:
+            raise ValueError(f"Deck '{deck_id}' not found")
+
+        v_idx, v_data = _find_version(data, version)
+
+        cards = _parse_decklist_text(deck_list)
+        card_count = sum(c for _, c in cards)
+        colors = _detect_colors(cards)
+        archetype = _detect_archetype(cards)
+
+        data["versions"][v_idx]["cards"] = deck_list
+        data["versions"][v_idx]["card_count"] = card_count
+        data["versions"][v_idx]["deck_list_hash"] = _deck_list_hash(deck_list)
+        data["colors"] = colors
+        data["archetype"] = archetype
+        data["updated"] = storage.now_iso()
+
+        storage.write_deck(deck_id, data)
+
+        log.info("Updated decklist for %s v%d: %d cards", deck_id, version, card_count)
+
+        return {
+            "deck_id": deck_id,
+            "version_number": version,
+            "card_count": card_count,
+            "colors": colors,
+            "archetype": archetype,
+        }
+
     # ─── delete_deck ─────────────────────────────────────────────
 
     def delete_deck(self, deck_id: str) -> None:

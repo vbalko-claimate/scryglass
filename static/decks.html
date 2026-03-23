@@ -430,18 +430,30 @@ function renderDeckDetail(d) {
         html += '</div>';
     }
 
-    // Current deck list (readonly)
-    html += '<div class="detail-section"><h3>Current Deck List</h3>'
-        + '<textarea class="deck-textarea" readonly>' + escHtml(currentList) + '</textarea>'
-        + '</div>';
+    // Current deck list (readonly) — only show if we have one
+    const hasDecklist = activeVer.card_count > 0;
+    if (hasDecklist) {
+        html += '<div class="detail-section"><h3>Current Deck List</h3>'
+            + '<textarea class="deck-textarea" readonly>' + escHtml(currentList) + '</textarea>'
+            + '</div>';
+    }
 
-    // Edit / new version
-    html += '<div class="detail-section"><h3>Edit Deck List</h3>'
-        + '<textarea class="deck-textarea" id="edit-deck-list" placeholder="Paste updated MTGA deck list here...">'
-        + escHtml(currentList) + '</textarea>'
-        + '<div class="btn-row" style="margin-top:8px">'
-        + '<button class="btn btn-primary btn-small" onclick="addVersion(\'' + d.deck_id + '\')">Save as New Version</button>'
-        + '</div></div>';
+    // Edit / new version — or set decklist for promoted stubs
+    const editLabel = hasDecklist ? 'Edit Deck List' : 'Set Deck List';
+    const editPlaceholder = hasDecklist ? 'Paste updated MTGA deck list here...' : 'Paste MTGA deck list to complete this deck...';
+    html += '<div class="detail-section"><h3>' + editLabel + '</h3>';
+    if (!hasDecklist) {
+        html += '<div class="warning-box" style="margin-bottom:8px">This deck has rules but no decklist. Paste one below to complete it.</div>';
+    }
+    html += '<textarea class="deck-textarea" id="edit-deck-list" placeholder="' + editPlaceholder + '">'
+        + escHtml(hasDecklist ? currentList : '') + '</textarea>'
+        + '<div class="btn-row" style="margin-top:8px">';
+    if (hasDecklist) {
+        html += '<button class="btn btn-primary btn-small" onclick="addVersion(\'' + d.deck_id + '\')">Save as New Version</button>';
+    } else {
+        html += '<button class="btn btn-primary btn-small" onclick="setDecklist(\'' + d.deck_id + '\',' + (activeVer.version_number || 1) + ')">Set Decklist</button>';
+    }
+    html += '</div></div>';
 
     el.innerHTML = html;
 }
@@ -498,6 +510,21 @@ async function deployVersion(deckId, version) {
     try {
         await apiFetch('/api/decks/' + deckId + '/versions/' + version + '/deploy', {method:'POST'});
         showToast('Version ' + version + ' deployed');
+        await loadDecks();
+        loadDeckDetail(deckId);
+    } catch (e) { /* toast shown */ }
+}
+
+async function setDecklist(deckId, version) {
+    const deckList = document.getElementById('edit-deck-list').value.trim();
+    if (!deckList) { showToast('Deck list cannot be empty', true); return; }
+    try {
+        await apiFetch('/api/decks/' + deckId + '/versions/' + version + '/decklist', {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({deck_list: deckList})
+        });
+        showToast('Decklist set');
         await loadDecks();
         loadDeckDetail(deckId);
     } catch (e) { /* toast shown */ }
