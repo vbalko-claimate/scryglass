@@ -1068,11 +1068,14 @@ function renderDebugPanel() {
 
     // Game state
     if (state) {
+        const ti = state.turn || {};
         html += '<div class="debug-section">';
         html += '<div class="debug-heading">Game State</div>';
-        html += debugRow('Turn', state.turn || '—');
-        html += debugRow('Phase', state.phase || '—');
-        html += debugRow('Active player', state.active_player === state.my_seat ? 'you' : 'opp');
+        html += debugRow('Turn', ti.number || '—');
+        html += debugRow('Phase', ti.phase_display || state.phase || '—');
+        html += debugRow('Active player', ti.is_my_turn === true ? 'you' : ti.is_my_turn === false ? 'opp' : '—');
+        html += debugRow('My life', state.my_life || '—');
+        html += debugRow('Opp life', state.opp_life || '—');
         html += debugRow('Meta decks', info?.meta_deck_count || 0);
         html += '</div>';
     }

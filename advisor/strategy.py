@@ -1482,6 +1482,7 @@ def find_matching_strategy(state: GameState) -> Strategy | None:
 
     best_match = None
     best_score = 0.0
+    best_is_managed = False
 
     for path in _all_strategy_paths():
         try:
@@ -1492,12 +1493,18 @@ def find_matching_strategy(state: GameState) -> Strategy | None:
             matched = [s for s in sig if s in deck_names]
             missing = [s for s in sig if s not in deck_names]
             score = len(matched) / len(sig)
-            log.info("Strategy match: %s — %.0f%% (%d/%d) matched=%s missing=%s",
+            # Managed decks (with deck.json) get priority over stubs at same score
+            is_managed = (path.parent / "deck.json").exists()
+            log.info("Strategy match: %s — %.0f%% (%d/%d) managed=%s matched=%s missing=%s",
                      path.parent.name if path.name == "strategy.json" else path.stem,
-                     score * 100, len(matched), len(sig), matched, missing)
-            if score > best_score and score >= 0.5:
+                     score * 100, len(matched), len(sig), is_managed, matched, missing)
+            if score >= 0.5 and (
+                score > best_score
+                or (score == best_score and is_managed and not best_is_managed)
+            ):
                 best_score = score
                 best_match = path
+                best_is_managed = is_managed
         except Exception:
             continue
 
