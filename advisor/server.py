@@ -833,11 +833,82 @@ async def manage_ga_runs():
                     "elapsed_h": round(sum(e.get("elapsed_s", 0) for e in data) / 3600, 1),
                     "matchups": last.get("best_matchups", {}),
                     "started": first.get("timestamp", ""),
+                    "status": "completed",
                 })
             except Exception:
                 continue
-    runs.sort(key=lambda r: r["best_fitness"], reverse=True)
+
+        # Check for live status.json (written by GA runner during execution)
+        status_file = ga_dir / "status.json"
+        if status_file.exists():
+            try:
+                status = json.loads(status_file.read_text())
+                # If status is newer than last log entry, GA is running
+                runs.append({
+                    "deck_id": deck_dir.name,
+                    "file": status.get("run_name", "live"),
+                    "generations": status.get("generation", 0),
+                    "best_fitness": round(status.get("best_fitness", 0), 4),
+                    "avg_fitness": round(status.get("avg_fitness", 0), 4),
+                    "best_record": status.get("best_record", ""),
+                    "elapsed_h": round(status.get("elapsed_s", 0) / 3600, 1),
+                    "matchups": status.get("best_matchups", {}),
+                    "started": status.get("started", ""),
+                    "status": "running",
+                    "progress": status.get("progress", ""),
+                })
+            except Exception:
+                pass
+
+    runs.sort(key=lambda r: (r["status"] == "running", r["best_fitness"]), reverse=True)
     return runs
+
+
+@app.get("/api/manage/ga-live")
+async def manage_ga_live():
+    """Check for live GA status from Studio via SSH.
+
+    Reads status.json files written by simlab's forge_ga during execution.
+    """
+    import subprocess
+    try:
+        result = subprocess.run(
+            ["ssh", "-o", "ConnectTimeout=5", "-o", "BatchMode=yes", "studio",
+             "find ~/ga-workspace -name status.json -newer ~/ga-workspace/.ga_check_marker "
+             "-exec cat {} \\; 2>/dev/null; touch ~/ga-workspace/.ga_check_marker"],
+            capture_output=True, text=True, timeout=10,
+        )
+        statuses = []
+        for line in result.stdout.strip().splitlines():
+            line = line.strip()
+            if line.startswith("{"):
+                try:
+                    statuses.append(json.loads(line))
+                except json.JSONDecodeError:
+                    pass
+
+        # Also check if GA processes are running
+        ps_result = subprocess.run(
+            ["ssh", "-o", "ConnectTimeout=3", "-o", "BatchMode=yes", "studio",
+             "pgrep -af 'ga-optimize|ga-staged' 2>/dev/null | head -3"],
+            capture_output=True, text=True, timeout=8,
+        )
+        processes = [l.strip() for l in ps_result.stdout.strip().splitlines() if l.strip()]
+
+        return {
+            "reachable": True,
+            "statuses": statuses,
+            "processes": processes,
+            "running": len(processes) > 0 or any(s.get("status") == "running" for s in statuses),
+        }
+    except (subprocess.TimeoutExpired, FileNotFoundError, Exception) as e:
+        return {
+            "reachable": False,
+            "statuses": [],
+            "processes": [],
+            "running": None,
+            "error": str(e),
+        }
 
 
 @app.get("/api/manage/general-rules")

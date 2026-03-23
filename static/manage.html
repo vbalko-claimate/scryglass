@@ -1086,21 +1086,52 @@ async function viewGuide(deckId, filename) {
 // ── Helpers ──
 // ── GA Runs ──
 async function loadGARuns() {
-    const res = await fetch('/api/manage/ga-runs');
-    const runs = await res.json();
+    const [runsRes, liveRes] = await Promise.all([
+        fetch('/api/manage/ga-runs'),
+        fetch('/api/manage/ga-live').catch(() => ({ ok: false })),
+    ]);
+    const runs = await runsRes.json();
+    let live = null;
+    if (liveRes.ok) {
+        try { live = await liveRes.json(); } catch(e) {}
+    }
 
     const totalGens = runs.reduce((s, r) => s + r.generations, 0);
     const totalHours = runs.reduce((s, r) => s + r.elapsed_h, 0);
     const bestRun = runs.length ? runs[0] : null;
+    const studioStatus = live?.reachable
+        ? (live.running ? '<span style="color:#81c784">running</span>' : '<span style="color:#666">idle</span>')
+        : '<span style="color:#ef5350">offline</span>';
+
     document.getElementById('ga-summary').innerHTML = `
         <div class="summary-card"><div class="value">${runs.length}</div><div class="label">Runs</div></div>
         <div class="summary-card"><div class="value">${totalGens}</div><div class="label">Generations</div></div>
         <div class="summary-card"><div class="value">${totalHours.toFixed(1)}h</div><div class="label">Compute</div></div>
         <div class="summary-card"><div class="value">${bestRun ? (bestRun.best_fitness * 100).toFixed(1) + '%' : '—'}</div><div class="label">Best Fitness</div></div>
+        <div class="summary-card"><div class="value">${studioStatus}</div><div class="label">Studio</div></div>
     `;
 
-    const tbody = document.getElementById('ga-body');
-    tbody.innerHTML = runs.map(r => {
+    // Live running GA at the top
+    let liveRows = '';
+    if (live?.statuses?.length) {
+        liveRows = live.statuses.map(s => {
+            const progress = s.stages_total
+                ? `Stage ${s.stage_num}/${s.stages_total} (${s.stage}), gen ${s.generation}/${s.generations_total}`
+                : `Gen ${s.generation}/${s.generations_total}`;
+            const elapsed = s.elapsed_s ? (s.elapsed_s / 3600).toFixed(1) + 'h' : '—';
+            return `<tr style="background:rgba(76,175,80,0.08)">
+                <td><strong>${s.deck}</strong></td>
+                <td><span class="badge badge-managed" style="font-size:10px">LIVE</span> ${s.stage || ''}</td>
+                <td>${progress}</td>
+                <td><strong style="color:#81c784">${(s.best_fitness * 100).toFixed(1)}%</strong></td>
+                <td>${s.best_record}</td>
+                <td>${elapsed}</td>
+                <td><span style="font-size:11px;color:#888">${s.updated || ''}</span></td>
+            </tr>`;
+        }).join('');
+    }
+
+    const completedRows = runs.map(r => {
         const runName = r.file.replace('.ga_log.json', '').replace(r.deck_id + '_', '');
         return `<tr>
             <td><strong>${r.deck_id}</strong></td>
@@ -1111,7 +1142,11 @@ async function loadGARuns() {
             <td>${r.elapsed_h}h</td>
             <td><button class="btn btn-secondary btn-small" onclick="viewGARun('${r.deck_id}','${r.file}')">Detail</button></td>
         </tr>`;
-    }).join('') || '<tr><td colspan="7" style="color:#555;font-style:italic">No GA runs found</td></tr>';
+    }).join('');
+
+    const tbody = document.getElementById('ga-body');
+    tbody.innerHTML = (liveRows + completedRows)
+        || '<tr><td colspan="7" style="color:#555;font-style:italic">No GA runs found</td></tr>';
 }
 
 async function viewGARun(deckId, filename) {
