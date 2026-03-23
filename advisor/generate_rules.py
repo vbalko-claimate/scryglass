@@ -13,6 +13,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import os
 import re
 import sys
 from dataclasses import asdict
@@ -22,7 +23,7 @@ from .database import card_cache
 from .models import CardInfo
 
 RULES_DIR = Path(__file__).parent.parent / "data" / "strategies"
-USER_RULES_DIR = Path.home() / "MTG" / "mtg-data" / "strategies"
+DECKS_ROOT = Path(os.environ.get("SCRY_USER_DATA", Path.home() / "MTG" / "mtg-data")) / "decks"
 
 
 def _parse_decklist(path: Path) -> list[tuple[str, int]]:
@@ -697,8 +698,9 @@ def main() -> None:
         out_path = args.output
     else:
         safe_name = re.sub(r"[^a-z0-9]+", "_", args.name.lower()).strip("_")
-        USER_RULES_DIR.mkdir(parents=True, exist_ok=True)
-        out_path = USER_RULES_DIR / f"{safe_name}.json"
+        deck_dir = DECKS_ROOT / safe_name
+        deck_dir.mkdir(parents=True, exist_ok=True)
+        out_path = deck_dir / "strategy.json"
 
     out_path.write_text(json.dumps(strategy, indent=2) + "\n")
     print(f"Written {len(strategy['rules'])} rules → {out_path}")

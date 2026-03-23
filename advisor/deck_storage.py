@@ -24,8 +24,6 @@ log = logging.getLogger(__name__)
 
 DECKS_ROOT = USER_DATA_DIR / "decks"
 
-# Legacy flat strategies dir (still used by strategy.py for matching)
-LEGACY_STRATEGIES_DIR = USER_DATA_DIR / "strategies"
 
 _SENTINEL = ".migrated"
 
@@ -106,34 +104,24 @@ def write_version_strategy(deck_id: str, version: int, data: dict) -> Path:
 
 
 def deploy_strategy(deck_id: str, version: int) -> bool:
-    """Copy version strategy to deck's strategy.json + legacy strategies dir.
+    """Copy version strategy to deck's strategy.json.
 
     Returns True if strategy file was found and deployed.
     """
     src = version_strategy_path(deck_id, version)
     try:
-        # Copy to deck dir as strategy.json
         dst = _deck_dir(deck_id) / "strategy.json"
         shutil.copy2(src, dst)
-
-        # Also copy to legacy flat dir so strategy.py can find it
-        LEGACY_STRATEGIES_DIR.mkdir(parents=True, exist_ok=True)
-        legacy_dst = LEGACY_STRATEGIES_DIR / f"{deck_id}.json"
-        shutil.copy2(src, legacy_dst)
     except FileNotFoundError:
         return False
 
-    log.info("Deployed strategy: %s v%d → %s + %s", deck_id, version, dst, legacy_dst)
+    log.info("Deployed strategy: %s v%d → %s", deck_id, version, dst)
     return True
 
 
 def undeploy_strategy(deck_id: str) -> None:
-    """Remove deployed strategy files."""
-    for path in [
-        _deck_dir(deck_id) / "strategy.json",
-        LEGACY_STRATEGIES_DIR / f"{deck_id}.json",
-    ]:
-        path.unlink(missing_ok=True)
+    """Remove deployed strategy file."""
+    (_deck_dir(deck_id) / "strategy.json").unlink(missing_ok=True)
 
 
 def delete_deck_dir(deck_id: str) -> bool:
@@ -142,7 +130,6 @@ def delete_deck_dir(deck_id: str) -> bool:
     if not d.exists():
         return False
     shutil.rmtree(d)
-    (LEGACY_STRATEGIES_DIR / f"{deck_id}.json").unlink(missing_ok=True)
     log.info("Deleted deck directory: %s", d)
     return True
 
@@ -243,7 +230,8 @@ def migrate_from_db(db_path: Path) -> int:
 
                 # Copy strategy file if exists
                 if rpath:
-                    old_path = LEGACY_STRATEGIES_DIR / rpath
+                    old_strategies_dir = USER_DATA_DIR / "strategies"
+                    old_path = old_strategies_dir / rpath
                     strategy_data = _read_json(old_path)
                     if strategy_data:
                         write_version_strategy(deck_id, vnum, strategy_data)

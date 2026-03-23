@@ -67,7 +67,6 @@ advisor.database.USER_DATA_DIR = Path(tmpdir)
 # Now patch deck_storage constants
 import advisor.deck_storage as storage
 storage.DECKS_ROOT = Path(tmpdir) / "decks"
-storage.LEGACY_STRATEGIES_DIR = Path(tmpdir) / "strategies"
 
 from advisor.deck_lifecycle import DeckService
 
@@ -197,8 +196,8 @@ check("v2 is_active = False", versions.get(2, {}).get("is_active") is False,
 # Strategy files deployed
 check("strategy.json exists in deck dir",
       (deck_dir / "strategy.json").exists())
-check("legacy strategy.json exists",
-      (storage.LEGACY_STRATEGIES_DIR / f"{deck_id}.json").exists())
+check("strategy.json deployed in deck dir",
+      (deck_dir / "strategy.json").exists())
 
 # Deploy non-existent version
 try:
@@ -228,8 +227,8 @@ check("no active version after undeploy",
       f"got {detail5.get('active_version')}")
 check("strategy.json removed from deck dir",
       not (deck_dir / "strategy.json").exists())
-check("legacy strategy.json removed",
-      not (storage.LEGACY_STRATEGIES_DIR / f"{deck_id}.json").exists())
+check("strategy.json removed from deck dir",
+      not (deck_dir / "strategy.json").exists())
 
 # Deck data state
 deck_json = json.loads((deck_dir / "deck.json").read_text())
@@ -284,8 +283,7 @@ remaining = [d for d in svc.list_decks() if d["deck_id"] == deck_id]
 check("deleted deck gone from list", len(remaining) == 0,
       f"found {len(remaining)}")
 check("deck directory removed", not deck_dir.exists())
-check("legacy strategy removed",
-      not (storage.LEGACY_STRATEGIES_DIR / f"{deck_id}.json").exists())
+check("deck dir fully removed", not deck_dir.exists())
 
 
 # ─── 9. Storage Functions ───────────────────────────────────

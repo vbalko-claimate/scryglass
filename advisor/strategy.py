@@ -24,7 +24,7 @@ from .version import ENGINE_VERSION, SCHEMA_VERSION
 log = logging.getLogger(__name__)
 
 RULES_DIR = Path(__file__).parent.parent / "data" / "strategies"
-USER_RULES_DIR = USER_DATA_DIR / "strategies"
+DECKS_ROOT = USER_DATA_DIR / "decks"
 
 # ─── Hot-reload: mtime-based cache invalidation ────────────────
 _strategy_cache: dict[str, tuple[float, Strategy]] = {}  # path -> (mtime, strategy)
@@ -1248,15 +1248,16 @@ def generate_strategy(state: GameState) -> Strategy:
 
 def _strategy_path(name: str) -> Path:
     safe_name = name.replace(" ", "_").replace("/", "_").replace("'", "").lower()
-    # Check user dir first, then built-in
-    user_path = USER_RULES_DIR / f"{safe_name}.json"
-    if user_path.exists():
-        return user_path
+    # Check deck dirs first (new format)
+    deck_path = DECKS_ROOT / safe_name / "strategy.json"
+    if deck_path.exists():
+        return deck_path
+    # Then built-in strategies
     builtin_path = RULES_DIR / f"{safe_name}.json"
     if builtin_path.exists():
         return builtin_path
-    # New strategies go to user dir
-    return user_path
+    # New strategies go to deck dir
+    return deck_path
 
 
 def _rule_to_dict(r: Rule) -> dict:
@@ -1363,8 +1364,7 @@ def _rule_from_dict(d: dict) -> Rule:
 
 
 def save_strategy(strategy: Strategy):
-    """Save strategy to JSON in user data dir."""
-    USER_RULES_DIR.mkdir(parents=True, exist_ok=True)
+    """Save strategy to deck dir (decks/{deck_id}/strategy.json)."""
     # Don't save merged general rules — only deck-specific ones
     deck_rules = [r for r in strategy.rules if r.id not in
                   {gr.id for gr in _load_general_rules()}]
@@ -1383,8 +1383,9 @@ def save_strategy(strategy: Strategy):
     data["_engine_version"] = ENGINE_VERSION
     data["_schema_version"] = SCHEMA_VERSION
     path = _strategy_path(strategy.name)
+    path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(data, indent=2))
-    log.info("Strategy saved: %s → %s", strategy.name, path.name)
+    log.info("Strategy saved: %s → %s", strategy.name, path)
 
 
 def load_strategy(name: str) -> Strategy | None:
@@ -1444,13 +1445,23 @@ def _load_strategy_file(path: Path, *, use_cache: bool = True) -> Strategy | Non
         return None
 
 
-def _all_strategy_dirs() -> list[Path]:
-    """Return all directories to search for strategy files.
-    User strategies (flat legacy dir) take priority over built-in ones."""
-    dirs = [RULES_DIR]
-    if USER_RULES_DIR.exists() and USER_RULES_DIR != RULES_DIR:
-        dirs.insert(0, USER_RULES_DIR)
-    return dirs
+def _all_strategy_paths() -> list[Path]:
+    """Return all strategy file paths to search.
+    User deck strategies (decks/*/strategy.json) first, then built-in."""
+    paths = []
+    # User deck strategies
+    if DECKS_ROOT.exists():
+        for deck_dir in DECKS_ROOT.iterdir():
+            if deck_dir.is_dir():
+                strat = deck_dir / "strategy.json"
+                if strat.exists():
+                    paths.append(strat)
+    # Built-in strategies
+    if RULES_DIR.exists():
+        for p in RULES_DIR.glob("*.json"):
+            if p.name not in ("meta_decks.json", "general.json"):
+                paths.append(p)
+    return paths
 
 
 def invalidate_strategy_cache() -> int:
@@ -1472,25 +1483,23 @@ def find_matching_strategy(state: GameState) -> Strategy | None:
     best_match = None
     best_score = 0.0
 
-    for strategy_dir in _all_strategy_dirs():
-        for path in strategy_dir.glob("*.json"):
-            if path.name in ("meta_decks.json", "general.json"):
+    for path in _all_strategy_paths():
+        try:
+            data = json.loads(path.read_text())
+            sig = data.get("deck_signature", [])
+            if not sig:
                 continue
-            try:
-                data = json.loads(path.read_text())
-                sig = data.get("deck_signature", [])
-                if not sig:
-                    continue
-                matched = [s for s in sig if s in deck_names]
-                missing = [s for s in sig if s not in deck_names]
-                score = len(matched) / len(sig)
-                log.info("Strategy match: %s — %.0f%% (%d/%d) matched=%s missing=%s",
-                         path.stem, score * 100, len(matched), len(sig), matched, missing)
-                if score > best_score and score >= 0.5:
-                    best_score = score
-                    best_match = path
-            except Exception:
-                continue
+            matched = [s for s in sig if s in deck_names]
+            missing = [s for s in sig if s not in deck_names]
+            score = len(matched) / len(sig)
+            log.info("Strategy match: %s — %.0f%% (%d/%d) matched=%s missing=%s",
+                     path.parent.name if path.name == "strategy.json" else path.stem,
+                     score * 100, len(matched), len(sig), matched, missing)
+            if score > best_score and score >= 0.5:
+                best_score = score
+                best_match = path
+        except Exception:
+            continue
 
     if best_match:
         strat = _load_strategy_file(best_match)

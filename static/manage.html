@@ -591,6 +591,7 @@ async function loadStrategies() {
         const stats = s.stats || {};
         const games = stats.games || 0;
         const wr = games > 0 ? ((stats.wins / games) * 100).toFixed(0) + '%' : '—';
+        const key = s.deck_id || s.file.replace('.json','');
         return `<tr>
             <td><strong>${s.name}</strong></td>
             <td>${colorDots(s.colors)}</td>
@@ -598,26 +599,26 @@ async function loadStrategies() {
             <td>${s.rule_count}</td>
             <td><span class="badge badge-${s.source}">${s.source}</span></td>
             <td>${wr}${games > 0 ? ` (${games}g)` : ''}</td>
-            <td><button class="btn btn-secondary btn-small" onclick="viewStrategy('${s.file}')">View</button></td>
+            <td><button class="btn btn-secondary btn-small" onclick="viewStrategy('${key}')">View</button></td>
         </tr>`;
     }).join('');
 }
 
-async function viewStrategy(filename) {
-    const res = await fetch(`/api/manage/strategy/${filename}`);
+async function viewStrategy(deckId) {
+    const res = await fetch(`/api/manage/strategy/${deckId}`);
     const data = await res.json();
     const panel = document.getElementById('strategy-detail');
     const rules = data.rules || [];
 
     panel.innerHTML = `
-        <h3>${data.name} <span style="color:#888;font-size:12px">(${filename})</span></h3>
+        <h3>${data.name} <span style="color:#888;font-size:12px">(${deckId})</span></h3>
         <div style="margin-bottom:8px;font-size:12px;color:#888">
             ${colorDots(data.colors)} ${data.archetype}
             · Signature: ${(data.deck_signature || []).join(', ') || '—'}
         </div>
         ${rules.length ? rules.map(r => ruleCard(r)).join('') : '<div style="color:#555;font-style:italic">No rules</div>'}
         <div class="btn-row" style="margin-top:12px">
-            <button class="btn btn-secondary" onclick="editStrategyJSON('${filename}')">Edit JSON</button>
+            <button class="btn btn-secondary" onclick="editStrategyJSON('${deckId}')">Edit JSON</button>
             <button class="btn btn-secondary" onclick="closeStrategyDetail()">Close</button>
         </div>
         <div id="strategy-editor-wrap"></div>
@@ -626,26 +627,26 @@ async function viewStrategy(filename) {
     panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
-async function editStrategyJSON(filename) {
-    const res = await fetch(`/api/manage/strategy/${filename}`);
+async function editStrategyJSON(deckId) {
+    const res = await fetch(`/api/manage/strategy/${deckId}`);
     const data = await res.json();
     const wrap = document.getElementById('strategy-editor-wrap');
     wrap.innerHTML = `
         <div style="margin-top:12px">
             <textarea id="strategy-json-edit" class="json-editor">${JSON.stringify(data, null, 2)}</textarea>
             <div class="btn-row" style="margin-top:8px">
-                <button class="btn btn-primary" onclick="saveStrategyJSON('${filename}')">Save</button>
+                <button class="btn btn-primary" onclick="saveStrategyJSON('${deckId}')">Save</button>
                 <button class="btn btn-secondary" onclick="document.getElementById('strategy-editor-wrap').innerHTML=''">Cancel</button>
             </div>
         </div>
     `;
 }
 
-async function saveStrategyJSON(filename) {
+async function saveStrategyJSON(deckId) {
     const text = document.getElementById('strategy-json-edit').value;
     try {
         const data = JSON.parse(text);
-        const res = await fetch(`/api/manage/strategy/${filename}`, {
+        const res = await fetch(`/api/manage/strategy/${deckId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data),
@@ -967,20 +968,27 @@ async function loadDecks() {
 
     const tbody = document.getElementById('decks-body');
     tbody.innerHTML = decks.map(d => `<tr>
-        <td><strong>${d.name}</strong></td>
+        <td><strong>${d.name}</strong> ${colorDots(d.colors)}</td>
         <td>${d.card_count}</td>
-        <td>${(d.size_bytes / 1024).toFixed(1)} KB</td>
-        <td><button class="btn btn-secondary btn-small" onclick="viewDeck('${d.file}')">View</button></td>
-    </tr>`).join('') || '<tr><td colspan="4" style="color:#555;font-style:italic">No deck files found</td></tr>';
+        <td>${d.rules_count} rules</td>
+        <td>${d.archetype}</td>
+        <td><button class="btn btn-secondary btn-small" onclick="viewDeck('${d.deck_id}')">View</button>
+            <a href="/decks#${d.deck_id}" class="btn btn-secondary btn-small" style="text-decoration:none">Manage</a></td>
+    </tr>`).join('') || '<tr><td colspan="5" style="color:#555;font-style:italic">No decks found</td></tr>';
 }
 
-async function viewDeck(filename) {
-    const res = await fetch(`/api/manage/deck/${filename}`);
+async function viewDeck(deckId) {
+    const res = await fetch(`/api/manage/deck/${deckId}`);
     const data = await res.json();
+    if (data.error) { showToast(data.error, true); return; }
     const panel = document.getElementById('deck-detail');
+    const activeV = (data.versions || []).find(v => v.is_active);
+    const deckList = activeV ? activeV.deck_list : '(no active version)';
     panel.innerHTML = `
-        <h3>${filename}</h3>
-        <pre class="deck-content">${escapeHtml(data.content)}</pre>
+        <h3>${data.name} ${colorDots(data.colors)} <span style="color:#888;font-size:12px">${data.archetype}</span></h3>
+        <div style="font-size:12px;color:#888;margin-bottom:8px">${data.versions?.length || 0} versions · Active: v${data.active_version || '—'}</div>
+        <pre class="deck-content">${escapeHtml(deckList)}</pre>
+        ${data.missing_cards?.length ? `<div style="margin-top:8px;color:#e94560;font-size:12px">Missing: ${data.missing_cards.map(c => c.name + ' ×' + c.missing).join(', ')}</div>` : ''}
         <div class="btn-row" style="margin-top:8px">
             <button class="btn btn-secondary" onclick="document.getElementById('deck-detail').classList.remove('open')">Close</button>
         </div>
@@ -997,18 +1005,18 @@ async function loadGuides() {
     const tbody = document.getElementById('guides-body');
     tbody.innerHTML = guides.map(g => `<tr>
         <td><strong>${g.name}</strong></td>
-        <td><span class="badge badge-${g.source}">${g.source}</span></td>
+        <td>${g.deck_id || ''}</td>
         <td>${(g.size_bytes / 1024).toFixed(1)} KB</td>
-        <td><button class="btn btn-secondary btn-small" onclick="viewGuide('${g.file}')">View</button></td>
+        <td><button class="btn btn-secondary btn-small" onclick="viewGuide('${g.deck_id}','${g.file}')">View</button></td>
     </tr>`).join('') || '<tr><td colspan="4" style="color:#555;font-style:italic">No guides found</td></tr>';
 }
 
-async function viewGuide(filename) {
-    const res = await fetch(`/api/manage/guide/${filename}`);
+async function viewGuide(deckId, filename) {
+    const res = await fetch(`/api/manage/guide/${deckId}/${filename}`);
     const data = await res.json();
     const panel = document.getElementById('guide-detail');
     panel.innerHTML = `
-        <h3>${filename}</h3>
+        <h3>${filename} <span style="color:#888;font-size:12px">(${deckId})</span></h3>
         <div class="guide-content">${marked.parse(data.content)}</div>
         <div class="btn-row" style="margin-top:8px">
             <button class="btn btn-secondary" onclick="document.getElementById('guide-detail').classList.remove('open')">Close</button>

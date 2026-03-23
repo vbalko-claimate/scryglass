@@ -32,10 +32,11 @@ from .models import Advice, GameState
 from .reporting import build_match_report, get_latest_completed_match_id
 from .deck_routes import router as deck_router
 from .strategy import (
-    RULES_DIR, USER_RULES_DIR, META_DECKS_PATH,
+    RULES_DIR, DECKS_ROOT, META_DECKS_PATH,
     load_meta_decks, load_strategy, _load_strategy_file,
-    _all_strategy_dirs,
+    _all_strategy_paths,
 )
+from . import deck_storage
 
 log = logging.getLogger(__name__)
 
@@ -736,53 +737,54 @@ async def decks_page():
 
 @app.get("/api/manage/strategies")
 async def manage_strategies():
-    """List all strategies from both built-in and user dirs."""
+    """List all strategies from deck dirs and built-in."""
     strategies = []
     seen_names = set()
-    for strategy_dir in _all_strategy_dirs():
-        if not strategy_dir.exists():
-            continue
-        for path in sorted(strategy_dir.glob("*.json")):
-            try:
-                data = json.loads(path.read_text())
-                name = data.get("name", path.stem)
-                if name in seen_names:
-                    continue
-                seen_names.add(name)
-                is_user = str(path).startswith(str(USER_RULES_DIR))
-                strategies.append({
-                    "name": name,
-                    "file": path.name,
-                    "source": "user" if is_user else "builtin",
-                    "archetype": data.get("archetype", "unknown"),
-                    "colors": data.get("colors", []),
-                    "deck_signature": data.get("deck_signature", []),
-                    "rule_count": len(data.get("rules", [])),
-                    "stats": data.get("stats", {}),
-                })
-            except Exception:
+    for path in _all_strategy_paths():
+        try:
+            data = json.loads(path.read_text())
+            name = data.get("name", path.stem)
+            if name in seen_names:
                 continue
+            seen_names.add(name)
+            # deck dirs → user, RULES_DIR → builtin
+            is_user = str(path).startswith(str(DECKS_ROOT))
+            deck_id = path.parent.name if is_user else ""
+            strategies.append({
+                "name": name,
+                "file": path.name,
+                "deck_id": deck_id,
+                "source": "user" if is_user else "builtin",
+                "archetype": data.get("archetype", "unknown"),
+                "colors": data.get("colors", []),
+                "deck_signature": data.get("deck_signature", []),
+                "rule_count": len(data.get("rules", [])),
+                "stats": data.get("stats", {}),
+            })
+        except Exception:
+            continue
     return strategies
 
 
-@app.get("/api/manage/strategy/{filename}")
-async def manage_strategy_detail(filename: str):
-    """Get full strategy JSON for editing."""
-    # Security: only allow .json in expected dirs
-    for d in _all_strategy_dirs():
-        path = d / filename
-        if path.exists() and path.suffix == ".json":
-            return json.loads(path.read_text())
+@app.get("/api/manage/strategy/{deck_id}")
+async def manage_strategy_detail(deck_id: str):
+    """Get full strategy JSON for a deck."""
+    # Check deck dir first
+    path = DECKS_ROOT / deck_id / "strategy.json"
+    if path.exists():
+        return json.loads(path.read_text())
+    # Fallback to built-in
+    path = RULES_DIR / f"{deck_id}.json"
+    if path.exists():
+        return json.loads(path.read_text())
     return JSONResponse({"error": "not found"}, status_code=404)
 
 
-@app.put("/api/manage/strategy/{filename}")
-async def manage_strategy_save(filename: str, request: dict):
-    """Save strategy JSON (user dir only)."""
-    if not filename.endswith(".json"):
-        return JSONResponse({"error": "invalid filename"}, status_code=400)
-    USER_RULES_DIR.mkdir(parents=True, exist_ok=True)
-    path = USER_RULES_DIR / filename
+@app.put("/api/manage/strategy/{deck_id}")
+async def manage_strategy_save(deck_id: str, request: dict):
+    """Save strategy JSON to deck dir."""
+    path = DECKS_ROOT / deck_id / "strategy.json"
+    path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(request, indent=2, ensure_ascii=False))
     log.info("Strategy saved via manage UI: %s", path)
     return {"status": "ok", "path": str(path)}
@@ -825,60 +827,51 @@ async def manage_meta_decks_save(request: dict):
 
 @app.get("/api/manage/decks")
 async def manage_decks():
-    """List deck files from user data dir."""
-    decks_dir = USER_DATA_DIR / "decks"
-    if not decks_dir.exists():
-        return []
-    decks = []
-    for path in sorted(decks_dir.glob("*.txt")):
-        lines = path.read_text().splitlines()
-        card_count = sum(1 for l in lines if l.strip() and not l.startswith("//")
-                         and not l.startswith("Deck") and not l.startswith("Sideboard")
-                         and not l.startswith("Commander"))
-        decks.append({
-            "file": path.name,
-            "name": path.stem.replace("_", " ").title(),
-            "card_count": card_count,
-            "size_bytes": path.stat().st_size,
-        })
-    return decks
+    """List decks from filesystem (new deck dir structure)."""
+    from .deck_lifecycle import DeckService
+    svc = DeckService()
+    return svc.list_decks()
 
 
-@app.get("/api/manage/deck/{filename}")
-async def manage_deck_detail(filename: str):
-    """Get deck file content."""
-    decks_dir = USER_DATA_DIR / "decks"
-    path = decks_dir / filename
-    if not path.exists() or not path.suffix == ".txt":
+@app.get("/api/manage/deck/{deck_id}")
+async def manage_deck_detail(deck_id: str):
+    """Get full deck detail."""
+    from .deck_lifecycle import DeckService
+    svc = DeckService()
+    result = svc.get_deck(deck_id)
+    if not result:
         return JSONResponse({"error": "not found"}, status_code=404)
-    return {"file": filename, "content": path.read_text()}
+    return result
 
 
 @app.get("/api/manage/guides")
 async def manage_guides():
-    """List strategy guide markdown files."""
+    """List guide markdown files from deck dirs."""
     guides = []
-    for d in _all_strategy_dirs():
-        if not d.exists():
-            continue
-        for path in sorted(d.glob("*.md")):
-            is_user = str(path).startswith(str(USER_RULES_DIR))
-            guides.append({
-                "file": path.name,
-                "name": path.stem.replace("_", " ").title(),
-                "source": "user" if is_user else "builtin",
-                "size_bytes": path.stat().st_size,
-            })
+    if DECKS_ROOT.exists():
+        for deck_dir in sorted(DECKS_ROOT.iterdir()):
+            if not deck_dir.is_dir():
+                continue
+            guides_dir = deck_dir / "guides"
+            if not guides_dir.exists():
+                continue
+            for path in sorted(guides_dir.glob("*.md")):
+                guides.append({
+                    "file": path.name,
+                    "deck_id": deck_dir.name,
+                    "name": path.stem.replace("_", " ").title(),
+                    "source": "user",
+                    "size_bytes": path.stat().st_size,
+                })
     return guides
 
 
-@app.get("/api/manage/guide/{filename}")
-async def manage_guide_detail(filename: str):
-    """Get guide markdown content."""
-    for d in _all_strategy_dirs():
-        path = d / filename
-        if path.exists() and path.suffix == ".md":
-            return {"file": filename, "content": path.read_text()}
+@app.get("/api/manage/guide/{deck_id}/{filename}")
+async def manage_guide_detail(deck_id: str, filename: str):
+    """Get guide markdown content from deck dir."""
+    path = DECKS_ROOT / deck_id / "guides" / filename
+    if path.exists() and path.suffix == ".md":
+        return {"file": filename, "deck_id": deck_id, "content": path.read_text()}
     return JSONResponse({"error": "not found"}, status_code=404)
 
 
