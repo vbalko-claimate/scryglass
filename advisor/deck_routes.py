@@ -90,3 +90,12 @@ async def undeploy_version(deck_id: str):
         return svc.undeploy_version(deck_id)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
+
+
+@router.post("/{deck_id}/promote")
+async def promote_stub(deck_id: str):
+    svc = DeckService()
+    try:
+        return svc.promote_stub(deck_id)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))

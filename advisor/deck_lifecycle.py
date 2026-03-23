@@ -510,3 +510,62 @@ class DeckService:
         log.info("Undeployed deck '%s'", deck_id)
 
         return {"deck_id": deck_id, "undeployed": True}
+
+    # ─── promote_stub ────────────────────────────────────────────
+
+    def promote_stub(self, deck_id: str) -> dict:
+        """Promote a stub (strategy-only) to a managed deck.
+
+        Creates deck.json from strategy metadata. Decklist is empty
+        until user imports it.
+        """
+        # Must have strategy.json but no deck.json
+        if storage.read_deck(deck_id) is not None:
+            raise ValueError(f"Deck '{deck_id}' already has deck.json")
+
+        strategy = storage.read_strategy(deck_id)
+        if not strategy:
+            raise ValueError(f"No strategy.json found for '{deck_id}'")
+
+        rules_count = len(strategy.get("rules", []))
+        ts = storage.now_iso()
+
+        deck_data = {
+            "name": strategy.get("name", deck_id),
+            "format": "standard",
+            "state": "has_rules",
+            "current_version": 1,
+            "colors": strategy.get("colors", []),
+            "archetype": strategy.get("archetype", "unknown"),
+            "created": ts,
+            "updated": ts,
+            "versions": [
+                {
+                    "version": 1,
+                    "card_count": 0,
+                    "cards": "",
+                    "deck_list_hash": "",
+                    "rules_source": strategy.get("_source", "imported"),
+                    "rules_count": rules_count,
+                    "rules_validated": False,
+                    "ga_status": "not_started",
+                    "ga_fitness": 0,
+                    "is_active": True,
+                    "change_summary": "",
+                    "created": ts,
+                },
+            ],
+        }
+
+        # Copy strategy.json to versions/v1
+        storage.write_version_strategy(deck_id, 1, strategy)
+        storage.write_deck(deck_id, deck_data)
+
+        log.info("Promoted stub '%s' to managed deck (%d rules)", deck_id, rules_count)
+
+        return {
+            "deck_id": deck_id,
+            "name": deck_data["name"],
+            "rules_count": rules_count,
+            "promoted": True,
+        }

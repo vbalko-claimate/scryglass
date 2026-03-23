@@ -305,9 +305,53 @@ vp = storage.version_strategy_path("foo", 3)
 check("version_strategy_path format", vp.name == "v3_strategy.json")
 
 
-# ─── 10. Migration ──────────────────────────────────────────
+# ─── 10. Promote Stub ───────────────────────────────────────
 
-print("\n=== 10. Migration from SQLite ===")
+print("\n=== 10. Promote Stub ===")
+
+# Create a stub: deck dir with only strategy.json (no deck.json)
+stub_id = "stub_test_deck"
+stub_dir = storage.DECKS_ROOT / stub_id
+stub_dir.mkdir(parents=True, exist_ok=True)
+stub_strategy = {"name": "Stub Test", "colors": ["R"], "archetype": "aggro",
+                 "deck_signature": ["Lightning Bolt"], "rules": [{"id": "r1"}, {"id": "r2"}]}
+(stub_dir / "strategy.json").write_text(json.dumps(stub_strategy))
+
+# Verify it's a stub (no deck.json)
+check("stub has no deck.json", not (stub_dir / "deck.json").exists())
+check("stub has strategy.json", (stub_dir / "strategy.json").exists())
+
+# Promote
+result = svc.promote_stub(stub_id)
+check("promote returns promoted=True", result.get("promoted") is True)
+check("promote returns rules_count=2", result.get("rules_count") == 2)
+check("promote creates deck.json", (stub_dir / "deck.json").exists())
+
+# Verify deck data
+promoted_data = json.loads((stub_dir / "deck.json").read_text())
+check("promoted deck has name", promoted_data.get("name") == "Stub Test")
+check("promoted deck state=has_rules", promoted_data.get("state") == "has_rules")
+check("promoted deck card_count=0", promoted_data["versions"][0].get("card_count") == 0)
+check("promoted deck has v1 strategy", (stub_dir / "versions" / "v1_strategy.json").exists())
+
+# Now visible in list_decks
+found = [d for d in svc.list_decks() if d["deck_id"] == stub_id]
+check("promoted deck in list_decks", len(found) == 1)
+
+# Can't promote again
+try:
+    svc.promote_stub(stub_id)
+    check("re-promote raises error", False, "no exception")
+except ValueError:
+    check("re-promote raises error", True)
+
+# Clean up
+svc.delete_deck(stub_id)
+
+
+# ─── 11. Migration ──────────────────────────────────────────
+
+print("\n=== 11. Migration from SQLite ===")
 
 import sqlite3
 

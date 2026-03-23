@@ -112,6 +112,8 @@ tr:hover { background: rgba(255,255,255,0.03); }
 }
 .badge-user { background: rgba(233,69,96,0.2); color: #e94560; border: 1px solid rgba(233,69,96,0.3); }
 .badge-builtin { background: rgba(33,150,243,0.15); color: #90caf9; border: 1px solid rgba(33,150,243,0.2); }
+.badge-managed { background: rgba(76,175,80,0.2); color: #81c784; border: 1px solid rgba(76,175,80,0.3); }
+.badge-stub { background: rgba(255,193,7,0.15); color: #ffc107; border: 1px solid rgba(255,193,7,0.2); }
 .color-dot {
     display: inline-block;
     width: 14px; height: 14px;
@@ -137,6 +139,8 @@ tr:hover { background: rgba(255,255,255,0.03); }
 }
 .btn-primary { background: #e94560; color: #fff; }
 .btn-primary:hover { background: #c73650; }
+.btn-danger { background: rgba(244,67,54,0.15); color: #ef5350; border: 1px solid rgba(244,67,54,0.3); }
+.btn-danger:hover { background: rgba(244,67,54,0.3); }
 .btn-secondary { background: #0f3460; color: #90caf9; border: 1px solid #2196f3; }
 .btn-secondary:hover { background: #1a4a80; }
 .btn-small { padding: 3px 10px; font-size: 11px; }
@@ -579,10 +583,12 @@ async function loadStrategies() {
     strategiesData = await res.json();
 
     const totalRules = strategiesData.reduce((s, d) => s + d.rule_count, 0);
-    const userCount = strategiesData.filter(d => d.source === 'user').length;
+    const managedCount = strategiesData.filter(d => d.has_deck).length;
+    const stubCount = strategiesData.filter(d => d.source === 'user' && !d.has_deck).length;
     document.getElementById('strategies-summary').innerHTML = `
         <div class="summary-card"><div class="value">${strategiesData.length}</div><div class="label">Strategies</div></div>
-        <div class="summary-card"><div class="value">${userCount}</div><div class="label">Custom</div></div>
+        <div class="summary-card"><div class="value">${managedCount}</div><div class="label">Managed</div></div>
+        <div class="summary-card"><div class="value">${stubCount}</div><div class="label">Stubs</div></div>
         <div class="summary-card"><div class="value">${totalRules}</div><div class="label">Total Rules</div></div>
     `;
 
@@ -592,14 +598,20 @@ async function loadStrategies() {
         const games = stats.games || 0;
         const wr = games > 0 ? ((stats.wins / games) * 100).toFixed(0) + '%' : '—';
         const key = s.deck_id || s.file.replace('.json','');
+        const status = s.has_deck ? 'managed' : s.source === 'builtin' ? 'builtin' : 'stub';
+        const actions = [`<button class="btn btn-secondary btn-small" onclick="viewStrategy('${key}')">View</button>`];
+        if (status === 'stub') {
+            actions.push(`<button class="btn btn-primary btn-small" onclick="promoteStub('${key}')">Import</button>`);
+            actions.push(`<button class="btn btn-danger btn-small" onclick="deleteStub('${key}','${s.name}')">Delete</button>`);
+        }
         return `<tr>
             <td><strong>${s.name}</strong></td>
             <td>${colorDots(s.colors)}</td>
             <td>${s.archetype}</td>
             <td>${s.rule_count}</td>
-            <td><span class="badge badge-${s.source}">${s.source}</span></td>
+            <td><span class="badge badge-${status}">${status}</span></td>
             <td>${wr}${games > 0 ? ` (${games}g)` : ''}</td>
-            <td><button class="btn btn-secondary btn-small" onclick="viewStrategy('${key}')">View</button></td>
+            <td>${actions.join(' ')}</td>
         </tr>`;
     }).join('');
 }
@@ -665,6 +677,29 @@ async function saveStrategyJSON(deckId) {
 
 function closeStrategyDetail() {
     document.getElementById('strategy-detail').classList.remove('open');
+}
+
+async function promoteStub(deckId) {
+    const res = await fetch(`/api/decks/${deckId}/promote`, { method: 'POST' });
+    const data = await res.json();
+    if (res.ok) {
+        showToast(`Imported "${data.name}" — ${data.rules_count} rules`);
+        loadStrategies();
+    } else {
+        showToast(data.detail || 'Import failed', true);
+    }
+}
+
+async function deleteStub(deckId, name) {
+    if (!confirm(`Delete stub strategy "${name}"? This cannot be undone.`)) return;
+    const res = await fetch(`/api/manage/strategy/${deckId}`, { method: 'DELETE' });
+    if (res.ok) {
+        showToast(`Deleted "${name}"`);
+        loadStrategies();
+    } else {
+        const data = await res.json();
+        showToast(data.error || 'Delete failed', true);
+    }
 }
 
 // ── General Rules ──

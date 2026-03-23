@@ -750,10 +750,12 @@ async def manage_strategies():
             # deck dirs → user, RULES_DIR → builtin
             is_user = str(path).startswith(str(DECKS_ROOT))
             deck_id = path.parent.name if is_user else ""
+            has_deck = (path.parent / "deck.json").exists() if is_user else False
             strategies.append({
                 "name": name,
                 "file": path.name,
                 "deck_id": deck_id,
+                "has_deck": has_deck,
                 "source": "user" if is_user else "builtin",
                 "archetype": data.get("archetype", "unknown"),
                 "colors": data.get("colors", []),
@@ -788,6 +790,20 @@ async def manage_strategy_save(deck_id: str, request: dict):
     path.write_text(json.dumps(request, indent=2, ensure_ascii=False))
     log.info("Strategy saved via manage UI: %s", path)
     return {"status": "ok", "path": str(path)}
+
+
+@app.delete("/api/manage/strategy/{deck_id}")
+async def manage_strategy_delete(deck_id: str):
+    """Delete a stub strategy (deck dir without deck.json)."""
+    deck_dir = DECKS_ROOT / deck_id
+    if not deck_dir.exists():
+        return JSONResponse({"error": "not found"}, status_code=404)
+    if (deck_dir / "deck.json").exists():
+        return JSONResponse({"error": "use /api/decks/{id} to delete managed decks"}, status_code=400)
+    import shutil
+    shutil.rmtree(deck_dir)
+    log.info("Deleted stub strategy: %s", deck_id)
+    return {"status": "ok", "deleted": deck_id}
 
 
 @app.get("/api/manage/general-rules")

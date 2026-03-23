@@ -85,6 +85,7 @@ header a:hover { color: #fff; }
 }
 .badge-deployed { background: rgba(76,175,80,0.2); color: #4caf50; border: 1px solid rgba(76,175,80,0.3); }
 .badge-rules { background: rgba(33,150,243,0.15); color: #90caf9; border: 1px solid rgba(33,150,243,0.2); }
+.badge-warn { background: rgba(255,193,7,0.15); color: #ffc107; border: 1px solid rgba(255,193,7,0.2); }
 .badge-ga { background: rgba(255,152,0,0.15); color: #ffa500; border: 1px solid rgba(255,152,0,0.3); }
 
 /* Buttons */
@@ -316,8 +317,10 @@ function renderDeckList(list) {
         const id = d.deck_id || d.deck_id;
         const isActive = id === selectedDeckId;
         const badges = [];
+        if (d.card_count === 0) badges.push('<span class="badge badge-warn">no decklist</span>');
         if (d.is_active || d.deployed_version) badges.push('<span class="badge badge-deployed">deployed</span>');
         if (d.rules_count) badges.push('<span class="badge badge-rules">' + d.rules_count + ' rules</span>');
+        else badges.push('<span class="badge badge-warn">no rules</span>');
         if (d.ga_fitness) badges.push('<span class="badge badge-ga">GA ' + (d.ga_fitness * 100).toFixed(0) + '%</span>');
         const ver = d.active_version || d.version || '';
         return '<div class="deck-item' + (isActive ? ' active' : '') + '" onclick="loadDeckDetail(\'' + id + '\')">'
