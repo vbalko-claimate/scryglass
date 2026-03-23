@@ -806,6 +806,40 @@ async def manage_strategy_delete(deck_id: str):
     return {"status": "ok", "deleted": deck_id}
 
 
+@app.get("/api/manage/ga-runs")
+async def manage_ga_runs():
+    """List all GA runs across all decks, with latest generation stats."""
+    runs = []
+    if not DECKS_ROOT.exists():
+        return runs
+    for deck_dir in sorted(DECKS_ROOT.iterdir()):
+        ga_dir = deck_dir / "ga_logs"
+        if not ga_dir.exists():
+            continue
+        for log_file in sorted(ga_dir.glob("*.ga_log.json")):
+            try:
+                data = json.loads(log_file.read_text())
+                if not isinstance(data, list) or not data:
+                    continue
+                last = data[-1]
+                first = data[0]
+                runs.append({
+                    "deck_id": deck_dir.name,
+                    "file": log_file.name,
+                    "generations": len(data),
+                    "best_fitness": round(last.get("best_fitness", 0), 4),
+                    "avg_fitness": round(last.get("avg_fitness", 0), 4),
+                    "best_record": last.get("best_record", ""),
+                    "elapsed_h": round(sum(e.get("elapsed_s", 0) for e in data) / 3600, 1),
+                    "matchups": last.get("best_matchups", {}),
+                    "started": first.get("timestamp", ""),
+                })
+            except Exception:
+                continue
+    runs.sort(key=lambda r: r["best_fitness"], reverse=True)
+    return runs
+
+
 @app.get("/api/manage/general-rules")
 async def manage_general_rules():
     """Get general.json rules."""

@@ -436,6 +436,7 @@ tr:hover { background: rgba(255,255,255,0.03); }
             <button class="tab" onclick="switchTab('meta')">Meta Decks</button>
             <button class="tab" onclick="switchTab('decks')">Decks</button>
             <button class="tab" onclick="switchTab('guides')">Guides</button>
+            <button class="tab" onclick="switchTab('ga')">GA Runs</button>
         </div>
 
         <!-- Strategies -->
@@ -537,6 +538,26 @@ tr:hover { background: rgba(255,255,255,0.03); }
             </table>
             <div id="guide-detail" class="detail-panel"></div>
         </div>
+
+        <div id="tab-ga" class="section">
+            <h2>GA Optimization Runs</h2>
+            <div id="ga-summary" class="summary-grid"></div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Deck</th>
+                        <th>Run</th>
+                        <th>Gens</th>
+                        <th>Best Fitness</th>
+                        <th>Record</th>
+                        <th>Time</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="ga-body"></tbody>
+            </table>
+            <div id="ga-detail" class="detail-panel"></div>
+        </div>
     </div>
 
     <div id="toast" class="toast"></div>
@@ -562,6 +583,7 @@ function switchTab(name) {
     if (name === 'meta') loadMetaDecks();
     if (name === 'decks') loadDecks();
     if (name === 'guides') loadGuides();
+    if (name === 'ga') loadGARuns();
 }
 
 // ── Toast ──
@@ -1062,6 +1084,75 @@ async function viewGuide(deckId, filename) {
 }
 
 // ── Helpers ──
+// ── GA Runs ──
+async function loadGARuns() {
+    const res = await fetch('/api/manage/ga-runs');
+    const runs = await res.json();
+
+    const totalGens = runs.reduce((s, r) => s + r.generations, 0);
+    const totalHours = runs.reduce((s, r) => s + r.elapsed_h, 0);
+    const bestRun = runs.length ? runs[0] : null;
+    document.getElementById('ga-summary').innerHTML = `
+        <div class="summary-card"><div class="value">${runs.length}</div><div class="label">Runs</div></div>
+        <div class="summary-card"><div class="value">${totalGens}</div><div class="label">Generations</div></div>
+        <div class="summary-card"><div class="value">${totalHours.toFixed(1)}h</div><div class="label">Compute</div></div>
+        <div class="summary-card"><div class="value">${bestRun ? (bestRun.best_fitness * 100).toFixed(1) + '%' : '—'}</div><div class="label">Best Fitness</div></div>
+    `;
+
+    const tbody = document.getElementById('ga-body');
+    tbody.innerHTML = runs.map(r => {
+        const runName = r.file.replace('.ga_log.json', '').replace(r.deck_id + '_', '');
+        return `<tr>
+            <td><strong>${r.deck_id}</strong></td>
+            <td>${runName || 'default'}</td>
+            <td>${r.generations}</td>
+            <td><strong style="color:${r.best_fitness >= 0.7 ? '#81c784' : r.best_fitness >= 0.5 ? '#ffc107' : '#ef5350'}">${(r.best_fitness * 100).toFixed(1)}%</strong></td>
+            <td>${r.best_record}</td>
+            <td>${r.elapsed_h}h</td>
+            <td><button class="btn btn-secondary btn-small" onclick="viewGARun('${r.deck_id}','${r.file}')">Detail</button></td>
+        </tr>`;
+    }).join('') || '<tr><td colspan="7" style="color:#555;font-style:italic">No GA runs found</td></tr>';
+}
+
+async function viewGARun(deckId, filename) {
+    const res = await fetch('/api/manage/ga-runs');
+    const runs = await res.json();
+    const run = runs.find(r => r.deck_id === deckId && r.file === filename);
+    if (!run) return;
+
+    const panel = document.getElementById('ga-detail');
+    const matchups = run.matchups || {};
+    const matchupHtml = Object.entries(matchups)
+        .sort((a, b) => b[1] - a[1])
+        .map(([opp, wr]) => {
+            const pct = (wr * 100).toFixed(0);
+            const color = wr >= 0.6 ? '#81c784' : wr >= 0.4 ? '#ffc107' : '#ef5350';
+            return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
+                <span style="width:180px;font-size:12px">${opp}</span>
+                <div style="flex:1;background:#1a1a2e;height:14px;border-radius:3px;overflow:hidden">
+                    <div style="width:${pct}%;background:${color};height:100%"></div>
+                </div>
+                <span style="width:35px;text-align:right;font-size:11px;color:${color}">${pct}%</span>
+            </div>`;
+        }).join('');
+
+    panel.innerHTML = `
+        <h3>${deckId} — ${filename.replace('.ga_log.json','')}</h3>
+        <div style="font-size:12px;color:#888;margin-bottom:8px">
+            ${run.generations} generations · ${run.elapsed_h}h compute · Best: ${run.best_record}
+        </div>
+        <div style="margin-top:8px">
+            <h4 style="font-size:12px;color:#90caf9;margin-bottom:6px">Matchup Win Rates (last gen)</h4>
+            ${matchupHtml || '<span style="color:#555">No matchup data</span>'}
+        </div>
+        <div class="btn-row" style="margin-top:12px">
+            <button class="btn btn-secondary" onclick="document.getElementById('ga-detail').classList.remove('open')">Close</button>
+        </div>
+    `;
+    panel.classList.add('open');
+    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
 function ruleCard(r) {
     const meta = [];
     if (r.layer) meta.push(`layer: ${r.layer}`);
