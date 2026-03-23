@@ -36,6 +36,16 @@ def now_iso() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
+def _parse_card_count(deck_list: str) -> int:
+    """Count total cards from Arena-format decklist (sum of copies, not lines)."""
+    total = 0
+    for line in (deck_list or "").splitlines():
+        parts = line.strip().split(None, 1)
+        if parts and parts[0].isdigit() and len(parts) > 1:
+            total += int(parts[0])
+    return total
+
+
 def _read_json(path: Path) -> dict | None:
     """Read and parse a JSON file. Returns None if missing or invalid."""
     try:
@@ -216,7 +226,7 @@ def migrate_from_db(db_path: Path) -> int:
             for vnum, dl, rpath, rsource, rcount, rvalid, ga_st, ga_fit, is_act, v_created in versions:
                 v_meta = {
                     "version": vnum,
-                    "card_count": sum(1 for _ in dl.splitlines() if _.strip()) if dl else 0,
+                    "card_count": _parse_card_count(dl),
                     "cards": dl,
                     "rules_source": rsource or "",
                     "rules_count": rcount or 0,
