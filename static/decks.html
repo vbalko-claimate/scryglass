@@ -313,16 +313,18 @@ function renderDeckList(list) {
         return;
     }
     el.innerHTML = list.map(d => {
-        const isActive = d.id === selectedDeckId;
+        const id = d.deck_id || d.deck_id;
+        const isActive = id === selectedDeckId;
         const badges = [];
-        if (d.deployed_version) badges.push('<span class="badge badge-deployed">deployed</span>');
+        if (d.is_active || d.deployed_version) badges.push('<span class="badge badge-deployed">deployed</span>');
         if (d.rules_count) badges.push('<span class="badge badge-rules">' + d.rules_count + ' rules</span>');
-        if (d.ga_fitness != null) badges.push('<span class="badge badge-ga">GA ' + d.ga_fitness.toFixed(2) + '</span>');
-        return '<div class="deck-item' + (isActive ? ' active' : '') + '" onclick="loadDeckDetail(\'' + d.id + '\')">'
+        if (d.ga_fitness) badges.push('<span class="badge badge-ga">GA ' + (d.ga_fitness * 100).toFixed(0) + '%</span>');
+        const ver = d.active_version || d.version || '';
+        return '<div class="deck-item' + (isActive ? ' active' : '') + '" onclick="loadDeckDetail(\'' + id + '\')">'
             + '<div class="deck-item-name">' + colorDots(d.colors) + ' ' + escHtml(d.name) + '</div>'
             + '<div class="deck-item-meta">'
             + (d.archetype ? '<span>' + escHtml(d.archetype) + '</span>' : '')
-            + (d.version ? '<span>v' + d.version + '</span>' : '')
+            + (ver ? '<span>v' + ver + '</span>' : '')
             + badges.join('')
             + '</div></div>';
     }).join('');
@@ -346,7 +348,9 @@ async function loadDeckDetail(deckId) {
 function renderDeckDetail(d) {
     const el = document.getElementById('deck-detail');
     const versions = d.versions || [];
-    const currentList = d.deck_list || '';
+    // Get deck list from active version
+    const activeVer = (d.versions || []).find(v => v.is_active) || (d.versions || [])[0] || {};
+    const currentList = activeVer.deck_list || d.deck_list || '';
     const missing = d.missing_cards || [];
 
     let html = '<div class="deck-list-header">'
@@ -359,7 +363,7 @@ function renderDeckDetail(d) {
         + '<textarea class="editable-desc" id="deck-desc" placeholder="Deck description...">'
         + escHtml(d.description || '') + '</textarea>'
         + '<button class="btn btn-secondary btn-small" style="margin-top:4px" '
-        + 'onclick="saveDescription(\'' + d.id + '\')">Save Description</button>'
+        + 'onclick="saveDescription(\'' + d.deck_id + '\')">Save Description</button>'
         + '</div>';
 
     // Action buttons
@@ -367,11 +371,11 @@ function renderDeckDetail(d) {
         + '<div class="dropdown">'
         + '<button class="btn btn-primary btn-small" onclick="toggleDropdown(event,\'gen-dd\')">Generate Rules &#9662;</button>'
         + '<div class="dropdown-menu" id="gen-dd">'
-        + '<button onclick="generateRules(\'' + d.id + '\',' + (d.current_version || 1) + ',\'auto\')">Auto (heuristic)</button>'
-        + '<button onclick="generateRules(\'' + d.id + '\',' + (d.current_version || 1) + ',\'llm\')">LLM-assisted</button>'
-        + '<button onclick="generateRules(\'' + d.id + '\',' + (d.current_version || 1) + ',\'expert\')">Expert review</button>'
+        + '<button onclick="generateRules(\'' + d.deck_id + '\',' + (d.active_version || 1) + ',\'auto\')">Auto (heuristic)</button>'
+        + '<button onclick="generateRules(\'' + d.deck_id + '\',' + (d.active_version || 1) + ',\'llm\')">LLM-assisted</button>'
+        + '<button onclick="generateRules(\'' + d.deck_id + '\',' + (d.active_version || 1) + ',\'expert\')">Expert review</button>'
         + '</div></div>'
-        + '<button class="btn btn-secondary btn-small" onclick="deployVersion(\'' + d.id + '\',' + (d.current_version || 1) + ')">Deploy</button>'
+        + '<button class="btn btn-secondary btn-small" onclick="deployVersion(\'' + d.deck_id + '\',' + (d.active_version || 1) + ')">Deploy</button>'
         + '</div>';
 
     // Missing cards
@@ -387,12 +391,12 @@ function renderDeckDetail(d) {
         const sorted = [...versions].sort((a, b) => (b.version || 0) - (a.version || 0));
         sorted.forEach(v => {
             const badges = [];
-            if (v.deployed) badges.push('<span class="badge badge-deployed">deployed</span>');
+            if (v.is_active) badges.push('<span class="badge badge-deployed">deployed</span>');
             if (v.rules_count) badges.push('<span class="badge badge-rules">' + v.rules_count + ' rules</span>');
             if (v.ga_fitness != null) badges.push('<span class="badge badge-ga">GA ' + v.ga_fitness.toFixed(2) + '</span>');
             html += '<div class="version-item">'
-                + '<span class="v-num">v' + (v.version || '?') + '</span>'
-                + '<span class="v-date">' + fmtDate(v.date) + '</span>'
+                + '<span class="v-num">v' + (v.version_number || '?') + '</span>'
+                + '<span class="v-date">' + fmtDate(v.created_at) + '</span>'
                 + '<span class="v-summary">' + escHtml(v.change_summary || '') + '</span>'
                 + '<span class="v-badges">' + badges.join('') + '</span>'
                 + '</div>';
@@ -433,7 +437,7 @@ function renderDeckDetail(d) {
         + '<textarea class="deck-textarea" id="edit-deck-list" placeholder="Paste updated MTGA deck list here...">'
         + escHtml(currentList) + '</textarea>'
         + '<div class="btn-row" style="margin-top:8px">'
-        + '<button class="btn btn-primary btn-small" onclick="addVersion(\'' + d.id + '\')">Save as New Version</button>'
+        + '<button class="btn btn-primary btn-small" onclick="addVersion(\'' + d.deck_id + '\')">Save as New Version</button>'
         + '</div></div>';
 
     el.innerHTML = html;
@@ -467,7 +471,7 @@ async function createDeck() {
         showToast('Deck "' + name + '" created');
         closeCreateModal();
         await loadDecks();
-        if (res.id) loadDeckDetail(res.id);
+        if (res.deck_id || res.id) loadDeckDetail(res.deck_id || res.id);
     } catch (e) { /* toast shown by apiFetch */ }
     btn.disabled = false; btn.textContent = 'Create';
 }
