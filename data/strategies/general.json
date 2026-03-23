@@ -101,7 +101,8 @@
         "fired": 0,
         "correct": 0
       },
-      "conflicts_with": []
+      "conflicts_with": [],
+      "opp_life_above": 10
     },
     {
       "id": "general_low_life_caution",

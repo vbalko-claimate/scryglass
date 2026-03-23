@@ -731,6 +731,21 @@ def _check_lethal(state: GameState) -> list[Advice]:
             return [Advice("heuristic", "critical",
                             f"LETHAL with trample — attack with all: {names}", confidence=0.85)]
 
+    # Swarm lethal — more attackers than blockers, excess power kills
+    if len(attackers) > len(untapped_blockers):
+        # Opponent blocks strongest first (worst case for us)
+        sorted_atk = sorted(attackers, key=lambda a: a.power, reverse=True)
+        blocked = sorted_atk[:len(untapped_blockers)]
+        unblocked = sorted_atk[len(untapped_blockers):]
+        unblocked_dmg = sum(a.power for a in unblocked) + unblockable_dmg
+        effective_life = opp.life_total + opp_lifelink_tough
+        if unblocked_dmg >= effective_life:
+            names = ", ".join(a.name for a in attackers)
+            return [Advice("heuristic", "critical",
+                            f"LETHAL — attack with all ({len(attackers)} vs {len(untapped_blockers)} blockers): {names}",
+                            confidence=0.85,
+                            recommended_cards=[a.name for a in attackers])]
+
     return []
 
 

@@ -126,6 +126,7 @@ class Rule:
     life_below: int | None = None
     life_above: int | None = None
     opp_life_below: int | None = None
+    opp_life_above: int | None = None
     mana_min: int | None = None
     hand_lands_min: int | None = None
     hand_lands_max: int | None = None
@@ -615,6 +616,9 @@ def evaluate_rules_v2(rules: list[Rule], state: GameState,
                 continue
         if rule.opp_life_below is not None:
             if not opp or opp.life_total >= rule.opp_life_below:
+                continue
+        if rule.opp_life_above is not None:
+            if not opp or opp.life_total <= rule.opp_life_above:
                 continue
         if rule.mana_min is not None and mana < rule.mana_min:
             continue
@@ -1297,7 +1301,7 @@ def _rule_to_dict(r: Rule) -> dict:
              }
             for zc in r.require
         ]
-    for attr in ["life_below", "life_above", "opp_life_below", "mana_min",
+    for attr in ["life_below", "life_above", "opp_life_below", "opp_life_above", "mana_min",
                  "hand_lands_min", "hand_lands_max", "hand_size_min", "hand_size_max",
                  "hand_castable_min", "hand_castable_max", "my_creatures_min", "opp_creatures_min",
                  "opp_speed", "opp_has_must_answer", "opp_has_vulnerability"]:
@@ -1343,6 +1347,7 @@ def _rule_from_dict(d: dict) -> Rule:
         life_below=d.get("life_below"),
         life_above=d.get("life_above"),
         opp_life_below=d.get("opp_life_below"),
+        opp_life_above=d.get("opp_life_above"),
         mana_min=d.get("mana_min"),
         hand_lands_min=d.get("hand_lands_min"),
         hand_lands_max=d.get("hand_lands_max"),
