@@ -1294,10 +1294,11 @@ class AdvisorEngine:
         """Return the latest opponent/strategy snapshot for the UI."""
         opp_deck_obj = self._opp_tracker.identified_deck
         derived_plan = self._derived_plan_from_threats()
+        strat = self._strategy
         return {
-            "strategy_name": self._strategy.name if self._strategy else None,
-            "archetype": self._strategy.archetype if self._strategy else None,
-            "rule_count": len(self._strategy.rules) if self._strategy else 0,
+            "strategy_name": strat.name if strat else None,
+            "archetype": strat.archetype if strat else None,
+            "rule_count": len(strat.rules) if strat else 0,
             "meta_deck_count": len(self._meta_decks),
             "opp_deck": self._last_opp_deck,
             "opp_confidence": round(self._opp_tracker.confidence * 100)
@@ -1315,8 +1316,27 @@ class AdvisorEngine:
             "opp_cards_seen": list(self._opp_tracker.seen_cards.keys()),
             "matchup_wr": self._matchup_wr.get("win_rate") if self._matchup_wr else None,
             "matchup_games": self._matchup_wr.get("total", 0) if self._matchup_wr else 0,
-            "global_biases": self._strategy.global_biases if self._strategy else {},
+            "global_biases": strat.global_biases if strat else {},
+            # Debug metadata
+            "debug": {
+                "engine_version": ENGINE_VERSION,
+                "colors": strat.colors if strat else [],
+                "deck_signature": strat.deck_signature[:8] if strat else [],
+                "general_overrides": len(strat.general_overrides) if strat else 0,
+                "vulnerabilities": strat.vulnerabilities[:5] if strat else [],
+                "stats": strat.stats if strat else {},
+                "rules_by_layer": self._rules_by_layer() if strat else {},
+                "biases": strat.global_biases if strat else {},
+            },
         }
+
+    def _rules_by_layer(self) -> dict[str, int]:
+        """Count rules per layer for debug info."""
+        counts: dict[str, int] = {}
+        if self._strategy:
+            for r in self._strategy.rules:
+                counts[r.layer] = counts.get(r.layer, 0) + 1
+        return counts
 
     def _build_intel_advice(self, state: GameState,
                             base_advice: list[Advice]) -> list[Advice]:

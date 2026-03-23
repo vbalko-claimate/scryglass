@@ -710,6 +710,56 @@ footer {
     border: 1px solid var(--line);
 }
 
+.debug-toggle {
+    margin-left: auto;
+    background: transparent;
+    border: 1px solid #444;
+    color: #666;
+    padding: 2px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 11px;
+}
+.debug-toggle:hover { color: #aaa; border-color: #666; }
+.debug-toggle.active { color: #ffc107; border-color: #ffc107; }
+
+.debug-panel {
+    background: rgba(15, 20, 35, 0.95);
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 11px;
+    color: #999;
+    line-height: 1.6;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+}
+.debug-panel .debug-section { margin-bottom: 8px; }
+.debug-panel .debug-label { color: #666; margin-right: 4px; }
+.debug-panel .debug-value { color: #ccc; }
+.debug-panel .debug-heading {
+    color: #90caf9;
+    font-size: 11px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    border-bottom: 1px solid #2a2a3e;
+    padding-bottom: 2px;
+}
+.debug-panel .debug-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 2px 16px;
+}
+.debug-panel .debug-badge {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 10px;
+    margin: 0 2px;
+}
+.debug-panel .layer-badge { background: rgba(33,150,243,0.15); color: #64b5f6; }
+.debug-panel .vuln-badge { background: rgba(244,67,54,0.15); color: #ef5350; }
+.debug-panel .bias-badge { background: rgba(255,193,7,0.15); color: #ffc107; }
+
 /* Decision point highlight */
 #advice-panel.decision-active {
     border-color: #ffd700;

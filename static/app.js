@@ -83,6 +83,7 @@ function connect() {
             case 'state_update':
                 currentState = msg.data;
                 renderState(msg.data);
+                renderDebugPanel();
                 break;
             case 'advice':
                 renderAdvice(msg.data);
@@ -98,6 +99,7 @@ function connect() {
             case 'strategy_info':
                 currentStrategyInfo = msg.data || null;
                 renderStrategyInfo(msg.data);
+                renderDebugPanel();
                 break;
             case 'llm_status':
                 currentLlmStatus = msg.data || null;
@@ -967,6 +969,121 @@ document.addEventListener('keydown', (e) => {
         if (e.key === '3') { e.preventDefault(); setProfile('tactical'); }
     }
 });
+
+// ─── Debug Panel ───
+let debugVisible = false;
+
+function toggleDebugPanel() {
+    debugVisible = !debugVisible;
+    const panel = document.getElementById('debug-panel');
+    const btn = document.getElementById('debug-toggle');
+    panel.style.display = debugVisible ? 'block' : 'none';
+    btn.classList.toggle('active', debugVisible);
+    if (debugVisible) renderDebugPanel();
+}
+
+function renderDebugPanel() {
+    const panel = document.getElementById('debug-panel');
+    if (!panel || !debugVisible) return;
+
+    const info = currentStrategyInfo;
+    const dbg = info?.debug || {};
+    const state = currentState;
+
+    let html = '<div class="debug-grid">';
+
+    // Strategy info
+    html += '<div class="debug-section">';
+    html += '<div class="debug-heading">Strategy</div>';
+    html += debugRow('Name', info?.strategy_name || 'none');
+    html += debugRow('Archetype', info?.archetype || '—');
+    html += debugRow('Colors', (dbg.colors || []).join(', ') || '—');
+    html += debugRow('Rules', info?.rule_count || 0);
+    html += debugRow('General overrides', dbg.general_overrides || 0);
+    html += debugRow('Engine', dbg.engine_version || '—');
+    html += '</div>';
+
+    // Rules by layer
+    html += '<div class="debug-section">';
+    html += '<div class="debug-heading">Rules by Layer</div>';
+    const layers = dbg.rules_by_layer || {};
+    if (Object.keys(layers).length) {
+        html += Object.entries(layers)
+            .sort((a, b) => b[1] - a[1])
+            .map(([k, v]) => `<span class="debug-badge layer-badge">${k}: ${v}</span>`)
+            .join(' ');
+    } else {
+        html += '<span class="debug-value">—</span>';
+    }
+    html += '</div>';
+
+    // Stats
+    html += '<div class="debug-section">';
+    html += '<div class="debug-heading">Stats</div>';
+    const stats = dbg.stats || {};
+    html += debugRow('Games', stats.games || 0);
+    html += debugRow('Win rate', stats.games > 0
+        ? ((stats.wins / stats.games) * 100).toFixed(0) + '%'
+        : '—');
+    html += '</div>';
+
+    // Deck signature
+    html += '<div class="debug-section">';
+    html += '<div class="debug-heading">Deck Signature</div>';
+    html += '<span class="debug-value">' + (dbg.deck_signature || []).join(', ') + '</span>';
+    html += '</div>';
+
+    // Vulnerabilities
+    if (dbg.vulnerabilities?.length) {
+        html += '<div class="debug-section">';
+        html += '<div class="debug-heading">Vulnerabilities</div>';
+        html += dbg.vulnerabilities.map(v =>
+            `<span class="debug-badge vuln-badge">${v}</span>`
+        ).join(' ');
+        html += '</div>';
+    }
+
+    // Global biases
+    const biases = dbg.biases || {};
+    if (Object.keys(biases).length) {
+        html += '<div class="debug-section">';
+        html += '<div class="debug-heading">Global Biases</div>';
+        html += Object.entries(biases)
+            .map(([k, v]) => `<span class="debug-badge bias-badge">${k}: ${v > 0 ? '+' : ''}${v}</span>`)
+            .join(' ');
+        html += '</div>';
+    }
+
+    // Opponent
+    html += '<div class="debug-section">';
+    html += '<div class="debug-heading">Opponent</div>';
+    html += debugRow('Deck', info?.opp_deck || 'unknown');
+    html += debugRow('Confidence', info?.opp_confidence ? info.opp_confidence + '%' : '—');
+    html += debugRow('Archetype', info?.opp_archetype || '—');
+    html += debugRow('Matchup WR', info?.matchup_wr != null
+        ? (info.matchup_wr * 100).toFixed(0) + '% (' + info.matchup_games + 'g)'
+        : '—');
+    html += debugRow('Cards seen', info?.opp_cards_seen?.length || 0);
+    html += '</div>';
+
+    // Game state
+    if (state) {
+        html += '<div class="debug-section">';
+        html += '<div class="debug-heading">Game State</div>';
+        html += debugRow('Turn', state.turn || '—');
+        html += debugRow('Phase', state.phase || '—');
+        html += debugRow('Active player', state.active_player === state.my_seat ? 'you' : 'opp');
+        html += debugRow('Meta decks', info?.meta_deck_count || 0);
+        html += '</div>';
+    }
+
+    html += '</div>';
+    panel.innerHTML = html;
+}
+
+function debugRow(label, value) {
+    return `<div><span class="debug-label">${label}:</span> <span class="debug-value">${value}</span></div>`;
+}
 
 // Init
 connect();
