@@ -147,6 +147,40 @@ def init_db():
         CREATE INDEX IF NOT EXISTS idx_advice_log_match ON advice_log(match_id);
         CREATE INDEX IF NOT EXISTS idx_llm_calls_match ON llm_calls(match_id);
         CREATE INDEX IF NOT EXISTS idx_cards_name ON cards(name);
+
+        -- Deck lifecycle tables
+        CREATE TABLE IF NOT EXISTS decks (
+            deck_id     TEXT PRIMARY KEY,
+            user_id     TEXT NOT NULL DEFAULT 'local',
+            name        TEXT NOT NULL,
+            description TEXT DEFAULT '',
+            colors      TEXT DEFAULT '[]',
+            archetype   TEXT DEFAULT '',
+            created_at  TEXT DEFAULT CURRENT_TIMESTAMP,
+            updated_at  TEXT DEFAULT CURRENT_TIMESTAMP
+        );
+        CREATE INDEX IF NOT EXISTS idx_decks_user ON decks(user_id);
+
+        CREATE TABLE IF NOT EXISTS deck_versions (
+            version_id      INTEGER PRIMARY KEY AUTOINCREMENT,
+            deck_id         TEXT NOT NULL REFERENCES decks(deck_id) ON DELETE CASCADE,
+            version_number  INTEGER NOT NULL,
+            deck_list       TEXT NOT NULL,
+            deck_list_hash  TEXT NOT NULL,
+            card_count      INTEGER DEFAULT 0,
+            change_summary  TEXT DEFAULT '',
+            rules_path      TEXT DEFAULT '',
+            rules_source    TEXT DEFAULT '',
+            rules_count     INTEGER DEFAULT 0,
+            rules_validated INTEGER DEFAULT 0,
+            ga_status       TEXT DEFAULT 'not_started',
+            ga_fitness      REAL DEFAULT 0,
+            ga_generations  INTEGER DEFAULT 0,
+            is_active       INTEGER DEFAULT 0,
+            created_at      TEXT DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(deck_id, version_number)
+        );
+        CREATE INDEX IF NOT EXISTS idx_versions_deck ON deck_versions(deck_id);
     """)
     # Add deck name columns (migration for existing DBs)
     try:

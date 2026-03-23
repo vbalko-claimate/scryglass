@@ -30,6 +30,7 @@ from .llm_advisor import get_backend, set_backend
 from .log_watcher import LogWatcher
 from .models import Advice, GameState
 from .reporting import build_match_report, get_latest_completed_match_id
+from .deck_routes import router as deck_router
 from .strategy import (
     RULES_DIR, USER_RULES_DIR, META_DECKS_PATH,
     load_meta_decks, load_strategy, _load_strategy_file,
@@ -70,6 +71,7 @@ def _archive_player_log(log_path: Path):
 
 
 app = FastAPI(title="MTGA Advisor")
+app.include_router(deck_router)
 
 # Static files
 STATIC_DIR = Path(__file__).parent.parent / "static"
