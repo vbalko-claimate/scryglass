@@ -700,6 +700,10 @@ def evaluate_rules_v2(rules: list[Rule], state: GameState,
             c = card_cache.get(matched_card.grp_id)
             matched_card_name = c.name if c else matched_card.name
             msg = msg.replace("{card}", matched_card_name)
+            # If message doesn't mention the matched card, append it for specificity
+            if matched_card_name and matched_card_name not in msg and "{card}" not in rule.action:
+                mana_cost = c.mana_cost if c else ""
+                msg = f"{msg}: {matched_card_name}" + (f" ({mana_cost})" if mana_cost else "")
         if matched_threat:
             c = card_cache.get(matched_threat.grp_id)
             matched_threat_name = c.name if c else matched_threat.name
