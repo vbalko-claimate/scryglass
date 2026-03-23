@@ -799,5 +799,117 @@
       "T2 STRUCTURE: Mono Red Goblins: 16 mutual suppression pairs",
       "T2 STRUCTURE: Rakdos Midrange: 17 mutual suppression pairs"
     ]
+  },
+  {
+    "timestamp": "2026-03-22T17:59:10.388041",
+    "tier1_engine": {
+      "regression_passed": 6,
+      "regression_failed": 4,
+      "regression_total": 10,
+      "regression_pass_rate": 0.6,
+      "failed_tests": [
+        "WL-06: Never block Screaming Nemesis",
+        "WL-07: Channeler transfer text shows Channeler not Hawk",
+        "RG-01: Second Rite at exactly 10 life",
+        "RG-02: Don't attack before Second Rite"
+      ],
+      "replay_agreement": 0.9508196721311475,
+      "replay_flips": 9,
+      "replay_total": 183
+    },
+    "tier2_structure": {
+      "Mono White Lifegain": {
+        "name": "Mono White Lifegain",
+        "archetype": "aggro",
+        "rules_total": 68,
+        "rules_by_layer": {
+          "archetype": 6,
+          "card_synergy": 20,
+          "mulligan": 7,
+          "threat_response": 10,
+          "situation": 11,
+          "meta_gameplan": 14
+        },
+        "low_weight_rules": 0,
+        "high_weight_rules": 15,
+        "no_condition_rules": 0,
+        "conflict_pairs": 0,
+        "mutual_suppression": 0,
+        "pruned_rules": 0,
+        "engine_version": "2.1.0",
+        "stable_rules": 54,
+        "meta_rules": 14,
+        "stable_ratio": 0.79
+      },
+      "Mono Red Goblins": {
+        "name": "Mono Red Goblins",
+        "archetype": "aggro",
+        "rules_total": 45,
+        "rules_by_layer": {
+          "archetype": 2,
+          "threat_response": 16,
+          "card_synergy": 18,
+          "situation": 3,
+          "meta_gameplan": 4,
+          "mulligan": 2
+        },
+        "low_weight_rules": 0,
+        "high_weight_rules": 0,
+        "no_condition_rules": 0,
+        "conflict_pairs": 1,
+        "mutual_suppression": 0,
+        "pruned_rules": 0,
+        "engine_version": "2.1.0",
+        "stable_rules": 41,
+        "meta_rules": 4,
+        "stable_ratio": 0.91
+      },
+      "Rakdos Midrange": {
+        "name": "Rakdos Midrange",
+        "archetype": "midrange",
+        "rules_total": 28,
+        "rules_by_layer": {
+          "archetype": 2,
+          "threat_response": 9,
+          "card_synergy": 8,
+          "situation": 4,
+          "meta_gameplan": 5
+        },
+        "low_weight_rules": 0,
+        "high_weight_rules": 1,
+        "no_condition_rules": 0,
+        "conflict_pairs": 0,
+        "mutual_suppression": 0,
+        "pruned_rules": 0,
+        "engine_version": "",
+        "stable_rules": 23,
+        "meta_rules": 5,
+        "stable_ratio": 0.82
+      }
+    },
+    "tier3_meta": {
+      "Mono White Lifegain": {
+        "ga_games": 92,
+        "ga_wins": 46,
+        "ga_wr": 0.5,
+        "meta_rules_count": 14
+      },
+      "Mono Red Goblins": {
+        "ga_games": 3,
+        "ga_wins": 2,
+        "ga_wr": 0.667,
+        "meta_rules_count": 4
+      },
+      "Rakdos Midrange": {
+        "ga_games": 4,
+        "ga_wins": 0,
+        "ga_wr": 0.0,
+        "meta_rules_count": 5
+      }
+    },
+    "warnings": [
+      "T1 ENGINE: 4 regression tests failing",
+      "\ud83d\udea8 T1 ENGINE REGRESSION: pass rate 70% \u2192 60%"
+    ]
   }
 ]

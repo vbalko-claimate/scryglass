@@ -341,6 +341,13 @@ async def startup():
         exported = card_cache.export_json()
         log.info("Card cache exported to JSON: %d cards", exported)
 
+    # Migrate decks from SQLite to filesystem (one-time)
+    from . import deck_storage
+    db_path = Path(__file__).parent.parent / "data" / "advisor.db"
+    migrated = deck_storage.migrate_from_db(db_path)
+    if migrated:
+        log.info("Migrated %d decks from SQLite to filesystem", migrated)
+
     # Set up callbacks
     tracker.on_state_change = on_state_change
     tracker.on_decision_point = on_decision_point

@@ -1,6 +1,7 @@
 """Deck lifecycle management — create, version, generate rules, deploy.
 
 Pure business logic, no HTTP concerns. Used by deck_routes.py.
+Storage: filesystem-based (one directory per deck), no SQLite.
 """
 from __future__ import annotations
 
@@ -8,16 +9,13 @@ import hashlib
 import json
 import logging
 import re
-import shutil
 import tempfile
 from pathlib import Path
 
-from .database import card_cache, get_connection, USER_DATA_DIR
+from .database import card_cache
+from . import deck_storage as storage
 
 log = logging.getLogger(__name__)
-
-USER_RULES_DIR = USER_DATA_DIR / "strategies"
-USER_DECKS_DIR = USER_DATA_DIR / "decks"
 
 
 def _slugify(name: str) -> str:
@@ -147,8 +145,17 @@ def _get_collection() -> dict[str, int]:
         return {}
 
 
+def _find_version(data: dict, version: int) -> tuple[int, dict]:
+    """Find version by number in deck data. Returns (index, version_dict).
+    Raises ValueError if not found."""
+    for i, v in enumerate(data["versions"]):
+        if v["version"] == version:
+            return i, v
+    raise ValueError(f"Version {version} not found for deck '{data.get('name', '?')}'")
+
+
 class DeckService:
-    """Deck lifecycle operations. All methods are synchronous."""
+    """Deck lifecycle operations. Filesystem-based, no SQLite."""
 
     def __init__(self, user_id: str = "local"):
         self.user_id = user_id
@@ -158,28 +165,46 @@ class DeckService:
     def create_deck(self, name: str, deck_list: str) -> dict:
         """Create a new deck with v1."""
         deck_id = _slugify(name)
+
+        # Check for duplicate
+        existing = storage.read_deck(deck_id)
+        if existing is not None:
+            raise ValueError(f"Deck '{deck_id}' already exists")
+
         cards = _parse_decklist_text(deck_list)
         colors = _detect_colors(cards)
         archetype = _detect_archetype(cards)
-        dl_hash = _deck_list_hash(deck_list)
         card_count = sum(c for _, c in cards)
 
-        conn = get_connection()
-        try:
-            conn.execute(
-                "INSERT INTO decks (deck_id, user_id, name, description, colors, archetype) "
-                "VALUES (?, ?, ?, '', ?, ?)",
-                (deck_id, self.user_id, name, json.dumps(colors), archetype),
-            )
-            conn.execute(
-                "INSERT INTO deck_versions "
-                "(deck_id, version_number, deck_list, deck_list_hash, card_count, is_active) "
-                "VALUES (?, 1, ?, ?, ?, 1)",
-                (deck_id, deck_list, dl_hash, card_count),
-            )
-            conn.commit()
-        finally:
-            conn.close()
+        ts = storage.now_iso()
+        deck_data = {
+            "name": name,
+            "format": "standard",
+            "state": "draft",
+            "current_version": 1,
+            "colors": colors,
+            "archetype": archetype,
+            "created": ts,
+            "updated": ts,
+            "versions": [
+                {
+                    "version": 1,
+                    "card_count": card_count,
+                    "cards": deck_list,
+                    "deck_list_hash": _deck_list_hash(deck_list),
+                    "rules_source": "",
+                    "rules_count": 0,
+                    "rules_validated": False,
+                    "ga_status": "not_started",
+                    "ga_fitness": 0,
+                    "is_active": True,
+                    "change_summary": "",
+                    "created": ts,
+                },
+            ],
+        }
+
+        storage.write_deck(deck_id, deck_data)
 
         log.info("Created deck '%s' (%s) — %d cards, %s %s",
                  name, deck_id, card_count, "/".join(colors), archetype)
@@ -197,102 +222,84 @@ class DeckService:
 
     def list_decks(self) -> list[dict]:
         """List all decks with active version summary."""
-        conn = get_connection()
-        try:
-            cur = conn.execute("""
-                SELECT d.deck_id, d.name, d.colors, d.archetype, d.created_at, d.updated_at,
-                       v.version_number, v.card_count, v.rules_count, v.rules_source,
-                       v.ga_status, v.ga_fitness, v.is_active
-                FROM decks d
-                LEFT JOIN deck_versions v ON d.deck_id = v.deck_id AND v.is_active = 1
-                WHERE d.user_id = ?
-                ORDER BY d.updated_at DESC
-            """, (self.user_id,))
-            rows = cur.fetchall()
-        finally:
-            conn.close()
+        result = []
+        for deck_id in storage.list_deck_ids():
+            data = storage.read_deck(deck_id)
+            if not data:
+                continue
 
-        return [
-            {
-                "deck_id": r[0],
-                "name": r[1],
-                "colors": json.loads(r[2]) if r[2] else [],
-                "archetype": r[3],
-                "created_at": r[4],
-                "updated_at": r[5],
-                "active_version": r[6],
-                "card_count": r[7] or 0,
-                "rules_count": r[8] or 0,
-                "rules_source": r[9] or "",
-                "ga_status": r[10] or "not_started",
-                "ga_fitness": r[11] or 0,
-            }
-            for r in rows
-        ]
+            # Find active version
+            active_v = None
+            for v in data.get("versions", []):
+                if v.get("is_active"):
+                    active_v = v
+                    break
+
+            result.append({
+                "deck_id": deck_id,
+                "name": data.get("name", deck_id),
+                "colors": data.get("colors", []),
+                "archetype": data.get("archetype", "unknown"),
+                "created_at": data.get("created", ""),
+                "updated_at": data.get("updated", ""),
+                "active_version": active_v["version"] if active_v else None,
+                "card_count": active_v.get("card_count", 0) if active_v else 0,
+                "rules_count": active_v.get("rules_count", 0) if active_v else 0,
+                "rules_source": active_v.get("rules_source", "") if active_v else "",
+                "ga_status": active_v.get("ga_status", "not_started") if active_v else "not_started",
+                "ga_fitness": active_v.get("ga_fitness", 0) if active_v else 0,
+            })
+
+        return result
 
     # ─── get_deck ────────────────────────────────────────────────
 
     def get_deck(self, deck_id: str) -> dict | None:
         """Full deck detail: metadata + all versions + missing cards."""
-        conn = get_connection()
-        try:
-            cur = conn.execute(
-                "SELECT deck_id, name, description, colors, archetype, created_at, updated_at "
-                "FROM decks WHERE deck_id = ? AND user_id = ?",
-                (deck_id, self.user_id),
-            )
-            row = cur.fetchone()
-            if not row:
-                return None
+        data = storage.read_deck(deck_id)
+        if not data:
+            return None
 
-            deck = {
-                "deck_id": row[0],
-                "name": row[1],
-                "description": row[2],
-                "colors": json.loads(row[3]) if row[3] else [],
-                "archetype": row[4],
-                "created_at": row[5],
-                "updated_at": row[6],
-                "versions": [],
-                "active_version": None,
-                "missing_cards": [],
+        active_version = None
+        active_deck_list = None
+        versions_out = []
+
+        for v in data.get("versions", []):
+            version = {
+                "version_number": v["version"],
+                "card_count": v.get("card_count", 0),
+                "deck_list": v.get("cards", ""),
+                "deck_list_hash": v.get("deck_list_hash", ""),
+                "change_summary": v.get("change_summary", ""),
+                "rules_source": v.get("rules_source", ""),
+                "rules_count": v.get("rules_count", 0),
+                "rules_validated": v.get("rules_validated", False),
+                "ga_status": v.get("ga_status", "not_started"),
+                "ga_fitness": v.get("ga_fitness", 0),
+                "ga_generations": v.get("ga_generations", 0),
+                "is_active": v.get("is_active", False),
+                "created_at": v.get("created", ""),
             }
+            versions_out.append(version)
+            if version["is_active"]:
+                active_version = version["version_number"]
+                active_deck_list = version["deck_list"]
 
-            vcur = conn.execute("""
-                SELECT version_id, version_number, deck_list, deck_list_hash,
-                       card_count, change_summary, rules_path, rules_source,
-                       rules_count, rules_validated, ga_status, ga_fitness,
-                       ga_generations, is_active, created_at
-                FROM deck_versions WHERE deck_id = ?
-                ORDER BY version_number DESC
-            """, (deck_id,))
+        # Sort versions descending
+        versions_out.sort(key=lambda x: x["version_number"], reverse=True)
 
-            active_deck_list = None
-            for vr in vcur.fetchall():
-                version = {
-                    "version_id": vr[0],
-                    "version_number": vr[1],
-                    "deck_list": vr[2],
-                    "deck_list_hash": vr[3],
-                    "card_count": vr[4],
-                    "change_summary": vr[5],
-                    "rules_path": vr[6],
-                    "rules_source": vr[7],
-                    "rules_count": vr[8],
-                    "rules_validated": bool(vr[9]),
-                    "ga_status": vr[10],
-                    "ga_fitness": vr[11],
-                    "ga_generations": vr[12],
-                    "is_active": bool(vr[13]),
-                    "created_at": vr[14],
-                }
-                deck["versions"].append(version)
-                if version["is_active"]:
-                    deck["active_version"] = version["version_number"]
-                    active_deck_list = version["deck_list"]
-
-        finally:
-            conn.close()
+        deck = {
+            "deck_id": deck_id,
+            "name": data.get("name", deck_id),
+            "description": data.get("description", ""),
+            "colors": data.get("colors", []),
+            "archetype": data.get("archetype", "unknown"),
+            "created_at": data.get("created", ""),
+            "updated_at": data.get("updated", ""),
+            "versions": versions_out,
+            "active_version": active_version,
+            "missing_cards": [],
+        }
 
         # Collection check for active version
         if active_deck_list:
@@ -316,107 +323,62 @@ class DeckService:
     # ─── delete_deck ─────────────────────────────────────────────
 
     def delete_deck(self, deck_id: str) -> None:
-        """Delete deck + all versions + associated strategy files."""
-        conn = get_connection()
-        try:
-            # Get rules paths before deletion
-            cur = conn.execute(
-                "SELECT rules_path FROM deck_versions WHERE deck_id = ?",
-                (deck_id,),
-            )
-            rules_paths = [r[0] for r in cur.fetchall() if r[0]]
-
-            conn.execute("DELETE FROM deck_versions WHERE deck_id = ?", (deck_id,))
-            conn.execute(
-                "DELETE FROM decks WHERE deck_id = ? AND user_id = ?",
-                (deck_id, self.user_id),
-            )
-            conn.commit()
-        finally:
-            conn.close()
-
-        # Clean up strategy files
-        for rp in rules_paths:
-            path = USER_RULES_DIR / rp
-            if path.exists():
-                path.unlink()
-                log.info("Deleted strategy file: %s", path)
-
-        # Clean up active strategy + deck file
-        active_strategy = USER_RULES_DIR / f"{deck_id}.json"
-        if active_strategy.exists():
-            active_strategy.unlink()
-        active_deck = USER_DECKS_DIR / f"{deck_id}.txt"
-        if active_deck.exists():
-            active_deck.unlink()
-
-        log.info("Deleted deck '%s' and %d version(s)", deck_id, len(rules_paths))
+        """Delete deck directory and all associated files."""
+        storage.delete_deck_dir(deck_id)
+        log.info("Deleted deck '%s'", deck_id)
 
     # ─── add_version ─────────────────────────────────────────────
 
     def add_version(self, deck_id: str, deck_list: str) -> dict:
         """Add a new version with strategy inheritance."""
-        conn = get_connection()
-        try:
-            # Get previous version info
-            cur = conn.execute("""
-                SELECT version_number, deck_list, rules_path, rules_count
-                FROM deck_versions WHERE deck_id = ?
-                ORDER BY version_number DESC LIMIT 1
-            """, (deck_id,))
-            prev = cur.fetchone()
-            if not prev:
-                raise ValueError(f"Deck '{deck_id}' not found or has no versions")
+        data = storage.read_deck(deck_id)
+        if not data or not data.get("versions"):
+            raise ValueError(f"Deck '{deck_id}' not found or has no versions")
 
-            prev_version = prev[0]
-            prev_deck_list = prev[1]
-            prev_rules_path = prev[2]
-            prev_rules_count = prev[3] or 0
+        versions = data["versions"]
+        prev = max(versions, key=lambda v: v["version"])
+        prev_version = prev["version"]
+        new_version = prev_version + 1
 
-            new_version = prev_version + 1
-            dl_hash = _deck_list_hash(deck_list)
-            cards = _parse_decklist_text(deck_list)
-            card_count = sum(c for _, c in cards)
-            colors = _detect_colors(cards)
-            archetype = _detect_archetype(cards)
+        cards = _parse_decklist_text(deck_list)
+        card_count = sum(c for _, c in cards)
+        colors = _detect_colors(cards)
+        archetype = _detect_archetype(cards)
 
-            # Compute diff
-            prev_cards = _parse_decklist_text(prev_deck_list)
-            change_summary = _compute_diff(prev_cards, cards)
+        # Compute diff
+        prev_cards = _parse_decklist_text(prev.get("cards", ""))
+        change_summary = _compute_diff(prev_cards, cards)
 
-            # Strategy inheritance: copy previous version's rules to new version
-            new_rules_path = ""
-            inherited_rules_count = 0
-            if prev_rules_path:
-                src = USER_RULES_DIR / prev_rules_path
-                if src.exists():
-                    new_rules_path = f"{deck_id}_v{new_version}.json"
-                    dst = USER_RULES_DIR / new_rules_path
-                    USER_RULES_DIR.mkdir(parents=True, exist_ok=True)
-                    shutil.copy2(src, dst)
-                    inherited_rules_count = prev_rules_count
-                    log.info("Inherited rules: %s -> %s (%d rules)",
-                             src.name, dst.name, inherited_rules_count)
+        # Strategy inheritance: copy previous version's strategy
+        inherited_rules_count = 0
+        prev_strategy = storage.read_version_strategy(deck_id, prev_version)
+        if prev_strategy:
+            storage.write_version_strategy(deck_id, new_version, prev_strategy)
+            inherited_rules_count = len(prev_strategy.get("rules", []))
+            log.info("Inherited %d rules from v%d to v%d", inherited_rules_count, prev_version, new_version)
 
-            conn.execute(
-                "INSERT INTO deck_versions "
-                "(deck_id, version_number, deck_list, deck_list_hash, card_count, "
-                " change_summary, rules_path, rules_source, rules_count) "
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                (deck_id, new_version, deck_list, dl_hash, card_count,
-                 change_summary, new_rules_path,
-                 "inherited" if new_rules_path else "",
-                 inherited_rules_count),
-            )
-            # Update deck metadata
-            conn.execute(
-                "UPDATE decks SET colors = ?, archetype = ?, updated_at = CURRENT_TIMESTAMP "
-                "WHERE deck_id = ?",
-                (json.dumps(colors), archetype, deck_id),
-            )
-            conn.commit()
-        finally:
-            conn.close()
+        # Add new version to deck data
+        new_v = {
+            "version": new_version,
+            "card_count": card_count,
+            "cards": deck_list,
+            "deck_list_hash": _deck_list_hash(deck_list),
+            "rules_source": "inherited" if prev_strategy else "",
+            "rules_count": inherited_rules_count,
+            "rules_validated": False,
+            "ga_status": "not_started",
+            "ga_fitness": 0,
+            "is_active": False,
+            "change_summary": change_summary,
+            "created": storage.now_iso(),
+        }
+        data["versions"].append(new_v)
+        data["current_version"] = new_version
+        data["colors"] = colors
+        data["archetype"] = archetype
+        data["updated"] = storage.now_iso()
+
+        storage.write_deck(deck_id, data)
 
         log.info("Added version %d to deck '%s': %s", new_version, deck_id, change_summary)
 
@@ -432,24 +394,14 @@ class DeckService:
 
     def generate_rules(self, deck_id: str, version: int, mode: str = "mechanical") -> dict:
         """Generate rules for a specific version."""
-        conn = get_connection()
-        try:
-            cur = conn.execute(
-                "SELECT deck_list FROM deck_versions "
-                "WHERE deck_id = ? AND version_number = ?",
-                (deck_id, version),
-            )
-            row = cur.fetchone()
-            if not row:
-                raise ValueError(f"Version {version} not found for deck '{deck_id}'")
-            deck_list = row[0]
+        data = storage.read_deck(deck_id)
+        if not data:
+            raise ValueError(f"Deck '{deck_id}' not found")
 
-            # Get deck name
-            ncur = conn.execute("SELECT name FROM decks WHERE deck_id = ?", (deck_id,))
-            name_row = ncur.fetchone()
-            deck_name = name_row[0] if name_row else deck_id
-        finally:
-            conn.close()
+        v_idx, v_data = _find_version(data, version)
+
+        deck_list = v_data.get("cards", "")
+        deck_name = data.get("name", deck_id)
 
         # Write deck_list to temp file for generate_strategy()
         with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
@@ -471,37 +423,29 @@ class DeckService:
                     rules_source = "mechanical+llm"
                 except Exception as e:
                     log.warning("LLM enrichment failed: %s", e)
-                    rules_source = "mechanical"
+
+            # Write strategy file
+            out_path = storage.write_version_strategy(deck_id, version, strategy)
 
             # Validate
-            rules_path = f"{deck_id}_v{version}.json"
-            out_path = USER_RULES_DIR / rules_path
-            USER_RULES_DIR.mkdir(parents=True, exist_ok=True)
-            out_path.write_text(json.dumps(strategy, indent=2, ensure_ascii=False) + "\n")
-
             from .validate_strategy import validate_strategy as validate_fn
             issues = validate_fn(out_path, fix=True)
 
             # Reload to get fixed rule count
             fixed_data = json.loads(out_path.read_text())
             rules_count = len(fixed_data.get("rules", []))
-            validated = 1 if not issues else 0
+            validated = not issues
 
         finally:
             tmp_path.unlink(missing_ok=True)
 
-        # Update version row
-        conn = get_connection()
-        try:
-            conn.execute(
-                "UPDATE deck_versions SET rules_path = ?, rules_source = ?, "
-                "rules_count = ?, rules_validated = ? "
-                "WHERE deck_id = ? AND version_number = ?",
-                (rules_path, rules_source, rules_count, validated, deck_id, version),
-            )
-            conn.commit()
-        finally:
-            conn.close()
+        # Update version metadata in deck.json
+        data["versions"][v_idx]["rules_source"] = rules_source
+        data["versions"][v_idx]["rules_count"] = rules_count
+        data["versions"][v_idx]["rules_validated"] = validated
+        data["state"] = "validated" if validated else "has_rules"
+        data["updated"] = storage.now_iso()
+        storage.write_deck(deck_id, data)
 
         log.info("Generated %d %s rules for %s v%d", rules_count, rules_source, deck_id, version)
 
@@ -510,63 +454,59 @@ class DeckService:
             "version_number": version,
             "rules_count": rules_count,
             "rules_source": rules_source,
-            "rules_validated": bool(validated),
+            "rules_validated": validated,
             "validation_issues": issues,
         }
 
     # ─── deploy_version ──────────────────────────────────────────
 
     def deploy_version(self, deck_id: str, version: int) -> dict:
-        """Deploy a version: copy rules to active location, write decklist."""
-        conn = get_connection()
-        try:
-            cur = conn.execute(
-                "SELECT rules_path, deck_list FROM deck_versions "
-                "WHERE deck_id = ? AND version_number = ?",
-                (deck_id, version),
-            )
-            row = cur.fetchone()
-            if not row:
-                raise ValueError(f"Version {version} not found for deck '{deck_id}'")
+        """Deploy a version: copy rules to active location."""
+        data = storage.read_deck(deck_id)
+        if not data:
+            raise ValueError(f"Deck '{deck_id}' not found")
 
-            rules_path = row[0]
-            deck_list = row[1]
+        _find_version(data, version)
 
-            # Copy rules to active strategy path
-            if rules_path:
-                src = USER_RULES_DIR / rules_path
-                if src.exists():
-                    dst = USER_RULES_DIR / f"{deck_id}.json"
-                    shutil.copy2(src, dst)
-                    log.info("Deployed rules: %s -> %s", src.name, dst.name)
+        # Deploy strategy files
+        deployed = storage.deploy_strategy(deck_id, version)
 
-            # Write deck_list to decks dir
-            USER_DECKS_DIR.mkdir(parents=True, exist_ok=True)
-            deck_file = USER_DECKS_DIR / f"{deck_id}.txt"
-            deck_file.write_text(deck_list)
+        # Update is_active flags
+        for v in data["versions"]:
+            v["is_active"] = (v["version"] == version)
 
-            # Set is_active=1 on this version, 0 on all others
-            conn.execute(
-                "UPDATE deck_versions SET is_active = 0 WHERE deck_id = ?",
-                (deck_id,),
-            )
-            conn.execute(
-                "UPDATE deck_versions SET is_active = 1 "
-                "WHERE deck_id = ? AND version_number = ?",
-                (deck_id, version),
-            )
-            conn.execute(
-                "UPDATE decks SET updated_at = CURRENT_TIMESTAMP WHERE deck_id = ?",
-                (deck_id,),
-            )
-            conn.commit()
-        finally:
-            conn.close()
+        data["state"] = "deployed"
+        data["current_version"] = version
+        data["updated"] = storage.now_iso()
+        storage.write_deck(deck_id, data)
 
-        log.info("Deployed version %d of deck '%s'", version, deck_id)
+        log.info("Deployed version %d of deck '%s' (strategy=%s)", version, deck_id, deployed)
 
         return {
             "deck_id": deck_id,
             "version_number": version,
             "deployed": True,
         }
+
+    # ─── undeploy_version ────────────────────────────────────────
+
+    def undeploy_version(self, deck_id: str) -> dict:
+        """Remove deployed strategy, set state back to has_rules."""
+        data = storage.read_deck(deck_id)
+        if not data:
+            raise ValueError(f"Deck '{deck_id}' not found")
+
+        storage.undeploy_strategy(deck_id)
+
+        for v in data["versions"]:
+            v["is_active"] = False
+
+        # Find best state based on whether any version has rules
+        has_rules = any(v.get("rules_count", 0) > 0 for v in data["versions"])
+        data["state"] = "has_rules" if has_rules else "draft"
+        data["updated"] = storage.now_iso()
+        storage.write_deck(deck_id, data)
+
+        log.info("Undeployed deck '%s'", deck_id)
+
+        return {"deck_id": deck_id, "undeployed": True}

@@ -26,6 +26,9 @@ log = logging.getLogger(__name__)
 RULES_DIR = Path(__file__).parent.parent / "data" / "strategies"
 USER_RULES_DIR = USER_DATA_DIR / "strategies"
 
+# ─── Hot-reload: mtime-based cache invalidation ────────────────
+_strategy_cache: dict[str, tuple[float, Strategy]] = {}  # path -> (mtime, strategy)
+
 # Layer priority (higher = more specific)
 LAYERS = {
     "general": 0,
@@ -1399,7 +1402,18 @@ def load_raw_strategy(name: str) -> dict | None:
     return json.loads(path.read_text())
 
 
-def _load_strategy_file(path: Path) -> Strategy | None:
+def _load_strategy_file(path: Path, *, use_cache: bool = True) -> Strategy | None:
+    # Hot-reload: return cached if mtime unchanged
+    try:
+        mtime = path.stat().st_mtime
+    except OSError:
+        mtime = 0
+
+    if use_cache:
+        cached = _strategy_cache.get(str(path))
+        if cached and cached[0] == mtime:
+            return cached[1]
+
     try:
         data = json.loads(path.read_text())
         saved_version = data.get("_engine_version", "")
@@ -1410,7 +1424,7 @@ def _load_strategy_file(path: Path) -> Strategy | None:
         if saved_schema and saved_schema != SCHEMA_VERSION:
             log.warning("Strategy %s uses schema %s (current: %s)", path.stem, saved_schema, SCHEMA_VERSION)
         rules = [_rule_from_dict(r) for r in data.get("rules", [])]
-        return Strategy(
+        strat = Strategy(
             name=data["name"],
             deck_signature=data.get("deck_signature", []),
             colors=data.get("colors", []),
@@ -1421,6 +1435,10 @@ def _load_strategy_file(path: Path) -> Strategy | None:
             stats=data.get("stats", {"games": 0, "wins": 0, "losses": 0}),
             global_biases=data.get("global_biases", {}),
         )
+        # Cache with mtime captured at start (single stat, no race)
+        if use_cache:
+            _strategy_cache[str(path)] = (mtime, strat)
+        return strat
     except Exception as e:
         log.error("Failed to load strategy %s: %s", path, e)
         return None
@@ -1428,11 +1446,20 @@ def _load_strategy_file(path: Path) -> Strategy | None:
 
 def _all_strategy_dirs() -> list[Path]:
     """Return all directories to search for strategy files.
-    User strategies take priority over built-in ones."""
+    User strategies (flat legacy dir) take priority over built-in ones."""
     dirs = [RULES_DIR]
     if USER_RULES_DIR.exists() and USER_RULES_DIR != RULES_DIR:
         dirs.insert(0, USER_RULES_DIR)
     return dirs
+
+
+def invalidate_strategy_cache() -> int:
+    """Clear the strategy mtime cache. Returns number of entries cleared."""
+    n = len(_strategy_cache)
+    _strategy_cache.clear()
+    if n:
+        log.info("Invalidated strategy cache (%d entries)", n)
+    return n
 
 
 def find_matching_strategy(state: GameState) -> Strategy | None:
