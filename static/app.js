@@ -1037,9 +1037,10 @@ function renderDebugPanel() {
     if (dbg.vulnerabilities?.length) {
         html += '<div class="debug-section">';
         html += '<div class="debug-heading">Vulnerabilities</div>';
-        html += dbg.vulnerabilities.map(v =>
-            `<span class="debug-badge vuln-badge">${v}</span>`
-        ).join(' ');
+        html += dbg.vulnerabilities.map(v => {
+            if (typeof v === 'string') return `<span class="debug-badge vuln-badge">${v}</span>`;
+            return `<span class="debug-badge vuln-badge">${v.card || v.name || '?'}${v.severity ? ' (' + v.severity + ')' : ''}</span>`;
+        }).join(' ');
         html += '</div>';
     }
 
