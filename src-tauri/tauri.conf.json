@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "identifier": "com.scryglass.app",
   "build": {
-    "frontendDist": "../static",
+    "frontendDist": "http://localhost:8765",
     "devUrl": "http://localhost:8765"
   },
   "app": {
