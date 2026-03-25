@@ -5,10 +5,41 @@ use tauri::{
 
 mod sidecar;
 
+#[tauri::command]
+fn toggle_overlay(app: tauri::AppHandle) {
+    if let Some(win) = app.get_webview_window("overlay") {
+        if win.is_visible().unwrap_or(false) {
+            let _ = win.hide();
+        } else {
+            let _ = win.show();
+            let _ = win.set_focus();
+        }
+    }
+}
+
+#[tauri::command]
+fn show_overlay(app: tauri::AppHandle) {
+    if let Some(win) = app.get_webview_window("overlay") {
+        let _ = win.show();
+    }
+}
+
+#[tauri::command]
+fn hide_overlay(app: tauri::AppHandle) {
+    if let Some(win) = app.get_webview_window("overlay") {
+        let _ = win.hide();
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
+        .invoke_handler(tauri::generate_handler![
+            toggle_overlay,
+            show_overlay,
+            hide_overlay,
+        ])
         .setup(|app| {
             // Start Python sidecar
             let handle = app.handle().clone();
@@ -18,7 +49,7 @@ pub fn run() {
                 }
             });
 
-            // Build tray icon
+            // Build tray icon with menu
             let _tray = TrayIconBuilder::new()
                 .tooltip("Scryglass — MTGA Advisor")
                 .on_tray_icon_event(|tray, event| {
@@ -36,6 +67,15 @@ pub fn run() {
                     }
                 })
                 .build(app)?;
+
+            // Show overlay after a short delay (wait for sidecar)
+            let handle2 = app.handle().clone();
+            tauri::async_runtime::spawn(async move {
+                tokio::time::sleep(std::time::Duration::from_secs(15)).await;
+                if let Some(win) = handle2.get_webview_window("overlay") {
+                    let _ = win.show();
+                }
+            });
 
             Ok(())
         })

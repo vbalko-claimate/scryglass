@@ -742,6 +742,12 @@ async def decks_page():
                         headers={"Cache-Control": "no-cache, no-store, must-revalidate"})
 
 
+@app.get("/overlay")
+async def overlay_page():
+    return FileResponse(str(STATIC_DIR / "overlay.html"),
+                        headers={"Cache-Control": "no-cache, no-store, must-revalidate"})
+
+
 @app.get("/api/manage/strategies")
 async def manage_strategies():
     """List all strategies from deck dirs and built-in."""

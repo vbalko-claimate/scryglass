@@ -968,6 +968,13 @@ document.addEventListener('keydown', (e) => {
         if (e.key === '2') { e.preventDefault(); setProfile('full'); }
         if (e.key === '3') { e.preventDefault(); setProfile('tactical'); }
     }
+    // Toggle overlay with backtick (`) key
+    if (e.key === '`' && !e.ctrlKey && !e.altKey) {
+        e.preventDefault();
+        if (window.__TAURI__) {
+            window.__TAURI__.core.invoke('toggle_overlay');
+        }
+    }
 });
 
 // ─── Debug Panel ───

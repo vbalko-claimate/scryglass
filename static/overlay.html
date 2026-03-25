@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scryglass Overlay</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body {
+    background: transparent;
+    overflow: hidden;
+    font-family: 'Inter', 'SF Pro Text', 'Segoe UI', system-ui, sans-serif;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+#overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 280px;
+    padding: 10px 12px;
+    background: rgba(12, 12, 18, 0.82);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 8px;
+    color: rgba(240, 238, 230, 0.95);
+    transition: opacity 0.15s ease-out;
+}
+
+#overlay.hidden { opacity: 0; pointer-events: none; }
+#overlay.compact { padding: 6px 10px; }
+
+/* Opponent line */
+.opp-line {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: rgba(200, 198, 190, 0.8);
+    margin-bottom: 6px;
+    min-height: 18px;
+}
+.opp-deck {
+    font-weight: 600;
+    color: rgba(240, 238, 230, 0.95);
+}
+.opp-conf {
+    font-size: 10px;
+    color: rgba(160, 158, 150, 0.6);
+}
+.opp-conf.high { color: #81c784; }
+.opp-conf.mid { color: #ffc107; }
+.opp-conf.low { color: rgba(160, 158, 150, 0.5); }
+
+/* Key play */
+.key-play {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    min-height: 22px;
+}
+.key-play-indicator {
+    width: 3px;
+    min-height: 18px;
+    border-radius: 2px;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+.key-play-indicator.critical { background: #E63946; }
+.key-play-indicator.high { background: #F4A261; }
+.key-play-indicator.medium { background: #6C9A8B; }
+.key-play-indicator.low { background: rgba(139, 139, 153, 0.5); }
+
+.key-play-text {
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.3;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* Threat warning */
+.threat-line {
+    font-size: 11px;
+    color: #F4A261;
+    margin-top: 5px;
+    padding-top: 5px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    display: none;
+}
+.threat-line.visible { display: block; }
+
+/* Phase indicator */
+.phase-line {
+    font-size: 10px;
+    color: rgba(160, 158, 150, 0.4);
+    margin-top: 4px;
+    text-align: right;
+}
+
+/* Do Now (expandable) */
+.do-now {
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    display: none;
+}
+.do-now.visible { display: block; }
+.do-now-item {
+    font-size: 11px;
+    color: rgba(200, 198, 190, 0.7);
+    padding: 2px 0;
+    padding-left: 11px;
+    position: relative;
+}
+.do-now-item::before {
+    content: '·';
+    position: absolute;
+    left: 3px;
+    color: rgba(160, 158, 150, 0.4);
+}
+
+/* Waiting state */
+.waiting {
+    font-size: 11px;
+    color: rgba(160, 158, 150, 0.4);
+    font-style: italic;
+}
+</style>
+</head>
+<body>
+<div id="overlay">
+    <div class="opp-line" id="opp-line">
+        <span class="waiting" id="waiting-msg">Waiting for match...</span>
+    </div>
+    <div class="key-play" id="key-play" style="display:none">
+        <div class="key-play-indicator medium" id="key-play-indicator"></div>
+        <div class="key-play-text" id="key-play-text"></div>
+    </div>
+    <div class="threat-line" id="threat-line"></div>
+    <div class="do-now" id="do-now"></div>
+    <div class="phase-line" id="phase-line"></div>
+</div>
+
+<script>
+let ws = null;
+let currentStrategyInfo = null;
+let isMyTurn = false;
+
+function connect() {
+    ws = new WebSocket(`ws://${location.hostname}:8765/ws`);
+    ws.onopen = () => {};
+    ws.onclose = () => setTimeout(connect, 2000);
+    ws.onerror = () => {};
+    ws.onmessage = (evt) => {
+        const msg = JSON.parse(evt.data);
+        switch (msg.type) {
+            case 'state_update':
+                updateState(msg.data);
+                break;
+            case 'advice':
+                updateAdvice(msg.data);
+                break;
+            case 'strategy_info':
+                currentStrategyInfo = msg.data;
+                updateOppLine(msg.data);
+                break;
+            case 'match_start':
+                document.getElementById('waiting-msg').textContent = 'Match started...';
+                break;
+            case 'match_end':
+                resetOverlay();
+                break;
+        }
+    };
+}
+
+function updateState(state) {
+    const ti = state.turn || {};
+    isMyTurn = ti.is_my_turn === true;
+    const overlay = document.getElementById('overlay');
+
+    // Phase-adaptive: compact on opponent's turn
+    if (isMyTurn) {
+        overlay.classList.remove('compact');
+        document.getElementById('do-now').classList.add('visible');
+    } else {
+        overlay.classList.add('compact');
+        document.getElementById('do-now').classList.remove('visible');
+    }
+
+    // Phase line
+    const phase = ti.phase_display || '';
+    const turnNum = ti.number || '';
+    if (turnNum) {
+        document.getElementById('phase-line').textContent =
+            `T${turnNum} · ${phase} · ${isMyTurn ? 'Your turn' : 'Opp turn'}`;
+    }
+}
+
+function updateOppLine(info) {
+    const el = document.getElementById('opp-line');
+    const waitMsg = document.getElementById('waiting-msg');
+
+    if (info && info.opp_deck) {
+        const conf = info.opp_confidence || 0;
+        const confClass = conf >= 80 ? 'high' : conf >= 50 ? 'mid' : 'low';
+        waitMsg.style.display = 'none';
+        el.innerHTML = `<span class="opp-deck">${info.opp_deck}</span>`
+            + `<span class="opp-conf ${confClass}">${conf}%</span>`;
+    } else if (info && info.strategy_name) {
+        waitMsg.style.display = 'none';
+        el.innerHTML = `<span class="opp-deck">${info.strategy_name}</span>`;
+    } else {
+        waitMsg.style.display = '';
+        waitMsg.textContent = 'Waiting for match...';
+    }
+}
+
+function updateAdvice(data) {
+    const items = data.items || data || [];
+    if (!items.length) return;
+
+    // Find spotlight (highest priority with action_scores)
+    const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
+    const sorted = [...items].sort((a, b) => {
+        const pa = priorityOrder[a.priority] ?? 4;
+        const pb = priorityOrder[b.priority] ?? 4;
+        if (pa !== pb) return pa - pb;
+        const sa = a.action_scores?.length ? Math.max(...a.action_scores.map(s => s.score)) : 0;
+        const sb = b.action_scores?.length ? Math.max(...b.action_scores.map(s => s.score)) : 0;
+        return sb - sa;
+    });
+
+    // Key play = first "now" item (heuristic or strategy, not intel)
+    const nowItems = sorted.filter(a => a.source !== 'intel');
+    const intelItems = sorted.filter(a => a.source === 'intel');
+
+    const keyPlay = nowItems[0];
+    if (keyPlay) {
+        const el = document.getElementById('key-play');
+        const indicator = document.getElementById('key-play-indicator');
+        const text = document.getElementById('key-play-text');
+
+        el.style.display = 'flex';
+        indicator.className = 'key-play-indicator ' + (keyPlay.priority || 'medium');
+        text.textContent = keyPlay.message;
+    }
+
+    // Do now (next 2 items)
+    const doNow = document.getElementById('do-now');
+    const secondary = nowItems.slice(1, 4);
+    if (secondary.length && isMyTurn) {
+        doNow.classList.add('visible');
+        doNow.innerHTML = secondary.map(a =>
+            `<div class="do-now-item">${a.message}</div>`
+        ).join('');
+    } else {
+        doNow.classList.remove('visible');
+    }
+
+    // Threat line (from intel)
+    const threat = intelItems.find(a => a.priority === 'high' || a.priority === 'critical');
+    const threatEl = document.getElementById('threat-line');
+    if (threat) {
+        threatEl.textContent = '⚠ ' + threat.message;
+        threatEl.classList.add('visible');
+    } else {
+        threatEl.classList.remove('visible');
+    }
+}
+
+function resetOverlay() {
+    document.getElementById('key-play').style.display = 'none';
+    document.getElementById('threat-line').classList.remove('visible');
+    document.getElementById('do-now').classList.remove('visible');
+    document.getElementById('opp-line').innerHTML =
+        '<span class="waiting">Waiting for match...</span>';
+    document.getElementById('phase-line').textContent = '';
+}
+
+connect();
+</script>
+</body>
+</html>
