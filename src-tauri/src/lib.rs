@@ -1,4 +1,5 @@
 use tauri::{
+    menu::{MenuBuilder, MenuItemBuilder},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
     Manager,
 };
@@ -80,9 +81,44 @@ pub fn run() {
                 });
             });
 
-            // Build tray icon
+            // Build menu bar tray icon with dropdown
+            let show_item = MenuItemBuilder::with_id("show", "Show Advisor").build(app)?;
+            let review_item = MenuItemBuilder::with_id("review", "Post-Game Review").build(app)?;
+            let setup_item = MenuItemBuilder::with_id("setup", "Setup").build(app)?;
+            let quit_item = MenuItemBuilder::with_id("quit", "Quit Scryglass").build(app)?;
+
+            let menu = MenuBuilder::new(app)
+                .item(&show_item)
+                .item(&review_item)
+                .separator()
+                .item(&setup_item)
+                .separator()
+                .item(&quit_item)
+                .build()?;
+
             let _tray = TrayIconBuilder::new()
-                .tooltip("Scryglass — MTGA Advisor")
+                .tooltip("Scryglass")
+                .menu(&menu)
+                .on_menu_event(|app, event| {
+                    match event.id().as_ref() {
+                        "show" => {
+                            if let Some(w) = app.get_webview_window("main") {
+                                let _ = w.show();
+                                let _ = w.set_focus();
+                            }
+                        }
+                        "review" => {
+                            let _ = open::that("http://localhost:8765/review");
+                        }
+                        "setup" => {
+                            let _ = open::that("http://localhost:8765/setup");
+                        }
+                        "quit" => {
+                            std::process::exit(0);
+                        }
+                        _ => {}
+                    }
+                })
                 .on_tray_icon_event(|tray, event| {
                     if let TrayIconEvent::Click {
                         button: MouseButton::Left,
