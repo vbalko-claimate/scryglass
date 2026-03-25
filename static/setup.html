@@ -90,30 +90,26 @@ h1 { color: #e94560; font-size: 28px; margin-bottom: 8px; }
 async function runChecks() {
     let allOk = true;
 
-    // Check 1: Server health
+    // Check 1: Server health + card count
+    let cardCount = 0;
     try {
         const res = await fetch('/health');
         const data = await res.json();
         setCheck('server', 'ok', `Engine v${data.engine_version} running`);
+        cardCount = data.card_count || 0;
     } catch(e) {
         setCheck('server', 'fail', 'Server not responding');
         allOk = false;
     }
 
     // Check 2: Card database
-    try {
-        const res = await fetch('/api/manage/collection-stats');
-        const data = await res.json();
-        const cards = data.total_cards || data.card_count || 0;
-        if (cards > 0) {
-            setCheck('cards', 'ok', `${cards.toLocaleString()} cards loaded`);
-        } else {
-            setCheck('cards', 'warn', 'No cards imported — install MTGA and restart');
-            allOk = false;
-        }
-    } catch(e) {
-        // Try health endpoint for card count
-        setCheck('cards', 'warn', 'Could not check card database');
+    if (cardCount > 1000) {
+        setCheck('cards', 'ok', `${cardCount.toLocaleString()} cards in database`);
+    } else if (cardCount > 0) {
+        setCheck('cards', 'warn', `Only ${cardCount} cards — restart may help`);
+    } else {
+        setCheck('cards', 'warn', 'No cards imported — install MTGA and restart');
+        allOk = false;
     }
 
     // Check 3: MTGA log

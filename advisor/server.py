@@ -79,7 +79,11 @@ app.include_router(deck_router)
 async def health():
     """Health check for sidecar readiness."""
     from .version import ENGINE_VERSION
-    return {"status": "ok", "engine_version": ENGINE_VERSION}
+    return {
+        "status": "ok",
+        "engine_version": ENGINE_VERSION,
+        "card_count": card_cache.size,
+    }
 
 
 @app.get("/match-status")
