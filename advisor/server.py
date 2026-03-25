@@ -87,6 +87,115 @@ async def match_status():
     """Is a match currently active? Used by overlay to show/hide."""
     return {"active": tracker.match_active}
 
+
+@app.get("/api/review/matches")
+async def review_match_list():
+    """List recent matches for review selection."""
+    from .database import get_connection
+    conn = get_connection()
+    try:
+        rows = conn.execute("""
+            SELECT match_id, my_deck_name, opp_deck_name, result, started_at
+            FROM matches
+            WHERE result != ''
+            ORDER BY started_at DESC
+            LIMIT 20
+        """).fetchall()
+        return [
+            {"match_id": r[0], "my_deck": r[1], "opp_deck": r[2], "result": r[3], "started": r[4]}
+            for r in rows
+        ]
+    finally:
+        conn.close()
+
+
+@app.get("/api/review/latest")
+async def latest_match_review():
+    """Review the most recent completed match."""
+    from .database import get_connection
+    conn = get_connection()
+    try:
+        row = conn.execute(
+            "SELECT match_id FROM matches WHERE result != '' ORDER BY started_at DESC LIMIT 1"
+        ).fetchone()
+        if not row:
+            return JSONResponse({"error": "No completed matches"}, status_code=404)
+        match_id = row[0]
+    finally:
+        conn.close()
+    return await match_review_detail(match_id)
+
+
+@app.get("/api/review/{match_id}")
+async def match_review_detail(match_id: str):
+    """Post-game review — key advice per turn for a match."""
+    from .database import get_connection
+    conn = get_connection()
+    try:
+        # Match info
+        match_row = conn.execute(
+            "SELECT match_id, my_deck_name, opp_deck_name, result, started_at, ended_at "
+            "FROM matches WHERE match_id = ?", (match_id,)
+        ).fetchone()
+        if not match_row:
+            return JSONResponse({"error": "Match not found"}, status_code=404)
+
+        match_info = {
+            "match_id": match_row[0],
+            "my_deck": match_row[1],
+            "opp_deck": match_row[2],
+            "result": match_row[3],
+            "started": match_row[4],
+            "ended": match_row[5],
+        }
+
+        # Advice grouped by turn
+        rows = conn.execute("""
+            SELECT turn_number, phase, source, priority, message, details
+            FROM advice_log
+            WHERE match_id = ?
+            AND source IN ('heuristic', 'strategy')
+            AND priority IN ('critical', 'high', 'medium')
+            ORDER BY turn_number, timestamp
+        """, (match_id,)).fetchall()
+
+        turns: dict[int, list] = {}
+        for turn, phase, source, priority, message, details in rows:
+            turns.setdefault(turn, []).append({
+                "phase": phase,
+                "source": source,
+                "priority": priority,
+                "message": message,
+                "details": details or "",
+            })
+
+        # Key moments — turns with critical/high advice
+        key_moments = []
+        for turn_num, advices in sorted(turns.items()):
+            critical = [a for a in advices if a["priority"] in ("critical", "high")]
+            if critical:
+                key_moments.append({
+                    "turn": turn_num,
+                    "advice": critical[:3],
+                    "all_advice_count": len(advices),
+                })
+
+        return {
+            "match": match_info,
+            "turns": {str(k): v for k, v in sorted(turns.items())},
+            "key_moments": key_moments,
+            "total_turns": max(turns.keys()) if turns else 0,
+            "total_advice": sum(len(v) for v in turns.values()),
+        }
+    finally:
+        conn.close()
+
+
+@app.get("/review")
+async def review_page():
+    return FileResponse(str(STATIC_DIR / "review.html"),
+                        headers={"Cache-Control": "no-cache, no-store, must-revalidate"})
+
 # Static files
 STATIC_DIR = Path(__file__).parent.parent / "static"
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
