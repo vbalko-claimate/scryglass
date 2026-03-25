@@ -19,21 +19,6 @@
         "minWidth": 800,
         "minHeight": 600,
         "url": "http://localhost:8765"
-      },
-      {
-        "label": "overlay",
-        "title": "",
-        "width": 280,
-        "height": 200,
-        "x": 8,
-        "y": 120,
-        "transparent": true,
-        "decorations": false,
-        "alwaysOnTop": true,
-        "skipTaskbar": true,
-        "resizable": false,
-        "url": "http://localhost:8765/overlay",
-        "visible": false
       }
     ],
     "trayIcon": {

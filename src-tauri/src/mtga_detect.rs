@@ -63,3 +63,25 @@ print("\(bestX),\(bestY),\(bestW),\(bestH)")
         Err(_) => MtgaWindow { x: 0, y: 0, width: 0, height: 0, found: false },
     }
 }
+
+/// Check if MTGA is the frontmost (active) application.
+pub fn is_mtga_frontmost() -> bool {
+    let script = r#"
+import Cocoa
+let front = NSWorkspace.shared.frontmostApplication?.localizedName ?? ""
+print(front.contains("MTGA") ? "1" : "0")
+"#;
+
+    let output = Command::new("swift")
+        .arg("-e")
+        .arg(script)
+        .output();
+
+    match output {
+        Ok(out) => {
+            let s = String::from_utf8_lossy(&out.stdout).trim().to_string();
+            s == "1"
+        }
+        Err(_) => false,
+    }
+}

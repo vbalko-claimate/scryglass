@@ -1,21 +1,16 @@
 use tauri::{
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
-    Manager, LogicalPosition,
+    Manager,
 };
+use std::process::Command;
 
 mod mtga_detect;
 mod sidecar;
 
 #[tauri::command]
-fn toggle_overlay(app: tauri::AppHandle) {
-    if let Some(win) = app.get_webview_window("overlay") {
-        if win.is_visible().unwrap_or(false) {
-            let _ = win.hide();
-        } else {
-            let _ = win.show();
-            let _ = win.set_focus();
-        }
-    }
+fn toggle_overlay() {
+    // Toggle is handled by the overlay process itself
+    // For now, this is a placeholder
 }
 
 #[tauri::command]
@@ -23,19 +18,24 @@ fn find_mtga() -> mtga_detect::MtgaWindow {
     mtga_detect::find_mtga_window()
 }
 
-/// Reposition overlay to the MTGA window's screen
-fn position_overlay_on_mtga(app: &tauri::AppHandle) {
-    let mtga = mtga_detect::find_mtga_window();
-    if !mtga.found {
-        return;
-    }
-    if let Some(win) = app.get_webview_window("overlay") {
-        // Position overlay at top-left of MTGA window with small offset
-        let x = mtga.x as f64 + 8.0;
-        let y = mtga.y as f64 + 8.0;
-        let _ = win.set_position(LogicalPosition::new(x, y));
-        let _ = win.show();
-        println!("[overlay] Positioned on MTGA at ({}, {})", x, y);
+/// Launch the native overlay helper (swift process)
+fn launch_overlay_helper() {
+    let overlay_script = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("overlay_helper.swift");
+
+    if overlay_script.exists() {
+        std::thread::spawn(move || {
+            println!("[overlay] Launching native overlay helper...");
+            let status = Command::new("swift")
+                .arg(overlay_script)
+                .status();
+            match status {
+                Ok(s) => println!("[overlay] Helper exited: {}", s),
+                Err(e) => eprintln!("[overlay] Failed to launch: {}", e),
+            }
+        });
+    } else {
+        eprintln!("[overlay] overlay_helper.swift not found at {:?}", overlay_script);
     }
 }
 
@@ -56,6 +56,16 @@ pub fn run() {
                 }
             });
 
+            // Launch native overlay helper after sidecar is ready
+            let handle2 = app.handle().clone();
+            tauri::async_runtime::spawn(async move {
+                // Wait for server to be ready
+                tokio::time::sleep(std::time::Duration::from_secs(12)).await;
+                let _ = handle2.run_on_main_thread(|| {
+                    launch_overlay_helper();
+                });
+            });
+
             // Build tray icon
             let _tray = TrayIconBuilder::new()
                 .tooltip("Scryglass — MTGA Advisor")
@@ -74,19 +84,6 @@ pub fn run() {
                     }
                 })
                 .build(app)?;
-
-            // Periodically check for MTGA and position overlay
-            let handle2 = app.handle().clone();
-            tauri::async_runtime::spawn(async move {
-                // Wait for sidecar to start
-                tokio::time::sleep(std::time::Duration::from_secs(10)).await;
-
-                loop {
-                    position_overlay_on_mtga(&handle2);
-                    // Re-check every 10 seconds (MTGA might move or start)
-                    tokio::time::sleep(std::time::Duration::from_secs(10)).await;
-                }
-            });
 
             Ok(())
         })
