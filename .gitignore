@@ -23,3 +23,5 @@ __pycache__/
 # Claude Code
 .claude/
 mtga_collection_raw.json
+src-tauri/target/
+src-tauri/binaries/scry-server-*

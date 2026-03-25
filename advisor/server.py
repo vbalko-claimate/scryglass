@@ -74,6 +74,13 @@ def _archive_player_log(log_path: Path):
 app = FastAPI(title="MTGA Advisor")
 app.include_router(deck_router)
 
+
+@app.get("/health")
+async def health():
+    """Health check for sidecar readiness."""
+    from .version import ENGINE_VERSION
+    return {"status": "ok", "engine_version": ENGINE_VERSION}
+
 # Static files
 STATIC_DIR = Path(__file__).parent.parent / "static"
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
