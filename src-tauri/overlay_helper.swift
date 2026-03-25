@@ -25,6 +25,20 @@ class OverlayDelegate: NSObject, NSApplicationDelegate {
         window.hasShadow = false
         window.ignoresMouseEvents = true  // click-through — clicks go to MTGA
 
+        // Monitor for Option+drag to reposition overlay
+        NSEvent.addGlobalMonitorForEvents(matching: .flagsChanged) { [weak self] event in
+            guard let self = self else { return }
+            // Option key toggles mouse interactivity (for dragging)
+            if event.modifierFlags.contains(.option) {
+                self.window.ignoresMouseEvents = false
+            } else {
+                self.window.ignoresMouseEvents = true
+            }
+        }
+
+        // Allow dragging when mouse events are enabled
+        window.isMovableByWindowBackground = true
+
         // Create WKWebView with transparent background
         let config = WKWebViewConfiguration()
         webView = WKWebView(frame: window.contentView!.bounds, configuration: config)
@@ -43,6 +57,22 @@ class OverlayDelegate: NSObject, NSApplicationDelegate {
             self?.syncWithMTGA()
         }
 
+        // Restore saved position
+        let savedX = UserDefaults.standard.double(forKey: "overlay_x")
+        let savedY = UserDefaults.standard.double(forKey: "overlay_y")
+        if savedX > 0 || savedY > 0 {
+            window.setFrameOrigin(NSPoint(x: savedX, y: savedY))
+        }
+
+        // Save position when window moves
+        NotificationCenter.default.addObserver(
+            forName: NSWindow.didMoveNotification, object: window, queue: nil
+        ) { [weak self] _ in
+            guard let origin = self?.window.frame.origin else { return }
+            UserDefaults.standard.set(origin.x, forKey: "overlay_x")
+            UserDefaults.standard.set(origin.y, forKey: "overlay_y")
+        }
+
         print("overlay:ready")
         fflush(stdout)
     }
@@ -55,30 +85,34 @@ class OverlayDelegate: NSObject, NSApplicationDelegate {
         let matchActive = checkMatchActive()
 
         if mtgaFront && matchActive && !window.isVisible {
-            // Find MTGA window position
-            let options: CGWindowListOption = [.optionAll, .excludeDesktopElements]
-            if let windowList = CGWindowListCopyWindowInfo(options, kCGNullWindowID) as? [[String: Any]] {
-                var bestArea = 0
-                var bestX = 0.0, bestY = 0.0
-                for w in windowList {
-                    let owner = w["kCGWindowOwnerName"] as? String ?? ""
-                    if owner.contains("MTGA") {
-                        let bounds = w["kCGWindowBounds"] as? [String: Any] ?? [:]
-                        let width = bounds["Width"] as? Int ?? 0
-                        let height = bounds["Height"] as? Int ?? 0
-                        let area = width * height
-                        if area > bestArea && width > 100 && height > 100 {
-                            bestArea = area
-                            bestX = Double(bounds["X"] as? Int ?? 0)
-                            bestY = Double(bounds["Y"] as? Int ?? 0)
+            // Only set position if user hasn't manually positioned it
+            let hasCustomPosition = UserDefaults.standard.double(forKey: "overlay_x") > 0
+                || UserDefaults.standard.double(forKey: "overlay_y") > 0
+            if !hasCustomPosition {
+                // Find MTGA window position
+                let options: CGWindowListOption = [.optionAll, .excludeDesktopElements]
+                if let windowList = CGWindowListCopyWindowInfo(options, kCGNullWindowID) as? [[String: Any]] {
+                    var bestArea = 0
+                    var bestX = 0.0, bestY = 0.0
+                    for w in windowList {
+                        let owner = w["kCGWindowOwnerName"] as? String ?? ""
+                        if owner.contains("MTGA") {
+                            let bounds = w["kCGWindowBounds"] as? [String: Any] ?? [:]
+                            let width = bounds["Width"] as? Int ?? 0
+                            let height = bounds["Height"] as? Int ?? 0
+                            let area = width * height
+                            if area > bestArea && width > 100 && height > 100 {
+                                bestArea = area
+                                bestX = Double(bounds["X"] as? Int ?? 0)
+                                bestY = Double(bounds["Y"] as? Int ?? 0)
+                            }
                         }
                     }
-                }
-                if bestArea > 0 {
-                    // Convert from top-left (CG) to bottom-left (AppKit)
-                    let screenHeight = NSScreen.main?.frame.height ?? 1080
-                    let appkitY = screenHeight - bestY - 240
-                    window.setFrameOrigin(NSPoint(x: bestX + 8, y: appkitY))
+                    if bestArea > 0 {
+                        let screenHeight = NSScreen.main?.frame.height ?? 1080
+                        let appkitY = screenHeight - bestY - 240
+                        window.setFrameOrigin(NSPoint(x: bestX + 8, y: appkitY))
+                    }
                 }
             }
             window.orderFrontRegardless()
