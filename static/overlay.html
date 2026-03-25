@@ -296,9 +296,9 @@ function updateState(state) {
             `T${turnNum} · ${phase} · ${isMyTurn ? 'Your turn' : 'Opp turn'}`;
     }
 
-    // Update card bars
-    updateHandBadges(state);
-    updateThreatBadges(state);
+    // Card badges disabled — experimental, needs better positioning
+    // updateHandBadges(state);
+    // updateThreatBadges(state);
 }
 
 function updateOppLine(info) {
