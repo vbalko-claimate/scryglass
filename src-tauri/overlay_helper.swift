@@ -5,6 +5,12 @@
 import Cocoa
 import WebKit
 
+// Custom window that never becomes key/main — won't steal focus from MTGA
+class OverlayWindow: NSWindow {
+    override var canBecomeKey: Bool { false }
+    override var canBecomeMain: Bool { false }
+}
+
 class OverlayDelegate: NSObject, NSApplicationDelegate {
     var window: NSWindow!
     var webView: WKWebView!
@@ -14,7 +20,7 @@ class OverlayDelegate: NSObject, NSApplicationDelegate {
         // Create borderless transparent window
         // Full screen transparent window — overlay elements position themselves via CSS
         let screenFrame = NSScreen.main?.frame ?? NSRect(x: 0, y: 0, width: 1920, height: 1080)
-        window = NSWindow(
+        window = OverlayWindow(
             contentRect: screenFrame,
             styleMask: [.borderless],
             backing: .buffered,
