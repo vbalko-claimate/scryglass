@@ -371,7 +371,9 @@ def get_card(grp_id: int) -> CardInfo | None:
     )
 
 
-CARDS_JSON_PATH = Path(__file__).parent.parent / "data" / "cards_cache.json"
+# Read bundled cache from package; write exports to DATA_DIR (writable)
+_BUNDLED_CARDS_JSON = Path(__file__).parent.parent / "data" / "cards_cache.json"
+CARDS_JSON_PATH = DATA_DIR / "cards_cache.json"
 
 
 class CardCache:
@@ -410,9 +412,11 @@ class CardCache:
         conn.close()
 
     def _load_from_json(self):
-        if not CARDS_JSON_PATH.exists():
+        # Check writable location first, then bundled fallback
+        json_path = CARDS_JSON_PATH if CARDS_JSON_PATH.exists() else _BUNDLED_CARDS_JSON
+        if not json_path.exists():
             return
-        cards = json.loads(CARDS_JSON_PATH.read_text())
+        cards = json.loads(json_path.read_text())
         for c in cards:
             self._cache[c["grp_id"]] = CardInfo(
                 grp_id=c["grp_id"], name=c["name"], mana_cost=c.get("mana_cost", ""),
