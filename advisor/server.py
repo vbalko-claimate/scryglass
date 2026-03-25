@@ -81,6 +81,12 @@ async def health():
     from .version import ENGINE_VERSION
     return {"status": "ok", "engine_version": ENGINE_VERSION}
 
+
+@app.get("/match-status")
+async def match_status():
+    """Is a match currently active? Used by overlay to show/hide."""
+    return {"active": tracker.match_active}
+
 # Static files
 STATIC_DIR = Path(__file__).parent.parent / "static"
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")

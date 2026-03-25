@@ -51,7 +51,10 @@ class OverlayDelegate: NSObject, NSApplicationDelegate {
         let frontApp = NSWorkspace.shared.frontmostApplication?.localizedName ?? ""
         let mtgaFront = frontApp.contains("MTGA")
 
-        if mtgaFront && !window.isVisible {
+        // Check if match is active via server
+        let matchActive = checkMatchActive()
+
+        if mtgaFront && matchActive && !window.isVisible {
             // Find MTGA window position
             let options: CGWindowListOption = [.optionAll, .excludeDesktopElements]
             if let windowList = CGWindowListCopyWindowInfo(options, kCGNullWindowID) as? [[String: Any]] {
@@ -79,9 +82,27 @@ class OverlayDelegate: NSObject, NSApplicationDelegate {
                 }
             }
             window.orderFrontRegardless()
-        } else if !mtgaFront && window.isVisible {
+        } else if (!mtgaFront || !matchActive) && window.isVisible {
             window.orderOut(nil)
         }
+    }
+
+    func checkMatchActive() -> Bool {
+        guard let url = URL(string: "http://localhost:8765/match-status") else { return false }
+        var request = URLRequest(url: url)
+        request.timeoutInterval = 1.0
+        var active = false
+        let sem = DispatchSemaphore(value: 0)
+        URLSession.shared.dataTask(with: request) { data, _, _ in
+            if let data = data,
+               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let isActive = json["active"] as? Bool {
+                active = isActive
+            }
+            sem.signal()
+        }.resume()
+        sem.wait()
+        return active
     }
 }
 
