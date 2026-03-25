@@ -120,7 +120,12 @@ html, body {
     color: rgba(160, 158, 150, 0.4);
 }
 
-/* Waiting state */
+/* Waiting state — hide entire overlay when no match */
+#overlay.no-match {
+    opacity: 0;
+    pointer-events: none;
+}
+
 .waiting {
     font-size: 11px;
     color: rgba(160, 158, 150, 0.4);
@@ -129,7 +134,7 @@ html, body {
 </style>
 </head>
 <body>
-<div id="overlay">
+<div id="overlay" class="no-match">
     <div class="opp-line" id="opp-line">
         <span class="waiting" id="waiting-msg">Waiting for match...</span>
     </div>
@@ -146,6 +151,7 @@ html, body {
 let ws = null;
 let currentStrategyInfo = null;
 let isMyTurn = false;
+let inMatch = false;
 
 function connect() {
     ws = new WebSocket(`ws://${location.hostname}:8765/ws`);
@@ -166,9 +172,11 @@ function connect() {
                 updateOppLine(msg.data);
                 break;
             case 'match_start':
-                document.getElementById('waiting-msg').textContent = 'Match started...';
+                inMatch = true;
+                document.getElementById('overlay').classList.remove('no-match');
                 break;
             case 'match_end':
+                inMatch = false;
                 resetOverlay();
                 break;
         }
@@ -179,6 +187,12 @@ function updateState(state) {
     const ti = state.turn || {};
     isMyTurn = ti.is_my_turn === true;
     const overlay = document.getElementById('overlay');
+
+    // Show overlay if we get state updates (match is active)
+    if (ti.number > 0 && !inMatch) {
+        inMatch = true;
+        overlay.classList.remove('no-match');
+    }
 
     // Phase-adaptive: compact on opponent's turn
     if (isMyTurn) {
@@ -271,11 +285,13 @@ function updateAdvice(data) {
 }
 
 function resetOverlay() {
+    inMatch = false;
+    document.getElementById('overlay').classList.add('no-match');
     document.getElementById('key-play').style.display = 'none';
     document.getElementById('threat-line').classList.remove('visible');
     document.getElementById('do-now').classList.remove('visible');
     document.getElementById('opp-line').innerHTML =
-        '<span class="waiting">Waiting for match...</span>';
+        '<span class="waiting" id="waiting-msg">Waiting for match...</span>';
     document.getElementById('phase-line').textContent = '';
 }
 
