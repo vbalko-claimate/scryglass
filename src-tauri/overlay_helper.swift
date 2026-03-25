@@ -33,19 +33,23 @@ class OverlayDelegate: NSObject, NSApplicationDelegate {
         window.hasShadow = false
         window.ignoresMouseEvents = true  // click-through — clicks go to MTGA
 
-        // Monitor for Option+drag to reposition overlay
-        NSEvent.addGlobalMonitorForEvents(matching: .flagsChanged) { [weak self] event in
-            guard let self = self else { return }
-            // Option key toggles mouse interactivity (for dragging)
-            if event.modifierFlags.contains(.option) {
-                self.window.ignoresMouseEvents = false
-            } else {
-                self.window.ignoresMouseEvents = true
+        // Keyboard repositioning: Option + arrow keys move the overlay panel
+        // Sends position offset to WKWebView via JavaScript
+        NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            guard let self = self, event.modifierFlags.contains(.option) else { return }
+            let step: CGFloat = event.modifierFlags.contains(.shift) ? 50 : 10
+            var dx: CGFloat = 0, dy: CGFloat = 0
+            switch event.keyCode {
+            case 123: dx = -step  // left
+            case 124: dx = step   // right
+            case 126: dy = -step  // up
+            case 125: dy = step   // down
+            default: return
             }
+            // Send to WKWebView
+            let js = "moveOverlay(\(dx), \(dy))"
+            self.webView.evaluateJavaScript(js, completionHandler: nil)
         }
-
-        // isMovableByWindowBackground disabled — drag handled by JS inside WKWebView
-        window.isMovable = false
 
         // Create WKWebView with transparent background
         let config = WKWebViewConfiguration()

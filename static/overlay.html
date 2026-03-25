@@ -516,38 +516,21 @@ function resetOverlay() {
 
 connect();
 
-// ─── Drag overlay panel ───
+// ─── Reposition overlay with Option + Arrow keys ───
+// Option + arrows = 10px, Option + Shift + arrows = 50px
+function moveOverlay(dx, dy) {
+    const el = document.getElementById('overlay');
+    const curX = parseInt(el.style.left) || 8;
+    const curY = parseInt(el.style.top) || 8;
+    el.style.left = (curX + dx) + 'px';
+    el.style.top = (curY + dy) + 'px';
+    localStorage.setItem('overlay-x', el.style.left);
+    localStorage.setItem('overlay-y', el.style.top);
+}
+
+// Restore saved position
 (function() {
     const el = document.getElementById('overlay');
-    let dragging = false, offsetX = 0, offsetY = 0;
-
-    el.addEventListener('mousedown', (e) => {
-        // Only drag with Option key held (Alt on keyboard)
-        if (!e.altKey) return;
-        dragging = true;
-        offsetX = e.clientX - el.offsetLeft;
-        offsetY = e.clientY - el.offsetTop;
-        el.style.cursor = 'grabbing';
-        e.preventDefault();
-    });
-
-    document.addEventListener('mousemove', (e) => {
-        if (!dragging) return;
-        el.style.left = (e.clientX - offsetX) + 'px';
-        el.style.top = (e.clientY - offsetY) + 'px';
-        // Save position
-        localStorage.setItem('overlay-x', el.style.left);
-        localStorage.setItem('overlay-y', el.style.top);
-    });
-
-    document.addEventListener('mouseup', () => {
-        if (dragging) {
-            dragging = false;
-            el.style.cursor = 'default';
-        }
-    });
-
-    // Restore saved position
     const savedX = localStorage.getItem('overlay-x');
     const savedY = localStorage.getItem('overlay-y');
     if (savedX) el.style.left = savedX;
