@@ -1926,7 +1926,12 @@ def _check_combat_blocks(state: GameState) -> list[Advice]:
 
     # C4: Trick risk — recommend preserving high-value blockers
     if trick_preserved and not lethal:
-        names = ", ".join(b.name for b in trick_preserved)
+        # Deduplicate names (e.g. multiple Pridemate tokens)
+        from collections import Counter
+        name_counts = Counter(b.name for b in trick_preserved)
+        names = ", ".join(
+            f"{n}" if c == 1 else f"{n} ×{c}" for n, c in name_counts.items()
+        )
         advice.insert(0, Advice("heuristic", "high",
             f"Don't block — preserve {names}"
             f" (trick risk {trick_risk:.0%}, life cushion {life_cushion:.0%})",

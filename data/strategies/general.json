@@ -137,7 +137,12 @@
         "fired": 0,
         "correct": 0
       },
-      "conflicts_with": []
+      "conflicts_with": [],
+      "phase": [
+        "Main",
+        "Combat"
+      ],
+      "my_turn": true
     },
     {
       "id": "mulligan_no_lands",
