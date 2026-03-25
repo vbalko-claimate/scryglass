@@ -58,11 +58,22 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
+        // Keep running in menu bar when window is closed
+        .on_window_event(|window, event| {
+            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                let _ = window.hide();
+                api.prevent_close();
+            }
+        })
         .invoke_handler(tauri::generate_handler![
             toggle_overlay,
             find_mtga,
         ])
         .setup(|app| {
+            // macOS: accessory app — no dock icon, lives in menu bar
+            #[cfg(target_os = "macos")]
+            app.set_activation_policy(tauri::ActivationPolicy::Accessory);
+
             // Start Python sidecar
             let handle = app.handle().clone();
             tauri::async_runtime::spawn(async move {
