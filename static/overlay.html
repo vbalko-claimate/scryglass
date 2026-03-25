@@ -239,7 +239,10 @@ let inMatch = false;
 
 function connect() {
     ws = new WebSocket(`ws://${location.hostname}:8765/ws`);
-    ws.onopen = () => {};
+    ws.onopen = () => {
+        // Request current state (we might have missed earlier messages)
+        ws.send(JSON.stringify({type: 'request_state'}));
+    };
     ws.onclose = () => setTimeout(connect, 2000);
     ws.onerror = () => {};
     ws.onmessage = (evt) => {
@@ -254,6 +257,11 @@ function connect() {
             case 'strategy_info':
                 currentStrategyInfo = msg.data;
                 updateOppLine(msg.data);
+                // Strategy info means a match is active
+                if (msg.data && msg.data.strategy_name && !inMatch) {
+                    inMatch = true;
+                    document.getElementById('overlay').classList.remove('no-match');
+                }
                 break;
             case 'match_start':
                 inMatch = true;
@@ -324,6 +332,12 @@ function updateAdvice(data) {
     const items = data.items || data || [];
     lastAdvice = items;
     if (!items.length) return;
+
+    // Advice means match is active
+    if (!inMatch) {
+        inMatch = true;
+        document.getElementById('overlay').classList.remove('no-match');
+    }
 
     // Find spotlight (highest priority with action_scores)
     const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 };

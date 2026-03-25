@@ -44,6 +44,12 @@
   "plugins": {
     "shell": {
       "open": true
+    },
+    "updater": {
+      "endpoints": [
+        "https://github.com/vbalko-claimate/scryglass/releases/latest/download/latest.json"
+      ],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEQ4M0FBREUyQkVCRTk5NwpSV1NYNmVzcjNxcUREYWhmZ3c4V1JVaytrQW1OWlhsbGpuYUI4M1hpNW5jUmZsMjdGdlhiTC9SZwo="
     }
   }
 }

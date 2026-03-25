@@ -145,6 +145,13 @@
         <div id="debug-panel" class="debug-panel" style="display:none"></div>
     </div>
 
+    <script>
+    // First-run check — redirect to setup if never visited before
+    if (!localStorage.getItem('scry-setup-done')) {
+        localStorage.setItem('scry-setup-done', '1');
+        window.location.href = '/setup';
+    }
+    </script>
     <script src="/static/app.js?v=14"></script>
 </body>
 </html>

@@ -475,7 +475,13 @@ async def startup():
     tracker.on_state_change = on_state_change
     tracker.on_decision_point = on_decision_point
     tracker.on_match_start = on_match_start
-    tracker.on_match_end = advisor.on_match_end
+    def on_match_end_handler(won: bool):
+        advisor.on_match_end(won)
+        result = "Win" if won else "Loss"
+        asyncio.get_event_loop().create_task(
+            broadcast({"type": "match_end", "data": {"result": result}})
+        )
+    tracker.on_match_end = on_match_end_handler
     advisor.on_advice = on_advice
     advisor.on_strategy_info = on_strategy_info
     advisor.on_threat_update = on_threat_update
@@ -854,6 +860,12 @@ async def manage_page():
 @app.get("/decks")
 async def decks_page():
     return FileResponse(str(STATIC_DIR / "decks.html"),
+                        headers={"Cache-Control": "no-cache, no-store, must-revalidate"})
+
+
+@app.get("/setup")
+async def setup_page():
+    return FileResponse(str(STATIC_DIR / "setup.html"),
                         headers={"Cache-Control": "no-cache, no-store, must-revalidate"})
 
 
