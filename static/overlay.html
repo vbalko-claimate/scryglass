@@ -146,7 +146,7 @@ html, body {
     pointer-events: none;
     visibility: hidden;
 }
-#hand-badges { bottom: 6%; }
+#hand-badges { bottom: 22%; }
 #threat-badges { top: 18%; }
 #hand-badges.visible, #threat-badges.visible { visibility: visible; }
 
@@ -389,13 +389,25 @@ function updateHandBadges(state) {
 
     if (!hand.length || !inMatch) { el.classList.remove('visible'); return; }
 
-    // MTGA hand cards span roughly 50% of screen width, centered
-    // Space badges to match approximate card spacing
-    const cardWidth = Math.min(75, Math.floor(window.innerWidth * 0.5 / hand.length));
-    const gap = Math.max(2, Math.floor((window.innerWidth * 0.5 - cardWidth * hand.length) / Math.max(1, hand.length - 1)));
+    // Group duplicate lands (e.g. 4× Plains → "Plains ×4")
+    const grouped = [];
+    const seen = {};
+    for (const c of hand) {
+        const isLand = c.is_land || (c.card_types || []).includes('Land');
+        if (isLand && seen[c.name]) {
+            seen[c.name].count++;
+        } else {
+            const entry = { ...c, count: 1 };
+            grouped.push(entry);
+            if (isLand) seen[c.name] = entry;
+        }
+    }
+
+    const cardWidth = Math.min(75, Math.floor(window.innerWidth * 0.5 / grouped.length));
+    const gap = Math.max(2, Math.floor((window.innerWidth * 0.5 - cardWidth * grouped.length) / Math.max(1, grouped.length - 1)));
 
     el.style.gap = gap + 'px';
-    el.innerHTML = hand.map(c => {
+    el.innerHTML = grouped.map(c => {
         const isLand = c.is_land || (c.card_types || []).includes('Land');
         const castable = !isLand && c.cmc <= mana;
         const isRec = recommended.has(c.name);
@@ -406,7 +418,9 @@ function updateHandBadges(state) {
         else cls += ' not-castable';
 
         const shortName = c.name.length > 10 ? c.name.substring(0, 9) + '…' : c.name;
-        const sub = isLand ? '' : `<span class="badge-sub">${c.cmc} mana</span>`;
+        const countLabel = c.count > 1 ? ` ×${c.count}` : '';
+        const sub = isLand ? (c.count > 1 ? `<span class="badge-sub">×${c.count}</span>` : '')
+                           : `<span class="badge-sub">${c.cmc} mana</span>`;
         return `<div class="${cls}" style="width:${cardWidth}px">
             <span class="badge-name">${shortName}</span>
             ${sub}
