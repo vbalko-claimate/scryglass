@@ -12,8 +12,10 @@ class OverlayDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Create borderless transparent window
+        // Full screen transparent window — overlay elements position themselves via CSS
+        let screenFrame = NSScreen.main?.frame ?? NSRect(x: 0, y: 0, width: 1920, height: 1080)
         window = NSWindow(
-            contentRect: NSRect(x: 8, y: 800, width: 280, height: 240),
+            contentRect: screenFrame,
             styleMask: [.borderless],
             backing: .buffered,
             defer: false
@@ -57,22 +59,6 @@ class OverlayDelegate: NSObject, NSApplicationDelegate {
             self?.syncWithMTGA()
         }
 
-        // Restore saved position
-        let savedX = UserDefaults.standard.double(forKey: "overlay_x")
-        let savedY = UserDefaults.standard.double(forKey: "overlay_y")
-        if savedX > 0 || savedY > 0 {
-            window.setFrameOrigin(NSPoint(x: savedX, y: savedY))
-        }
-
-        // Save position when window moves
-        NotificationCenter.default.addObserver(
-            forName: NSWindow.didMoveNotification, object: window, queue: nil
-        ) { [weak self] _ in
-            guard let origin = self?.window.frame.origin else { return }
-            UserDefaults.standard.set(origin.x, forKey: "overlay_x")
-            UserDefaults.standard.set(origin.y, forKey: "overlay_y")
-        }
-
         print("overlay:ready")
         fflush(stdout)
     }
@@ -85,36 +71,6 @@ class OverlayDelegate: NSObject, NSApplicationDelegate {
         let matchActive = checkMatchActive()
 
         if mtgaFront && matchActive && !window.isVisible {
-            // Only set position if user hasn't manually positioned it
-            let hasCustomPosition = UserDefaults.standard.double(forKey: "overlay_x") > 0
-                || UserDefaults.standard.double(forKey: "overlay_y") > 0
-            if !hasCustomPosition {
-                // Find MTGA window position
-                let options: CGWindowListOption = [.optionAll, .excludeDesktopElements]
-                if let windowList = CGWindowListCopyWindowInfo(options, kCGNullWindowID) as? [[String: Any]] {
-                    var bestArea = 0
-                    var bestX = 0.0, bestY = 0.0
-                    for w in windowList {
-                        let owner = w["kCGWindowOwnerName"] as? String ?? ""
-                        if owner.contains("MTGA") {
-                            let bounds = w["kCGWindowBounds"] as? [String: Any] ?? [:]
-                            let width = bounds["Width"] as? Int ?? 0
-                            let height = bounds["Height"] as? Int ?? 0
-                            let area = width * height
-                            if area > bestArea && width > 100 && height > 100 {
-                                bestArea = area
-                                bestX = Double(bounds["X"] as? Int ?? 0)
-                                bestY = Double(bounds["Y"] as? Int ?? 0)
-                            }
-                        }
-                    }
-                    if bestArea > 0 {
-                        let screenHeight = NSScreen.main?.frame.height ?? 1080
-                        let appkitY = screenHeight - bestY - 240
-                        window.setFrameOrigin(NSPoint(x: bestX + 8, y: appkitY))
-                    }
-                }
-            }
             window.orderFrontRegardless()
         } else if (!mtgaFront || !matchActive) && window.isVisible {
             window.orderOut(nil)

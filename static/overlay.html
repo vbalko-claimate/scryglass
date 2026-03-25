@@ -16,7 +16,7 @@ html, body {
 
 #overlay {
     position: fixed;
-    top: 0; left: 0;
+    top: 8px; left: 8px;
     width: 280px;
     padding: 10px 12px;
     background: rgba(12, 12, 18, 0.82);
@@ -290,6 +290,7 @@ function connect() {
             case 'match_end':
                 inMatch = false;
                 resetOverlay();
+                showDebrief(msg.data);
                 break;
         }
     };
@@ -481,9 +482,32 @@ function updateThreatBar(state) {
 
 let lastAdvice = null;
 
+function showDebrief(data) {
+    const overlay = document.getElementById('overlay');
+    overlay.classList.remove('no-match');
+    const result = data?.result || '?';
+    const resultColor = result === 'Win' ? '#81c784' : '#ef5350';
+    overlay.innerHTML = `
+        <div style="text-align:center;padding:8px 0">
+            <div style="font-size:18px;font-weight:700;color:${resultColor}">${result}</div>
+            <div style="font-size:11px;color:#888;margin-top:4px">Match complete</div>
+            <div style="margin-top:8px;font-size:11px">
+                <a href="http://localhost:8765/review" target="_blank"
+                   style="color:#90caf9;text-decoration:none">
+                    Open Post-Game Review →
+                </a>
+            </div>
+        </div>
+    `;
+    // Auto-hide after 15 seconds
+    setTimeout(() => {
+        overlay.classList.add('no-match');
+        overlay.innerHTML = '<div class="opp-line"><span class="waiting" id="waiting-msg">Waiting for match...</span></div>';
+    }, 15000);
+}
+
 function resetOverlay() {
     inMatch = false;
-    document.getElementById('overlay').classList.add('no-match');
     document.getElementById('hand-bar').classList.remove('visible');
     document.getElementById('threat-bar').classList.remove('visible');
     document.getElementById('key-play').style.display = 'none';
