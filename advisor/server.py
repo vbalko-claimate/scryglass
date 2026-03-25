@@ -83,6 +83,8 @@ async def health():
         "status": "ok",
         "engine_version": ENGINE_VERSION,
         "card_count": card_cache.size,
+        "match_active": tracker.match_active,
+        "ws_clients": len(clients),
     }
 
 

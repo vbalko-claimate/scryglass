@@ -18,25 +18,38 @@ fn find_mtga() -> mtga_detect::MtgaWindow {
     mtga_detect::find_mtga_window()
 }
 
-/// Launch the native overlay helper (swift process)
+/// Launch the native overlay helper with auto-restart on crash.
 fn launch_overlay_helper() {
     let overlay_script = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("overlay_helper.swift");
 
-    if overlay_script.exists() {
-        std::thread::spawn(move || {
-            println!("[overlay] Launching native overlay helper...");
+    if !overlay_script.exists() {
+        eprintln!("[overlay] overlay_helper.swift not found at {:?}", overlay_script);
+        return;
+    }
+
+    std::thread::spawn(move || {
+        let mut restart_count = 0;
+        loop {
+            println!("[overlay] Starting overlay helper (attempt {})", restart_count + 1);
             let status = Command::new("swift")
-                .arg(overlay_script)
+                .arg(&overlay_script)
                 .status();
             match status {
                 Ok(s) => println!("[overlay] Helper exited: {}", s),
                 Err(e) => eprintln!("[overlay] Failed to launch: {}", e),
             }
-        });
-    } else {
-        eprintln!("[overlay] overlay_helper.swift not found at {:?}", overlay_script);
-    }
+            restart_count += 1;
+            if restart_count >= 5 {
+                eprintln!("[overlay] Too many restarts ({}), giving up", restart_count);
+                break;
+            }
+            // Wait before restart (exponential backoff)
+            let wait = std::time::Duration::from_secs(2u64.pow(restart_count.min(4)));
+            println!("[overlay] Restarting in {:?}...", wait);
+            std::thread::sleep(wait);
+        }
+    });
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
