@@ -38,8 +38,8 @@ class OverlayDelegate: NSObject, NSApplicationDelegate {
             }
         }
 
-        // Allow dragging when mouse events are enabled
-        window.isMovableByWindowBackground = true
+        // isMovableByWindowBackground disabled — drag handled by JS inside WKWebView
+        window.isMovable = false
 
         // Create WKWebView with transparent background
         let config = WKWebViewConfiguration()

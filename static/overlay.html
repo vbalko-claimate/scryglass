@@ -18,6 +18,7 @@ html, body {
     position: fixed;
     top: 8px; left: 8px;
     width: 280px;
+    cursor: default;
     padding: 10px 12px;
     background: rgba(12, 12, 18, 0.82);
     backdrop-filter: blur(8px);
@@ -514,6 +515,44 @@ function resetOverlay() {
 }
 
 connect();
+
+// ─── Drag overlay panel ───
+(function() {
+    const el = document.getElementById('overlay');
+    let dragging = false, offsetX = 0, offsetY = 0;
+
+    el.addEventListener('mousedown', (e) => {
+        // Only drag with Option key held (Alt on keyboard)
+        if (!e.altKey) return;
+        dragging = true;
+        offsetX = e.clientX - el.offsetLeft;
+        offsetY = e.clientY - el.offsetTop;
+        el.style.cursor = 'grabbing';
+        e.preventDefault();
+    });
+
+    document.addEventListener('mousemove', (e) => {
+        if (!dragging) return;
+        el.style.left = (e.clientX - offsetX) + 'px';
+        el.style.top = (e.clientY - offsetY) + 'px';
+        // Save position
+        localStorage.setItem('overlay-x', el.style.left);
+        localStorage.setItem('overlay-y', el.style.top);
+    });
+
+    document.addEventListener('mouseup', () => {
+        if (dragging) {
+            dragging = false;
+            el.style.cursor = 'default';
+        }
+    });
+
+    // Restore saved position
+    const savedX = localStorage.getItem('overlay-x');
+    const savedY = localStorage.getItem('overlay-y');
+    if (savedX) el.style.left = savedX;
+    if (savedY) el.style.top = savedY;
+})();
 </script>
 </body>
 </html>
