@@ -136,6 +136,110 @@ html, body {
     color: rgba(160, 158, 150, 0.4);
     font-style: italic;
 }
+
+/* Hand bar — floating at bottom of screen */
+#hand-bar {
+    position: fixed;
+    bottom: 120px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 4px;
+    padding: 4px 8px;
+    background: rgba(12, 12, 18, 0.75);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 6px;
+    visibility: hidden;
+}
+#hand-bar.visible { visibility: visible; }
+
+.hand-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 3px 6px;
+    border-radius: 4px;
+    min-width: 48px;
+    font-size: 10px;
+    line-height: 1.2;
+    border-left: 2px solid transparent;
+}
+.hand-card.castable {
+    border-left-color: #81c784;
+    background: rgba(76, 175, 80, 0.1);
+}
+.hand-card.not-castable {
+    border-left-color: rgba(100, 100, 100, 0.3);
+    opacity: 0.5;
+}
+.hand-card.is-land {
+    border-left-color: #F4A261;
+    background: rgba(244, 162, 97, 0.1);
+}
+.hand-card.recommended {
+    border-left-color: #E63946;
+    background: rgba(233, 57, 70, 0.15);
+    box-shadow: 0 0 6px rgba(233, 57, 70, 0.2);
+}
+.hand-card-name {
+    color: rgba(220, 218, 210, 0.9);
+    font-weight: 500;
+    max-width: 70px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.hand-card-cost {
+    color: rgba(160, 158, 150, 0.6);
+    font-size: 9px;
+}
+
+/* Threat bar — floating at top for opponent creatures */
+#threat-bar {
+    position: fixed;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 4px;
+    padding: 4px 8px;
+    background: rgba(18, 8, 8, 0.75);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border: 1px solid rgba(233, 57, 70, 0.15);
+    border-radius: 6px;
+    visibility: hidden;
+}
+#threat-bar.visible { visibility: visible; }
+
+.threat-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 3px 6px;
+    border-radius: 4px;
+    min-width: 48px;
+    font-size: 10px;
+    line-height: 1.2;
+}
+.threat-card.must-answer {
+    background: rgba(233, 57, 70, 0.15);
+    border: 1px solid rgba(233, 57, 70, 0.3);
+}
+.threat-card-name {
+    color: rgba(239, 83, 80, 0.9);
+    font-weight: 500;
+    max-width: 70px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.threat-card-stat {
+    color: rgba(200, 150, 150, 0.6);
+    font-size: 9px;
+}
 </style>
 </head>
 <body>
@@ -151,6 +255,9 @@ html, body {
     <div class="do-now" id="do-now"></div>
     <div class="phase-line" id="phase-line"></div>
 </div>
+
+<div id="threat-bar"></div>
+<div id="hand-bar"></div>
 
 <script>
 let ws = null;
@@ -215,6 +322,10 @@ function updateState(state) {
         document.getElementById('phase-line').textContent =
             `T${turnNum} · ${phase} · ${isMyTurn ? 'Your turn' : 'Opp turn'}`;
     }
+
+    // Update card bars
+    updateHandBar(state);
+    updateThreatBar(state);
 }
 
 function updateOppLine(info) {
@@ -238,6 +349,7 @@ function updateOppLine(info) {
 
 function updateAdvice(data) {
     const items = data.items || data || [];
+    lastAdvice = items;
     if (!items.length) return;
 
     // Find spotlight (highest priority with action_scores)
@@ -289,9 +401,91 @@ function updateAdvice(data) {
     }
 }
 
+function updateHandBar(state) {
+    const bar = document.getElementById('hand-bar');
+    const hand = state.hand || state.my_hand || [];
+    const myBf = state.my_battlefield || [];
+    const mana = myBf.filter(c => c.is_land && !c.is_tapped).length;
+    // Get recommended cards from current advice
+    const recommended = new Set();
+    if (lastAdvice) {
+        for (const a of lastAdvice) {
+            if (a.recommended_cards) {
+                a.recommended_cards.forEach(c => recommended.add(c));
+            }
+        }
+    }
+
+    if (!hand.length || !inMatch) {
+        bar.classList.remove('visible');
+        return;
+    }
+
+    bar.innerHTML = hand.map(c => {
+        const isLand = c.is_land || (c.card_types || []).includes('Land');
+        const castable = !isLand && c.cmc <= mana;
+        const isRec = recommended.has(c.name);
+        let cls = 'hand-card';
+        if (isRec) cls += ' recommended';
+        else if (isLand) cls += ' is-land';
+        else if (castable) cls += ' castable';
+        else cls += ' not-castable';
+
+        const shortName = c.name.length > 12 ? c.name.substring(0, 11) + '…' : c.name;
+        const cost = isLand ? '🏔' : `${c.cmc}`;
+        return `<div class="${cls}">
+            <span class="hand-card-name">${shortName}</span>
+            <span class="hand-card-cost">${cost}</span>
+        </div>`;
+    }).join('');
+    bar.classList.add('visible');
+}
+
+function updateThreatBar(state) {
+    const bar = document.getElementById('threat-bar');
+    const opp = state.opp_battlefield || [];
+    const creatures = opp.filter(c => c.is_creature);
+
+    if (!creatures.length || !inMatch) {
+        bar.classList.remove('visible');
+        return;
+    }
+
+    // Show only creatures with power > 0
+    const threats = creatures.filter(c => c.power > 0).sort((a, b) => b.power - a.power).slice(0, 6);
+    if (!threats.length) {
+        bar.classList.remove('visible');
+        return;
+    }
+
+    // Check which are "must answer" from strategy info
+    const mustAnswer = new Set();
+    if (currentStrategyInfo && currentStrategyInfo.opp_key_threats) {
+        currentStrategyInfo.opp_key_threats.forEach(t => {
+            const name = typeof t === 'string' ? t : t.card;
+            if (name) mustAnswer.add(name);
+        });
+    }
+
+    bar.innerHTML = threats.map(c => {
+        const isMust = mustAnswer.has(c.name);
+        const cls = 'threat-card' + (isMust ? ' must-answer' : '');
+        const shortName = c.name.length > 12 ? c.name.substring(0, 11) + '…' : c.name;
+        return `<div class="${cls}">
+            <span class="threat-card-name">${shortName}</span>
+            <span class="threat-card-stat">${c.power}/${c.toughness}</span>
+        </div>`;
+    }).join('');
+    bar.classList.add('visible');
+}
+
+let lastAdvice = null;
+
 function resetOverlay() {
     inMatch = false;
     document.getElementById('overlay').classList.add('no-match');
+    document.getElementById('hand-bar').classList.remove('visible');
+    document.getElementById('threat-bar').classList.remove('visible');
     document.getElementById('key-play').style.display = 'none';
     document.getElementById('threat-line').classList.remove('visible');
     document.getElementById('do-now').classList.remove('visible');
