@@ -478,8 +478,11 @@ def _card_matches(obj: GameObject, matcher: CardMatcher, mana: int = 99,
         return False
     if matcher.toughness_max is not None and obj.toughness > matcher.toughness_max:
         return False
-    if matcher.castable and card.cmc > mana:
-        return False
+    if matcher.castable:
+        if "Land" in card.card_types:
+            return False  # lands are not castable spells
+        if card.cmc > mana:
+            return False
     # Color-aware castability: check if untapped lands can pay colored pips
     if matcher.castable and untapped_lands is not None and card.mana_cost:
         from .heuristics import _can_pay_mana_cost

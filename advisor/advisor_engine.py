@@ -1679,6 +1679,30 @@ class AdvisorEngine:
         return sorted(self._active_threats.values(),
                        key=lambda t: t.get("danger", 0), reverse=True)
 
+    @staticmethod
+    def _resolve_contradictions(advice: list[Advice]) -> list[Advice]:
+        """Remove contradictory advice — specific board-aware advice wins."""
+        msgs = {a.message.lower() for a in advice}
+        has_dont_attack = any("don't attack" in m or "don\u2019t attack" in m for m in msgs)
+        has_dont_block = any("don't block" in m or "don\u2019t block" in m for m in msgs)
+        has_hold = any(m.startswith("hold ") or "save removal" in m for m in msgs)
+
+        filtered = []
+        for a in advice:
+            msg = a.message.lower()
+            # If we have specific "don't attack" advice, suppress generic "attack with all"
+            if has_dont_attack and "attack with all" in msg and a.source == "strategy":
+                continue
+            # If we have specific "don't block" advice, suppress generic "block" advice
+            if has_dont_block and msg.startswith("block ") and a.source == "strategy":
+                continue
+            # If we have "save removal" + specific "cast removal on X", keep the specific one
+            if has_hold and "spend all your mana" in msg and a.source == "strategy":
+                # Don't suppress curve_out when there's a hold — they're different concerns
+                pass
+            filtered.append(a)
+        return filtered
+
     def _finalize_advice(self, state: GameState, advice: list[Advice]) -> list[Advice]:
         if not advice:
             return []
@@ -1702,6 +1726,9 @@ class AdvisorEngine:
                 continue
             merged.append(item)
             seen_messages.add(key)
+
+        # Resolve contradictions: specific board-aware advice beats generic rules
+        merged = self._resolve_contradictions(merged)
 
         prio = {"critical": 0, "high": 1, "medium": 2, "low": 3}
         merged.sort(key=lambda a: (prio.get(a.priority, 4), -(a.action_scores[0].score if a.action_scores else 0.0)))
