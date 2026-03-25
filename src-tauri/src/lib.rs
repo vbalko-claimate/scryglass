@@ -1,8 +1,9 @@
 use tauri::{
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
-    Manager,
+    Manager, LogicalPosition,
 };
 
+mod mtga_detect;
 mod sidecar;
 
 #[tauri::command]
@@ -18,16 +19,23 @@ fn toggle_overlay(app: tauri::AppHandle) {
 }
 
 #[tauri::command]
-fn show_overlay(app: tauri::AppHandle) {
-    if let Some(win) = app.get_webview_window("overlay") {
-        let _ = win.show();
-    }
+fn find_mtga() -> mtga_detect::MtgaWindow {
+    mtga_detect::find_mtga_window()
 }
 
-#[tauri::command]
-fn hide_overlay(app: tauri::AppHandle) {
+/// Reposition overlay to the MTGA window's screen
+fn position_overlay_on_mtga(app: &tauri::AppHandle) {
+    let mtga = mtga_detect::find_mtga_window();
+    if !mtga.found {
+        return;
+    }
     if let Some(win) = app.get_webview_window("overlay") {
-        let _ = win.hide();
+        // Position overlay at top-left of MTGA window with small offset
+        let x = mtga.x as f64 + 8.0;
+        let y = mtga.y as f64 + 8.0;
+        let _ = win.set_position(LogicalPosition::new(x, y));
+        let _ = win.show();
+        println!("[overlay] Positioned on MTGA at ({}, {})", x, y);
     }
 }
 
@@ -37,8 +45,7 @@ pub fn run() {
         .plugin(tauri_plugin_shell::init())
         .invoke_handler(tauri::generate_handler![
             toggle_overlay,
-            show_overlay,
-            hide_overlay,
+            find_mtga,
         ])
         .setup(|app| {
             // Start Python sidecar
@@ -49,7 +56,7 @@ pub fn run() {
                 }
             });
 
-            // Build tray icon with menu
+            // Build tray icon
             let _tray = TrayIconBuilder::new()
                 .tooltip("Scryglass — MTGA Advisor")
                 .on_tray_icon_event(|tray, event| {
@@ -68,12 +75,16 @@ pub fn run() {
                 })
                 .build(app)?;
 
-            // Show overlay after a short delay (wait for sidecar)
+            // Periodically check for MTGA and position overlay
             let handle2 = app.handle().clone();
             tauri::async_runtime::spawn(async move {
-                tokio::time::sleep(std::time::Duration::from_secs(15)).await;
-                if let Some(win) = handle2.get_webview_window("overlay") {
-                    let _ = win.show();
+                // Wait for sidecar to start
+                tokio::time::sleep(std::time::Duration::from_secs(10)).await;
+
+                loop {
+                    position_overlay_on_mtga(&handle2);
+                    // Re-check every 10 seconds (MTGA might move or start)
+                    tokio::time::sleep(std::time::Duration::from_secs(10)).await;
                 }
             });
 
