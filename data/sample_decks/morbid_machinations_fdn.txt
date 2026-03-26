@@ -1,0 +1,25 @@
+Deck
+8 Forest (FDN) 280
+7 Swamp (FDN) 277
+1 Midnight Reaper (FDN) 609
+1 Spinner of Souls (FDN) 112
+1 Temple of Malady (FDN) 700
+3 Wardens of the Cycle (FDN) 125
+2 Infestation Sage (FDN) 64
+2 Eager Trufflesnout (FDN) 102
+2 Cackling Prowler (FDN) 101
+2 Vampire Gourmand (FDN) 74
+3 Llanowar Elves (FDN) 227
+2 Undying Malice (FDN) 528
+4 Golgari Guildgate (FDN) 689
+2 Needletooth Pack (FDN) 108
+2 Infernal Vessel (FDN) 63
+1 Quilled Greatwurm (FDN) 111
+2 Eaten Alive (FDN) 172
+1 Scavenging Ooze (FDN) 232
+2 Felling Blow (FDN) 105
+2 Wary Thespian (FDN) 235
+2 Tragic Banshee (FDN) 73
+2 Vampiric Rites (FDN) 615
+2 Reassembling Skeleton (FDN) 182
+4 Jungle Hollow (FDN) 263

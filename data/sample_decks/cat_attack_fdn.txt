@@ -1,0 +1,23 @@
+Deck
+9 Plains (FDN) 273
+1 Arahbo, the First Fang (FDN) 2
+6 Forest (FDN) 281
+1 Anthem of Champions (FDN) 116
+1 Regal Caracal (FDN) 579
+1 Temple of Plenty (FDN) 703
+2 Felling Blow (FDN) 105
+2 Dawnwing Marshal (FDN) 570
+3 Savannah Lions (FDN) 146
+2 Felidar Savior (FDN) 12
+2 Banishing Light (FDN) 138
+3 Leonin Vanguard (FDN) 499
+4 Wary Thespian (FDN) 235
+1 Angelic Destiny (FDN) 565
+3 Good-Fortune Unicorn (FDN) 240
+4 Selesnya Guildgate (FDN) 694
+2 Claws Out (FDN) 6
+2 Claws Out (FDN) 6
+1 Unflinching Courage (FDN) 722
+2 Giant Growth (FDN) 223
+4 Helpful Hunter (FDN) 16
+4 Blossoming Sands (FDN) 260
