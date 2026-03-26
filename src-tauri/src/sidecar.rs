@@ -7,26 +7,43 @@ const HEALTH_ENDPOINT: &str = "/health";
 const MAX_WAIT_SECS: u64 = 45;
 
 /// Start the Python sidecar and wait until it responds to health checks.
-pub async fn start_and_wait(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
-    // In dev mode, assume the server is already running (started manually)
-    if cfg!(debug_assertions) {
-        println!("[sidecar] Dev mode — checking if server is already running...");
-        if check_health().await {
-            println!("[sidecar] Server already running at {}", SIDECAR_URL);
-            return Ok(());
-        }
-        println!("[sidecar] Server not running — starting sidecar...");
+/// Returns Ok(()) on success, Err(message) on failure.
+pub async fn start_and_wait(app: &AppHandle) -> Result<(), String> {
+    // Check if server is already running
+    println!("[sidecar] Checking if server is already running...");
+    if check_health().await {
+        println!("[sidecar] Server already running at {}", SIDECAR_URL);
+        return Ok(());
     }
 
-    // Spawn sidecar process
+    // Dev mode: don't try sidecar, just wait for manual server
+    if cfg!(debug_assertions) {
+        println!("[sidecar] Dev mode — waiting for manual server start...");
+        for i in 0..MAX_WAIT_SECS {
+            tokio::time::sleep(Duration::from_secs(1)).await;
+            if check_health().await {
+                println!("[sidecar] Server ready after {}s", i + 1);
+                return Ok(());
+            }
+        }
+        return Err("Dev mode: Python server not running. Start with: uv run python run.py".into());
+    }
+
+    // Production: spawn sidecar
     let shell = app.shell();
-    let (mut _rx, _child) = shell
+    let spawn_result = shell
         .sidecar("scry-server")
         .map_err(|e| format!("Failed to create sidecar command: {}", e))?
-        .spawn()
-        .map_err(|e| format!("Failed to spawn sidecar: {}", e))?;
+        .spawn();
 
-    println!("[sidecar] Spawned scry-server, waiting for health...");
+    match spawn_result {
+        Ok((mut _rx, _child)) => {
+            println!("[sidecar] Spawned scry-server, waiting for health...");
+        }
+        Err(e) => {
+            return Err(format!("Failed to spawn sidecar: {}. Is scry-server bundled?", e));
+        }
+    }
 
     // Poll health endpoint
     for i in 0..MAX_WAIT_SECS {
@@ -37,7 +54,7 @@ pub async fn start_and_wait(app: &AppHandle) -> Result<(), Box<dyn std::error::E
         }
     }
 
-    Err(format!("Sidecar did not respond within {}s", MAX_WAIT_SECS).into())
+    Err(format!("Server did not respond within {}s. Check logs for errors.", MAX_WAIT_SECS))
 }
 
 async fn check_health() -> bool {

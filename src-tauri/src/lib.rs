@@ -79,7 +79,6 @@ pub fn run() {
             tauri::async_runtime::spawn(async move {
                 match sidecar::start_and_wait(&handle).await {
                     Ok(()) => {
-                        // Server ready — show main window
                         if let Some(win) = handle.get_webview_window("main") {
                             let _ = win.navigate("http://localhost:8765".parse().unwrap());
                             let _ = win.show();
@@ -87,10 +86,20 @@ pub fn run() {
                         }
                     }
                     Err(e) => {
-                        eprintln!("Sidecar error: {}", e);
-                        // Show window with error — navigate to loading page
+                        eprintln!("[error] Sidecar failed: {}", e);
+                        // Show error page inline
                         if let Some(win) = handle.get_webview_window("main") {
-                            // Can't load from server, just show the window with an error
+                            let error_html = format!(
+                                "data:text/html,<html><body style='background:%231a1a2e;color:%23e0e0e0;\
+                                font-family:system-ui;display:flex;justify-content:center;align-items:center;\
+                                min-height:100vh;flex-direction:column'>\
+                                <h2 style='color:%23ef5350'>Scryglass failed to start</h2>\
+                                <p style='color:%23888;max-width:400px;text-align:center;margin:12px'>{}</p>\
+                                <p style='color:%23555;font-size:12px'>Try: uv run python run.py</p>\
+                                </body></html>",
+                                e.replace("'", "\\'")
+                            );
+                            let _ = win.navigate(error_html.parse().unwrap());
                             let _ = win.show();
                         }
                     }

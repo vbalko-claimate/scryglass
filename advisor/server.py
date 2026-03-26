@@ -203,7 +203,10 @@ async def review_page():
                         headers={"Cache-Control": "no-cache, no-store, must-revalidate"})
 
 # Static files
-STATIC_DIR = Path(__file__).parent.parent / "static"
+# PyInstaller bundles static/ into _MEIPASS; normal dev uses repo root
+import sys
+_BASE_DIR = Path(sys._MEIPASS) if getattr(sys, '_MEIPASS', None) else Path(__file__).parent.parent
+STATIC_DIR = _BASE_DIR / "static"
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 # Global state
