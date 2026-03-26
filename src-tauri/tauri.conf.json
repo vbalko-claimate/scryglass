@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "identifier": "com.scryglass.app",
   "build": {
-    "frontendDist": "http://localhost:8765",
+    "frontendDist": "../static",
     "devUrl": "http://localhost:8765"
   },
   "app": {
@@ -18,7 +18,7 @@
         "height": 800,
         "minWidth": 800,
         "minHeight": 600,
-        "url": "http://localhost:8765"
+        "url": "loading.html"
       }
     ],
     "trayIcon": {
