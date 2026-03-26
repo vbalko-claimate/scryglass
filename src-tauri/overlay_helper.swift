@@ -69,6 +69,20 @@ class OverlayDelegate: NSObject, NSApplicationDelegate {
             self?.syncWithMTGA()
         }
 
+        // Monitor parent process — exit if parent dies (prevents zombie overlay)
+        let parentPid = getppid()
+        Timer.scheduledTimer(withTimeInterval: 3.0, repeats: true) { _ in
+            if getppid() != parentPid || kill(parentPid, 0) != 0 {
+                print("overlay: parent died, exiting")
+                NSApplication.shared.terminate(nil)
+            }
+        }
+
+        // Also exit if server stops responding
+        Timer.scheduledTimer(withTimeInterval: 10.0, repeats: true) { [weak self] _ in
+            self?.checkServerAlive()
+        }
+
         print("overlay:ready")
         fflush(stdout)
     }
@@ -84,6 +98,32 @@ class OverlayDelegate: NSObject, NSApplicationDelegate {
             window.orderFrontRegardless()
         } else if (!mtgaFront || !matchActive) && window.isVisible {
             window.orderOut(nil)
+        }
+    }
+
+    var serverFailCount = 0
+
+    func checkServerAlive() {
+        guard let url = URL(string: "http://localhost:8765/health") else { return }
+        var request = URLRequest(url: url)
+        request.timeoutInterval = 2.0
+        let sem = DispatchSemaphore(value: 0)
+        var ok = false
+        URLSession.shared.dataTask(with: request) { data, _, _ in
+            ok = data != nil
+            sem.signal()
+        }.resume()
+        sem.wait()
+        if ok {
+            serverFailCount = 0
+        } else {
+            serverFailCount += 1
+            if serverFailCount >= 3 {
+                print("overlay: server unreachable 3x, exiting")
+                DispatchQueue.main.async {
+                    NSApplication.shared.terminate(nil)
+                }
+            }
         }
     }
 
