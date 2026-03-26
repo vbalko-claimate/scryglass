@@ -227,6 +227,7 @@ html, body {
     <div class="threat-line" id="threat-line"></div>
     <div class="do-now" id="do-now"></div>
     <div class="phase-line" id="phase-line"></div>
+    <div id="debrief" style="display:none;text-align:center;padding:8px 0"></div>
 </div>
 
 <div id="threat-badges"></div>
@@ -483,22 +484,32 @@ function showDebrief(data) {
     overlay.classList.remove('no-match');
     const result = data?.result || '?';
     const resultColor = result === 'Win' ? '#81c784' : '#ef5350';
-    overlay.innerHTML = `
-        <div style="text-align:center;padding:8px 0">
-            <div style="font-size:18px;font-weight:700;color:${resultColor}">${result}</div>
-            <div style="font-size:11px;color:#888;margin-top:4px">Match complete</div>
-            <div style="margin-top:8px;font-size:11px">
-                <a href="http://localhost:8765/review" target="_blank"
-                   style="color:#90caf9;text-decoration:none">
-                    Open Post-Game Review →
-                </a>
-            </div>
+
+    // Hide game elements, show debrief
+    document.getElementById('opp-line').style.display = 'none';
+    document.getElementById('key-play').style.display = 'none';
+    document.getElementById('threat-line').classList.remove('visible');
+    document.getElementById('do-now').classList.remove('visible');
+    document.getElementById('phase-line').textContent = '';
+
+    const debrief = document.getElementById('debrief');
+    debrief.innerHTML = `
+        <div style="font-size:18px;font-weight:700;color:${resultColor}">${result}</div>
+        <div style="font-size:11px;color:#888;margin-top:4px">Match complete</div>
+        <div style="margin-top:8px;font-size:11px">
+            <a href="http://localhost:8765/review" target="_blank"
+               style="color:#90caf9;text-decoration:none">
+                Open Post-Game Review →
+            </a>
         </div>
     `;
+    debrief.style.display = 'block';
+
     // Auto-hide after 15 seconds
     setTimeout(() => {
+        debrief.style.display = 'none';
         overlay.classList.add('no-match');
-        overlay.innerHTML = '<div class="opp-line"><span class="waiting" id="waiting-msg">Waiting for match...</span></div>';
+        document.getElementById('opp-line').style.display = '';
     }, 15000);
 }
 
@@ -509,6 +520,8 @@ function resetOverlay() {
     document.getElementById('key-play').style.display = 'none';
     document.getElementById('threat-line').classList.remove('visible');
     document.getElementById('do-now').classList.remove('visible');
+    document.getElementById('debrief').style.display = 'none';
+    document.getElementById('opp-line').style.display = '';
     document.getElementById('opp-line').innerHTML =
         '<span class="waiting" id="waiting-msg">Waiting for match...</span>';
     document.getElementById('phase-line').textContent = '';
