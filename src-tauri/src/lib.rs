@@ -74,11 +74,26 @@ pub fn run() {
             #[cfg(target_os = "macos")]
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);
 
-            // Start Python sidecar
+            // Start Python sidecar, then show main window
             let handle = app.handle().clone();
             tauri::async_runtime::spawn(async move {
-                if let Err(e) = sidecar::start_and_wait(&handle).await {
-                    eprintln!("Sidecar error: {}", e);
+                match sidecar::start_and_wait(&handle).await {
+                    Ok(()) => {
+                        // Server ready — show main window
+                        if let Some(win) = handle.get_webview_window("main") {
+                            let _ = win.navigate("http://localhost:8765".parse().unwrap());
+                            let _ = win.show();
+                            let _ = win.set_focus();
+                        }
+                    }
+                    Err(e) => {
+                        eprintln!("Sidecar error: {}", e);
+                        // Show window with error — navigate to loading page
+                        if let Some(win) = handle.get_webview_window("main") {
+                            // Can't load from server, just show the window with an error
+                            let _ = win.show();
+                        }
+                    }
                 }
             });
 

@@ -4,7 +4,7 @@ use tauri_plugin_shell::ShellExt;
 
 const SIDECAR_URL: &str = "http://localhost:8765";
 const HEALTH_ENDPOINT: &str = "/health";
-const MAX_WAIT_SECS: u64 = 30;
+const MAX_WAIT_SECS: u64 = 45;
 
 /// Start the Python sidecar and wait until it responds to health checks.
 pub async fn start_and_wait(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {

@@ -869,6 +869,12 @@ async def decks_page():
                         headers={"Cache-Control": "no-cache, no-store, must-revalidate"})
 
 
+@app.get("/loading")
+async def loading_page():
+    return FileResponse(str(STATIC_DIR / "loading.html"),
+                        headers={"Cache-Control": "no-cache, no-store, must-revalidate"})
+
+
 @app.get("/setup")
 async def setup_page():
     return FileResponse(str(STATIC_DIR / "setup.html"),
