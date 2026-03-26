@@ -1,9 +1,9 @@
 # MTGA Starter Decklists
 
-All starter decks from MTG Arena — free for every player.
+All 15 starter decks from MTG Arena — free for every player.
 Import via /decks page.
 
-## Foundations (FDN) Starters — 10 decks
+## Foundations (FDN) — 10 two-color decks
 - Arcane Aerialists (W/U) — Flying, angels
 - Cat Attack (W/G) — Cats, +1/+1 counters
 - Graveyard Gifts (U/B) — Zombies, graveyard
@@ -15,9 +15,9 @@ Import via /decks page.
 - Vampiric Hunger (W/B) — Lifegain, vampires
 - Wondrous Wizardry (U/R) — Spellslinger
 
-## Arena New Beginnings (ANB) Starters — 5 mono decks
-- Ocean's Might (U) — Flyers, card draw
-- Celestial Assault (W) — Lifegain
-- Blazing Warfare (R) — Goblins, aggro
-- Savage Lands (G) — Ramp, big creatures
-- Grim Reaping (B) — Removal, vampires
+## Arena New Beginnings (ANB) — 5 mono-color decks
+- Aerial Domination (U) — Flyers, card draw
+- Keep the Peace (W) — Lifegain, go-wide
+- Goblins Everywhere! (R) — Goblins, aggro
+- Large and in Charge (G) — Ramp, big creatures
+- Cold-Blooded Killers (B) — Removal, vampires
