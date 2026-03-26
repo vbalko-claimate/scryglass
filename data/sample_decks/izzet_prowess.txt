@@ -1,0 +1,17 @@
+Deck
+4 Monastery Swiftspear (FDN) 157
+4 Slickshot Show-Off (OTJ) 243
+4 Burst Lightning (FDN) 192
+4 Shock (FDN) 200
+4 Play with Fire (MID) 154
+3 Spellgorger Weird (WAR) 145
+2 Lightning Strike (M19) 152
+4 Consider (MID) 44
+3 Opt (STA) 19
+2 Spell Pierce (XLN) 81
+2 Wizard's Lightning (DAR) 152
+4 Steam Vents (GRN) 257
+4 Stormcarved Coast (VOW) 265
+6 Island (TMT) 316
+6 Mountain (TMT) 318
+4 Shivan Reef (DMU) 255

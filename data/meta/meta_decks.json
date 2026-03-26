@@ -49,7 +49,14 @@
       "speed": "medium",
       "typical_kill_turn": 6,
       "hidden_reach": 0,
-      "description": "Izzet Lessons leverages spell-copying and card advantage engines to assemble a critical mass of burn and tempo, threatening a combo kill around turn 6. Artist's Talent and Accumulate Wisdom fuel the engine while Combustion Technique provides the finishing burst damage. Meta share: 11.9%."
+      "description": "Izzet Lessons leverages spell-copying and card advantage engines to assemble a critical mass of burn and tempo, threatening a combo kill around turn 6. Artist's Talent and Accumulate Wisdom fuel the engine while Combustion Technique provides the finishing burst damage. Meta share: 11.9%.",
+      "meta_share": 0.086,
+      "key_cards": [
+        "Archmage Emeritus",
+        "Teach by Example",
+        "Galvanic Iteration",
+        "Lorehold Command"
+      ]
     },
     {
       "name": "Mono-Green Landfall",
@@ -92,7 +99,15 @@
       "speed": "medium",
       "typical_kill_turn": 6,
       "hidden_reach": 8,
-      "description": "Ground-centric landfall deck with explosive combat steps"
+      "description": "Ground-centric landfall deck with explosive combat steps",
+      "meta_share": 0.127,
+      "key_cards": [
+        "Nissa, Ascended Animist",
+        "Lotus Cobra",
+        "Scute Swarm",
+        "Kazandu Mammoth",
+        "Ashaya, Soul of the Wild"
+      ]
     },
     {
       "name": "Izzet Prowess",
@@ -143,7 +158,15 @@
       "speed": "very_fast",
       "typical_kill_turn": 5,
       "hidden_reach": 6,
-      "description": "Creature-based prowess deck. Creatures grow huge with each spell. Remove Firebending Student and Balmor before they snowball."
+      "description": "Creature-based prowess deck. Creatures grow huge with each spell. Remove Firebending Student and Balmor before they snowball.",
+      "meta_share": 0.195,
+      "key_cards": [
+        "Monastery Swiftspear",
+        "Burst Lightning",
+        "Slickshot Show-Off",
+        "Shock",
+        "Spellgorger Weird"
+      ]
     },
     {
       "name": "Dimir Excruciator",
@@ -186,7 +209,12 @@
       "speed": "medium",
       "typical_kill_turn": 7,
       "hidden_reach": 7,
-      "description": "Disruptive combo-control deck with sweepers and a fast closer"
+      "description": "Disruptive combo-control deck with sweepers and a fast closer",
+      "key_cards": [
+        "Excruciator",
+        "Mindlink Mech",
+        "Duress"
+      ]
     },
     {
       "name": "Dimir Midrange",
@@ -230,7 +258,15 @@
       "speed": "medium",
       "typical_kill_turn": 7,
       "hidden_reach": 3,
-      "description": "Tempo-midrange deck built on flyers, discard, and Kaito"
+      "description": "Tempo-midrange deck built on flyers, discard, and Kaito",
+      "meta_share": 0.093,
+      "key_cards": [
+        "Kaito Shizuki",
+        "Sheoldred, the Apocalypse",
+        "Go for the Throat",
+        "Preacher of the Schism",
+        "Faerie Mastermind"
+      ]
     },
     {
       "name": "Izzet Spellementals",
@@ -281,7 +317,14 @@
       "speed": "medium",
       "typical_kill_turn": 7,
       "hidden_reach": 0,
-      "description": "Izzet Spellementals chains cheap cantrips and burn to trigger elemental payoffs, building an overwhelming board while maintaining card flow. Dangerous because each cantrip doubles as both selection and a creature trigger, making removal exchanges inefficient. Meta share: 5.0%."
+      "description": "Izzet Spellementals chains cheap cantrips and burn to trigger elemental payoffs, building an overwhelming board while maintaining card flow. Dangerous because each cantrip doubles as both selection and a creature trigger, making removal exchanges inefficient. Meta share: 5.0%.",
+      "meta_share": 0.079,
+      "key_cards": [
+        "Risen Reef",
+        "Omnath, Locus of the Roil",
+        "Lightning Bolt",
+        "Quasiduplicate"
+      ]
     },
     {
       "name": "Azorius Tempo",
@@ -325,7 +368,14 @@
       "speed": "medium",
       "typical_kill_turn": 7,
       "hidden_reach": 2,
-      "description": "Tempo deck that wins by constraining mana and sequencing"
+      "description": "Tempo deck that wins by constraining mana and sequencing",
+      "meta_share": 0.045,
+      "key_cards": [
+        "Warden of the Inner Sky",
+        "Skrelv, Defector Mite",
+        "Spell Pierce",
+        "Loran of the Third Path"
+      ]
     },
     {
       "name": "Mono-Red Aggro",
@@ -368,7 +418,14 @@
       "speed": "very_fast",
       "typical_kill_turn": 5,
       "hidden_reach": 7,
-      "description": "Fast burn deck that demands early blocks and lifegain. Monstrous Rage banned, Heartfire Hero nerfed to 0/1."
+      "description": "Fast burn deck that demands early blocks and lifegain. Monstrous Rage banned, Heartfire Hero nerfed to 0/1.",
+      "meta_share": 0.04,
+      "key_cards": [
+        "Kumano Faces Kakkazan",
+        "Play with Fire",
+        "Lightning Strike",
+        "Feldon, Ronom Excavator"
+      ]
     },
     {
       "name": "Jeskai Control",
@@ -411,7 +468,14 @@
       "speed": "slow",
       "typical_kill_turn": 9,
       "hidden_reach": 4,
-      "description": "Removal-heavy control deck with wraths and late card advantage"
+      "description": "Removal-heavy control deck with wraths and late card advantage",
+      "meta_share": 0.03,
+      "key_cards": [
+        "Teferi, Who Slows the Sunset",
+        "The Wandering Emperor",
+        "Sunfall",
+        "Memory Deluge"
+      ]
     },
     {
       "name": "Temur Harmonizer Combo",
@@ -462,7 +526,13 @@
       "speed": "medium",
       "typical_kill_turn": 6,
       "hidden_reach": 0,
-      "description": "Temur Harmonizer Combo builds toward a turn-6 kill by chaining cheap spells through Mightform Harmonizer to generate explosive damage or overwhelming board presence. Consult the Star Charts and Stock Up provide the card velocity to assemble the combo consistently. Meta share: 2.6%."
+      "description": "Temur Harmonizer Combo builds toward a turn-6 kill by chaining cheap spells through Mightform Harmonizer to generate explosive damage or overwhelming board presence. Consult the Star Charts and Stock Up provide the card velocity to assemble the combo consistently. Meta share: 2.6%.",
+      "meta_share": 0.025,
+      "key_cards": [
+        "Enigmatic Incarnation",
+        "Fable of the Mirror-Breaker",
+        "Leyline Binding"
+      ]
     },
     {
       "name": "Bant Airbending Combo",
@@ -514,7 +584,11 @@
       "speed": "medium",
       "typical_kill_turn": 6,
       "hidden_reach": 0,
-      "description": "Bant Airbending exploits Aang's bounce/flicker ability to loop Bramble Familiar and Doc Aurlock's adventure-from-exile engine, generating infinite mana and tutors to assemble a deterministic kill. Dangerous because it can threaten the combo through interaction while ramping ahead on mana. Meta share: 2.5%."
+      "description": "Bant Airbending exploits Aang's bounce/flicker ability to loop Bramble Familiar and Doc Aurlock's adventure-from-exile engine, generating infinite mana and tutors to assemble a deterministic kill. Dangerous because it can threaten the combo through interaction while ramping ahead on mana. Meta share: 2.5%.",
+      "key_cards": [
+        "Collected Company",
+        "Prosperous Innkeeper"
+      ]
     },
     {
       "name": "Boros Dragons",
@@ -565,7 +639,13 @@
       "speed": "fast",
       "typical_kill_turn": 6,
       "hidden_reach": 0,
-      "description": "Boros Dragons leverages efficient dragon creatures and burn spells to close games quickly by turn 6. The deck combines evasive flying threats with powerful ETB/attack triggers that snowball if left unchecked. Meta share: 2.5%."
+      "description": "Boros Dragons leverages efficient dragon creatures and burn spells to close games quickly by turn 6. The deck combines evasive flying threats with powerful ETB/attack triggers that snowball if left unchecked. Meta share: 2.5%.",
+      "meta_share": 0.035,
+      "key_cards": [
+        "Thundermaw Hellkite",
+        "Moonveil Regent",
+        "Shivan Devastator"
+      ]
     },
     {
       "name": "Simic Ouroboroid",
@@ -616,7 +696,11 @@
       "speed": "very_fast",
       "typical_kill_turn": 5,
       "hidden_reach": 0,
-      "description": "Simic ramp-combo deck that uses mana acceleration and token generators to assemble an Ouroboroid kill by turn 5. Extremely linear but resilient to single-point removal thanks to redundant enablers. Meta share: 2.5%."
+      "description": "Simic ramp-combo deck that uses mana acceleration and token generators to assemble an Ouroboroid kill by turn 5. Extremely linear but resilient to single-point removal thanks to redundant enablers. Meta share: 2.5%.",
+      "key_cards": [
+        "Ouroboroid",
+        "Llanowar Elves"
+      ]
     },
     {
       "name": "4c Ouroboroid",
@@ -669,7 +753,12 @@
       "speed": "very_fast",
       "typical_kill_turn": 5,
       "hidden_reach": 0,
-      "description": "A 4-color creature combo deck that uses mana acceleration into copy effects and recursive triggers to assemble a lethal loop, typically winning turn 5 through Gene Pollinator chains amplified by Mockingbird and Nature's Rhythm. Extremely fragile to early interaction but nearly unstoppable if it resolves its engine. Meta share: 1.8%."
+      "description": "A 4-color creature combo deck that uses mana acceleration into copy effects and recursive triggers to assemble a lethal loop, typically winning turn 5 through Gene Pollinator chains amplified by Mockingbird and Nature's Rhythm. Extremely fragile to early interaction but nearly unstoppable if it resolves its engine. Meta share: 1.8%.",
+      "key_cards": [
+        "Ouroboroid",
+        "Soulflayer",
+        "Fable of the Mirror-Breaker"
+      ]
     },
     {
       "name": "Rakdos Monument",
@@ -1911,5 +2000,7 @@
       "hidden_reach": 0,
       "description": ""
     }
-  ]
+  ],
+  "_updated": "2026-03-26",
+  "_source": "AetherHub, MTGDecks.net, magic.gg (March 2026)"
 }
