@@ -1,0 +1,146 @@
+name: Build & Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  build-sidecar:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            sidecar-name: scry-server-aarch64-apple-darwin
+          - os: macos-13
+            target: x86_64-apple-darwin
+            sidecar-name: scry-server-x86_64-apple-darwin
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            sidecar-name: scry-server-x86_64-pc-windows-msvc.exe
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install Python deps
+        run: |
+          pip install pyinstaller
+          pip install -e .
+
+      - name: Build sidecar
+        run: |
+          SEP=":"
+          if [ "$RUNNER_OS" = "Windows" ]; then SEP=";"; fi
+          pyinstaller --name scry-server --onefile --noconfirm \
+            --add-data "data/strategies${SEP}data/strategies" \
+            --add-data "data/meta${SEP}data/meta" \
+            --add-data "data/cards_cache.json${SEP}data/" \
+            --add-data "static${SEP}static" \
+            --hidden-import uvicorn.logging \
+            --hidden-import uvicorn.loops.auto \
+            --hidden-import uvicorn.protocols.http.auto \
+            --hidden-import uvicorn.protocols.websockets.auto \
+            --hidden-import uvicorn.lifespan.on \
+            --collect-submodules advisor \
+            --collect-submodules uvicorn \
+            run.py
+        shell: bash
+
+      - name: Rename sidecar with target triple
+        run: |
+          mv dist/scry-server${{ runner.os == 'Windows' && '.exe' || '' }} dist/${{ matrix.sidecar-name }}
+        shell: bash
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sidecar-${{ matrix.target }}
+          path: dist/${{ matrix.sidecar-name }}
+
+  build-tauri:
+    needs: build-sidecar
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            args: --target aarch64-apple-darwin
+          - os: macos-13
+            target: x86_64-apple-darwin
+            args: --target x86_64-apple-darwin
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            args: --target x86_64-pc-windows-msvc
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Download sidecar
+        uses: actions/download-artifact@v4
+        with:
+          name: sidecar-${{ matrix.target }}
+          path: src-tauri/binaries/
+
+      - name: Make sidecar executable
+        if: runner.os != 'Windows'
+        run: chmod +x src-tauri/binaries/*
+
+      - name: Build Tauri
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          # macOS signing (optional — set in repo secrets)
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: 'Scryglass ${{ github.ref_name }}'
+          releaseBody: 'See [CHANGELOG](https://github.com/vbalko-claimate/scryglass/commits/${{ github.ref_name }}) for details.'
+          releaseDraft: true
+          prerelease: false
+          args: ${{ matrix.args }}
+
+  # Quick CI check (runs on every push, not just tags)
+  ci-check:
+    if: github.ref_type != 'tag'
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install deps
+        run: pip install -e .
+
+      - name: Run CI gate check
+        run: python -m advisor.ci_check
