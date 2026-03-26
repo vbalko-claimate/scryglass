@@ -34,7 +34,7 @@ jobs:
       - name: Install Python deps
         run: |
           pip install pyinstaller
-          pip install -e .
+          pip install .
 
       - name: Build sidecar
         run: |
@@ -140,7 +140,7 @@ jobs:
           cache: 'pip'
 
       - name: Install deps
-        run: pip install -e .
+        run: pip install .
 
       - name: Run CI gate check
         run: python -m advisor.ci_check
