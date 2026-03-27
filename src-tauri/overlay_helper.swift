@@ -4,9 +4,10 @@
 import Cocoa
 import WebKit
 
-// Custom window that never becomes key/main — won't steal focus from MTGA
+// Custom window — canBecomeKey toggles for feedback mode
 class OverlayWindow: NSWindow {
-    override var canBecomeKey: Bool { false }
+    var interactiveMode = false
+    override var canBecomeKey: Bool { interactiveMode }
     override var canBecomeMain: Bool { false }
 }
 
@@ -82,8 +83,68 @@ class OverlayDelegate: NSObject, NSApplicationDelegate {
             self?.checkServerAlive()
         }
 
+        // Right Command key monitor — toggle feedback mode
+        NSEvent.addGlobalMonitorForEvents(matching: .flagsChanged) { [weak self] event in
+            guard let self = self else { return }
+            // Right Command = .command present AND keyCode 54 (right cmd)
+            // We detect via rawValue: right command sets bit 0x10 in device-dependent flags
+            let flags = event.modifierFlags
+            let rightCmd = flags.contains(.command) && event.keyCode == 54
+            let cmdReleased = !flags.contains(.command)
+            DispatchQueue.main.async {
+                if rightCmd && !self.isInteractive && self.window.isVisible {
+                    self.enterFeedbackMode()
+                } else if cmdReleased && self.isInteractive {
+                    self.exitFeedbackMode()
+                }
+            }
+        }
+
+        // Local mouse monitor — exit feedback mode after any click
+        NSEvent.addLocalMonitorForEvents(matching: .leftMouseDown) { [weak self] event in
+            guard let self = self, self.isInteractive else { return event }
+            // Let WKWebView handle the click, then exit after short delay
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+                self?.exitFeedbackMode()
+            }
+            return event
+        }
+
         print("overlay:ready")
         fflush(stdout)
+    }
+
+    var isInteractive = false
+    var feedbackTimeout: DispatchWorkItem?
+
+    func enterFeedbackMode() {
+        isInteractive = true
+        (window as! OverlayWindow).interactiveMode = true
+        window.ignoresMouseEvents = false
+        window.makeKeyAndOrderFront(nil)
+        webView.evaluateJavaScript("setInteractiveMode(true)", completionHandler: nil)
+
+        // Safety timeout — 5s max
+        feedbackTimeout?.cancel()
+        feedbackTimeout = DispatchWorkItem { [weak self] in
+            self?.exitFeedbackMode()
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5.0, execute: feedbackTimeout!)
+    }
+
+    func exitFeedbackMode() {
+        guard isInteractive else { return }
+        isInteractive = false
+        feedbackTimeout?.cancel()
+        (window as! OverlayWindow).interactiveMode = false
+        window.ignoresMouseEvents = true
+        window.resignKey()
+        webView.evaluateJavaScript("setInteractiveMode(false)", completionHandler: nil)
+
+        // Re-focus MTGA
+        if let mtga = NSWorkspace.shared.runningApplications.first(where: { ($0.localizedName ?? "").contains("MTGA") }) {
+            mtga.activate()
+        }
     }
 
     func syncWithMTGA() {

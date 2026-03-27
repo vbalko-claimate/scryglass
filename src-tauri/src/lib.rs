@@ -71,18 +71,20 @@ fn launch_overlay_macos(handle: &tauri::AppHandle) {
 }
 
 /// Windows: Use Tauri overlay window — poll MTGA foreground + match status to show/hide.
+/// Also polls Alt key for feedback mode toggle.
 #[cfg(target_os = "windows")]
 fn launch_overlay_windows(handle: &tauri::AppHandle) {
     let handle = handle.clone();
 
+    // Show/hide overlay thread (2s poll)
+    let h1 = handle.clone();
     std::thread::spawn(move || {
         let rt = tokio::runtime::Builder::new_current_thread()
             .enable_all()
             .build()
             .unwrap();
 
-        // Configure overlay window: click-through
-        if let Some(overlay) = handle.get_webview_window("overlay") {
+        if let Some(overlay) = h1.get_webview_window("overlay") {
             let _ = overlay.set_ignore_cursor_events(true);
         }
 
@@ -98,7 +100,7 @@ fn launch_overlay_windows(handle: &tauri::AppHandle) {
 
             let should_show = mtga_front && match_active;
 
-            if let Some(overlay) = handle.get_webview_window("overlay") {
+            if let Some(overlay) = h1.get_webview_window("overlay") {
                 if should_show && !was_visible {
                     println!("[overlay] MTGA in foreground + match active → showing overlay");
                     let _ = overlay.show();
@@ -108,6 +110,30 @@ fn launch_overlay_windows(handle: &tauri::AppHandle) {
                     let _ = overlay.hide();
                     was_visible = false;
                 }
+            }
+        }
+    });
+
+    // Alt key polling thread for feedback mode (50ms poll)
+    let h2 = handle.clone();
+    std::thread::spawn(move || {
+        use windows::Win32::UI::Input::KeyboardAndMouse::{GetAsyncKeyState, VK_RWIN};
+
+        let mut was_alt = false;
+
+        loop {
+            std::thread::sleep(std::time::Duration::from_millis(50));
+
+            // Right Windows key (≈ Right Command on Mac keyboards)
+            let alt_down = unsafe { GetAsyncKeyState(VK_RWIN.0 as i32) } & (1i16 << 15) != 0;
+
+            if alt_down != was_alt {
+                if let Some(overlay) = h2.get_webview_window("overlay") {
+                    let _ = overlay.set_ignore_cursor_events(!alt_down);
+                    let js = format!("setInteractiveMode({})", alt_down);
+                    let _ = overlay.eval(&js);
+                }
+                was_alt = alt_down;
             }
         }
     });

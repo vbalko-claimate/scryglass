@@ -94,6 +94,31 @@ async def match_status():
     return {"active": tracker.match_active}
 
 
+def _save_feedback(msg: dict, tracker) -> None:
+    """Save advice feedback to JSONL file in user data dir."""
+    from datetime import datetime
+    from pathlib import Path
+    import os
+
+    entry = {
+        "timestamp": datetime.now().isoformat(),
+        "vote": msg.get("vote"),
+        "decision_id": msg.get("decision_id"),
+        "advice_text": msg.get("advice_text"),
+        "match_id": getattr(tracker, "match_id", None),
+        "turn": getattr(tracker, "turn_number", None),
+    }
+
+    data_dir = Path(os.environ.get("SCRY_USER_DATA", Path.home() / "MTG" / "mtg-data"))
+    feedback_path = data_dir / "feedback.jsonl"
+    feedback_path.parent.mkdir(parents=True, exist_ok=True)
+
+    with open(feedback_path, "a") as f:
+        f.write(json.dumps(entry, default=str) + "\n")
+
+    log.info("Feedback saved: %s on decision_id=%s", msg.get("vote"), msg.get("decision_id"))
+
+
 @app.get("/api/review/matches")
 async def review_match_list():
     """List recent matches for review selection."""
@@ -633,6 +658,9 @@ async def websocket_endpoint(ws: WebSocket):
                     "type": "backend_changed",
                     "data": {"backend": get_backend()},
                 })
+
+            elif msg.get("type") == "feedback":
+                _save_feedback(msg, tracker)
 
     except WebSocketDisconnect:
         clients.remove(ws)

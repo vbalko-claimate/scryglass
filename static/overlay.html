@@ -121,6 +121,73 @@ html, body {
     color: rgba(160, 158, 150, 0.4);
 }
 
+/* Feedback buttons — hidden by default, shown in interactive mode */
+.feedback-btns {
+    display: none;
+    gap: 6px;
+    margin-top: 4px;
+    margin-left: 11px;
+}
+.feedback-btns.visible { display: flex; }
+
+.fb-btn {
+    width: 28px; height: 28px;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 6px;
+    background: rgba(30, 30, 40, 0.85);
+    cursor: pointer;
+    font-size: 13px;
+    line-height: 28px;
+    text-align: center;
+    transition: background 0.1s, transform 0.1s;
+}
+.fb-btn:hover {
+    background: rgba(60, 60, 80, 0.95);
+    transform: scale(1.15);
+}
+.fb-btn:active { transform: scale(0.95); }
+.fb-btn.good { color: #81c784; }
+.fb-btn.bad { color: #ef5350; }
+.fb-btn.sent {
+    opacity: 0.3;
+    pointer-events: none;
+}
+
+/* Interactive mode indicator */
+#interactive-indicator {
+    display: none;
+    font-size: 9px;
+    color: rgba(255, 200, 50, 0.7);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-top: 4px;
+    text-align: right;
+}
+#interactive-indicator.visible { display: block; }
+
+/* Feedback flash confirmation */
+#overlay.feedback-good { border-color: rgba(129, 199, 132, 0.5); }
+#overlay.feedback-bad { border-color: rgba(239, 83, 80, 0.5); }
+
+/* Hint line */
+.hint-line {
+    font-size: 9px;
+    color: rgba(244, 162, 97, 0.6);
+    margin-top: 6px;
+    padding-top: 4px;
+    border-top: 1px solid rgba(255, 255, 255, 0.04);
+    text-align: right;
+    animation: hint-pulse 10s ease-in-out infinite;
+}
+
+@keyframes hint-pulse {
+    0%, 84%, 100% { opacity: 1; }
+    87% { opacity: 1.0; color: rgba(244, 162, 97, 0.9); }
+    91% { opacity: 0.2; }
+    95% { opacity: 0.2; }
+    98% { opacity: 1; }
+}
+
 /* No match — completely invisible (background too) */
 #overlay.no-match {
     background: transparent !important;
@@ -227,6 +294,12 @@ html, body {
     <div class="threat-line" id="threat-line"></div>
     <div class="do-now" id="do-now"></div>
     <div class="phase-line" id="phase-line"></div>
+    <div class="hint-line" id="hint-line">Right ⌘ for feedback</div>
+    <div class="feedback-btns" id="feedback-btns">
+        <div class="fb-btn good" onclick="sendFeedback('up')" title="Good advice">✓</div>
+        <div class="fb-btn bad" onclick="sendFeedback('down')" title="Bad advice">✗</div>
+    </div>
+    <div id="interactive-indicator">⌘R FEEDBACK</div>
     <div id="debrief" style="display:none;text-align:center;padding:8px 0"></div>
 </div>
 
@@ -478,6 +551,53 @@ function updateThreatBadges(state) {
 }
 
 let lastAdvice = null;
+let feedbackMode = false;
+let feedbackAdviceSnapshot = null;
+
+// Called by native overlay (Swift/Rust) when modifier key is pressed/released
+function setInteractiveMode(active) {
+    feedbackMode = active;
+    const btns = document.getElementById('feedback-btns');
+    const indicator = document.getElementById('interactive-indicator');
+
+    if (active && inMatch && lastAdvice && lastAdvice.length > 0) {
+        // Snapshot current advice for race condition protection
+        feedbackAdviceSnapshot = {
+            decision_id: lastAdvice[0]?.decision_id || null,
+            message: lastAdvice[0]?.message || '',
+            timestamp: Date.now()
+        };
+        btns.classList.add('visible');
+        indicator.classList.add('visible');
+        // Reset sent state
+        document.querySelectorAll('.fb-btn').forEach(b => b.classList.remove('sent'));
+    } else {
+        btns.classList.remove('visible');
+        indicator.classList.remove('visible');
+        feedbackAdviceSnapshot = null;
+    }
+}
+
+function sendFeedback(vote) {
+    if (!ws || ws.readyState !== WebSocket.OPEN || !feedbackAdviceSnapshot) return;
+
+    // Disable buttons
+    document.querySelectorAll('.fb-btn').forEach(b => b.classList.add('sent'));
+
+    ws.send(JSON.stringify({
+        type: 'feedback',
+        vote: vote,
+        decision_id: feedbackAdviceSnapshot.decision_id,
+        advice_text: feedbackAdviceSnapshot.message,
+        snapshot_ts: feedbackAdviceSnapshot.timestamp
+    }));
+
+    // Visual confirmation flash
+    const overlay = document.getElementById('overlay');
+    const cls = vote === 'up' ? 'feedback-good' : 'feedback-bad';
+    overlay.classList.add(cls);
+    setTimeout(() => overlay.classList.remove(cls), 500);
+}
 
 function showDebrief(data) {
     const overlay = document.getElementById('overlay');
