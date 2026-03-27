@@ -20,8 +20,9 @@ fn find_mtga() -> mtga_detect::MtgaWindow {
     mtga_detect::find_mtga_window()
 }
 
-/// Launch the native overlay helper via Tauri sidecar with auto-restart.
-fn launch_overlay_helper(handle: &tauri::AppHandle) {
+/// macOS: Launch native Swift overlay sidecar with auto-restart.
+#[cfg(target_os = "macos")]
+fn launch_overlay_macos(handle: &tauri::AppHandle) {
     let shell = handle.shell();
     let mut restart_count = 0u32;
 
@@ -38,7 +39,6 @@ fn launch_overlay_helper(handle: &tauri::AppHandle) {
 
         match cmd.spawn() {
             Ok((mut rx, _child)) => {
-                // Block this thread waiting for process events
                 while let Some(event) = rx.blocking_recv() {
                     match event {
                         CommandEvent::Stdout(line) => {
@@ -67,6 +67,64 @@ fn launch_overlay_helper(handle: &tauri::AppHandle) {
         let wait = std::time::Duration::from_secs(5);
         println!("[overlay] Restarting in {:?}...", wait);
         std::thread::sleep(wait);
+    }
+}
+
+/// Windows: Use Tauri overlay window — poll MTGA foreground + match status to show/hide.
+#[cfg(target_os = "windows")]
+fn launch_overlay_windows(handle: &tauri::AppHandle) {
+    let handle = handle.clone();
+
+    std::thread::spawn(move || {
+        let rt = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+
+        // Configure overlay window: click-through
+        if let Some(overlay) = handle.get_webview_window("overlay") {
+            let _ = overlay.set_ignore_cursor_events(true);
+        }
+
+        let mut was_visible = false;
+
+        loop {
+            std::thread::sleep(std::time::Duration::from_secs(2));
+
+            let mtga_front = mtga_detect::is_mtga_frontmost();
+            let match_active = rt.block_on(async {
+                check_match_active().await
+            });
+
+            let should_show = mtga_front && match_active;
+
+            if let Some(overlay) = handle.get_webview_window("overlay") {
+                if should_show && !was_visible {
+                    println!("[overlay] MTGA in foreground + match active → showing overlay");
+                    let _ = overlay.show();
+                    was_visible = true;
+                } else if !should_show && was_visible {
+                    println!("[overlay] Hiding overlay");
+                    let _ = overlay.hide();
+                    was_visible = false;
+                }
+            }
+        }
+    });
+}
+
+#[cfg(target_os = "windows")]
+async fn check_match_active() -> bool {
+    let resp = reqwest::get("http://localhost:8765/match-status").await;
+    match resp {
+        Ok(r) => {
+            if let Ok(json) = r.json::<serde_json::Value>().await {
+                json.get("active").and_then(|v| v.as_bool()).unwrap_or(false)
+            } else {
+                false
+            }
+        }
+        Err(_) => false,
     }
 }
 
@@ -123,10 +181,9 @@ pub fn run() {
                 }
             });
 
-            // Launch native overlay helper after server is healthy
+            // Launch overlay after server is healthy (platform-specific)
             let handle2 = app.handle().clone();
             std::thread::spawn(move || {
-                // Poll health until server is ready (max 45s)
                 let rt = tokio::runtime::Builder::new_current_thread()
                     .enable_all()
                     .build()
@@ -142,7 +199,11 @@ pub fn run() {
                     false
                 });
                 if ready {
-                    launch_overlay_helper(&handle2);
+                    #[cfg(target_os = "macos")]
+                    launch_overlay_macos(&handle2);
+
+                    #[cfg(target_os = "windows")]
+                    launch_overlay_windows(&handle2);
                 } else {
                     eprintln!("[overlay] Server never became healthy, skipping overlay");
                 }

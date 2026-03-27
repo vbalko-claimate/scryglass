@@ -1,5 +1,4 @@
 use serde::Serialize;
-use std::process::Command;
 
 #[derive(Serialize, Clone, Debug)]
 pub struct MtgaWindow {
@@ -10,8 +9,11 @@ pub struct MtgaWindow {
     pub found: bool,
 }
 
-/// Find the main MTGA window using CGWindowList via swift.
+// ── macOS ──────────────────────────────────────────────────────────────
+
+#[cfg(target_os = "macos")]
 pub fn find_mtga_window() -> MtgaWindow {
+    use std::process::Command;
     let script = r#"
 import Cocoa
 let options: CGWindowListOption = [.optionAll, .excludeDesktopElements]
@@ -64,8 +66,9 @@ print("\(bestX),\(bestY),\(bestW),\(bestH)")
     }
 }
 
-/// Check if MTGA is the frontmost (active) application.
+#[cfg(target_os = "macos")]
 pub fn is_mtga_frontmost() -> bool {
+    use std::process::Command;
     let script = r#"
 import Cocoa
 let front = NSWorkspace.shared.frontmostApplication?.localizedName ?? ""
@@ -83,5 +86,31 @@ print(front.contains("MTGA") ? "1" : "0")
             s == "1"
         }
         Err(_) => false,
+    }
+}
+
+// ── Windows ────────────────────────────────────────────────────────────
+
+#[cfg(target_os = "windows")]
+pub fn find_mtga_window() -> MtgaWindow {
+    MtgaWindow { x: 0, y: 0, width: 0, height: 0, found: is_mtga_frontmost() }
+}
+
+#[cfg(target_os = "windows")]
+pub fn is_mtga_frontmost() -> bool {
+    use windows::Win32::UI::WindowsAndMessaging::{GetForegroundWindow, GetWindowTextW};
+
+    unsafe {
+        let hwnd = GetForegroundWindow();
+        if hwnd.is_invalid() {
+            return false;
+        }
+        let mut buf = [0u16; 256];
+        let len = GetWindowTextW(hwnd, &mut buf);
+        if len == 0 {
+            return false;
+        }
+        let title = String::from_utf16_lossy(&buf[..len as usize]);
+        title.contains("MTGA") || title.contains("Magic: The Gathering Arena")
     }
 }
