@@ -57,7 +57,7 @@ pub async fn start_and_wait(app: &AppHandle) -> Result<(), String> {
     Err(format!("Server did not respond within {}s. Check logs for errors.", MAX_WAIT_SECS))
 }
 
-async fn check_health() -> bool {
+pub async fn check_health() -> bool {
     let url = format!("{}{}", SIDECAR_URL, HEALTH_ENDPOINT);
     match reqwest::get(&url).await {
         Ok(resp) => resp.status().is_success(),

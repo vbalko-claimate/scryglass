@@ -22,11 +22,7 @@
         "url": "http://localhost:8765"
       }
     ],
-    "trayIcon": {
-      "iconPath": "icons/tray-icon.png",
-      "iconAsTemplate": true,
-      "tooltip": "Scryglass"
-    }
+    "trayIcon": null
   },
   "bundle": {
     "active": true,
@@ -39,7 +35,12 @@
       "icons/icon.ico"
     ],
     "externalBin": [
-      "binaries/scry-server"
+      "binaries/scry-server",
+      "binaries/overlay-helper"
+    ],
+    "resources": [
+      "icons/tray-icon.png",
+      "icons/tray-icon@2x.png"
     ],
     "macOS": {
       "dmg": {

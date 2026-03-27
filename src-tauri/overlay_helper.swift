@@ -1,5 +1,4 @@
-#!/usr/bin/env swift
-// Native overlay window for Scryglass
+// overlay_helper — compiled native overlay for Scryglass
 // Launched as subprocess, creates NSWindow + WKWebView over fullscreen MTGA
 
 import Cocoa

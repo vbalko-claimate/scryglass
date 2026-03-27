@@ -1,9 +1,10 @@
 use tauri::{
     menu::{MenuBuilder, MenuItemBuilder},
-    tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
+    tray::TrayIconBuilder,
     Manager,
 };
-use std::process::Command;
+use tauri_plugin_shell::ShellExt;
+use tauri_plugin_shell::process::CommandEvent;
 
 mod mtga_detect;
 mod sidecar;
@@ -19,38 +20,54 @@ fn find_mtga() -> mtga_detect::MtgaWindow {
     mtga_detect::find_mtga_window()
 }
 
-/// Launch the native overlay helper with auto-restart on crash.
-fn launch_overlay_helper() {
-    let overlay_script = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("overlay_helper.swift");
+/// Launch the native overlay helper via Tauri sidecar with auto-restart.
+fn launch_overlay_helper(handle: &tauri::AppHandle) {
+    let shell = handle.shell();
+    let mut restart_count = 0u32;
 
-    if !overlay_script.exists() {
-        eprintln!("[overlay] overlay_helper.swift not found at {:?}", overlay_script);
-        return;
-    }
+    loop {
+        println!("[overlay] Starting overlay helper (attempt {})", restart_count + 1);
 
-    std::thread::spawn(move || {
-        let mut restart_count = 0;
-        loop {
-            println!("[overlay] Starting overlay helper (attempt {})", restart_count + 1);
-            let status = Command::new("swift")
-                .arg(&overlay_script)
-                .status();
-            match status {
-                Ok(s) => println!("[overlay] Helper exited: {}", s),
-                Err(e) => eprintln!("[overlay] Failed to launch: {}", e),
+        let cmd = match shell.sidecar("overlay-helper") {
+            Ok(c) => c,
+            Err(e) => {
+                eprintln!("[overlay] Cannot create overlay sidecar: {}", e);
+                return;
             }
-            restart_count += 1;
-            if restart_count >= 5 {
-                eprintln!("[overlay] Too many restarts ({}), giving up", restart_count);
-                break;
+        };
+
+        match cmd.spawn() {
+            Ok((mut rx, _child)) => {
+                // Block this thread waiting for process events
+                while let Some(event) = rx.blocking_recv() {
+                    match event {
+                        CommandEvent::Stdout(line) => {
+                            println!("[overlay] {}", String::from_utf8_lossy(&line));
+                        }
+                        CommandEvent::Stderr(line) => {
+                            eprintln!("[overlay] {}", String::from_utf8_lossy(&line));
+                        }
+                        CommandEvent::Terminated(payload) => {
+                            println!("[overlay] Exited: code={:?} signal={:?}",
+                                payload.code, payload.signal);
+                            break;
+                        }
+                        _ => {}
+                    }
+                }
             }
-            // Wait before restart (exponential backoff)
-            let wait = std::time::Duration::from_secs(2u64.pow(restart_count.min(4)));
-            println!("[overlay] Restarting in {:?}...", wait);
-            std::thread::sleep(wait);
+            Err(e) => eprintln!("[overlay] Failed to spawn: {}", e),
         }
-    });
+
+        restart_count += 1;
+        if restart_count >= 5 {
+            eprintln!("[overlay] Too many restarts ({}), giving up", restart_count);
+            break;
+        }
+        let wait = std::time::Duration::from_secs(5);
+        println!("[overlay] Restarting in {:?}...", wait);
+        std::thread::sleep(wait);
+    }
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -106,14 +123,29 @@ pub fn run() {
                 }
             });
 
-            // Launch native overlay helper after sidecar is ready
+            // Launch native overlay helper after server is healthy
             let handle2 = app.handle().clone();
-            tauri::async_runtime::spawn(async move {
-                // Wait for server to be ready
-                tokio::time::sleep(std::time::Duration::from_secs(12)).await;
-                let _ = handle2.run_on_main_thread(|| {
-                    launch_overlay_helper();
+            std::thread::spawn(move || {
+                // Poll health until server is ready (max 45s)
+                let rt = tokio::runtime::Builder::new_current_thread()
+                    .enable_all()
+                    .build()
+                    .unwrap();
+                let ready = rt.block_on(async {
+                    for i in 0..45u32 {
+                        tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+                        if sidecar::check_health().await {
+                            println!("[overlay] Server healthy after {}s, launching overlay", i + 1);
+                            return true;
+                        }
+                    }
+                    false
                 });
+                if ready {
+                    launch_overlay_helper(&handle2);
+                } else {
+                    eprintln!("[overlay] Server never became healthy, skipping overlay");
+                }
             });
 
             // Build menu bar tray icon with dropdown
@@ -131,9 +163,18 @@ pub fn run() {
                 .item(&quit_item)
                 .build()?;
 
+            let tray_icon_path = app.path()
+                .resolve("icons/tray-icon.png", tauri::path::BaseDirectory::Resource)
+                .expect("tray icon not found in resources");
+            let tray_icon = tauri::image::Image::from_path(&tray_icon_path)
+                .expect("failed to decode tray icon PNG");
+
             let _tray = TrayIconBuilder::new()
                 .tooltip("Scryglass")
+                .icon(tray_icon)
+                .icon_as_template(true)
                 .menu(&menu)
+                .show_menu_on_left_click(true)
                 .on_menu_event(|app, event| {
                     match event.id().as_ref() {
                         "show" => {
@@ -149,23 +190,9 @@ pub fn run() {
                             let _ = open::that("http://localhost:8765/setup");
                         }
                         "quit" => {
-                            std::process::exit(0);
+                            app.exit(0);
                         }
                         _ => {}
-                    }
-                })
-                .on_tray_icon_event(|tray, event| {
-                    if let TrayIconEvent::Click {
-                        button: MouseButton::Left,
-                        button_state: MouseButtonState::Up,
-                        ..
-                    } = event
-                    {
-                        let app = tray.app_handle();
-                        if let Some(window) = app.get_webview_window("main") {
-                            let _ = window.show();
-                            let _ = window.set_focus();
-                        }
                     }
                 })
                 .build(app)?;
