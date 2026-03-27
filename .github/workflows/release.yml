@@ -104,6 +104,11 @@ jobs:
         if: runner.os != 'Windows'
         run: chmod +x src-tauri/binaries/*
 
+      - name: Create overlay-helper placeholder (Windows)
+        if: runner.os == 'Windows'
+        run: echo "overlay not supported on Windows" > src-tauri/binaries/overlay-helper-x86_64-pc-windows-msvc.exe
+        shell: bash
+
       - name: Build Tauri
         uses: tauri-apps/tauri-action@v0
         env:
