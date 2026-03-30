@@ -105,8 +105,8 @@ def _save_feedback(msg: dict, tracker) -> None:
         "vote": msg.get("vote"),
         "decision_id": msg.get("decision_id"),
         "advice_text": msg.get("advice_text"),
-        "match_id": getattr(tracker, "match_id", None),
-        "turn": getattr(tracker, "turn_number", None),
+        "match_id": tracker.state.match_info.match_id if tracker.state else None,
+        "turn": tracker.state.turn_info.turn_number if tracker.state else None,
     }
 
     data_dir = Path(os.environ.get("SCRY_USER_DATA", Path.home() / "MTG" / "mtg-data"))

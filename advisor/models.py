@@ -306,3 +306,4 @@ class Advice:
     confidence: float = 0.0
     recommended_cards: list[str] = field(default_factory=list)
     action_scores: list[ActionScore] = field(default_factory=list)
+    decision_id: str | None = None

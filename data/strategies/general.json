@@ -210,9 +210,10 @@
       "hand_lands_max": 4,
       "hand_castable_min": 2,
       "hand_size_min": 7,
-      "action": "Good hand — 2-4 lands + castable spells, KEEP",
-      "priority": "high",
-      "weight": 1.2,
+      "hand_curve_max": 3,
+      "action": "Keepable hand — 2-4 lands with early curve (castable T1-T3)",
+      "priority": "medium",
+      "weight": 0.9,
       "stats": {
         "fired": 0,
         "correct": 0

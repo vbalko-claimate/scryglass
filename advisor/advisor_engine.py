@@ -1734,6 +1734,12 @@ class AdvisorEngine:
         merged.sort(key=lambda a: (prio.get(a.priority, 4), -(a.action_scores[0].score if a.action_scores else 0.0)))
         self._last_advice = merged[:5]
 
+        # ── Stamp decision_id on advice objects ──
+        if state.match_info.match_id:
+            did = f"{state.match_info.match_id}_{state.match_info.game_number}_{state.game_state_id}"
+            for a in self._last_advice:
+                a.decision_id = did
+
         # ── Phase 1 Telemetry: decision_eval ──
         # Log rule contributions, advice ranking, and canonical actions.
         if state.match_info.match_id and advice:
