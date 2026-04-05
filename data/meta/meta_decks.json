@@ -1693,7 +1693,7 @@
           "removal_priority": 4
         }
       ],
-      "speed": "medium",
+      "speed": "fast",
       "typical_kill_turn": 7,
       "hidden_reach": 0,
       "description": "Mono-white lifegain synergy deck that chains cheap life gain triggers into explosive board presence through token generation and +1/+1 counter growth. Dangerous because it converts innocuous life gain into lethal board states that snowball out of control by turn 5-6."
@@ -1711,7 +1711,7 @@
         "Ball Lightning": 0.15
       },
       "key_threats": [],
-      "speed": "medium",
+      "speed": "fast",
       "typical_kill_turn": 10,
       "hidden_reach": 0,
       "description": ""
@@ -1869,7 +1869,7 @@
         "Badgermole Cub": 0.15
       },
       "key_threats": [],
-      "speed": "medium",
+      "speed": "fast",
       "typical_kill_turn": 10,
       "hidden_reach": 0,
       "description": ""
@@ -1944,7 +1944,7 @@
         "Cragflame": 0.15
       },
       "key_threats": [],
-      "speed": "medium",
+      "speed": "fast",
       "typical_kill_turn": 10,
       "hidden_reach": 0,
       "description": ""
