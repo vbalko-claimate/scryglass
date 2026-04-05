@@ -1,8 +1,8 @@
 {
-  "engine_version": "2.1.0",
-  "total_states": 281,
-  "top_1_agreement": 0.9858,
-  "flip_rate": 0.0142,
+  "engine_version": "2.2.0",
+  "total_states": 278,
+  "top_1_agreement": 1.0,
+  "flip_rate": 0.0,
   "threshold": 0.9,
   "passed": true,
   "decks": [
@@ -26,165 +26,12 @@
     },
     {
       "deck": "Mono White Lifegain",
-      "total": 154,
-      "top_1_match": 150,
-      "top_3_match": 154,
-      "flips": 4,
+      "total": 151,
+      "top_1_match": 151,
+      "top_3_match": 151,
+      "flips": 0,
       "skipped": 0,
-      "mismatches": [
-        {
-          "state": {
-            "turn": 12,
-            "phase": "Phase_Combat",
-            "my_life": 23,
-            "opp_life": 13,
-            "hand": [
-              "Valorous Stance"
-            ],
-            "my_battlefield": [
-              "Ruin-Lurker Bat",
-              "Plains",
-              "Plains",
-              "Plains",
-              "Plains",
-              "Plains",
-              "Sheltered by Ghosts"
-            ],
-            "opp_battlefield": [
-              "Authority of the Consuls",
-              "Island",
-              "Plains",
-              "Plains",
-              "Temple of Enlightenment",
-              "Temple of Enlightenment",
-              "Tranquil Cove"
-            ]
-          },
-          "expected_top": "situation_topdeck_preserve_flyer",
-          "got_top": "archetype_attack_aggressively",
-          "expected_ids": [
-            "situation_topdeck_preserve_flyer",
-            "archetype_attack_aggressively"
-          ],
-          "got_ids": [
-            "archetype_attack_aggressively"
-          ]
-        },
-        {
-          "state": {
-            "turn": 12,
-            "phase": "Phase_Combat",
-            "my_life": 23,
-            "opp_life": 13,
-            "hand": [
-              "Valorous Stance"
-            ],
-            "my_battlefield": [
-              "Ruin-Lurker Bat",
-              "Plains",
-              "Plains",
-              "Plains",
-              "Plains",
-              "Plains",
-              "Sheltered by Ghosts"
-            ],
-            "opp_battlefield": [
-              "Authority of the Consuls",
-              "Island",
-              "Plains",
-              "Plains",
-              "Temple of Enlightenment",
-              "Temple of Enlightenment",
-              "Tranquil Cove"
-            ]
-          },
-          "expected_top": "situation_topdeck_preserve_flyer",
-          "got_top": "archetype_attack_aggressively",
-          "expected_ids": [
-            "situation_topdeck_preserve_flyer",
-            "archetype_attack_aggressively"
-          ],
-          "got_ids": [
-            "archetype_attack_aggressively"
-          ]
-        },
-        {
-          "state": {
-            "turn": 12,
-            "phase": "Phase_Combat",
-            "my_life": 23,
-            "opp_life": 13,
-            "hand": [
-              "Valorous Stance"
-            ],
-            "my_battlefield": [
-              "Ruin-Lurker Bat",
-              "Plains",
-              "Plains",
-              "Plains",
-              "Plains",
-              "Plains",
-              "Sheltered by Ghosts"
-            ],
-            "opp_battlefield": [
-              "Authority of the Consuls",
-              "Island",
-              "Plains",
-              "Plains",
-              "Temple of Enlightenment",
-              "Temple of Enlightenment",
-              "Tranquil Cove"
-            ]
-          },
-          "expected_top": "situation_topdeck_preserve_flyer",
-          "got_top": "archetype_attack_aggressively",
-          "expected_ids": [
-            "situation_topdeck_preserve_flyer",
-            "archetype_attack_aggressively"
-          ],
-          "got_ids": [
-            "archetype_attack_aggressively"
-          ]
-        },
-        {
-          "state": {
-            "turn": 12,
-            "phase": "Phase_Combat",
-            "my_life": 23,
-            "opp_life": 13,
-            "hand": [
-              "Valorous Stance"
-            ],
-            "my_battlefield": [
-              "Ruin-Lurker Bat",
-              "Plains",
-              "Plains",
-              "Plains",
-              "Plains",
-              "Plains",
-              "Sheltered by Ghosts"
-            ],
-            "opp_battlefield": [
-              "Authority of the Consuls",
-              "Island",
-              "Plains",
-              "Plains",
-              "Temple of Enlightenment",
-              "Temple of Enlightenment",
-              "Tranquil Cove"
-            ]
-          },
-          "expected_top": "situation_topdeck_preserve_flyer",
-          "got_top": "archetype_attack_aggressively",
-          "expected_ids": [
-            "situation_topdeck_preserve_flyer",
-            "archetype_attack_aggressively"
-          ],
-          "got_ids": [
-            "archetype_attack_aggressively"
-          ]
-        }
-      ]
+      "mismatches": []
     }
   ]
 }

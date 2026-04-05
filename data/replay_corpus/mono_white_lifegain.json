@@ -20,7 +20,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": null,
     "expected": [],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -43,7 +43,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": null,
     "expected": [],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -74,7 +74,7 @@
       },
       {
         "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       },
@@ -86,18 +86,18 @@
       },
       {
         "rule_id": "archetype_one_drop_t1",
-        "priority": "high",
+        "priority": "critical",
         "source": "strategy",
         "action_family": "cast_spell"
       },
       {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -128,7 +128,7 @@
       },
       {
         "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       },
@@ -140,18 +140,18 @@
       },
       {
         "rule_id": "archetype_one_drop_t1",
-        "priority": "high",
+        "priority": "critical",
         "source": "strategy",
         "action_family": "cast_spell"
       },
       {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -179,13 +179,7 @@
     "expected": [
       {
         "rule_id": "situation_low_creatures_deploy",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "critical",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       },
@@ -202,13 +196,19 @@
         "action_family": "cast_spell"
       },
       {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
         "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -236,13 +236,7 @@
     "expected": [
       {
         "rule_id": "situation_low_creatures_deploy",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "critical",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       },
@@ -259,13 +253,19 @@
         "action_family": "cast_spell"
       },
       {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
         "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -296,12 +296,12 @@
     "expected": [
       {
         "rule_id": "archetype_attack_aggressively",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "attack"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -332,12 +332,12 @@
     "expected": [
       {
         "rule_id": "archetype_attack_aggressively",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "attack"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -352,7 +352,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Azorius (unknown)",
     "expected": [],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -367,7 +367,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Azorius (unknown)",
     "expected": [],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -382,7 +382,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Azorius (unknown)",
     "expected": [],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -427,18 +427,18 @@
       },
       {
         "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       },
       {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -483,18 +483,18 @@
       },
       {
         "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       },
       {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -539,18 +539,18 @@
       },
       {
         "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       },
       {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -595,18 +595,18 @@
       },
       {
         "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       },
       {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -651,18 +651,18 @@
       },
       {
         "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       },
       {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -695,12 +695,12 @@
     "expected": [
       {
         "rule_id": "archetype_attack_aggressively",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "attack"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -733,12 +733,12 @@
     "expected": [
       {
         "rule_id": "archetype_attack_aggressively",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "attack"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -771,12 +771,12 @@
     "expected": [
       {
         "rule_id": "archetype_attack_aggressively",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "attack"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -809,12 +809,12 @@
     "expected": [
       {
         "rule_id": "archetype_attack_aggressively",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "attack"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -847,12 +847,12 @@
     "expected": [
       {
         "rule_id": "archetype_attack_aggressively",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "attack"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -885,12 +885,12 @@
     "expected": [
       {
         "rule_id": "archetype_attack_aggressively",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "attack"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -929,18 +929,18 @@
       },
       {
         "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       },
       {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -979,18 +979,18 @@
       },
       {
         "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       },
       {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -1029,18 +1029,18 @@
       },
       {
         "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       },
       {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -1055,7 +1055,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Azorius (unknown)",
     "expected": [],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -1070,7 +1070,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Azorius (unknown)",
     "expected": [],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -1090,15 +1090,9 @@
         "priority": "critical",
         "source": "strategy",
         "action_family": "cast_spell"
-      },
-      {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -1138,12 +1132,12 @@
       },
       {
         "rule_id": "archetype_attack_aggressively",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "attack"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -1183,12 +1177,12 @@
       },
       {
         "rule_id": "archetype_attack_aggressively",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "attack"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -1228,12 +1222,12 @@
       },
       {
         "rule_id": "archetype_attack_aggressively",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "attack"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -1273,12 +1267,12 @@
       },
       {
         "rule_id": "archetype_attack_aggressively",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "attack"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -1292,15 +1286,8 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Azorius (unknown)",
-    "expected": [
-      {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      }
-    ],
-    "_engine_version": "2.1.0"
+    "expected": [],
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -1332,7 +1319,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Azorius (unknown)",
     "expected": [],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -1364,7 +1351,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Azorius (unknown)",
     "expected": [],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -1411,18 +1398,18 @@
       },
       {
         "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       },
       {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -1469,18 +1456,18 @@
       },
       {
         "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       },
       {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -1527,18 +1514,18 @@
       },
       {
         "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       },
       {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -1585,18 +1572,18 @@
       },
       {
         "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       },
       {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -1643,18 +1630,18 @@
       },
       {
         "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       },
       {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -1695,12 +1682,12 @@
       },
       {
         "rule_id": "archetype_attack_aggressively",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "attack"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -1741,18 +1728,18 @@
       },
       {
         "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       },
       {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -1793,18 +1780,18 @@
       },
       {
         "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       },
       {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -1845,18 +1832,18 @@
       },
       {
         "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       },
       {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -1897,18 +1884,18 @@
       },
       {
         "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       },
       {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -1949,18 +1936,18 @@
       },
       {
         "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       },
       {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -2001,18 +1988,18 @@
       },
       {
         "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       },
       {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -2053,18 +2040,18 @@
       },
       {
         "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       },
       {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -2105,18 +2092,18 @@
       },
       {
         "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       },
       {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -2157,18 +2144,18 @@
       },
       {
         "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       },
       {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -2209,18 +2196,18 @@
       },
       {
         "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       },
       {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -2258,19 +2245,13 @@
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -2308,19 +2289,13 @@
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -2358,19 +2333,13 @@
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -2408,19 +2377,13 @@
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -2458,19 +2421,13 @@
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -2508,19 +2465,13 @@
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -2558,19 +2509,13 @@
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -2585,7 +2530,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Azorius (unknown)",
     "expected": [],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -2600,7 +2545,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Azorius (unknown)",
     "expected": [],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -2634,19 +2579,13 @@
     "opp_deck": "Jeskai Control",
     "expected": [
       {
-        "rule_id": "situation_topdeck_preserve_flyer",
-        "priority": "critical",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_attack_aggressively",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "attack"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -2680,19 +2619,13 @@
     "opp_deck": "Jeskai Control",
     "expected": [
       {
-        "rule_id": "situation_topdeck_preserve_flyer",
-        "priority": "critical",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_attack_aggressively",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "attack"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -2726,19 +2659,13 @@
     "opp_deck": "Jeskai Control",
     "expected": [
       {
-        "rule_id": "situation_topdeck_preserve_flyer",
-        "priority": "critical",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_attack_aggressively",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "attack"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -2772,19 +2699,13 @@
     "opp_deck": "Jeskai Control",
     "expected": [
       {
-        "rule_id": "situation_topdeck_preserve_flyer",
-        "priority": "critical",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_attack_aggressively",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "attack"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -2820,12 +2741,12 @@
     "expected": [
       {
         "rule_id": "archetype_attack_aggressively",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "attack"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -2861,12 +2782,12 @@
     "expected": [
       {
         "rule_id": "archetype_attack_aggressively",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "attack"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -2902,12 +2823,12 @@
     "expected": [
       {
         "rule_id": "archetype_attack_aggressively",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "attack"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -2943,12 +2864,12 @@
     "expected": [
       {
         "rule_id": "archetype_attack_aggressively",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "attack"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -2984,12 +2905,12 @@
     "expected": [
       {
         "rule_id": "archetype_attack_aggressively",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "attack"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -3025,12 +2946,12 @@
     "expected": [
       {
         "rule_id": "archetype_attack_aggressively",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "attack"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -3073,19 +2994,13 @@
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -3128,19 +3043,13 @@
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -3183,19 +3092,13 @@
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -3238,19 +3141,13 @@
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -3293,19 +3190,13 @@
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -3348,19 +3239,13 @@
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -3403,19 +3288,13 @@
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -3458,19 +3337,13 @@
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -3513,19 +3386,13 @@
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -3562,19 +3429,13 @@
     "opp_deck": "Jeskai Control",
     "expected": [
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -3611,19 +3472,13 @@
     "opp_deck": "Jeskai Control",
     "expected": [
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -3660,19 +3515,13 @@
     "opp_deck": "Jeskai Control",
     "expected": [
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -3718,19 +3567,13 @@
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -3776,19 +3619,13 @@
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -3834,19 +3671,13 @@
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -3892,19 +3723,13 @@
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -3950,19 +3775,13 @@
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -4008,19 +3827,13 @@
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -4066,19 +3879,13 @@
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -4124,19 +3931,13 @@
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -4182,19 +3983,13 @@
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -4240,19 +4035,13 @@
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -4298,19 +4087,13 @@
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -4356,19 +4139,13 @@
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -4414,19 +4191,13 @@
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -4472,19 +4243,13 @@
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -4530,19 +4295,13 @@
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -4588,19 +4347,13 @@
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -4646,19 +4399,13 @@
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -4704,19 +4451,13 @@
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -4762,19 +4503,13 @@
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -4820,19 +4555,13 @@
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -4873,18 +4602,18 @@
     "expected": [
       {
         "rule_id": "card_synergy_multiple_lifelink_payoffs",
-        "priority": "critical",
+        "priority": "high",
         "source": "strategy",
         "action_family": "attack"
       },
       {
         "rule_id": "archetype_attack_aggressively",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "attack"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -4925,18 +4654,18 @@
     "expected": [
       {
         "rule_id": "card_synergy_multiple_lifelink_payoffs",
-        "priority": "critical",
+        "priority": "high",
         "source": "strategy",
         "action_family": "attack"
       },
       {
         "rule_id": "archetype_attack_aggressively",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "attack"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -4977,18 +4706,18 @@
     "expected": [
       {
         "rule_id": "card_synergy_multiple_lifelink_payoffs",
-        "priority": "critical",
+        "priority": "high",
         "source": "strategy",
         "action_family": "attack"
       },
       {
         "rule_id": "archetype_attack_aggressively",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "attack"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -5029,18 +4758,18 @@
     "expected": [
       {
         "rule_id": "card_synergy_multiple_lifelink_payoffs",
-        "priority": "critical",
+        "priority": "high",
         "source": "strategy",
         "action_family": "attack"
       },
       {
         "rule_id": "archetype_attack_aggressively",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "attack"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -5081,18 +4810,18 @@
     "expected": [
       {
         "rule_id": "card_synergy_multiple_lifelink_payoffs",
-        "priority": "critical",
+        "priority": "high",
         "source": "strategy",
         "action_family": "attack"
       },
       {
         "rule_id": "archetype_attack_aggressively",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "attack"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -5133,18 +4862,18 @@
     "expected": [
       {
         "rule_id": "card_synergy_multiple_lifelink_payoffs",
-        "priority": "critical",
+        "priority": "high",
         "source": "strategy",
         "action_family": "attack"
       },
       {
         "rule_id": "archetype_attack_aggressively",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "attack"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -5184,19 +4913,13 @@
     "opp_deck": "Jeskai Control",
     "expected": [
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -5236,19 +4959,13 @@
     "opp_deck": "Jeskai Control",
     "expected": [
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -5288,19 +5005,13 @@
     "opp_deck": "Jeskai Control",
     "expected": [
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -5348,19 +5059,13 @@
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -5408,19 +5113,13 @@
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -5468,19 +5167,13 @@
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -5528,19 +5221,13 @@
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -5588,19 +5275,13 @@
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -5642,7 +5323,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
     "expected": [],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -5684,7 +5365,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
     "expected": [],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -5726,7 +5407,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
     "expected": [],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -5768,7 +5449,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
     "expected": [],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -5782,15 +5463,8 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [
-      {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      }
-    ],
-    "_engine_version": "2.1.0"
+    "expected": [],
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -5832,7 +5506,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
     "expected": [],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -5874,7 +5548,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
     "expected": [],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -5889,7 +5563,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
     "expected": [],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -5904,7 +5578,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
     "expected": [],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -5954,19 +5628,13 @@
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -6016,19 +5684,13 @@
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -6078,19 +5740,13 @@
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -6140,19 +5796,13 @@
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -6202,19 +5852,13 @@
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -6229,7 +5873,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
     "expected": [],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -6244,7 +5888,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
     "expected": [],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -6288,19 +5932,13 @@
     "opp_deck": "Jeskai Control",
     "expected": [
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -6344,19 +5982,13 @@
     "opp_deck": "Jeskai Control",
     "expected": [
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -6400,19 +6032,13 @@
     "opp_deck": "Jeskai Control",
     "expected": [
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -6427,7 +6053,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
     "expected": [],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -6442,7 +6068,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
     "expected": [],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -6457,7 +6083,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
     "expected": [],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -6507,19 +6133,13 @@
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -6569,19 +6189,13 @@
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -6631,19 +6245,13 @@
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -6693,19 +6301,13 @@
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -6755,19 +6357,13 @@
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -6817,19 +6413,13 @@
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -6879,19 +6469,13 @@
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -6941,19 +6525,13 @@
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -7003,19 +6581,13 @@
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -7065,19 +6637,13 @@
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -7127,19 +6693,13 @@
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -7189,19 +6749,13 @@
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -7251,19 +6805,13 @@
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -7313,19 +6861,13 @@
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -7368,7 +6910,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
     "expected": [],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -7411,7 +6953,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
     "expected": [],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -7454,7 +6996,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
     "expected": [],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -7497,7 +7039,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
     "expected": [],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -7540,7 +7082,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
     "expected": [],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -7583,7 +7125,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
     "expected": [],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -7626,7 +7168,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
     "expected": [],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -7640,15 +7182,8 @@
     },
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
-    "expected": [
-      {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      }
-    ],
-    "_engine_version": "2.1.0"
+    "expected": [],
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -7691,7 +7226,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
     "expected": [],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -7734,7 +7269,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
     "expected": [],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -7749,7 +7284,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
     "expected": [],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -7764,7 +7299,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": "Jeskai Control",
     "expected": [],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -7815,19 +7350,13 @@
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -7878,19 +7407,13 @@
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -7941,19 +7464,13 @@
         "action_family": "cast_spell"
       },
       {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -7976,7 +7493,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": null,
     "expected": [],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -8008,7 +7525,7 @@
       },
       {
         "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       },
@@ -8020,18 +7537,18 @@
       },
       {
         "rule_id": "archetype_one_drop_t1",
-        "priority": "high",
+        "priority": "critical",
         "source": "strategy",
         "action_family": "cast_spell"
       },
       {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -8063,7 +7580,7 @@
       },
       {
         "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       },
@@ -8075,18 +7592,18 @@
       },
       {
         "rule_id": "archetype_one_drop_t1",
-        "priority": "high",
+        "priority": "critical",
         "source": "strategy",
         "action_family": "cast_spell"
       },
       {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -8115,13 +7632,7 @@
     "expected": [
       {
         "rule_id": "situation_low_creatures_deploy",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "critical",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       },
@@ -8133,18 +7644,24 @@
       },
       {
         "rule_id": "card_synergy_ghosts_hold_for_exile",
-        "priority": "high",
+        "priority": "critical",
         "source": "strategy",
         "action_family": "pass"
       },
       {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
         "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -8173,13 +7690,7 @@
     "expected": [
       {
         "rule_id": "situation_low_creatures_deploy",
-        "priority": "medium",
-        "source": "strategy",
-        "action_family": "cast_spell"
-      },
-      {
-        "rule_id": "synergy_lifelink_payoff",
-        "priority": "critical",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       },
@@ -8191,18 +7702,24 @@
       },
       {
         "rule_id": "card_synergy_ghosts_hold_for_exile",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "pass"
+      },
+      {
+        "rule_id": "synergy_lifelink_payoff",
+        "priority": "critical",
+        "source": "strategy",
+        "action_family": "cast_spell"
+      },
+      {
+        "rule_id": "synergy_flying_pressure",
         "priority": "high",
         "source": "strategy",
-        "action_family": "pass"
-      },
-      {
-        "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
-        "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -8231,12 +7748,12 @@
     "expected": [
       {
         "rule_id": "archetype_attack_aggressively",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "attack"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -8265,12 +7782,12 @@
     "expected": [
       {
         "rule_id": "archetype_attack_aggressively",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "attack"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -8285,7 +7802,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": null,
     "expected": [],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -8300,7 +7817,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": null,
     "expected": [],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -8315,7 +7832,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": null,
     "expected": [],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -8330,7 +7847,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": null,
     "expected": [],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -8345,7 +7862,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": null,
     "expected": [],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -8389,18 +7906,18 @@
       },
       {
         "rule_id": "card_synergy_ghosts_flyer_engine",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       },
       {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -8444,18 +7961,18 @@
       },
       {
         "rule_id": "card_synergy_ghosts_flyer_engine",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       },
       {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -8499,18 +8016,18 @@
       },
       {
         "rule_id": "card_synergy_ghosts_flyer_engine",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       },
       {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -8554,18 +8071,18 @@
       },
       {
         "rule_id": "card_synergy_ghosts_flyer_engine",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       },
       {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -8609,18 +8126,18 @@
       },
       {
         "rule_id": "card_synergy_ghosts_flyer_engine",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       },
       {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -8664,18 +8181,18 @@
       },
       {
         "rule_id": "card_synergy_ghosts_flyer_engine",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       },
       {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -8719,18 +8236,18 @@
       },
       {
         "rule_id": "card_synergy_ghosts_flyer_engine",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       },
       {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -8774,18 +8291,18 @@
       },
       {
         "rule_id": "card_synergy_ghosts_flyer_engine",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       },
       {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -8816,18 +8333,18 @@
     "expected": [
       {
         "rule_id": "card_synergy_multiple_lifelink_payoffs",
-        "priority": "critical",
+        "priority": "high",
         "source": "strategy",
         "action_family": "attack"
       },
       {
         "rule_id": "archetype_attack_aggressively",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "attack"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -8858,18 +8375,18 @@
     "expected": [
       {
         "rule_id": "card_synergy_multiple_lifelink_payoffs",
-        "priority": "critical",
+        "priority": "high",
         "source": "strategy",
         "action_family": "attack"
       },
       {
         "rule_id": "archetype_attack_aggressively",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "attack"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -8900,18 +8417,18 @@
     "expected": [
       {
         "rule_id": "card_synergy_multiple_lifelink_payoffs",
-        "priority": "critical",
+        "priority": "high",
         "source": "strategy",
         "action_family": "attack"
       },
       {
         "rule_id": "archetype_attack_aggressively",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "attack"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -8942,18 +8459,18 @@
     "expected": [
       {
         "rule_id": "card_synergy_multiple_lifelink_payoffs",
-        "priority": "critical",
+        "priority": "high",
         "source": "strategy",
         "action_family": "attack"
       },
       {
         "rule_id": "archetype_attack_aggressively",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "attack"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -8968,7 +8485,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": null,
     "expected": [],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -8983,7 +8500,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": null,
     "expected": [],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -8998,7 +8515,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": null,
     "expected": [],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -9013,7 +8530,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": null,
     "expected": [],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -9028,7 +8545,7 @@
     "strategy_name": "Mono White Lifegain",
     "opp_deck": null,
     "expected": [],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -9067,18 +8584,18 @@
       },
       {
         "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       },
       {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -9117,18 +8634,18 @@
       },
       {
         "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       },
       {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -9167,18 +8684,18 @@
       },
       {
         "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       },
       {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   },
   {
     "state": {
@@ -9217,17 +8734,17 @@
       },
       {
         "rule_id": "synergy_flying_pressure",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       },
       {
         "rule_id": "archetype_spend_mana",
-        "priority": "medium",
+        "priority": "high",
         "source": "strategy",
         "action_family": "cast_spell"
       }
     ],
-    "_engine_version": "2.1.0"
+    "_engine_version": "2.2.0"
   }
 ]
