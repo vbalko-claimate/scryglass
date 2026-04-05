@@ -183,18 +183,30 @@ async def match_review_detail(match_id: str):
 
         # Advice grouped by turn
         rows = conn.execute("""
-            SELECT turn_number, phase, source, priority, message, details
+            SELECT turn_number, phase, source, priority, message, details, id
             FROM advice_log
             WHERE match_id = ?
             AND source IN ('heuristic', 'strategy')
             AND priority IN ('critical', 'high', 'medium')
-            ORDER BY turn_number, timestamp
+            ORDER BY turn_number, id
         """, (match_id,)).fetchall()
+
+        # T0 mulligan: keep only advice from the final hand (last cluster by ID)
+        t0_rows = [r for r in rows if r[0] == 0]
+        other_rows = [r for r in rows if r[0] != 0]
+        if t0_rows:
+            # Find the last mulligan/keep advice ID — everything after it is the final hand
+            last_keep_id = 0
+            for r in t0_rows:
+                msg = r[4].lower()
+                if msg.startswith("keep") or msg.startswith("mulligan") or msg.startswith("risky keep"):
+                    last_keep_id = r[6]  # id column
+            if last_keep_id:
+                t0_rows = [r for r in t0_rows if r[6] >= last_keep_id]
 
         turns: dict[int, list] = {}
         seen: set[tuple] = set()  # dedup same rule/message in same turn+phase
-        for turn, phase, source, priority, message, details in rows:
-            # Strategy rules: dedup by rule_id; heuristic: dedup by message
+        for turn, phase, source, priority, message, details, _id in (t0_rows + other_rows):
             rule_id = ""
             if details and details.startswith("[") and "]" in details:
                 rule_id = details[1:details.index("]")]
