@@ -80,6 +80,7 @@ class CardInfo:
     expansion: str = ""
     abilities: list[str] = field(default_factory=list)
     oracle_text: str = ""
+    roles: set[str] = field(default_factory=set)
 
     @property
     def is_creature(self) -> bool:
@@ -307,3 +308,10 @@ class Advice:
     recommended_cards: list[str] = field(default_factory=list)
     action_scores: list[ActionScore] = field(default_factory=list)
     decision_id: str | None = None
+
+    @property
+    def rule_id(self) -> str:
+        """Extract 'layer:rule_id' from details '[layer:rule_id] w:...'."""
+        if self.details and self.details.startswith("[") and "]" in self.details:
+            return self.details[1:self.details.index("]")]
+        return ""

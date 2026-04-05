@@ -19,9 +19,9 @@ from .models import ActionFamily
 
 ACTION_FAMILIES = [f.value for f in ActionFamily]
 N_FEATURES = 16
-DATA_DIR = Path(__file__).resolve().parent.parent / "data"
-DEFAULT_DATA = DATA_DIR / "training" / "reranker_v1.jsonl"
-DEFAULT_MODEL = DATA_DIR / "models" / "reranker_v1.npz"
+from .database import PERSISTENT_DIR
+DEFAULT_DATA = PERSISTENT_DIR / "training" / "reranker_v1.jsonl"
+DEFAULT_MODEL = PERSISTENT_DIR / "models" / "reranker_v1.npz"
 
 
 def build_state_dict(

@@ -18,7 +18,7 @@ from advisor.heuristics import (
 )
 from advisor.models import GameState, GameObject, PlayerState, TurnInfo, MatchInfo, Zone
 
-DB_PATH = Path(__file__).parent.parent / "data" / "advisor.db"
+from advisor.database import DB_PATH
 
 
 def _to_gre_types(card_types: list[str]) -> list[str]:

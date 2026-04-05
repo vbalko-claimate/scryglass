@@ -23,7 +23,7 @@ from .database import (
     get_stats_mulligan, get_stats_my_cards, get_stats_opp_cards,
     get_stats_color_matchups, get_stats_opponents, get_stats_overview,
     get_stats_recent_trend, get_stats_weaknesses, get_match_timeline,
-    import_cards_from_mtga, init_db, USER_DATA_DIR,
+    import_cards_from_mtga, init_db, verify_db, USER_DATA_DIR,
 )
 from .game_state import GameStateTracker
 from .llm_advisor import get_backend, set_backend
@@ -40,7 +40,7 @@ from . import deck_storage
 
 log = logging.getLogger(__name__)
 
-ARCHIVE_DIR = Path(__file__).parent.parent / "data" / "log_archive"
+from .database import LOG_ARCHIVE_DIR as ARCHIVE_DIR
 
 
 def _archive_player_log(log_path: Path):
@@ -78,9 +78,10 @@ app.include_router(deck_router)
 @app.get("/health")
 async def health():
     """Health check for sidecar readiness."""
-    from .version import ENGINE_VERSION
+    from .version import APP_VERSION, ENGINE_VERSION
     return {
         "status": "ok",
+        "app_version": APP_VERSION,
         "engine_version": ENGINE_VERSION,
         "card_count": card_cache.size,
         "match_active": tracker.match_active,
@@ -191,7 +192,16 @@ async def match_review_detail(match_id: str):
         """, (match_id,)).fetchall()
 
         turns: dict[int, list] = {}
+        seen: set[tuple] = set()  # dedup same rule/message in same turn+phase
         for turn, phase, source, priority, message, details in rows:
+            # Strategy rules: dedup by rule_id; heuristic: dedup by message
+            rule_id = ""
+            if details and details.startswith("[") and "]" in details:
+                rule_id = details[1:details.index("]")]
+            dedup_key = (turn, phase, rule_id) if rule_id else (turn, phase, message)
+            if dedup_key in seen:
+                continue
+            seen.add(dedup_key)
             turns.setdefault(turn, []).append({
                 "phase": phase,
                 "source": source,
@@ -259,10 +269,12 @@ def state_to_dict(state: GameState) -> dict:
     me = state.my_player()
     opp = state.opp_player()
 
-    # Hand cards with resolved names
+    # Hand cards with resolved names, sorted to match MTGA visual order
+    # MTGA sorts: non-lands by CMC ascending, then lands at the right
     hand = []
     for obj in state.my_hand():
         card = card_cache.get(obj.grp_id)
+        is_land = "Land" in (card.card_types if card else [])
         hand.append({
             "instance_id": obj.instance_id,
             "grp_id": obj.grp_id,
@@ -274,7 +286,9 @@ def state_to_dict(state: GameState) -> dict:
             "toughness": card.toughness if card else "",
             "colors": card.colors if card else [],
             "abilities": card.abilities if card else [],
+            "is_land": is_land,
         })
+    hand.sort(key=lambda c: (c["is_land"], c["cmc"], c["name"]))
 
     # Battlefields
     def bf_cards(bf_list):
@@ -481,6 +495,7 @@ async def startup():
     )
 
     # Init DB & backup
+    verify_db()
     init_db()
     backup_db()
 

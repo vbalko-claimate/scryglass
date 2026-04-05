@@ -14,8 +14,8 @@ from pathlib import Path
 
 from .database import get_connection, DB_PATH
 
-DATA_DIR = Path(__file__).resolve().parent.parent / "data"
-DEFAULT_OUTPUT = DATA_DIR / "training" / "reranker_v1.jsonl"
+from .database import PERSISTENT_DIR
+DEFAULT_OUTPUT = PERSISTENT_DIR / "training" / "reranker_v1.jsonl"
 
 
 def _join_key(row: dict) -> tuple:

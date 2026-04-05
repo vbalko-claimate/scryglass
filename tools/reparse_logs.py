@@ -17,8 +17,7 @@ from advisor.database import card_cache, init_db, save_match_event
 from advisor.game_state import GameStateTracker
 from advisor.log_parser import iter_messages_from_lines
 
-ARCHIVE_DIR = Path(__file__).parent.parent / "data" / "log_archive"
-DB_PATH = Path(__file__).parent.parent / "data" / "advisor.db"
+from advisor.database import DB_PATH, LOG_ARCHIVE_DIR as ARCHIVE_DIR
 
 
 def get_existing_events(match_id: str) -> set[str]:

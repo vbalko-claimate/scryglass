@@ -710,6 +710,39 @@ footer {
     border: 1px solid var(--line);
 }
 
+.footer-version {
+    color: #555;
+    cursor: pointer;
+    font-size: 11px;
+    user-select: none;
+}
+.footer-version:hover { color: #aaa; }
+
+.about-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.6);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 9999;
+}
+.about-dialog {
+    background: #1a1a2e;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 28px 36px;
+    min-width: 300px;
+    text-align: center;
+}
+.about-dialog h2 { margin: 0 0 4px; color: #e94560; font-size: 22px; }
+.about-subtitle { color: #888; margin: 0 0 18px; font-size: 13px; }
+.about-table { margin: 0 auto 18px; text-align: left; font-size: 13px; border-spacing: 8px 4px; }
+.about-table td:first-child { color: #888; }
+.about-table td:last-child { color: #e0e0e0; }
+.about-close {
+    background: transparent; border: 1px solid #444; color: #aaa;
+    padding: 6px 20px; border-radius: 6px; cursor: pointer; font-size: 12px;
+}
+.about-close:hover { border-color: #888; color: #fff; }
+
 .debug-toggle {
     margin-left: auto;
     background: transparent;
@@ -979,69 +1012,93 @@ footer {
     50% { opacity: 1; }
 }
 
-/* Card highlights */
-.card.highlight-attack {
-    border-color: #4caf50 !important;
-    box-shadow: 0 0 8px rgba(76, 175, 80, 0.5);
-}
-
-.card.highlight-block {
-    border-color: #2196f3 !important;
-    box-shadow: 0 0 8px rgba(33, 150, 243, 0.5);
-}
-
-.card.highlight-cast {
-    border-color: #ffd700 !important;
-    box-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
-}
-
-.card.highlight-target {
-    border-color: #f44336 !important;
-    box-shadow: 0 0 8px rgba(244, 67, 54, 0.5);
-}
-
+/* Threat highlight (opponent cards) — kept separate from action strip system */
 .card.highlight-threat {
     border-color: #ff6b6b !important;
     box-shadow: 0 0 10px rgba(255, 107, 107, 0.4);
 }
 
-/* Action badges on cards */
-.action-badge {
+/* ─── Action Strip System ─── */
+/* Full-width bottom strip on recommended cards, using ::after pseudo-element */
+
+:root {
+    --action-cast-bg: #f0b429;
+    --action-cast-fg: #1a1a2e;
+    --action-attack-bg: #e8443a;
+    --action-attack-fg: #fff;
+    --action-block-bg: #3b82f6;
+    --action-block-fg: #fff;
+    --action-hold-bg: #64748b;
+    --action-hold-fg: #e2e8f0;
+    --action-target-bg: #d946ef;
+    --action-target-fg: #fff;
+}
+
+.card.action-rec {
+    position: relative;
+    padding-bottom: 28px;
+}
+
+.card.action-rec::after {
+    content: attr(data-action-label);
     position: absolute;
-    top: -4px;
-    left: -4px;
-    font-size: 8px;
-    font-weight: 800;
-    padding: 1px 4px;
-    border-radius: 3px;
-    letter-spacing: 0.5px;
-    z-index: 1;
+    bottom: 0; left: 0; right: 0;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
+    border-radius: 0 0 9px 9px;
+    z-index: 2;
 }
 
-.badge-attack {
-    background: #4caf50;
-    color: #fff;
+/* Per-action-type colors */
+.card.action-cast  { --strip-color: var(--action-cast-bg);   --strip-glow: rgba(240,180,41,0.5); }
+.card.action-cast::after  { background: var(--action-cast-bg);  color: var(--action-cast-fg); }
+
+.card.action-attack { --strip-color: var(--action-attack-bg); --strip-glow: rgba(232,68,58,0.5); }
+.card.action-attack::after { background: var(--action-attack-bg); color: var(--action-attack-fg); }
+
+.card.action-block { --strip-color: var(--action-block-bg);  --strip-glow: rgba(59,130,246,0.5); }
+.card.action-block::after { background: var(--action-block-bg); color: var(--action-block-fg); }
+
+.card.action-hold  { --strip-color: var(--action-hold-bg);   --strip-glow: rgba(100,116,139,0.3); }
+.card.action-hold::after  { background: var(--action-hold-bg);  color: var(--action-hold-fg); }
+
+.card.action-target { --strip-color: var(--action-target-bg); --strip-glow: rgba(217,70,239,0.5); }
+.card.action-target::after { background: var(--action-target-bg); color: var(--action-target-fg); }
+
+/* Priority: high — taller strip + left accent */
+.card.action-rec.priority-high { border-left: 3px solid var(--strip-color) !important; }
+.card.action-rec.priority-high::after { height: 26px; font-size: 12px; }
+
+/* Priority: critical — full border + pulse animation */
+.card.action-rec.priority-critical { border: 2px solid var(--strip-color) !important; animation: strip-pulse 1.5s ease-in-out infinite; }
+.card.action-rec.priority-critical::after { height: 28px; font-size: 13px; font-weight: 800; }
+
+@keyframes strip-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 var(--strip-glow); }
+    50% { box-shadow: 0 0 12px 4px var(--strip-glow); }
 }
 
-.badge-block {
-    background: #2196f3;
-    color: #fff;
+@media (prefers-reduced-motion: reduce) {
+    .card.action-rec.priority-critical { animation: none; border-width: 3px !important; }
 }
 
-.badge-cast {
-    background: #ffd700;
-    color: #1a1a2e;
-}
+/* Cross-highlight: advice ↔ card hover */
+.card.cross-highlight { box-shadow: 0 0 14px 2px rgba(255,255,255,0.35) !important; }
+.advice-item.cross-highlight { background: rgba(255,255,255,0.08) !important; }
 
-.badge-target {
-    background: #f44336;
-    color: #fff;
-}
-
+/* Threat badges on opponent cards (kept from old system) */
 .badge-threat {
-    background: #ff6b6b;
-    color: #fff;
+    position: absolute; top: -4px; left: -4px;
+    font-size: 9px; font-weight: 800; padding: 1px 5px;
+    border-radius: 3px; z-index: 1;
+    background: #ff6b6b; color: #fff;
 }
 
 /* Action family badges (A1) — inline badges before advice message text */

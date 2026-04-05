@@ -91,12 +91,13 @@
       "tags": [
         "protect"
       ],
+      "phase": ["Main"],
       "my_turn": true,
-      "my_creatures_min": 4,
-      "action": "4+ creatures on board — consider holding back vs board wipes",
+      "my_creatures_min": 5,
+      "action": "5+ creatures — hold back vs board wipes",
       "action_family": "pass",
-      "priority": "medium",
-      "weight": 1.0,
+      "priority": "low",
+      "weight": 0.7,
       "stats": {
         "fired": 0,
         "correct": 0
@@ -273,12 +274,13 @@
         {
           "zone": "hand",
           "match": {
-            "castable": true
+            "castable": true,
+            "type": "Creature"
           },
           "min_count": 1
         }
       ],
-      "action": "Spend all your mana — curve out in early turns",
+      "action": "Curve out — deploy a creature each turn",
       "action_family": "cast_spell",
       "priority": "medium",
       "weight": 1.0,
@@ -288,6 +290,38 @@
       },
       "conflicts_with": [],
       "mana_min": 1
+    },
+    {
+      "id": "general_threat_big_creature",
+      "layer": "threat_response",
+      "tags": [
+        "removal",
+        "threat"
+      ],
+      "require": [
+        {
+          "zone": "opp_battlefield",
+          "match": {
+            "type": "Creature",
+            "power_min": 4
+          }
+        },
+        {
+          "zone": "hand",
+          "match": {
+            "castable": true,
+            "role": "removal"
+          }
+        }
+      ],
+      "action": "Remove {threat} with {card}",
+      "action_family": "cast_spell",
+      "priority": "high",
+      "weight": 1.1,
+      "stats": {
+        "fired": 0,
+        "correct": 0
+      }
     },
     {
       "id": "meta_vs_fast_hold_blockers",

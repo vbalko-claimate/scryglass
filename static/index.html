@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MTGA Play Advisor</title>
-    <link rel="stylesheet" href="/static/style.css?v=14">
+    <link rel="stylesheet" href="/static/style.css?v=15">
     <script>document.documentElement.className='profile-'+(localStorage.getItem('scry-profile')||'full');</script>
 </head>
 <body>
@@ -140,8 +140,17 @@
             <span id="graveyard-count">Graveyard: 0</span>
             <span id="stack-count"></span>
             <span id="game-state-id"></span>
+            <span id="footer-version" class="footer-version" onclick="showAbout()" title="About Scryglass"></span>
             <button id="debug-toggle" class="debug-toggle" onclick="toggleDebugPanel()">Debug</button>
         </footer>
+        <div id="about-overlay" class="about-overlay" style="display:none" onclick="if(event.target===this)hideAbout()">
+            <div class="about-dialog">
+                <h2>Scryglass</h2>
+                <p class="about-subtitle">MTGA Play Advisor</p>
+                <table class="about-table" id="about-details"></table>
+                <button class="about-close" onclick="hideAbout()">Close</button>
+            </div>
+        </div>
         <div id="debug-panel" class="debug-panel" style="display:none"></div>
     </div>
 

@@ -767,7 +767,7 @@ def _check_opponent_lethal(state: GameState) -> list[Advice]:
         for c in opp_attackers)
     if opp_power >= me.life_total and len(my_blockers) < len(opp_attackers):
         advice.append(Advice("heuristic", "critical",
-                             f"DANGER — opponent has {opp_power} power, you have {me.life_total} life",
+                             f"DANGER — lethal on board: {opp_power} power vs {me.life_total} life",
                              confidence=0.8))
 
     # Trampler accumulation warning: tramplers on board can't be chumped

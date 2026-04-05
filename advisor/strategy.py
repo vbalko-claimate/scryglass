@@ -62,11 +62,14 @@ class CardMatcher:
     toughness_max: int | None = None
     castable: bool = False  # must be castable with current mana
     color: str | None = None
+    role: str | None = None  # functional role: "removal", "protection", "draw", etc.
+    exclude: CardMatcher | None = None  # reject cards matching this sub-matcher
 
     @staticmethod
     def from_dict(d: dict) -> CardMatcher:
         if isinstance(d, str):
             return CardMatcher(name=d)
+        excl_raw = d.get("exclude")
         return CardMatcher(
             name=d.get("name"),
             keyword=d.get("keyword"),
@@ -78,6 +81,8 @@ class CardMatcher:
             toughness_max=d.get("toughness_max"),
             castable=d.get("castable", False),
             color=d.get("color"),
+            role=d.get("role"),
+            exclude=CardMatcher.from_dict(excl_raw) if excl_raw else None,
         )
 
 
@@ -490,6 +495,12 @@ def _card_matches(obj: GameObject, matcher: CardMatcher, mana: int = 99,
             return False
     if matcher.color:
         if matcher.color not in card.colors:
+            return False
+    if matcher.role:
+        if matcher.role not in card.roles:
+            return False
+    if matcher.exclude:
+        if _card_matches(obj, matcher.exclude, mana, untapped_lands):
             return False
     return True
 

@@ -73,11 +73,37 @@ html, body {
 .key-play-indicator.medium { background: #6C9A8B; }
 .key-play-indicator.low { background: rgba(139, 139, 153, 0.5); }
 
-.key-play-text {
-    font-size: 13px;
-    font-weight: 600;
-    line-height: 1.3;
+.key-play-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+.key-play-action {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    line-height: 1;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+.key-play-action.act-cast   { color: #f0b429; }
+.key-play-action.act-attack { color: #e8443a; }
+.key-play-action.act-block  { color: #3b82f6; }
+.key-play-action.act-hold   { color: #94a3b8; }
+.key-play-action.act-target { color: #d946ef; }
+.key-play-card {
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.2;
+    color: rgba(255, 255, 255, 0.95);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+.key-play-reason {
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 1.3;
+    color: rgba(200, 198, 190, 0.7);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
 }
 
 /* Threat warning */
@@ -205,19 +231,73 @@ html, body {
     font-style: italic;
 }
 
-/* Floating badges — positioned over approximate card locations */
-#hand-badges, #threat-badges {
+/* Recommendation strip — vertical column on left side */
+#hand-badges {
+    position: fixed;
+    left: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    pointer-events: none;
+    visibility: hidden;
+}
+#hand-badges.visible { visibility: visible; }
+
+#threat-badges {
     position: fixed;
     left: 0; right: 0;
     display: flex;
     justify-content: center;
     pointer-events: none;
     visibility: hidden;
+    top: 18%;
 }
-#hand-badges { bottom: 22%; }
-#threat-badges { top: 18%; }
-#hand-badges.visible, #threat-badges.visible { visibility: visible; }
+#threat-badges.visible { visibility: visible; }
 
+.rec-chip {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.rec-chip .chip-action {
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    opacity: 0.85;
+    min-width: 32px;
+}
+.rec-chip .chip-name {
+    font-weight: 500;
+}
+
+/* Action type chip colors */
+.rec-chip.chip-cast   { background: rgba(240, 180, 41, 0.8); color: #1a1a2e; }
+.rec-chip.chip-attack { background: rgba(232, 68, 58, 0.8);  color: #fff; }
+.rec-chip.chip-block  { background: rgba(59, 130, 246, 0.8); color: #fff; }
+.rec-chip.chip-hold   { background: rgba(100, 116, 139, 0.6); color: #e2e8f0; }
+.rec-chip.chip-target { background: rgba(217, 70, 239, 0.8); color: #fff; }
+
+/* Critical priority pulse */
+.rec-chip.chip-critical {
+    animation: chip-pulse 1.5s ease-in-out infinite;
+}
+@keyframes chip-pulse {
+    0%, 100% { box-shadow: none; }
+    50% { box-shadow: 0 0 10px 2px rgba(255, 255, 255, 0.3); }
+}
+
+/* Unused legacy — kept for threat badges */
 .card-badge {
     position: relative;
     display: flex;
@@ -231,30 +311,6 @@ html, body {
     min-width: 40px;
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
-}
-
-/* Hand badges */
-.card-badge.castable {
-    background: rgba(76, 175, 80, 0.6);
-    border: 1px solid rgba(76, 175, 80, 0.8);
-    color: #fff;
-}
-.card-badge.not-castable {
-    background: rgba(40, 40, 50, 0.5);
-    border: 1px solid rgba(80, 80, 90, 0.4);
-    color: rgba(180, 180, 180, 0.6);
-}
-.card-badge.is-land {
-    background: rgba(244, 162, 97, 0.5);
-    border: 1px solid rgba(244, 162, 97, 0.7);
-    color: #fff;
-}
-.card-badge.recommended {
-    background: rgba(233, 57, 70, 0.7);
-    border: 1px solid rgba(233, 57, 70, 0.9);
-    color: #fff;
-    box-shadow: 0 0 8px rgba(233, 57, 70, 0.4);
-    font-weight: 600;
 }
 .badge-name {
     font-weight: 500;
@@ -289,7 +345,11 @@ html, body {
     </div>
     <div class="key-play" id="key-play" style="display:none">
         <div class="key-play-indicator medium" id="key-play-indicator"></div>
-        <div class="key-play-text" id="key-play-text"></div>
+        <div class="key-play-content">
+            <div class="key-play-action" id="key-play-action"></div>
+            <div class="key-play-card" id="key-play-card"></div>
+            <div class="key-play-reason" id="key-play-reason"></div>
+        </div>
     </div>
     <div class="threat-line" id="threat-line"></div>
     <div class="do-now" id="do-now"></div>
@@ -311,6 +371,16 @@ let ws = null;
 let currentStrategyInfo = null;
 let isMyTurn = false;
 let inMatch = false;
+
+// Shared action family mappings
+const FAMILY_TYPE = {
+    cast_spell: 'cast', play_land: 'cast', activate: 'cast',
+    attack: 'attack', block: 'block', pass: 'hold',
+};
+const FAMILY_LABEL = {
+    cast_spell: 'CAST', play_land: 'PLAY LAND', activate: 'ACTIVATE',
+    attack: 'ATTACK', block: 'BLOCK', pass: 'HOLD',
+};
 
 function connect() {
     ws = new WebSocket(`ws://${location.hostname}:8765/ws`);
@@ -379,9 +449,8 @@ function updateState(state) {
             `T${turnNum} · ${phase} · ${isMyTurn ? 'Your turn' : 'Opp turn'}`;
     }
 
-    // Card badges disabled — experimental, needs better positioning
-    // updateHandBadges(state);
-    // updateThreatBadges(state);
+    updateHandBadges(state);
+    updateThreatBadges(state);
 }
 
 function updateOppLine(info) {
@@ -433,11 +502,43 @@ function updateAdvice(data) {
     if (keyPlay) {
         const el = document.getElementById('key-play');
         const indicator = document.getElementById('key-play-indicator');
-        const text = document.getElementById('key-play-text');
+        const actionEl = document.getElementById('key-play-action');
+        const cardEl = document.getElementById('key-play-card');
+        const reasonEl = document.getElementById('key-play-reason');
 
         el.style.display = 'flex';
         indicator.className = 'key-play-indicator ' + (keyPlay.priority || 'medium');
-        text.textContent = keyPlay.message;
+
+        // Extract card name and action from structured data
+        const scores = keyPlay.action_scores || [];
+        const topScore = scores.find(s => s.target) || scores[0];
+        const cardName = topScore?.target || '';
+        const family = topScore?.family || '';
+        const actionLabel = FAMILY_LABEL[family] || '';
+        const actionCss = FAMILY_TYPE[family] || '';
+
+        if (cardName) {
+            // Structured: action label + big card name + reason
+            actionEl.textContent = actionLabel;
+            actionEl.className = 'key-play-action' + (actionCss ? ' act-' + actionCss : '');
+            cardEl.textContent = cardName;
+            // Strip card name from message to get clean reason
+            let reason = keyPlay.message;
+            if (cardName && reason.includes(cardName)) {
+                reason = reason.replace(cardName, '').replace(/:\s*$/, '').replace(/\s*\([^)]*\)\s*$/, '').trim();
+            }
+            // Remove trailing mana cost like "(o1oW)"
+            reason = reason.replace(/\s*\([o\dWUBRG]+\)\s*$/i, '').trim();
+            reasonEl.textContent = reason;
+            reasonEl.style.display = reason ? '' : 'none';
+        } else {
+            // Fallback: just show message
+            actionEl.textContent = '';
+            actionEl.className = 'key-play-action';
+            cardEl.textContent = keyPlay.message;
+            reasonEl.textContent = '';
+            reasonEl.style.display = 'none';
+        }
     }
 
     // Do now (next 2 items)
@@ -445,9 +546,16 @@ function updateAdvice(data) {
     const secondary = nowItems.slice(1, 4);
     if (secondary.length && isMyTurn) {
         doNow.classList.add('visible');
-        doNow.innerHTML = secondary.map(a =>
-            `<div class="do-now-item">${a.message}</div>`
-        ).join('');
+        doNow.innerHTML = secondary.map(a => {
+            const s = (a.action_scores || []).find(s => s.target);
+            if (s) {
+                const name = s.target;
+                // Bold the card name in the message
+                const highlighted = a.message.replace(name, `<strong>${name}</strong>`);
+                return `<div class="do-now-item">${highlighted}</div>`;
+            }
+            return `<div class="do-now-item">${a.message}</div>`;
+        }).join('');
     } else {
         doNow.classList.remove('visible');
     }
@@ -465,56 +573,38 @@ function updateAdvice(data) {
 
 function updateHandBadges(state) {
     const el = document.getElementById('hand-badges');
-    const hand = state.hand || state.my_hand || [];
-    const myBf = state.my_battlefield || [];
-    const mana = myBf.filter(c => c.is_land && !c.is_tapped).length;
+    if (!inMatch || !lastAdvice) { el.classList.remove('visible'); return; }
 
-    const recommended = new Set();
-    if (lastAdvice) {
-        for (const a of lastAdvice) {
-            if (a.recommended_cards) a.recommended_cards.forEach(c => recommended.add(c));
+    // Collect recommendations: card name → {action, priority}
+    const recs = new Map(); // name → {action, priority}
+    for (const a of lastAdvice) {
+        const scores = a.action_scores || [];
+        for (const s of scores) {
+            if (!s.target) continue;
+            if (recs.has(s.target)) continue; // keep first (highest priority)
+            recs.set(s.target, {
+                action: FAMILY_TYPE[s.family] || 'cast',
+                label: (FAMILY_MAP[s.family] || 'cast').toUpperCase(),
+                priority: a.priority || 'medium',
+            });
         }
     }
 
-    if (!hand.length || !inMatch) { el.classList.remove('visible'); return; }
+    if (!recs.size) { el.classList.remove('visible'); return; }
 
-    // Group duplicate lands (e.g. 4× Plains → "Plains ×4")
-    const grouped = [];
-    const seen = {};
-    for (const c of hand) {
-        const isLand = c.is_land || (c.card_types || []).includes('Land');
-        if (isLand && seen[c.name]) {
-            seen[c.name].count++;
-        } else {
-            const entry = { ...c, count: 1 };
-            grouped.push(entry);
-            if (isLand) seen[c.name] = entry;
-        }
+    // Build chips
+    const chips = [];
+    for (const [name, r] of recs) {
+        const priClass = r.priority === 'critical' ? ' chip-critical' : '';
+        chips.push(
+            `<span class="rec-chip chip-${r.action}${priClass}">` +
+            `<span class="chip-action">${r.label}</span>` +
+            `<span class="chip-name">${name}</span>` +
+            `</span>`
+        );
     }
 
-    const cardWidth = Math.min(75, Math.floor(window.innerWidth * 0.5 / grouped.length));
-    const gap = Math.max(2, Math.floor((window.innerWidth * 0.5 - cardWidth * grouped.length) / Math.max(1, grouped.length - 1)));
-
-    el.style.gap = gap + 'px';
-    el.innerHTML = grouped.map(c => {
-        const isLand = c.is_land || (c.card_types || []).includes('Land');
-        const castable = !isLand && c.cmc <= mana;
-        const isRec = recommended.has(c.name);
-        let cls = 'card-badge';
-        if (isRec) cls += ' recommended';
-        else if (isLand) cls += ' is-land';
-        else if (castable) cls += ' castable';
-        else cls += ' not-castable';
-
-        const shortName = c.name.length > 10 ? c.name.substring(0, 9) + '…' : c.name;
-        const countLabel = c.count > 1 ? ` ×${c.count}` : '';
-        const sub = isLand ? (c.count > 1 ? `<span class="badge-sub">×${c.count}</span>` : '')
-                           : `<span class="badge-sub">${c.cmc} mana</span>`;
-        return `<div class="${cls}" style="width:${cardWidth}px">
-            <span class="badge-name">${shortName}</span>
-            ${sub}
-        </div>`;
-    }).join('');
+    el.innerHTML = chips.join('');
     el.classList.add('visible');
 }
 

@@ -6,6 +6,7 @@ import copy
 import json
 import logging
 import os
+import re
 from pathlib import Path
 from typing import Callable
 
@@ -37,6 +38,16 @@ log = logging.getLogger(__name__)
 
 _last_advice_state_id: tuple[int, str] = (-1, "")
 VALID_ADVICE_MODES = {"hybrid", "llm_first", "llm_only"}
+
+# Strip numbers from message to create stable dedup key
+_DEDUP_STRIP_RE = re.compile(r"\d+")
+
+
+def _advice_dedup_key(a: Advice) -> str:
+    """Stable dedup key: rule_id if available, otherwise message with numbers stripped."""
+    if a.rule_id:
+        return a.rule_id
+    return _DEDUP_STRIP_RE.sub("", a.message)
 VALID_LLM_SCOPES = {"full", "budget"}
 AUTO_LLM_IGNORED_REQUESTS = {
     "GREMessageType_MulliganReq",
@@ -1713,10 +1724,10 @@ class AdvisorEngine:
             self._advice_spot = spot_key
             self._advice_sent_this_spot = set()
             self._last_advice = []
-        advice = [a for a in advice if a.message not in self._advice_sent_this_spot]
+        advice = [a for a in advice if _advice_dedup_key(a) not in self._advice_sent_this_spot]
         if not advice:
             return []
-        self._advice_sent_this_spot.update(a.message for a in advice)
+        self._advice_sent_this_spot.update(_advice_dedup_key(a) for a in advice)
 
         merged = list(self._last_advice)
         seen_messages = {a.message.lower() for a in merged}

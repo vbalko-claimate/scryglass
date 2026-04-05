@@ -35,7 +35,7 @@ REQUEST_DELAY = 1.5
 USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
 
 META_DECKS_PATH = Path(__file__).parent.parent / "data" / "meta" / "meta_decks.json"
-DB_PATH = Path(__file__).parent.parent / "data" / "advisor.db"
+from advisor.database import DB_PATH
 
 # ---------------------------------------------------------------------------
 # Land detection (reused from PoC)

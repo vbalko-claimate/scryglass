@@ -31,7 +31,7 @@ from urllib.request import urlopen
 
 
 ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_DB = ROOT / "data" / "advisor.db"
+from advisor.database import DB_PATH as DEFAULT_DB
 DEFAULT_OUT = ROOT / "data" / "training" / "llama31_action_sft"
 DEFAULT_META_DECKS = ROOT / "data" / "meta" / "meta_decks.json"
 DEFAULT_SCRYFALL_ORACLE = ROOT / "data" / "training" / "cache" / "scryfall-oracle-cards.json"

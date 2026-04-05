@@ -1,6 +1,7 @@
 """Persistent SQLite database with automatic backups."""
 import glob
 import json
+import logging
 import os
 import re
 import shutil
@@ -12,19 +13,38 @@ from pathlib import Path
 from .enums import DB_COLORS, DB_TYPES, RARITY_MAP
 from .models import CardInfo
 
+log = logging.getLogger(__name__)
+
 # Paths
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 USER_DATA_DIR = Path(os.environ.get("SCRY_USER_DATA", Path.home() / "MTG" / "mtg-data"))
-DB_PATH = DATA_DIR / "advisor.db"
-BACKUP_DIR = DATA_DIR / "backups"
+# Persistent data lives in USER_DATA_DIR so it survives PyInstaller temp dir cleanup.
+# DATA_DIR may point to a volatile _MEI* extraction when running as a bundled binary.
+PERSISTENT_DIR = USER_DATA_DIR / "app_data"
+DB_PATH = PERSISTENT_DIR / "advisor.db"
+BACKUP_DIR = PERSISTENT_DIR / "backups"
+LOG_ARCHIVE_DIR = PERSISTENT_DIR / "log_archive"
 MTGA_DB_GLOB = str(Path.home() / "Library" / "Application Support" / "Steam" / "steamapps" / "common" / "MTGA" / "MTGA_Data" / "Downloads" / "Raw" / "Raw_CardDatabase_*.mtga")
 
 MAX_BACKUPS = 10
 
+_dirs_ensured = False
+
 
 def _ensure_dirs():
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
-    BACKUP_DIR.mkdir(parents=True, exist_ok=True)
+    global _dirs_ensured
+    if _dirs_ensured:
+        return
+    PERSISTENT_DIR.mkdir(parents=True, exist_ok=True)
+    BACKUP_DIR.mkdir(exist_ok=True)
+    LOG_ARCHIVE_DIR.mkdir(exist_ok=True)
+    _dirs_ensured = True
+
+
+def _apply_pragmas(conn: sqlite3.Connection) -> sqlite3.Connection:
+    conn.execute("PRAGMA journal_mode=WAL")
+    conn.execute("PRAGMA foreign_keys=ON")
+    return conn
 
 
 def backup_db():
@@ -44,13 +64,33 @@ def backup_db():
     return backup_path
 
 
+def verify_db():
+    """Run integrity check on the database. Call once at startup, not per-connection."""
+    _ensure_dirs()
+    try:
+        conn = sqlite3.connect(str(DB_PATH))
+        conn.execute("PRAGMA integrity_check").fetchone()
+        conn.close()
+    except (sqlite3.DatabaseError, sqlite3.OperationalError) as e:
+        log.error("Database corrupted: %s — attempting recovery from backup", e)
+        backups = sorted(BACKUP_DIR.glob("advisor_*.db"), reverse=True)
+        for backup in backups:
+            try:
+                shutil.copy2(backup, DB_PATH)
+                conn = sqlite3.connect(str(DB_PATH))
+                conn.execute("PRAGMA integrity_check").fetchone()
+                conn.close()
+                log.info("Recovered from backup: %s", backup.name)
+                return
+            except (sqlite3.DatabaseError, sqlite3.OperationalError):
+                continue
+        log.warning("No usable backup found — creating fresh database")
+        DB_PATH.unlink(missing_ok=True)
+
+
 def get_connection() -> sqlite3.Connection:
     """Get a connection to the persistent database."""
-    _ensure_dirs()
-    conn = sqlite3.connect(str(DB_PATH))
-    conn.execute("PRAGMA journal_mode=WAL")
-    conn.execute("PRAGMA foreign_keys=ON")
-    return conn
+    return _apply_pragmas(sqlite3.connect(str(DB_PATH)))
 
 
 def init_db():
@@ -345,6 +385,51 @@ def import_cards_from_mtga():
     return count
 
 
+def _classify_roles(card: CardInfo) -> set[str]:
+    """Classify a card's functional roles from abilities/oracle text and types."""
+    roles: set[str] = set()
+    # MTGA stores rules text in abilities array, oracle_text is often empty
+    text = " ".join(card.abilities + [card.oracle_text]).lower()
+    types = card.card_types
+
+    # Removal (targeted)
+    if re.search(r"destroy target|exile target|deals? \d+ damage to (target|any)|target creature gets -\d+/-\d+", text):
+        roles.add("removal")
+    # Fight / bite
+    if re.search(r"fights? target|deals damage equal to its power to target", text):
+        roles.add("removal")
+    # Bounce (exclude graveyard recursion like "return target card from your graveyard")
+    if re.search(r"return target .* to .*(hand|owner)", text) and "from your graveyard" not in text:
+        roles.add("removal")
+    # Sacrifice-based removal
+    if re.search(r"(target|each) (player|opponent) sacrifices", text):
+        roles.add("removal")
+    # Sweeper
+    if re.search(r"destroy all|exile all|all creatures get -|deals? \d+ damage to each", text):
+        roles.add("sweeper")
+        roles.add("removal")
+    # Aura-based removal (Pacifism, Banishing Light, Sheltered by Ghosts)
+    if "Enchantment" in types and re.search(r"exile target|can't attack|can't block", text):
+        roles.add("removal")
+    # Counterspell
+    if re.search(r"counter target", text):
+        roles.add("counterspell")
+    # Protection
+    if re.search(r"(gains?|has) (hexproof|indestructible|protection from)|phase out|can't be (the target|destroyed)", text):
+        roles.add("protection")
+    # Pump / combat trick
+    if re.search(r"(gets?|gains?) \+\d+/\+\d+", text) and "Instant" in types:
+        roles.add("pump")
+    # Card draw
+    if re.search(r"draw (a|two|three|\d+) card", text):
+        roles.add("draw")
+    # Ramp
+    if re.search(r"search your library for .* (land|basic)", text) or re.search(r"add \{", text):
+        roles.add("ramp")
+
+    return roles
+
+
 def get_card(grp_id: int) -> CardInfo | None:
     """Look up a card by grp_id from persistent DB."""
     conn = get_connection()
@@ -393,6 +478,9 @@ class CardCache:
             pass
         if not self._cache:
             self._load_from_json()
+        # Classify roles for all cards
+        for card in self._cache.values():
+            card.roles = _classify_roles(card)
         self._loaded = True
 
     def _load_from_db(self):

@@ -101,6 +101,7 @@ def render_advice(hits: list[RuleHit]) -> list[Advice]:
             details=f"[{hit.layer}:{hit.rule_id}] w:{hit.weight:.2f}",
             confidence=confidence,
             action_scores=list(hit.action_scores),
+            recommended_cards=[s.target for s in hit.action_scores if s.target],
         )
         result.append(advice)
     return result
