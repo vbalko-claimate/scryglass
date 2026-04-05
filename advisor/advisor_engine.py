@@ -1431,6 +1431,7 @@ class AdvisorEngine:
         else:
             if opp_deck_obj and opp_deck_obj.key_threats:
                 seen_cards = {c.casefold() for c in self._opp_tracker.seen_cards}
+                unseen_count = 0
                 for kt in opp_deck_obj.key_threats:
                     if not isinstance(kt, dict):
                         continue
@@ -1446,7 +1447,40 @@ class AdvisorEngine:
                         message=f"Watch for {card_name} — {reason}",
                         details=opp_deck_obj.name,
                     ))
-                    break
+                    unseen_count += 1
+                    if unseen_count >= 2:
+                        break
+
+        # Clock calculation — how many turns until opponent kills us
+        from .heuristics import clock_calculation, opp_possible_plays
+        clock = clock_calculation(state)
+        if clock and clock["critical"]:
+            msg = f"CLOCK: {clock['turns_to_live']} turns to live ({clock['opp_damage_per_turn']} dmg/turn)"
+            if msg.lower() not in seen_messages:
+                intel.insert(0, Advice(
+                    source="intel", priority="critical", message=msg,
+                    details=f"{clock['my_life']} life remaining",
+                ))
+        elif clock:
+            msg = f"Clock: ~{clock['turns_to_live']} turns ({clock['opp_damage_per_turn']} dmg/turn)"
+            if msg.lower() not in seen_messages:
+                intel.append(Advice(
+                    source="intel", priority="medium", message=msg,
+                    details=f"{clock['my_life']} life remaining",
+                ))
+
+        # Mana math — what opponent could cast with open mana
+        if opp_deck_obj:
+            possible = opp_possible_plays(state, opp_deck_obj)
+            if possible:
+                names = ", ".join(f"{p['card']}({p['cmc']})" for p in possible)
+                from .heuristics import _opp_open_mana_colors
+                opp_mana, _ = _opp_open_mana_colors(state)
+                msg = f"{opp_mana} mana open — could cast: {names}"
+                if msg.lower() not in seen_messages:
+                    intel.append(Advice(
+                        source="intel", priority="medium", message=msg,
+                    ))
 
         unique: list[Advice] = []
         emitted = set()
@@ -1456,7 +1490,7 @@ class AdvisorEngine:
                 continue
             emitted.add(key)
             unique.append(item)
-        trimmed = unique[:2]
+        trimmed = unique[:3]
         if not trimmed:
             return []
 

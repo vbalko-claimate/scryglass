@@ -539,6 +539,13 @@ class CardCache:
         card = self.get(grp_id)
         return card.name if card else f"Unknown({grp_id})"
 
+    def get_by_name(self, name: str) -> CardInfo | None:
+        if not self._loaded:
+            self.load()
+        if not hasattr(self, '_name_index'):
+            self._name_index = {c.name: c for c in self._cache.values()}
+        return self._name_index.get(name)
+
     @property
     def size(self) -> int:
         return len(self._cache)

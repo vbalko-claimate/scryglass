@@ -749,6 +749,32 @@ def _check_lethal(state: GameState) -> list[Advice]:
     return []
 
 
+def clock_calculation(state: GameState) -> dict | None:
+    """Calculate lethal clock: turns until opponent kills you at current board."""
+    me = state.my_player()
+    if not me or me.life_total <= 0:
+        return None
+    opp_creatures = state.opp_creatures()
+    attackers = [c for c in opp_creatures
+                 if c.can_attack and not _has_keyword(c, "Defender")]
+    if not attackers:
+        return None
+    damage = sum(
+        c.power * (2 if _has_keyword(c, "double strike") else 1)
+        for c in attackers if c.power > 0)
+    if damage <= 0:
+        return None
+    turns = (me.life_total + damage - 1) // damage  # ceiling division
+    if turns > 5:
+        return None
+    return {
+        "opp_damage_per_turn": damage,
+        "my_life": me.life_total,
+        "turns_to_live": turns,
+        "critical": turns <= 2,
+    }
+
+
 def _check_opponent_lethal(state: GameState) -> list[Advice]:
     me = state.my_player()
     if not me:
@@ -1576,6 +1602,44 @@ def _opp_open_mana_colors(state: GameState) -> tuple[int, set[str]]:
                 if basic in name_lower:
                     colors.add(c)
     return len(opp_lands), colors
+
+
+def opp_possible_plays(state: GameState, meta_deck) -> list[dict]:
+    """Cross-reference opponent's open mana with unseen meta threats."""
+    if not meta_deck or not getattr(meta_deck, 'key_threats', None):
+        return []
+    opp_mana, opp_colors = _opp_open_mana_colors(state)
+    if opp_mana == 0:
+        return []
+    possible = []
+    for kt in meta_deck.key_threats:
+        card_name = kt.get("card", "") if isinstance(kt, dict) else str(kt)
+        if not card_name:
+            continue
+        card_info = card_cache.get_by_name(card_name) if hasattr(card_cache, 'get_by_name') else None
+        if not card_info:
+            # Fallback: use CMC from threat data if available
+            cmc = kt.get("cmc", 99) if isinstance(kt, dict) else 99
+            if cmc > opp_mana:
+                continue
+            possible.append({
+                "card": card_name,
+                "reason": kt.get("reason", "") if isinstance(kt, dict) else "",
+                "cmc": cmc,
+            })
+            continue
+        if card_info.cmc > opp_mana:
+            continue
+        # Check color requirements
+        cost_colors = {c for c in (card_info.mana_cost or "") if c in "WUBRG"}
+        if cost_colors and not cost_colors.issubset(opp_colors):
+            continue
+        possible.append({
+            "card": card_name,
+            "reason": kt.get("reason", "") if isinstance(kt, dict) else "",
+            "cmc": card_info.cmc,
+        })
+    return possible[:3]
 
 
 def _combat_trick_risk(state: GameState, opp_attackers: list[GameObject],

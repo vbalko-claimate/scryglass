@@ -73,6 +73,12 @@ html, body {
 .key-play-indicator.medium { background: #6C9A8B; }
 .key-play-indicator.low { background: rgba(139, 139, 153, 0.5); }
 
+/* Opponent turn — muted intel style */
+#overlay.opp-turn .key-play-indicator { background: #4a6fa5; }
+#overlay.opp-turn .key-play-card { font-weight: 500; color: rgba(230, 232, 240, 0.9); }
+#overlay.opp-turn .key-play-action { color: rgba(160, 170, 190, 0.7); }
+#overlay.opp-turn .key-play-reason { font-style: italic; }
+
 .key-play-content {
     display: flex;
     flex-direction: column;
@@ -432,13 +438,15 @@ function updateState(state) {
         overlay.classList.remove('no-match');
     }
 
-    // Phase-adaptive: compact on opponent's turn
-    if (isMyTurn) {
-        overlay.classList.remove('compact');
+    // Always show overlay — opponent turn shows intel, blocking expands fully
+    const isBlocking = state.pending_request === 'GREMessageType_DeclareBlockersReq';
+    overlay.classList.remove('compact');
+    if (isMyTurn || isBlocking) {
         document.getElementById('do-now').classList.add('visible');
+        overlay.classList.remove('opp-turn');
     } else {
-        overlay.classList.add('compact');
         document.getElementById('do-now').classList.remove('visible');
+        overlay.classList.add('opp-turn');
     }
 
     // Phase line
