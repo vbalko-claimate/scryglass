@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 HOST = "127.0.0.1"
-PORT = 8765
+PORT = int(os.environ.get("SCRY_PORT", 8765))
 
 if __name__ == "__main__":
     sys.stdout.flush()

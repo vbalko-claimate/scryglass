@@ -56,6 +56,11 @@ jobs:
             run.py
         shell: bash
 
+      - name: Smoke test sidecar (macOS only)
+        if: runner.os == 'macOS'
+        run: bash tools/smoke_test_binary.sh dist/scry-server
+        shell: bash
+
       - name: Rename sidecar with target triple
         run: |
           mv dist/scry-server${{ runner.os == 'Windows' && '.exe' || '' }} dist/${{ matrix.sidecar-name }}
