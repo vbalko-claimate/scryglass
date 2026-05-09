@@ -7,6 +7,7 @@ import json
 import logging
 import sys
 from dataclasses import asdict
+from datetime import datetime, timezone
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
@@ -23,7 +24,7 @@ from .database import (
     get_stats_mulligan, get_stats_my_cards, get_stats_opp_cards,
     get_stats_color_matchups, get_stats_opponents, get_stats_overview,
     get_stats_recent_trend, get_stats_weaknesses, get_match_timeline,
-    import_cards_from_mtga, init_db, verify_db, USER_DATA_DIR,
+    import_cards_from_mtga, init_db, verify_db, USER_DATA_DIR, PERSISTENT_DIR,
 )
 from .game_state import GameStateTracker
 from .llm_advisor import get_backend, set_backend
@@ -37,6 +38,7 @@ from .strategy import (
     _all_strategy_paths,
 )
 from . import deck_storage
+from .collection_refresh import DEFAULT_SOURCE as COLLECTION_SOURCE, sync_collection_snapshot
 
 log = logging.getLogger(__name__)
 
@@ -1246,56 +1248,294 @@ async def manage_sync_meta():
 
 
 _collection_refresh_lock = asyncio.Lock()
+_collection_refresh_task: asyncio.Task | None = None
+_collection_refresh_status: dict = {
+    "state": "idle",
+    "running": False,
+    "phase": "idle",
+    "message": "Idle",
+    "detail": "",
+    "started_at": None,
+    "updated_at": None,
+    "summary": None,
+    "error": None,
+    "recent_output": [],
+}
+
+
+def _now_iso() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def _collection_recent_output(lines: list[str], limit: int = 12) -> list[str]:
+    return lines[-limit:]
+
+
+def _update_collection_refresh_status(
+    *,
+    state: str | None = None,
+    running: bool | None = None,
+    phase: str | None = None,
+    message: str | None = None,
+    detail: str | None = None,
+    summary: dict | None = None,
+    error: str | None = None,
+    recent_output: list[str] | None = None,
+    started_at: str | None = None,
+) -> None:
+    if state is not None:
+        _collection_refresh_status["state"] = state
+    if running is not None:
+        _collection_refresh_status["running"] = running
+    if phase is not None:
+        _collection_refresh_status["phase"] = phase
+    if message is not None:
+        _collection_refresh_status["message"] = message
+    if detail is not None:
+        _collection_refresh_status["detail"] = detail
+    if summary is not None:
+        _collection_refresh_status["summary"] = summary
+    if error is not None:
+        _collection_refresh_status["error"] = error
+    if recent_output is not None:
+        _collection_refresh_status["recent_output"] = recent_output
+    if started_at is not None:
+        _collection_refresh_status["started_at"] = started_at
+    _collection_refresh_status["updated_at"] = _now_iso()
+
+
+def _collection_refresh_snapshot() -> dict:
+    return copy.deepcopy(_collection_refresh_status)
+
+
+def _parse_collection_progress_line(line: str) -> tuple[str, str] | None:
+    text = line.strip()
+    if not text:
+        return None
+    if "MTGA PID:" in text or "Attached to PID" in text:
+        return ("attaching", "Attaching to MTGA process...")
+    if "Known offsets failed" in text:
+        return ("layout_scan", "Searching for current memory layout...")
+    if "type_info_table at" in text:
+        return ("layout_found", "Memory layout found. Resolving collection structures...")
+    if "Class 'AwsInventoryServiceWrapper' not found" in text:
+        return ("auto_discovery", "Direct inventory signature changed. Switching to auto-discovery...")
+    if "falling back to collection-only dictionary scan" in text.lower():
+        return ("collection_scan", "Searching for collection data automatically...")
+    if "candidate(s)" in text and "Heap range" in text:
+        return ("collection_candidates", "Collection candidates found. Validating structures...")
+    if "Using dictionary candidate at" in text:
+        return ("collection_found", "Collection structure found. Reading cards...")
+    if "Found" in text and "cards in memory" in text:
+        return ("reading_collection", "Reading collection from MTGA memory...")
+    if "Read" in text and "unique cards" in text:
+        return ("syncing_snapshot", "Collection loaded. Syncing snapshot into app data...")
+    if "Saved to" in text and "my_collection_memory.json" in text:
+        return ("raw_saved", "Raw memory snapshot saved. Finalizing refresh...")
+    return None
+
+
+async def _read_collection_refresh_stderr(stream: asyncio.StreamReader, sink: list[str]) -> None:
+    while True:
+        line = await stream.readline()
+        if not line:
+            break
+        text = line.decode("utf-8", errors="replace").rstrip()
+        if not text:
+            continue
+        sink.append(text)
+        parsed = _parse_collection_progress_line(text)
+        if parsed:
+            phase, message = parsed
+            _update_collection_refresh_status(
+                state="running",
+                running=True,
+                phase=phase,
+                message=message,
+                detail=text,
+                recent_output=_collection_recent_output(sink),
+            )
+        else:
+            _update_collection_refresh_status(
+                recent_output=_collection_recent_output(sink),
+            )
+
+
+def _collection_summary_message(summary: dict) -> str:
+    inventory = summary.get("inventory") or {}
+    wildcards = inventory.get("wildcards") or {}
+    if wildcards:
+        wc = (
+            f"{wildcards.get('common', 0)}C/"
+            f"{wildcards.get('uncommon', 0)}U/"
+            f"{wildcards.get('rare', 0)}R/"
+            f"{wildcards.get('mythic', 0)}M"
+        )
+    else:
+        wc = "WC unknown"
+    return f"{summary.get('unique_cards', '?')} cards synced · {wc}"
+
+
+async def _run_collection_refresh_job() -> None:
+    wrapper_cmd = ["sudo", "-n", "/usr/local/sbin/mtga-read-collection"]
+    started_at = _now_iso()
+    stderr_lines: list[str] = []
+    proc: asyncio.subprocess.Process | None = None
+
+    _update_collection_refresh_status(
+        state="running",
+        running=True,
+        phase="starting",
+        message="Starting MTGA memory reader...",
+        detail="Launching sudo-approved wrapper",
+        summary=None,
+        error=None,
+        recent_output=[],
+        started_at=started_at,
+    )
+
+    try:
+        proc = await asyncio.create_subprocess_exec(
+            *wrapper_cmd,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+            cwd=str(Path(__file__).parent.parent),
+        )
+        stdout_task = asyncio.create_task(proc.stdout.read())
+        stderr_task = asyncio.create_task(_read_collection_refresh_stderr(proc.stderr, stderr_lines))
+        await asyncio.wait_for(proc.wait(), timeout=180)
+        stdout = (await stdout_task).decode("utf-8", errors="replace") if proc.stdout else ""
+        await stderr_task
+
+        if proc.returncode != 0:
+            detail = "\n".join(_collection_recent_output(stderr_lines, limit=20)) or stdout[-2000:] or "Collection refresh failed"
+            _update_collection_refresh_status(
+                state="error",
+                running=False,
+                phase="error",
+                message="Collection refresh failed",
+                detail=detail,
+                error=detail,
+                recent_output=_collection_recent_output(stderr_lines, limit=20),
+            )
+            return
+
+        _update_collection_refresh_status(
+            state="running",
+            running=True,
+            phase="syncing_snapshot",
+            message="Syncing snapshot into app data...",
+            detail="Refreshing repo-local snapshot files",
+            recent_output=_collection_recent_output(stderr_lines),
+        )
+        try:
+            payload = sync_collection_snapshot(
+                COLLECTION_SOURCE,
+                stderr_text="\n".join(stderr_lines),
+                command="sudo /usr/local/sbin/mtga-read-collection",
+                returncode=proc.returncode or 0,
+                stdout_text=stdout,
+            )
+        except Exception as exc:
+            detail = str(exc)
+            _update_collection_refresh_status(
+                state="error",
+                running=False,
+                phase="error",
+                message="Collection snapshot sync failed",
+                detail=detail,
+                error=detail,
+                recent_output=_collection_recent_output(stderr_lines, limit=20),
+            )
+            return
+
+        _update_collection_refresh_status(
+            state="ok",
+            running=False,
+            phase="completed",
+            message=_collection_summary_message(payload),
+            detail="Collection refresh complete",
+            summary=payload,
+            error=None,
+            recent_output=_collection_recent_output(stderr_lines, limit=20),
+        )
+    except asyncio.TimeoutError:
+        if proc and proc.returncode is None:
+            proc.kill()
+            await proc.wait()
+        detail = "Collection refresh timed out while reading MTGA memory"
+        _update_collection_refresh_status(
+            state="error",
+            running=False,
+            phase="timeout",
+            message="Collection refresh timed out",
+            detail=detail,
+            error=detail,
+            recent_output=_collection_recent_output(stderr_lines, limit=20),
+        )
+    except Exception as exc:
+        detail = str(exc)
+        _update_collection_refresh_status(
+            state="error",
+            running=False,
+            phase="error",
+            message="Collection refresh failed",
+            detail=detail,
+            error=detail,
+            recent_output=_collection_recent_output(stderr_lines, limit=20),
+        )
+    finally:
+        global _collection_refresh_task
+        _collection_refresh_task = None
 
 
 @app.post("/api/manage/refresh-collection")
 async def manage_refresh_collection():
     """Refresh local collection snapshot via the sudo-approved memory reader wrapper."""
-    if _collection_refresh_lock.locked():
-        return JSONResponse({"error": "Collection refresh already in progress"}, status_code=409)
-
     async with _collection_refresh_lock:
-        script = Path(__file__).parent.parent / "tools" / "refresh_collection_snapshot.py"
-        proc = await asyncio.create_subprocess_exec(
-            sys.executable, str(script),
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
-            cwd=str(script.parent.parent),
-        )
-        stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=180)
-        out_text = stdout.decode("utf-8", errors="replace") if stdout else ""
-        err_text = stderr.decode("utf-8", errors="replace") if stderr else ""
-
-        payload: dict | None = None
-        try:
-            payload = json.loads(out_text) if out_text.strip() else None
-        except json.JSONDecodeError:
-            payload = None
-
-        if proc.returncode != 0:
+        global _collection_refresh_task
+        if _collection_refresh_task and not _collection_refresh_task.done():
             return JSONResponse(
                 {
-                    "status": "error",
-                    "returncode": proc.returncode,
-                    "detail": payload or out_text[-2000:] or err_text[-2000:] or "Collection refresh failed",
-                    "stdout": out_text[-2000:],
-                    "stderr": err_text[-2000:],
+                    "status": "running",
+                    "detail": "Collection refresh already in progress",
+                    "progress": _collection_refresh_snapshot(),
                 },
-                status_code=500,
+                status_code=409,
             )
 
-        return {
-            "status": "ok",
-            "returncode": proc.returncode,
-            "summary": payload or {},
-            "stderr": err_text[-2000:],
-        }
+        _update_collection_refresh_status(
+            state="running",
+            running=True,
+            phase="starting",
+            message="Starting MTGA memory reader...",
+            detail="Queued collection refresh job",
+            summary=None,
+            error=None,
+            recent_output=[],
+            started_at=_now_iso(),
+        )
+        _collection_refresh_task = asyncio.create_task(_run_collection_refresh_job())
+
+        return JSONResponse(
+            {
+                "status": "started",
+                "progress": _collection_refresh_snapshot(),
+            },
+            status_code=202,
+        )
+
+
+@app.get("/api/manage/refresh-collection-status")
+async def manage_refresh_collection_status():
+    """Return current state of the background collection refresh job."""
+    return _collection_refresh_snapshot()
 
 
 @app.get("/api/manage/collection-stats")
 async def manage_collection_stats():
     """Return current collection stats from the raw snapshot."""
-    raw_path = Path(__file__).parent.parent / "mtga_collection_raw.json"
+    raw_path = PERSISTENT_DIR / "mtga_collection_raw.json"
     if not raw_path.exists():
         return {"status": "no_data", "message": "No collection snapshot found. Run Refresh first."}
 
@@ -1319,7 +1559,7 @@ async def manage_collection_stats():
 
     # Read wildcards from Untapped inventory if available
     wildcards = {}
-    inv_path = Path(__file__).parent.parent / "mtga_inventory.json"
+    inv_path = PERSISTENT_DIR / "mtga_inventory.json"
     if inv_path.exists():
         try:
             inv = _json.loads(inv_path.read_text())

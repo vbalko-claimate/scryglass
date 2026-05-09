@@ -569,6 +569,8 @@ let generalData = null;
 let metaData = null;
 let allGeneralRules = [];
 let allMetaDecks = [];
+let collectionRefreshPollTimer = null;
+let lastCollectionRefreshState = null;
 
 // ── Tabs ──
 function switchTab(name) {
@@ -932,47 +934,114 @@ async function syncMeta() {
 }
 
 // ── Collection Refresh ──
+function setCollectionRefreshStatusText(text, color = '#90caf9') {
+    const status = document.getElementById('refresh-collection-status');
+    status.textContent = text;
+    status.style.color = color;
+}
+
+function applyCollectionRefreshState(data) {
+    const btn = document.getElementById('refresh-collection-btn');
+    const summary = data.summary || {};
+    const inv = summary.inventory || {};
+    const wc = inv.wildcards
+        ? `${inv.wildcards.common}C/${inv.wildcards.uncommon}U/${inv.wildcards.rare}R/${inv.wildcards.mythic}M`
+        : 'WC unknown';
+
+    if (data.running) {
+        btn.disabled = true;
+        btn.textContent = 'Refreshing...';
+        setCollectionRefreshStatusText(data.message || 'Refreshing collection...', '#90caf9');
+        return;
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'Refresh from MTGA Memory';
+
+    if (data.state === 'ok') {
+        setCollectionRefreshStatusText(
+            summary.unique_cards ? `${summary.unique_cards} cards synced · ${wc}` : (data.message || 'Collection refreshed'),
+            '#4caf50'
+        );
+        loadCollectionStats();
+        return;
+    }
+
+    if (data.state === 'error') {
+        setCollectionRefreshStatusText(data.detail || data.message || 'Collection refresh failed', '#f44336');
+        return;
+    }
+
+    setCollectionRefreshStatusText(data.message || 'Idle', '#90caf9');
+}
+
+async function pollCollectionRefreshStatus() {
+    try {
+        const res = await fetch('/api/manage/refresh-collection-status');
+        const data = await res.json();
+        const prevState = lastCollectionRefreshState;
+        lastCollectionRefreshState = data.state || null;
+        applyCollectionRefreshState(data);
+
+        if (prevState === 'running' && data.state === 'ok') {
+            showToast('Collection refreshed');
+        } else if (prevState === 'running' && data.state === 'error') {
+            showToast('Collection refresh failed', true);
+        }
+
+        if (!data.running && collectionRefreshPollTimer) {
+            clearInterval(collectionRefreshPollTimer);
+            collectionRefreshPollTimer = null;
+        }
+    } catch (e) {
+        if (collectionRefreshPollTimer) {
+            clearInterval(collectionRefreshPollTimer);
+            collectionRefreshPollTimer = null;
+        }
+        setCollectionRefreshStatusText(`Error: ${e.message}`, '#f44336');
+    }
+}
+
+function ensureCollectionRefreshPolling() {
+    if (!collectionRefreshPollTimer) {
+        collectionRefreshPollTimer = setInterval(pollCollectionRefreshStatus, 1200);
+    }
+    pollCollectionRefreshStatus();
+}
+
 async function refreshCollection() {
     const btn = document.getElementById('refresh-collection-btn');
-    const status = document.getElementById('refresh-collection-status');
     btn.disabled = true;
     btn.textContent = 'Refreshing...';
-    status.textContent = 'Running memory reader wrapper...';
-    status.style.color = '#90caf9';
+    setCollectionRefreshStatusText('Starting MTGA memory reader...', '#90caf9');
 
     try {
         const res = await fetch('/api/manage/refresh-collection', { method: 'POST' });
         const data = await res.json();
 
         if (res.status === 409) {
-            status.textContent = 'Refresh already running';
-            status.style.color = '#ffa500';
+            applyCollectionRefreshState(data.progress || {});
+            ensureCollectionRefreshPolling();
             showToast('Collection refresh already running', true);
-        } else if (!res.ok || data.status !== 'ok') {
+        } else if (!res.ok || (data.status !== 'started' && data.status !== 'ok')) {
             const detail = data.detail || data.stderr || 'Collection refresh failed';
-            status.textContent = typeof detail === 'string' ? detail.slice(0, 140) : 'Collection refresh failed';
-            status.style.color = '#f44336';
+            setCollectionRefreshStatusText(
+                typeof detail === 'string' ? detail.slice(0, 140) : 'Collection refresh failed',
+                '#f44336'
+            );
             showToast('Collection refresh failed', true);
             console.error('Collection refresh error:', data);
         } else {
-            const summary = data.summary || {};
-            const inv = summary.inventory || {};
-            const wc = inv.wildcards
-                ? `${inv.wildcards.common}C/${inv.wildcards.uncommon}U/${inv.wildcards.rare}R/${inv.wildcards.mythic}M`
-                : 'WC unknown';
-            status.textContent = `${summary.unique_cards || '?'} cards synced · ${wc}`;
-            status.style.color = '#4caf50';
-            showToast('Collection refreshed');
+            applyCollectionRefreshState(data.progress || {});
+            ensureCollectionRefreshPolling();
+            showToast('Collection refresh started');
         }
     } catch (e) {
-        status.textContent = `Error: ${e.message}`;
-        status.style.color = '#f44336';
+        setCollectionRefreshStatusText(`Error: ${e.message}`, '#f44336');
         showToast('Collection refresh error', true);
+        btn.disabled = false;
+        btn.textContent = 'Refresh from MTGA Memory';
     }
-
-    btn.disabled = false;
-    btn.textContent = 'Refresh from MTGA Memory';
-    loadCollectionStats();
 }
 
 async function loadCollectionStats() {
@@ -1015,8 +1084,11 @@ async function loadCollectionStats() {
     }
 }
 
-// Load stats on page load
-document.addEventListener('DOMContentLoaded', loadCollectionStats);
+// Load stats/status on page load
+document.addEventListener('DOMContentLoaded', () => {
+    loadCollectionStats();
+    pollCollectionRefreshStatus();
+});
 
 // ── Decks ──
 async function loadDecks() {

@@ -12,7 +12,7 @@ import re
 import tempfile
 from pathlib import Path
 
-from .database import card_cache
+from .database import PERSISTENT_DIR, card_cache
 from . import deck_storage as storage
 
 log = logging.getLogger(__name__)
@@ -128,7 +128,7 @@ def _compute_diff(old_cards: list[tuple[str, int]], new_cards: list[tuple[str, i
 
 def _get_collection() -> dict[str, int]:
     """Load collection snapshot as {card_name: count}."""
-    raw_path = Path(__file__).parent.parent / "mtga_collection_raw.json"
+    raw_path = PERSISTENT_DIR / "mtga_collection_raw.json"
     if not raw_path.exists():
         return {}
     try:

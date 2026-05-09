@@ -30,3 +30,6 @@ dist/
 *.spec
 data/log_archive/
 data/meta/*.bak
+mtga_collection_raw_pre_*.json
+mtga_inventory.json
+src-tauri/binaries/overlay-helper-*
