@@ -14,20 +14,19 @@ from __future__ import annotations
 
 import argparse
 import json
-import re
 import shlex
 import subprocess
 import sys
-from datetime import datetime
 from pathlib import Path
-from typing import Any
 
 
 ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_SOURCE = Path.home() / "MTG" / "my_collection_memory.json"
-DEFAULT_TARGETS = [
-    ROOT / "mtga_collection_raw.json",
-]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from advisor.collection_refresh import DEFAULT_SOURCE, sync_collection_snapshot
+
+
 DEFAULT_CMD = "sudo /usr/local/sbin/mtga-read-collection"
 
 
@@ -62,64 +61,6 @@ def parse_args() -> argparse.Namespace:
         help="Do not run the refresh command; just validate/copy an existing snapshot",
     )
     return parser.parse_args()
-
-
-def parse_snapshot(path: Path) -> dict[str, int]:
-    raw = json.loads(path.read_text(encoding="utf-8"))
-    if isinstance(raw, dict):
-        if "cards" in raw and isinstance(raw["cards"], list):
-            return {
-                str(entry.get("grpid") or entry.get("grpId")): int(entry.get("quantity", 1))
-                for entry in raw["cards"]
-                if entry.get("grpid") or entry.get("grpId")
-            }
-        return {str(key): int(value) for key, value in raw.items()}
-    if isinstance(raw, list):
-        return {
-            str(entry.get("grpid") or entry.get("grpId")): int(entry.get("quantity", 1))
-            for entry in raw
-            if isinstance(entry, dict) and (entry.get("grpid") or entry.get("grpId"))
-        }
-    raise ValueError(f"Unsupported collection payload in {path}")
-
-
-def parse_inventory(stderr: str) -> dict[str, Any]:
-    result: dict[str, Any] = {}
-    wildcards = re.search(
-        r"Wildcards:\s*(\d+)C\s*/\s*(\d+)U\s*/\s*(\d+)R\s*/\s*(\d+)M",
-        stderr,
-    )
-    if wildcards:
-        result["wildcards"] = {
-            "common": int(wildcards.group(1)),
-            "uncommon": int(wildcards.group(2)),
-            "rare": int(wildcards.group(3)),
-            "mythic": int(wildcards.group(4)),
-        }
-    money = re.search(r"Gold:\s*(\d+),\s*Gems:\s*(\d+)", stderr)
-    if money:
-        result["gold"] = int(money.group(1))
-        result["gems"] = int(money.group(2))
-    cards = re.search(r"Read\s+(\d+)\s+unique cards\s+\((\d+)\s+total\)", stderr)
-    if cards:
-        result["reader_unique_cards"] = int(cards.group(1))
-        result["reader_total_cards"] = int(cards.group(2))
-    return result
-
-
-def write_targets(snapshot: dict[str, int], source: Path, extra_targets: list[Path]) -> list[str]:
-    targets: list[Path] = [*DEFAULT_TARGETS, *extra_targets]
-    written: list[str] = []
-    payload = json.dumps(snapshot, indent=2, sort_keys=True)
-    for path in targets:
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(payload, encoding="utf-8")
-        written.append(str(path))
-    if source not in targets:
-        written.insert(0, str(source))
-    return written
-
-
 def main() -> int:
     args = parse_args()
     stdout = ""
@@ -158,21 +99,15 @@ def main() -> int:
         }, ensure_ascii=False, indent=2))
         return 1
 
-    snapshot = parse_snapshot(args.source)
     extra_targets = [Path(path) for path in args.target]
-    written = write_targets(snapshot, args.source, extra_targets)
-    summary = {
-        "status": "ok",
-        "returncode": returncode,
-        "command": args.cmd,
-        "source": str(args.source),
-        "written": written,
-        "unique_cards": len(snapshot),
-        "snapshot_mtime": datetime.fromtimestamp(args.source.stat().st_mtime).isoformat(),
-        "inventory": parse_inventory(stderr),
-        "stdout": stdout[-1000:],
-        "stderr": stderr[-2000:],
-    }
+    summary = sync_collection_snapshot(
+        args.source,
+        stderr_text=stderr,
+        extra_targets=extra_targets,
+        command=args.cmd,
+        returncode=returncode,
+        stdout_text=stdout,
+    )
     print(json.dumps(summary, ensure_ascii=False, indent=2))
     return 0
 

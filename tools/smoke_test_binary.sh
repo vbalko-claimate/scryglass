@@ -62,6 +62,17 @@ for page in / /overlay /stats /review /manage /decks; do
 done
 echo "  OK: all HTML pages"
 
+# Test 4b: Manage page content matches the checked-in source file.
+SOURCE_MANAGE_HASH=$(shasum -a 256 static/manage.html | awk '{print $1}')
+SERVED_MANAGE_HASH=$(curl -sf "http://localhost:$PORT/manage" 2>/dev/null | shasum -a 256 | awk '{print $1}')
+if [ -z "$SERVED_MANAGE_HASH" ] || [ "$SOURCE_MANAGE_HASH" != "$SERVED_MANAGE_HASH" ]; then
+    echo "FAIL: /manage content hash does not match static/manage.html"
+    echo "  source=$SOURCE_MANAGE_HASH"
+    echo "  served=$SERVED_MANAGE_HASH"
+    exit 1
+fi
+echo "  OK: manage.html matches source"
+
 # Test 5: Card count > 0
 CARDS=$(echo "$HEALTH" | python3 -c "import json,sys; print(json.load(sys.stdin).get('card_count',0))")
 if [ "$CARDS" -lt 1000 ]; then
