@@ -108,7 +108,37 @@ def make_side_play() -> dict:
         "spell_x": {},          # cast spell name → X value paid
         "spell_modes": {},      # modal cast spell name → 0-based mode
         "activation_x": [],     # parallel to `activations`, X per entry
+        # Sprint 2 — life paid per turn for life-cost mana abilities
+        # ("{T}, Pay N life: Add ...", e.g. Starting Town). Counted
+        # from ManaPaid annotations where the affector is a known
+        # life-cost-mana land and the color enum is 1-5 (= a colored
+        # mana, only producible via the pay-life side of that source).
+        "life_paid_for_mana": 0,
     }
+
+
+# MTGA ManaPaid color enum (empirically decoded from corpus annotations):
+#   1 = White, 2 = Blue, 3 = Black, 4 = Red, 5 = Green, 12 = Colorless
+# Higher values (6-11, 13+) appear on hybrid/snow/other sources we
+# don't need to disambiguate for life-payment detection.
+MANA_PAID_COLOR_W = 1
+MANA_PAID_COLOR_U = 2
+MANA_PAID_COLOR_B = 3
+MANA_PAID_COLOR_R = 4
+MANA_PAID_COLOR_G = 5
+MANA_PAID_COLOR_C = 12
+
+# Mana sources whose ONLY way to produce a coloured ({W}/{U}/{B}/{R}/{G})
+# tap is through their "{T}, Pay N life: Add one mana of any color"
+# ability — the free side adds {C}. When such a source emits a
+# ManaPaid annotation with color 1-5 (not 12), the player must have
+# paid life to activate it. The life cost per use is encoded
+# alongside (1 for Starting Town; future cards with different costs
+# can override the default 1 below). This is the empirical wiring
+# decoded from c93ef724's 14-turn life-drift gap.
+LIFE_COST_MANA_LANDS: dict[str, int] = {
+    "Starting Town": 1,
+}
 
 
 # MTGA ManaPaid color enum values that represent a life payment as
@@ -297,7 +327,40 @@ def build_replay_record(match: dict, events: list[dict], game_number: int) -> di
     # the cast itself). Dedup by `ann_id` because persistent
     # annotations get rebroadcast on every diff.
     targets_by_iid: dict[int, list[str]] = {}
+    # iid → "me" / "opp" map built from spell/ability/play events so
+    # life-payment attribution (ManaPaid affecting a spell) can
+    # credit the correct side without re-walking events.
+    side_by_iid: dict[int, str] = {}
+    # window index for each event (so per-window life-pay aggregation
+    # knows which side-play dict to update).
+    window_of_iid: dict[int, int] = {}
+    # Pre-compute (event_id → window_idx) for fast lookups of which
+    # window an annotation's affected spell was cast in.
+    event_window: dict[int, int] = {}
+    for w_idx, (window_events, _, _) in enumerate(windows):
+        for evt in window_events:
+            event_window[evt["id"]] = w_idx
     seen_ann_ids: set[int] = set()
+    # First pass over GAME events: build the iid → side map from
+    # spell_cast / ability / card_played events (and their opp
+    # mirrors). This is order-stable: each iid's first appearance
+    # wins, matching how MTGA assigns instanceIds at creation.
+    for evt in game_events:
+        et = evt["event_type"]
+        d = evt["data"]
+        iid = d.get("instance_id")
+        if iid is None:
+            continue
+        if et in ("spell_cast", "card_played", "ability"):
+            side_by_iid.setdefault(iid, "me")
+            window_of_iid.setdefault(iid, event_window.get(evt["id"], 0))
+        elif et in ("opp_spell_cast", "opp_card_played", "opp_ability"):
+            side_by_iid.setdefault(iid, "opp")
+            window_of_iid.setdefault(iid, event_window.get(evt["id"], 0))
+    # Second pass: collect target_spec joins + life-paid mana counts.
+    # life_pay_by_window[(side, w_idx)] = total life paid in that
+    # window by that side via "{T}, Pay N life: Add ..." sources.
+    life_pay_by_window: dict[tuple[str, int], int] = {}
     for evt in game_events:
         if evt["event_type"] != "annotation":
             continue
@@ -312,6 +375,33 @@ def build_replay_record(match: dict, events: list[dict], game_number: int) -> di
         aff_names = d.get("affected_names") or []
         if kind == "target_spec" and aff_id and aff_names:
             targets_by_iid.setdefault(aff_id, []).extend(aff_names)
+        elif kind == "mana_paid":
+            affector_name = d.get("affector_name")
+            color = (d.get("details") or {}).get("color")
+            life_cost = LIFE_COST_MANA_LANDS.get(affector_name or "")
+            # Color values 1-5 (W/U/B/R/G) from a life-cost-only land
+            # mean the player used the pay-life-for-any-color side.
+            # Color 12 (colorless) means the free `{T}: Add {C}` was
+            # used — no life paid.
+            if (
+                life_cost
+                and color is not None
+                and color in (
+                    MANA_PAID_COLOR_W,
+                    MANA_PAID_COLOR_U,
+                    MANA_PAID_COLOR_B,
+                    MANA_PAID_COLOR_R,
+                    MANA_PAID_COLOR_G,
+                )
+            ):
+                affected_ids = d.get("affected_ids") or []
+                if affected_ids:
+                    payee = affected_ids[0]
+                    side = side_by_iid.get(payee)
+                    w_idx = window_of_iid.get(payee)
+                    if side and w_idx is not None:
+                        key = (side, w_idx)
+                        life_pay_by_window[key] = life_pay_by_window.get(key, 0) + life_cost
 
     for k, (window_events, start_ts, checkpoint_src) in enumerate(windows):
         # Active player for this window = the active_player field on
@@ -383,6 +473,13 @@ def build_replay_record(match: dict, events: list[dict], game_number: int) -> di
 
         checkpoint = make_checkpoint(checkpoint_src, my_gy, opp_gy)
         raw_mtga = int(checkpoint_src["turn_number"] or 0) if checkpoint_src else 0
+        # Sprint 2 — attach per-side life-payment counts derived from
+        # ManaPaid annotations on life-cost mana lands (Starting Town
+        # etc.). The total accumulates across all casts in this
+        # window, so the engine harness can deduct it once before the
+        # next turn's checkpoint diff runs.
+        me_side["life_paid_for_mana"] = life_pay_by_window.get(("me", k), 0)
+        opp_side["life_paid_for_mana"] = life_pay_by_window.get(("opp", k), 0)
         turns_out.append({
             "turn": k + 1,  # logical 1-based timeline index
             "raw_mtga_turn": raw_mtga,
