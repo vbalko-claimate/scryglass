@@ -114,6 +114,11 @@ def make_side_play() -> dict:
         # life-cost-mana land and the color enum is 1-5 (= a colored
         # mana, only producible via the pay-life side of that source).
         "life_paid_for_mana": 0,
+        # Sprint 4 — per-spell life-cost choice. ScriptedPlayer reads
+        # this and forces choice index 1 (PayLife) for matching spell
+        # names; otherwise picks index 0 (the cheap branch). Empty
+        # when no Choice spells were cast this turn.
+        "spell_paid_life": {},
     }
 
 
@@ -150,6 +155,42 @@ LIFE_COST_MANA_LANDS: dict[str, int] = {
 # DIFFERENT bucket. Used by `_attach_user_choices` to count life
 # paid per spell cast.
 MANA_PAID_LIFE_COLOR = 5
+
+
+def _attach_life_choice(
+    side: dict, name: str, iid: int | None, life_change_by_source: dict
+) -> None:
+    """Detect "pay X life" additional-cost choice for the cast.
+    Scoped to known cards with `Choice(DiscardCard, PayLife(N))` (or
+    similar) additional costs — the broader "any negative ModifiedLife
+    on cast iid" filter was too noisy, conflating combat damage
+    attributed to attacking creatures, lifelink lifegain on cast
+    sources, etc. When MTGA logs a ModifiedLife with the cast's iid
+    and a negative delta inside the expected cost range, we emit
+    `spell_paid_life[name] = abs(delta)`; ScriptedPlayer forces the
+    PayLife branch for that spell.
+
+    First-cast-wins by spell name (matches engine's HashMap shape).
+    """
+    if iid is None:
+        return
+    if name not in ADDITIONAL_COST_LIFE_CARDS:
+        return
+    delta = life_change_by_source.get(iid, 0)
+    expected_cost = ADDITIONAL_COST_LIFE_CARDS[name]
+    # Tight window — only treat a delta of exactly -expected_cost as
+    # PayLife. Anything else is downstream damage / lifegain.
+    if delta == -expected_cost:
+        side["spell_paid_life"].setdefault(name, expected_cost)
+
+
+# Cards whose mana cost includes a `Choice(DiscardCard, PayLife(N))`
+# additional cost. Empirically curated from the Standard corpus —
+# the value is the PayLife cost in life points. Extend when wiring
+# more cards.
+ADDITIONAL_COST_LIFE_CARDS: dict[str, int] = {
+    "Bitter Triumph": 3,
+}
 
 
 def _attach_spell_target(
@@ -327,6 +368,12 @@ def build_replay_record(match: dict, events: list[dict], game_number: int) -> di
     # the cast itself). Dedup by `ann_id` because persistent
     # annotations get rebroadcast on every diff.
     targets_by_iid: dict[int, list[str]] = {}
+    # Sprint 4 — per-source life delta captured from ModifiedLife.
+    # Lets the exporter detect Bitter Triumph style additional-cost
+    # life payments (Choice(DiscardCard, PayLife(N)) — if MTGA logs
+    # a negative life delta tied to the cast's iid, the choice was
+    # PayLife). The map is iid → signed life delta (cumulative).
+    life_change_by_source: dict[int, int] = {}
     # Sprint 1 — X-values for activated abilities, decoded from
     # AnnotationType_CounterAdded `transaction_amount`. For Mossborn
     # Hydra's `{X}{G}: gets X +1/+1 counters`, the transaction_amount
@@ -384,6 +431,18 @@ def build_replay_record(match: dict, events: list[dict], game_number: int) -> di
         aff_names = d.get("affected_names") or []
         if kind == "target_spec" and aff_id and aff_names:
             targets_by_iid.setdefault(aff_id, []).extend(aff_names)
+        elif kind == "modified_life" and aff_id:
+            # ModifiedLife tied to a spell/effect. affector_id is
+            # the source iid; affected_ids[0] is the player seat
+            # whose life changed; details.life is the signed delta.
+            # We accumulate per affector_id so a spell with multiple
+            # ModifiedLife (e.g. drain) gets the full picture.
+            life_delta = (d.get("details") or {}).get("life", 0)
+            if life_delta:
+                life_change_by_source.setdefault(aff_id, 0)
+                life_change_by_source[aff_id] = (
+                    life_change_by_source[aff_id] + int(life_delta)
+                )
         elif kind == "counter_added" and aff_id:
             # affector_id = the ability/source that put the counter.
             # transaction_amount = total counters added by THIS
@@ -450,10 +509,12 @@ def build_replay_record(match: dict, events: list[dict], game_number: int) -> di
                 name = d.get("name", "?")
                 me_side["plays"].append(name)
                 _attach_spell_target(me_side, name, iid, targets_by_iid)
+                _attach_life_choice(me_side, name, iid, life_change_by_source)
             elif et in ("opp_card_played", "opp_spell_cast"):
                 name = d.get("name", "?")
                 opp_side["plays"].append(name)
                 _attach_spell_target(opp_side, name, iid, targets_by_iid)
+                _attach_life_choice(opp_side, name, iid, life_change_by_source)
             elif et == "attack_declared":
                 _append_attackers(me_side, d)
             elif et == "opp_attack_declared":

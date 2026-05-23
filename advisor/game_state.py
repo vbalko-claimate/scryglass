@@ -1107,6 +1107,15 @@ class GameStateTracker:
                 kind = "mana_paid"
             elif "AnnotationType_UserActionTaken" in ann_types:
                 kind = "user_action_taken"
+            elif "AnnotationType_ModifiedLife" in ann_types:
+                # Life delta tied to a specific source. affectorId =
+                # the spell/ability/effect that changed life;
+                # affectedIds[0] = the player whose life changed
+                # (system seat id); details.life = signed delta.
+                # Captured so the exporter can detect Bitter Triumph
+                # style additional-cost life payments and feed the
+                # choice back to ScriptedPlayer.
+                kind = "modified_life"
             elif "AnnotationType_CounterAdded" in ann_types:
                 # X-cost ability activations (Mossborn Hydra
                 # `{X}{G}: This creature gets X +1/+1 counters`) emit
