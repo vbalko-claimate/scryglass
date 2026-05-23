@@ -607,7 +607,48 @@ class GameStateTracker:
 
         # Set attack/block state from game object data
         game_obj.attack_state = obj.get("attackState")
+        prev_block_state = game_obj.block_state
         game_obj.block_state = obj.get("blockState")
+
+        # Sprint 4 — synthesize block_declared events for OPPONENT'S
+        # blocks. The existing path (`_handle_client_message
+        # DeclareBlockersResp`) only catches MY blocks (sent by the
+        # client). Opp's blocks arrive via GameStateMessage updates
+        # marking the creature's `blockState`. We detect the
+        # transition None/Empty → "Blocking" and emit a block event
+        # in the same shape so the replay exporter can route it.
+        if (
+            opp_seat
+            and owner == opp_seat
+            and game_obj.block_state
+            and game_obj.block_state != prev_block_state
+            and self.state.match_info.match_id
+        ):
+            attackers_blocked = obj.get("blockInfo", {}).get("attackerIds", [])
+            if attackers_blocked:
+                attacker_names = []
+                for a_iid in attackers_blocked:
+                    a_obj = self.state.objects.get(a_iid)
+                    a_card = card_cache.get(a_obj.grp_id) if a_obj else None
+                    attacker_names.append({
+                        "name": a_card.name if a_card else (a_obj.name if a_obj else "?"),
+                        "id": a_iid,
+                        "power": a_obj.power if a_obj else 0,
+                        "toughness": a_obj.toughness if a_obj else 0,
+                    })
+                save_match_event(
+                    self.state.match_info.match_id, "block_declared",
+                    game_number=self.state.match_info.game_number,
+                    turn_number=self.state.turn_info.turn_number,
+                    phase=self.state.turn_info.phase,
+                    data={
+                        "blocker": card.name if card else game_obj.name,
+                        "blocker_id": iid,
+                        "blocker_power": game_obj.power,
+                        "blocker_toughness": game_obj.toughness,
+                        "attackers": attacker_names,
+                        "owner": "opp",
+                    })
 
         # Log my card entering battlefield
         if (entering_bf and my_seat and owner == my_seat and card

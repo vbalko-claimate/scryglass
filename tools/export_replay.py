@@ -520,14 +520,29 @@ def build_replay_record(match: dict, events: list[dict], game_number: int) -> di
             elif et == "opp_attack_declared":
                 _append_attackers(opp_side, d)
             elif et == "block_declared":
-                owner = d.get("owner", "opp")
-                target_side = me_side if owner == "me" else opp_side
-                for b in d.get("blocks", []) or []:
-                    if isinstance(b, dict):
-                        target_side["blocks"].append({
-                            "blocker": b.get("blocker", "?"),
-                            "attacker": b.get("attacker", "?"),
-                        })
+                # scryglass emits one block_declared per BLOCKER with
+                # shape: {blocker, blocker_id, attackers: [{name,id,..}]}.
+                # Blocker is always on the non-active player's side
+                # (the defender). Determine side: if active=me, blocks
+                # go on opp_side; if active=opp, blocks go on me_side.
+                # Pick the FIRST attacker only — normally a creature
+                # blocks exactly one attacker; multi-attacker shapes
+                # appear only for menace-style mandatory multi-block
+                # which we treat as the first assignment.
+                blocker = d.get("blocker")
+                if not blocker or d.get("no_blocks"):
+                    continue
+                attackers = d.get("attackers") or []
+                target_side = opp_side if active == "me" else me_side
+                if attackers and isinstance(attackers[0], dict):
+                    block_entry = {
+                        "blocker": blocker,
+                        "attacker": attackers[0].get("name", "?"),
+                    }
+                    # Dedup against duplicate scryglass log entries
+                    # (same block declared in multiple phases).
+                    if block_entry not in target_side["blocks"]:
+                        target_side["blocks"].append(block_entry)
             elif et == "ability":
                 name = d.get("name", "?")
                 target_names = targets_by_iid.get(iid) if iid else None
