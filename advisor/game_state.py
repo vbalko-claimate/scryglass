@@ -1107,6 +1107,17 @@ class GameStateTracker:
                 kind = "mana_paid"
             elif "AnnotationType_UserActionTaken" in ann_types:
                 kind = "user_action_taken"
+            elif "AnnotationType_CounterAdded" in ann_types:
+                # X-cost ability activations (Mossborn Hydra
+                # `{X}{G}: This creature gets X +1/+1 counters`) emit
+                # one CounterAdded annotation per counter added.
+                # affectorId = the ability/source that put the
+                # counter; affectedIds[0] = the permanent that
+                # received it; details.transaction_amount = how many
+                # counters (usually 1 — multi-counter spells fire
+                # the annotation N times). Replay exporter sums
+                # these per ability source to reconstruct X.
+                kind = "counter_added"
             else:
                 continue
 

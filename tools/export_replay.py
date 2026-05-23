@@ -327,6 +327,15 @@ def build_replay_record(match: dict, events: list[dict], game_number: int) -> di
     # the cast itself). Dedup by `ann_id` because persistent
     # annotations get rebroadcast on every diff.
     targets_by_iid: dict[int, list[str]] = {}
+    # Sprint 1 — X-values for activated abilities, decoded from
+    # AnnotationType_CounterAdded `transaction_amount`. For Mossborn
+    # Hydra's `{X}{G}: gets X +1/+1 counters`, the transaction_amount
+    # equals X chosen at activation. Some X-pump activations get
+    # MULTIPLIED by a doubler effect (Doubling Season, Branching
+    # Evolution) — in those cases transaction_amount is the FINAL
+    # counter count, not the X paid. The harness can divide by the
+    # known doubler stack at the moment of activation if needed.
+    counter_amount_by_iid: dict[int, int] = {}
     # iid → "me" / "opp" map built from spell/ability/play events so
     # life-payment attribution (ManaPaid affecting a spell) can
     # credit the correct side without re-walking events.
@@ -375,6 +384,14 @@ def build_replay_record(match: dict, events: list[dict], game_number: int) -> di
         aff_names = d.get("affected_names") or []
         if kind == "target_spec" and aff_id and aff_names:
             targets_by_iid.setdefault(aff_id, []).extend(aff_names)
+        elif kind == "counter_added" and aff_id:
+            # affector_id = the ability/source that put the counter.
+            # transaction_amount = total counters added by THIS
+            # activation (so for "X +1/+1 counters", amount == X).
+            amt = (d.get("details") or {}).get("transaction_amount", 1)
+            counter_amount_by_iid[aff_id] = (
+                counter_amount_by_iid.get(aff_id, 0) + int(amt)
+            )
         elif kind == "mana_paid":
             affector_name = d.get("affector_name")
             color = (d.get("details") or {}).get("color")
@@ -457,7 +474,9 @@ def build_replay_record(match: dict, events: list[dict], game_number: int) -> di
                     "source": name,
                     "target": (target_names[0] if target_names else d.get("target")),
                 })
-                me_side["activation_x"].append(0)
+                me_side["activation_x"].append(
+                    counter_amount_by_iid.get(iid, 0) if iid else 0
+                )
             elif et == "opp_ability":
                 name = d.get("name", "?")
                 target_names = targets_by_iid.get(iid) if iid else None
@@ -465,7 +484,9 @@ def build_replay_record(match: dict, events: list[dict], game_number: int) -> di
                     "source": name,
                     "target": (target_names[0] if target_names else d.get("target")),
                 })
-                opp_side["activation_x"].append(0)
+                opp_side["activation_x"].append(
+                    counter_amount_by_iid.get(iid, 0) if iid else 0
+                )
             elif et == "creature_left_bf":
                 owner = d.get("owner", "me")
                 name = d.get("name", "?")
