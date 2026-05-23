@@ -73,9 +73,13 @@ def discover_log_files(archive: Path | None, explicit: list[Path]) -> list[Path]
     return files
 
 
-def reextract(match_id: str, log_files: list[Path]) -> dict:
+def reextract(match_id: str, log_files: list[Path], commit: bool = True) -> dict:
     """Walk every log file with a fresh tracker and save every event
-    the tracker emits for `match_id`. Returns a small summary dict."""
+    the tracker emits for `match_id`. When `commit=False`, no events
+    are persisted — the tracker still runs but inserts are suppressed
+    so the function can be used as a dry probe to count what WOULD be
+    saved (used by main() to decide whether deleting existing events
+    is safe). Returns a small summary dict."""
     total_saved = 0
     seen_in_log: list[str] = []
 
@@ -104,7 +108,8 @@ def reextract(match_id: str, log_files: list[Path]) -> dict:
             if mid != match_id:
                 return
             saved_for_this_file += 1
-            orig_save(mid, event_type, **kwargs)
+            if commit:
+                orig_save(mid, event_type, **kwargs)
 
         game_state_module.save_match_event = filtered_save
         try:
@@ -157,12 +162,29 @@ def main() -> None:
     print(f"Logs:     {len(log_files)} files")
     print()
 
-    if not args.dry_run:
-        deleted = delete_log_derived_events(args.match_id)
-        print(f"Deleted {deleted} pre-existing log-derived events")
-        print()
+    if args.dry_run:
+        summary = reextract(args.match_id, log_files, commit=False)
+        print(f"Would re-extract {summary['events_saved']} events")
+        for line in summary["log_files_with_match"]:
+            print(f"  - {line}")
+        return
 
-    summary = reextract(args.match_id, log_files)
+    # Two-pass safety: probe FIRST without committing so we know how
+    # many events the current logs hold for this match. If the probe
+    # finds nothing, leave the existing events intact — wiping them
+    # would be a destructive no-op (the source log is gone and we'd
+    # end up with 0 events for a match that previously had data).
+    probe = reextract(args.match_id, log_files, commit=False)
+    if probe["events_saved"] == 0:
+        print("No events found in any log file for this match; "
+              "leaving existing events untouched.")
+        return
+
+    deleted = delete_log_derived_events(args.match_id)
+    print(f"Deleted {deleted} pre-existing log-derived events")
+    print()
+
+    summary = reextract(args.match_id, log_files, commit=True)
     print(f"Re-extracted {summary['events_saved']} events")
     for line in summary["log_files_with_match"]:
         print(f"  - {line}")

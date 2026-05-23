@@ -568,9 +568,12 @@ class GameStateTracker:
         else:
             self._seen_on_bf.discard(iid)
 
-        # Log opponent cards entering battlefield
+        # Log opponent cards entering battlefield. Lands ARE included
+        # (the replay engine needs to see them to apply life-payment
+        # for shock lands and gain-life triggers for "enters; gain 1
+        # life" lands like Dismal Backwater / Promising Vein).
         if (entering_bf and opp_seat and owner == opp_seat and card
-                and not card.is_land and grp_id > 0
+                and grp_id > 0
                 and self.state.match_info.match_id):
             save_match_event(
                 self.state.match_info.match_id, "opp_card_played",
@@ -580,6 +583,8 @@ class GameStateTracker:
                 data={"name": card.name, "grp_id": grp_id,
                       "card_types": card.card_types,
                       "colors": card.colors,
+                      "is_land": card.is_land,
+                      "enters_tapped": obj.get("isTapped", False),
                       "instance_id": iid})
 
         if (on_battlefield and was_on_bf and old_obj and card
@@ -658,6 +663,7 @@ class GameStateTracker:
                          "colors": card.colors,
                          "cmc": card.cmc,
                          "is_land": card.is_land,
+                         "enters_tapped": obj.get("isTapped", False),
                          "instance_id": iid}
             # B5: attach mana spent info
             auto_tap = self._last_auto_tap.pop(iid, None)

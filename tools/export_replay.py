@@ -119,6 +119,11 @@ def make_side_play() -> dict:
         # names; otherwise picks index 0 (the cheap branch). Empty
         # when no Choice spells were cast this turn.
         "spell_paid_life": {},
+        # Land names that entered tapped this turn (from MTGA's
+        # `isTapped` flag at ETB time). Lets the engine know whether
+        # the player paid life for a shock land or accepted the
+        # tapped enter.
+        "lands_entered_tapped": [],
     }
 
 
@@ -508,11 +513,15 @@ def build_replay_record(match: dict, events: list[dict], game_number: int) -> di
             if et in ("card_played", "spell_cast"):
                 name = d.get("name", "?")
                 me_side["plays"].append(name)
+                if d.get("is_land") and d.get("enters_tapped"):
+                    me_side["lands_entered_tapped"].append(name)
                 _attach_spell_target(me_side, name, iid, targets_by_iid)
                 _attach_life_choice(me_side, name, iid, life_change_by_source)
             elif et in ("opp_card_played", "opp_spell_cast"):
                 name = d.get("name", "?")
                 opp_side["plays"].append(name)
+                if d.get("is_land") and d.get("enters_tapped"):
+                    opp_side["lands_entered_tapped"].append(name)
                 _attach_spell_target(opp_side, name, iid, targets_by_iid)
                 _attach_life_choice(opp_side, name, iid, life_change_by_source)
             elif et == "attack_declared":
