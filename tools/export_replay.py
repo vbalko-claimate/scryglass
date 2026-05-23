@@ -1,0 +1,575 @@
+#!/usr/bin/env python3
+"""Export one match from advisor.db as a Glass Shard ReplayRecord JSON.
+
+The output schema mirrors `glass_engine::replay::ReplayRecord` and is
+consumed by `glass-engine/examples/replay_match.rs`. The exporter
+groups `match_events` rows by `(game_number, turn_number)`, derives
+per-turn plays/attacks/blocks/activations + an end-of-turn
+Checkpoint, and emits one JSON file per game.
+
+Usage:
+    uv run python tools/export_replay.py <match_id> [--out DIR]
+    uv run python tools/export_replay.py --latest-deck "Mono-Green Landfall"
+
+The `--latest-deck` shortcut picks the most recently started match
+whose `my_deck_name` (case-insensitive substring) matches the
+argument; useful for "export the game I just finished."
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import sqlite3
+import sys
+from collections import defaultdict
+from pathlib import Path
+from typing import Any
+
+# Add project root to sys.path so `from advisor.database ...` works
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from advisor.database import DB_PATH  # noqa: E402
+
+# The PyInstaller-bundled scryglass.app uses SCRY_USER_DATA →
+# ~/MTG/mtg-data/app_data/advisor.db. When this script is run from
+# the source repo, the advisor.database default is the same; if
+# SCRY_USER_DATA is unset we still want to read the live DB the
+# bundled app is writing to.
+import os  # noqa: E402
+
+if not os.environ.get("SCRY_USER_DATA") and not DB_PATH.exists():
+    fallback = Path.home() / "MTG" / "mtg-data" / "app_data" / "advisor.db"
+    if fallback.exists():
+        DB_PATH = fallback
+
+SCHEMA_VERSION = 1
+
+
+def load_match(conn: sqlite3.Connection, match_id: str) -> dict | None:
+    """Return the matches-table row as a dict or None."""
+    row = conn.execute(
+        "SELECT match_id, started_at, opponent_name, my_deck_name, "
+        "opp_deck_name, result, game_count "
+        "FROM matches WHERE match_id = ?",
+        (match_id,),
+    ).fetchone()
+    if not row:
+        return None
+    keys = [
+        "match_id", "started_at", "opponent_name", "my_deck_name",
+        "opp_deck_name", "result", "game_count",
+    ]
+    return dict(zip(keys, row))
+
+
+def load_events(conn: sqlite3.Connection, match_id: str) -> list[dict]:
+    """Return ordered events for a match, parsed JSON `data`."""
+    rows = conn.execute(
+        "SELECT id, game_number, turn_number, phase, event_type, data "
+        "FROM match_events WHERE match_id = ? ORDER BY id",
+        (match_id,),
+    ).fetchall()
+    events = []
+    for r in rows:
+        try:
+            data = json.loads(r[5]) if r[5] else {}
+        except json.JSONDecodeError:
+            data = {"raw": r[5]}
+        events.append({
+            "id": r[0],
+            "game_number": r[1],
+            "turn_number": r[2],
+            "phase": r[3],
+            "event_type": r[4],
+            "data": data,
+        })
+    return events
+
+
+def latest_match_for_deck(conn: sqlite3.Connection, deck_substring: str) -> str | None:
+    row = conn.execute(
+        "SELECT match_id FROM matches "
+        "WHERE LOWER(my_deck_name) LIKE ? "
+        "ORDER BY started_at DESC LIMIT 1",
+        (f"%{deck_substring.lower()}%",),
+    ).fetchone()
+    return row[0] if row else None
+
+
+def make_side_play() -> dict:
+    return {
+        "plays": [],
+        "attacks": [],
+        "blocks": [],
+        "activations": [],
+        "spell_targets": {},
+        # Sprint 1 — per-cast / per-activation user choices joined
+        # from MTGA annotation events. See `_attach_user_choices`.
+        "spell_x": {},          # cast spell name → X value paid
+        "spell_modes": {},      # modal cast spell name → 0-based mode
+        "activation_x": [],     # parallel to `activations`, X per entry
+    }
+
+
+# MTGA ManaPaid color enum values that represent a life payment as
+# the "color" of mana produced. Empirically 5 maps to the
+# Starting-Town-style "{T}, Pay N life: Add one mana of any color"
+# ability (the player chooses the color at activation time, and the
+# log records the choice via the affector / affected pair while the
+# `color: 5` flag signals "life was paid"). Generic colorless is a
+# DIFFERENT bucket. Used by `_attach_user_choices` to count life
+# paid per spell cast.
+MANA_PAID_LIFE_COLOR = 5
+
+
+def _attach_spell_target(
+    side: dict, name: str, iid: int | None, targets_by_iid: dict
+) -> None:
+    """Set `spell_targets[name]` from the global TargetSpec map if a
+    target was recorded for this spell's instance_id. ReplayRecord's
+    `spell_targets` is a `HashMap<String, String>` (single value per
+    spell name), so when multiple casts of the same spell hit, the
+    FIRST recorded target wins. That's fine in practice — repeated
+    casts in the same game usually pick the same target type
+    (creature removal) or the engine's heuristic fills the gap.
+    """
+    if iid is None:
+        return
+    tgts = targets_by_iid.get(iid)
+    if tgts:
+        side["spell_targets"].setdefault(name, tgts[0])
+
+
+def make_battlefield_card(bf_entry: dict) -> dict:
+    """Convert a turn_start battlefield entry to ReplayRecord
+    BattlefieldCard. Counter information isn't currently tracked
+    per-permanent by scryglass — we encode P/T deltas under
+    plus_counters when both are positive and equal (a heuristic for
+    +1/+1 counters; refined by permanent_stats_changed analysis in a
+    follow-up)."""
+    return {
+        "name": bf_entry.get("name", "?"),
+        "tapped": bool(bf_entry.get("tapped", False)),
+        "plus_counters": 0,
+        "loyalty": 0,
+        "summoning_sick": bool(bf_entry.get("summoning_sick", False)),
+    }
+
+
+def make_checkpoint(turn_start: dict | None, my_gy: list[str], opp_gy: list[str]) -> dict:
+    """Build a Checkpoint from a `turn_start` event payload."""
+    if not turn_start:
+        return {
+            "my_life": 20,
+            "opp_life": 20,
+            "my_battlefield": [],
+            "opp_battlefield": [],
+            "my_hand_size": 0,
+            "opp_hand_size": 0,
+            "my_graveyard": list(my_gy),
+            "opp_graveyard": list(opp_gy),
+        }
+    ts = turn_start.get("data", {})
+    return {
+        "my_life": int(ts.get("my_life", 20)),
+        "opp_life": int(ts.get("opp_life", 20)),
+        "my_battlefield": [make_battlefield_card(c) for c in ts.get("my_battlefield", [])],
+        "opp_battlefield": [make_battlefield_card(c) for c in ts.get("opp_battlefield", [])],
+        "my_hand_size": int(ts.get("my_hand_size", 0)),
+        "opp_hand_size": 0,  # MTGA only reveals opponent hand size on broadcast events; not in turn_start
+        "my_graveyard": list(my_gy),
+        "opp_graveyard": list(opp_gy),
+    }
+
+
+def build_replay_record(match: dict, events: list[dict], game_number: int) -> dict:
+    """Build a ReplayRecord for one game of a match.
+
+    Turn numbering note: scryglass tags turn_start events with the
+    MTGA-internal turn_number, which can be irregular (we observed
+    2/4/6/8/10 in some matches where the opposite side's turns
+    weren't recorded). This builder groups events between
+    consecutive turn_start events using the INDEX of the turn_start
+    in chronological order (1-based: first turn_start = "turn 1",
+    second = "turn 2", etc.) rather than the raw MTGA turn_number,
+    so downstream consumers see a clean sequential turn timeline.
+    """
+    # Filter to this game's events (keep them id-ordered).
+    game_events = [e for e in events if e["game_number"] == game_number]
+    if not game_events:
+        return {}
+
+    # Mulligan + opening hand.
+    mulligan_evt = next(
+        (e for e in game_events if e["event_type"] == "mulligan"), None
+    )
+    if mulligan_evt:
+        my_opening_hand = [c.get("name", "?") for c in mulligan_evt["data"].get("hand", [])]
+        my_starting_hand_size = int(mulligan_evt["data"].get("hand_size", len(my_opening_hand)))
+    else:
+        first_ts = next((e for e in game_events if e["event_type"] == "turn_start"), None)
+        if first_ts:
+            my_opening_hand = [
+                c.get("name", "?") for c in first_ts["data"].get("my_hand", [])
+            ]
+            my_starting_hand_size = int(first_ts["data"].get("my_hand_size", len(my_opening_hand)))
+        else:
+            my_opening_hand = []
+            my_starting_hand_size = 0
+
+    # Index every turn_start by its position in the event timeline.
+    # Each turn_start marks the START of a new player's turn (the
+    # transition AT the boundary). The pre-first-turn_start events
+    # belong to logical turn 1 (the starting player's first turn).
+    turn_start_events = [
+        (i, e) for i, e in enumerate(game_events) if e["event_type"] == "turn_start"
+    ]
+
+    # Starting player: prefer the explicit `active_player` field on
+    # the first turn_start event (added in Sprint #REPLAY-BOTH-SIDES
+    # — scryglass tracker now emits turn_start for both players'
+    # turns AND tags each with active_player). When the first
+    # turn_start lacks that field (legacy logs), fall back to
+    # inferring from the first card_played-style event observed
+    # before any turn_start.
+    starting_player = "me"  # default
+    if turn_start_events:
+        first_ts = turn_start_events[0][1]
+        candidate = first_ts.get("data", {}).get("active_player")
+        if candidate in ("me", "opp"):
+            starting_player = candidate
+        else:
+            first_ts_idx = turn_start_events[0][0]
+            for evt in game_events[:first_ts_idx]:
+                et = evt["event_type"]
+                if et in ("card_played", "spell_cast", "ability", "attack_declared"):
+                    starting_player = "me"
+                    break
+                if et in ("opp_card_played", "opp_spell_cast", "opp_ability", "opp_attack_declared"):
+                    starting_player = "opp"
+                    break
+
+    my_gy: list[str] = []
+    opp_gy: list[str] = []
+
+    turns_out: list[dict] = []
+    final_result = "Unknown"
+
+    game_end_evt = next(
+        (e for e in game_events if e["event_type"] == "game_end"), None
+    )
+    if game_end_evt:
+        final_result = game_end_evt["data"].get("result", final_result)
+
+    # Build the window list. Each scryglass turn_start event fires
+    # at the BEGINNING of an MTGA turn (Sprint #REPLAY-BOTH-SIDES
+    # added emission for both players). So window K = the events
+    # that happen DURING the MTGA turn whose start was announced by
+    # turn_start_events[K] (exclusive end at turn_start_events[K+1]).
+    #
+    # The active player for window K is turn_start_events[K]'s
+    # active_player field (the player whose turn this is). The
+    # checkpoint for window K is turn_start_events[K+1]'s snapshot,
+    # i.e. the state AT THE END of this turn (= start of next turn).
+    #
+    # Pre-game events (game start, mulligans) before turn_start[0]
+    # don't belong to any in-game turn and are dropped. The tail
+    # after the last turn_start is also dropped — it's typically the
+    # untap step of a turn that ended via game_end with no usable
+    # snapshot.
+    windows: list[tuple[list[dict], dict, dict]] = []
+    if turn_start_events:
+        for k in range(len(turn_start_events) - 1):
+            cur_idx, cur_ts = turn_start_events[k]
+            next_idx, next_ts = turn_start_events[k + 1]
+            windows.append((
+                game_events[cur_idx + 1 : next_idx],
+                cur_ts,    # turn_start that STARTED this window
+                next_ts,   # turn_start that ENDED this window (checkpoint)
+            ))
+
+    # SPRINT 1 — game-wide annotation join maps, keyed by the
+    # spell/ability instance_id that the annotation describes. Built
+    # ONCE per game so per-window joining survives the timing skew
+    # between a spell_cast event and the TargetSpec that records its
+    # target (the TargetSpec persists across many subsequent
+    # gamestate diffs, so it often arrives in a later window than
+    # the cast itself). Dedup by `ann_id` because persistent
+    # annotations get rebroadcast on every diff.
+    targets_by_iid: dict[int, list[str]] = {}
+    seen_ann_ids: set[int] = set()
+    for evt in game_events:
+        if evt["event_type"] != "annotation":
+            continue
+        d = evt["data"]
+        ann_id = d.get("ann_id")
+        if ann_id is not None and ann_id in seen_ann_ids:
+            continue
+        if ann_id is not None:
+            seen_ann_ids.add(ann_id)
+        kind = d.get("kind")
+        aff_id = d.get("affector_id")
+        aff_names = d.get("affected_names") or []
+        if kind == "target_spec" and aff_id and aff_names:
+            targets_by_iid.setdefault(aff_id, []).extend(aff_names)
+
+    for k, (window_events, start_ts, checkpoint_src) in enumerate(windows):
+        # Active player for this window = the active_player field on
+        # the turn_start that BEGAN the window. Fall back to
+        # alternation from starting_player when the field is missing
+        # (legacy logs without explicit active_player).
+        explicit = start_ts.get("data", {}).get("active_player")
+        if explicit in ("me", "opp"):
+            active = explicit
+        else:
+            active = starting_player if k % 2 == 0 else (
+                "opp" if starting_player == "me" else "me"
+            )
+
+        me_side = make_side_play()
+        opp_side = make_side_play()
+        for evt in window_events:
+            if evt["event_type"] == "annotation":
+                # Annotations are pre-aggregated GAME-WIDE below so
+                # joins survive turn-window timing skew (TargetSpec
+                # often appears in a later gamestate than the
+                # spell_cast event that triggered it).
+                continue
+
+            et = evt["event_type"]
+            d = evt["data"]
+            iid = d.get("instance_id")
+            if et in ("card_played", "spell_cast"):
+                name = d.get("name", "?")
+                me_side["plays"].append(name)
+                _attach_spell_target(me_side, name, iid, targets_by_iid)
+            elif et in ("opp_card_played", "opp_spell_cast"):
+                name = d.get("name", "?")
+                opp_side["plays"].append(name)
+                _attach_spell_target(opp_side, name, iid, targets_by_iid)
+            elif et == "attack_declared":
+                _append_attackers(me_side, d)
+            elif et == "opp_attack_declared":
+                _append_attackers(opp_side, d)
+            elif et == "block_declared":
+                owner = d.get("owner", "opp")
+                target_side = me_side if owner == "me" else opp_side
+                for b in d.get("blocks", []) or []:
+                    if isinstance(b, dict):
+                        target_side["blocks"].append({
+                            "blocker": b.get("blocker", "?"),
+                            "attacker": b.get("attacker", "?"),
+                        })
+            elif et == "ability":
+                name = d.get("name", "?")
+                target_names = targets_by_iid.get(iid) if iid else None
+                me_side["activations"].append({
+                    "source": name,
+                    "target": (target_names[0] if target_names else d.get("target")),
+                })
+                me_side["activation_x"].append(0)
+            elif et == "opp_ability":
+                name = d.get("name", "?")
+                target_names = targets_by_iid.get(iid) if iid else None
+                opp_side["activations"].append({
+                    "source": name,
+                    "target": (target_names[0] if target_names else d.get("target")),
+                })
+                opp_side["activation_x"].append(0)
+            elif et == "creature_left_bf":
+                owner = d.get("owner", "me")
+                name = d.get("name", "?")
+                (my_gy if owner == "me" else opp_gy).append(name)
+
+        checkpoint = make_checkpoint(checkpoint_src, my_gy, opp_gy)
+        raw_mtga = int(checkpoint_src["turn_number"] or 0) if checkpoint_src else 0
+        turns_out.append({
+            "turn": k + 1,  # logical 1-based timeline index
+            "raw_mtga_turn": raw_mtga,
+            "active_player": active,
+            "me": me_side,
+            "opp": opp_side,
+            "me_draws": [],
+            "opp_draws": [],
+            "checkpoint": checkpoint,
+        })
+
+    # Decklist — best effort.
+    my_deck_names = derive_deck_names(match, game_events)
+
+    # Opponent revealed names: every distinct card name we observed
+    # the opponent control or cast. Filter out generic token names
+    # that look like creature subtypes (no grp_id present in the
+    # source event implies a token).
+    opp_revealed: set[str] = set()
+    for evt in game_events:
+        et = evt["event_type"]
+        d = evt["data"]
+        if et in ("opp_card_played", "opp_spell_cast", "opp_ability"):
+            name = d.get("name")
+            if name and d.get("grp_id"):
+                opp_revealed.add(name)
+        elif et == "turn_start":
+            for bf in d.get("opp_battlefield", []) or []:
+                name = bf.get("name")
+                if name and bf.get("grp_id"):
+                    opp_revealed.add(name)
+
+    return {
+        "schema_version": SCHEMA_VERSION,
+        "match_id": match["match_id"],
+        "game_number": game_number,
+        "my_deck_names": sorted(my_deck_names),
+        "opp_revealed_names": sorted(opp_revealed),
+        "starting_player": starting_player,
+        "my_starting_hand_size": my_starting_hand_size,
+        "opp_starting_hand_size": 7,
+        "my_opening_hand": my_opening_hand,
+        "turns": turns_out,
+        "final_result": final_result,
+    }
+
+
+def _append_attackers(side: dict, data: dict) -> None:
+    """Pull attacker card names out of an attack_declared payload.
+
+    Scryglass emits attack_declared in two shapes — a single-card
+    `{"name": "..."}` per attacker, or a batched
+    `{"attackers": [...]}` list. Accept both."""
+    attackers = data.get("attackers")
+    if isinstance(attackers, list) and attackers:
+        for a in attackers:
+            if isinstance(a, dict):
+                n = a.get("name")
+                if n:
+                    side["attacks"].append(n)
+            elif isinstance(a, str):
+                side["attacks"].append(a)
+    elif data.get("name"):
+        side["attacks"].append(data["name"])
+
+
+def derive_deck_names(match: dict, events: list[dict]) -> list[str]:
+    """Best-effort: read my_deck_grp_ids from matches and resolve to
+    names via the `cards` table. Falls back to accumulating names
+    from card_played events if the mapping is missing."""
+    grp_ids_json = match.get("my_deck_grp_ids") or "[]"
+    try:
+        grp_ids = json.loads(grp_ids_json)
+    except json.JSONDecodeError:
+        grp_ids = []
+
+    deck_names: list[str] = []
+    if grp_ids:
+        # Resolve via cards table.
+        conn = sqlite3.connect(str(DB_PATH))
+        try:
+            for entry in grp_ids:
+                if isinstance(entry, dict):
+                    grp_id = entry.get("grpId") or entry.get("grp_id")
+                    qty = int(entry.get("quantity", entry.get("qty", 1)))
+                else:
+                    grp_id = entry
+                    qty = 1
+                if not grp_id:
+                    continue
+                row = conn.execute(
+                    "SELECT name FROM cards WHERE grp_id = ?",
+                    (grp_id,),
+                ).fetchone()
+                if row:
+                    for _ in range(qty):
+                        deck_names.append(row[0])
+        finally:
+            conn.close()
+
+    if not deck_names:
+        # Fall back to observed names.
+        observed = set()
+        for evt in events:
+            d = evt["data"]
+            if evt["event_type"] == "card_played":
+                n = d.get("name")
+                if n:
+                    observed.add(n)
+            elif evt["event_type"] == "mulligan":
+                for c in d.get("hand", []):
+                    n = c.get("name")
+                    if n:
+                        observed.add(n)
+            elif evt["event_type"] == "turn_start":
+                for c in d.get("my_hand", []):
+                    n = c.get("name")
+                    if n:
+                        observed.add(n)
+                for c in d.get("my_battlefield", []):
+                    n = c.get("name")
+                    if n:
+                        observed.add(n)
+        deck_names = sorted(observed)
+    return deck_names
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "match_id",
+        nargs="?",
+        help="full match_id (UUID) to export; omit when using --latest-deck",
+    )
+    parser.add_argument(
+        "--latest-deck",
+        help="export the most recently started match whose my_deck_name "
+        "matches this substring (case-insensitive)",
+    )
+    parser.add_argument(
+        "--out",
+        type=Path,
+        default=Path("./replays"),
+        help="output directory (one JSON per game)",
+    )
+    args = parser.parse_args()
+
+    conn = sqlite3.connect(str(DB_PATH))
+    conn.row_factory = None
+
+    match_id = args.match_id
+    if args.latest_deck and not match_id:
+        match_id = latest_match_for_deck(conn, args.latest_deck)
+        if not match_id:
+            print(f"No match found with deck matching '{args.latest_deck}'", file=sys.stderr)
+            sys.exit(1)
+        print(f"Resolved --latest-deck '{args.latest_deck}' → {match_id}")
+
+    if not match_id:
+        parser.error("either match_id or --latest-deck is required")
+
+    match = load_match(conn, match_id)
+    if not match:
+        print(f"Match {match_id} not found in DB", file=sys.stderr)
+        sys.exit(1)
+
+    events = load_events(conn, match_id)
+    if not events:
+        print(f"Match {match_id} has no events in DB", file=sys.stderr)
+        sys.exit(1)
+
+    game_numbers = sorted(set(e["game_number"] for e in events))
+    print(f"Match {match_id}: {len(events)} events across games {game_numbers}")
+
+    args.out.mkdir(parents=True, exist_ok=True)
+    for gn in game_numbers:
+        record = build_replay_record(match, events, gn)
+        if not record:
+            continue
+        out_path = args.out / f"{match_id}_game{gn}.json"
+        with out_path.open("w") as f:
+            json.dump(record, f, indent=2)
+        print(
+            f"  game {gn}: {len(record['turns'])} turns, "
+            f"deck={len(record['my_deck_names'])} cards → {out_path}"
+        )
+
+
+if __name__ == "__main__":
+    main()
