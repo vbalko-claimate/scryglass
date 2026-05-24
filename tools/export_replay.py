@@ -525,9 +525,31 @@ def build_replay_record(match: dict, events: list[dict], game_number: int) -> di
             is_sac_token = (
                 d.get("is_token") and d.get("name") in _SAC_TOKEN_NAMES
             )
+            # Cards entering BF from Library / Graveyard / Exile are
+            # not "manual plays" — they're consequences of an effect
+            # already on the stack (search-fetched basic, reanimated
+            # creature, cast-from-exile). ScriptedPlayer should NOT
+            # try to cast them; the engine path that resolved the
+            # source effect handles their BF entry.
+            #
+            # ACCEPT: None (legacy events without zone tracking),
+            # "Hand" (manually-played lands, which skip the stack per
+            # CR 305.1), "Stack" (cast spells resolving normally).
+            # REJECT: "Library" (fetch), "Graveyard" (reanimate),
+            # "Exile" (cast-from-exile reveal).
+            #
+            # Filtering Library-origin lands also prevents engine
+            # from picking the WRONG slot under CR 305.2 (1 land per
+            # turn): when MTGA shows both a manual land AND a fetched
+            # basic in me.plays, engine plays the first land in order
+            # which may differ from MTGA's manual choice. With the
+            # fetched basic filtered, engine plays the manual one and
+            # the engine's own search effect handles the fetch.
+            from_zone = d.get("from_zone")
+            is_manual_play = from_zone in (None, "Hand", "Stack")
             if et in ("card_played", "spell_cast"):
                 name = d.get("name", "?")
-                if is_sac_token:
+                if is_sac_token or not is_manual_play:
                     continue
                 me_side["plays"].append(name)
                 if d.get("is_land") and d.get("enters_tapped"):
@@ -536,7 +558,7 @@ def build_replay_record(match: dict, events: list[dict], game_number: int) -> di
                 _attach_life_choice(me_side, name, iid, life_change_by_source)
             elif et in ("opp_card_played", "opp_spell_cast"):
                 name = d.get("name", "?")
-                if is_sac_token:
+                if is_sac_token or not is_manual_play:
                     continue
                 opp_side["plays"].append(name)
                 if d.get("is_land") and d.get("enters_tapped"):

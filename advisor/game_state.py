@@ -551,9 +551,15 @@ class GameStateTracker:
         on_battlefield = obj_zone and obj_zone.type == "ZoneType_Battlefield"
 
         was_on_bf = False
+        from_zone_type = None
         if old_obj:
             old_zone = self.state.zones.get(old_obj.zone_id)
             was_on_bf = old_zone and old_zone.type == "ZoneType_Battlefield"
+            if old_zone:
+                # Strip the "ZoneType_" prefix → bare name like
+                # "Hand", "Library", "Graveyard", "Exile", "Stack"
+                # for downstream consumers.
+                from_zone_type = old_zone.type.replace("ZoneType_", "")
 
         entering_bf = on_battlefield and not was_on_bf
 
@@ -594,6 +600,7 @@ class GameStateTracker:
                       "is_land": card.is_land,
                       "is_token": is_token,
                       "enters_tapped": obj.get("isTapped", False),
+                      "from_zone": from_zone_type,
                       "instance_id": iid})
 
         if (on_battlefield and was_on_bf and old_obj and card
@@ -675,6 +682,7 @@ class GameStateTracker:
                          "cmc": card.cmc,
                          "is_land": card.is_land,
                          "enters_tapped": obj.get("isTapped", False),
+                         "from_zone": from_zone_type,
                          "instance_id": iid}
             # B5: attach mana spent info
             auto_tap = self._last_auto_tap.pop(iid, None)
