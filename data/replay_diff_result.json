@@ -1,0 +1,37 @@
+{
+  "engine_version": "2.2.0",
+  "total_states": 278,
+  "top_1_agreement": 1.0,
+  "flip_rate": 0.0,
+  "threshold": 0.9,
+  "passed": true,
+  "decks": [
+    {
+      "deck": "Golgari Midrange",
+      "total": 124,
+      "top_1_match": 124,
+      "top_3_match": 124,
+      "flips": 0,
+      "skipped": 0,
+      "mismatches": []
+    },
+    {
+      "deck": "Mono Red Goblins",
+      "total": 3,
+      "top_1_match": 3,
+      "top_3_match": 3,
+      "flips": 0,
+      "skipped": 0,
+      "mismatches": []
+    },
+    {
+      "deck": "Mono White Lifegain",
+      "total": 151,
+      "top_1_match": 151,
+      "top_3_match": 151,
+      "flips": 0,
+      "skipped": 0,
+      "mismatches": []
+    }
+  ]
+}

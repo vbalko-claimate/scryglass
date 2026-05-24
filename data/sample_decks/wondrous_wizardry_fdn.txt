@@ -1,0 +1,22 @@
+Deck
+1 Drake Hatcher (FDN) 35
+7 Mountain (FDN) 278
+1 Niv-Mizzet, Visionary (FDN) 123
+2 Arcane Epiphany (FDN) 29
+1 Archmage of Runes (FDN) 30
+3 Tolarian Terror (DMU) 72
+4 Ghitu Lavarunner (FDN) 623
+8 Island (FDN) 275
+1 Balmor, Battlemage Captain (FDN) 237
+2 Enigma Drake (FDN) 657
+4 Opt (FDN) 512
+2 Mischievous Mystic (FDN) 47
+4 Burst Lightning (FDN) 192
+2 Heartfire Immolator (FDN) 201
+3 Dive Down (FDN) 588
+2 Fiery Annihilation (FDN) 86
+4 Swiftwater Cliffs (FDN) 268
+3 Chart a Course (FDN) 586
+1 Temple of Epiphany (FDN) 699
+4 Izzet Guildgate (FDN) 691
+1 Ovika, Enigma Goliath (FDN) 663

@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scryglass Overlay</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body {
+    background: transparent;
+    overflow: hidden;
+    font-family: 'Inter', 'SF Pro Text', 'Segoe UI', system-ui, sans-serif;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+#overlay {
+    position: fixed;
+    top: 8px; left: 8px;
+    width: 280px;
+    cursor: default;
+    padding: 10px 12px;
+    background: rgba(12, 12, 18, 0.82);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 8px;
+    color: rgba(240, 238, 230, 0.95);
+    transition: opacity 0.15s ease-out;
+}
+
+#overlay.hidden { opacity: 0; pointer-events: none; }
+#overlay.compact { padding: 6px 10px; }
+
+/* Opponent line */
+.opp-line {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: rgba(200, 198, 190, 0.8);
+    margin-bottom: 6px;
+    min-height: 18px;
+}
+.opp-deck {
+    font-weight: 600;
+    color: rgba(240, 238, 230, 0.95);
+}
+.opp-conf {
+    font-size: 10px;
+    color: rgba(160, 158, 150, 0.6);
+}
+.opp-conf.high { color: #81c784; }
+.opp-conf.mid { color: #ffc107; }
+.opp-conf.low { color: rgba(160, 158, 150, 0.5); }
+
+/* Key play */
+.key-play {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    min-height: 22px;
+}
+.key-play-indicator {
+    width: 3px;
+    min-height: 18px;
+    border-radius: 2px;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+.key-play-indicator.critical { background: #E63946; }
+.key-play-indicator.high { background: #F4A261; }
+.key-play-indicator.medium { background: #6C9A8B; }
+.key-play-indicator.low { background: rgba(139, 139, 153, 0.5); }
+
+/* Opponent turn — muted intel style */
+#overlay.opp-turn .key-play-indicator { background: #4a6fa5; }
+#overlay.opp-turn .key-play-card { font-weight: 500; color: rgba(230, 232, 240, 0.9); }
+#overlay.opp-turn .key-play-action { color: rgba(160, 170, 190, 0.7); }
+#overlay.opp-turn .key-play-reason { font-style: italic; }
+
+.key-play-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+.key-play-action {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    line-height: 1;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+.key-play-action.act-cast   { color: #f0b429; }
+.key-play-action.act-attack { color: #e8443a; }
+.key-play-action.act-block  { color: #3b82f6; }
+.key-play-action.act-hold   { color: #94a3b8; }
+.key-play-action.act-target { color: #d946ef; }
+.key-play-card {
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.2;
+    color: rgba(255, 255, 255, 0.95);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+.key-play-reason {
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 1.3;
+    color: rgba(200, 198, 190, 0.7);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+/* Threat warning */
+.threat-line {
+    font-size: 11px;
+    color: #F4A261;
+    margin-top: 5px;
+    padding-top: 5px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    display: none;
+}
+.threat-line.visible { display: block; }
+
+/* Phase indicator */
+.phase-line {
+    font-size: 10px;
+    color: rgba(160, 158, 150, 0.4);
+    margin-top: 4px;
+    text-align: right;
+}
+
+/* Do Now (expandable) */
+.do-now {
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    display: none;
+}
+.do-now.visible { display: block; }
+.do-now-item {
+    font-size: 11px;
+    color: rgba(200, 198, 190, 0.7);
+    padding: 2px 0;
+    padding-left: 11px;
+    position: relative;
+}
+.do-now-item::before {
+    content: '·';
+    position: absolute;
+    left: 3px;
+    color: rgba(160, 158, 150, 0.4);
+}
+
+/* Feedback buttons — hidden by default, shown in interactive mode */
+.feedback-btns {
+    display: none;
+    gap: 6px;
+    margin-top: 4px;
+    margin-left: 11px;
+}
+.feedback-btns.visible { display: flex; }
+
+.fb-btn {
+    width: 28px; height: 28px;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 6px;
+    background: rgba(30, 30, 40, 0.85);
+    cursor: pointer;
+    font-size: 13px;
+    line-height: 28px;
+    text-align: center;
+    transition: background 0.1s, transform 0.1s;
+}
+.fb-btn:hover {
+    background: rgba(60, 60, 80, 0.95);
+    transform: scale(1.15);
+}
+.fb-btn:active { transform: scale(0.95); }
+.fb-btn.good { color: #81c784; }
+.fb-btn.bad { color: #ef5350; }
+.fb-btn.sent {
+    opacity: 0.3;
+    pointer-events: none;
+}
+
+/* Interactive mode indicator */
+#interactive-indicator {
+    display: none;
+    font-size: 9px;
+    color: rgba(255, 200, 50, 0.7);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-top: 4px;
+    text-align: right;
+}
+#interactive-indicator.visible { display: block; }
+
+/* Feedback flash confirmation */
+#overlay.feedback-good { border-color: rgba(129, 199, 132, 0.5); }
+#overlay.feedback-bad { border-color: rgba(239, 83, 80, 0.5); }
+
+/* Hint line */
+.hint-line {
+    font-size: 9px;
+    color: rgba(244, 162, 97, 0.6);
+    margin-top: 6px;
+    padding-top: 4px;
+    border-top: 1px solid rgba(255, 255, 255, 0.04);
+    text-align: right;
+    animation: hint-pulse 10s ease-in-out infinite;
+}
+
+@keyframes hint-pulse {
+    0%, 84%, 100% { opacity: 1; }
+    87% { opacity: 1.0; color: rgba(244, 162, 97, 0.9); }
+    91% { opacity: 0.2; }
+    95% { opacity: 0.2; }
+    98% { opacity: 1; }
+}
+
+/* No match — completely invisible (background too) */
+#overlay.no-match {
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border-color: transparent !important;
+}
+#overlay.no-match * {
+    visibility: hidden;
+}
+
+.waiting {
+    font-size: 11px;
+    color: rgba(160, 158, 150, 0.4);
+    font-style: italic;
+}
+
+/* Recommendation strip — vertical column on left side */
+#hand-badges {
+    position: fixed;
+    left: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    pointer-events: none;
+    visibility: hidden;
+}
+#hand-badges.visible { visibility: visible; }
+
+#threat-badges {
+    position: fixed;
+    left: 0; right: 0;
+    display: flex;
+    justify-content: center;
+    pointer-events: none;
+    visibility: hidden;
+    top: 18%;
+}
+#threat-badges.visible { visibility: visible; }
+
+.rec-chip {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.rec-chip .chip-action {
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    opacity: 0.85;
+    min-width: 32px;
+}
+.rec-chip .chip-name {
+    font-weight: 500;
+}
+
+/* Action type chip colors */
+.rec-chip.chip-cast   { background: rgba(240, 180, 41, 0.8); color: #1a1a2e; }
+.rec-chip.chip-attack { background: rgba(232, 68, 58, 0.8);  color: #fff; }
+.rec-chip.chip-block  { background: rgba(59, 130, 246, 0.8); color: #fff; }
+.rec-chip.chip-hold   { background: rgba(100, 116, 139, 0.6); color: #e2e8f0; }
+.rec-chip.chip-target { background: rgba(217, 70, 239, 0.8); color: #fff; }
+
+/* Critical priority pulse */
+.rec-chip.chip-critical {
+    animation: chip-pulse 1.5s ease-in-out infinite;
+}
+@keyframes chip-pulse {
+    0%, 100% { box-shadow: none; }
+    50% { box-shadow: 0 0 10px 2px rgba(255, 255, 255, 0.3); }
+}
+
+/* Unused legacy — kept for threat badges */
+.card-badge {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2px 5px;
+    border-radius: 4px;
+    font-size: 9px;
+    line-height: 1.2;
+    text-align: center;
+    min-width: 40px;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+.badge-name {
+    font-weight: 500;
+    max-width: 65px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.badge-sub {
+    font-size: 8px;
+    opacity: 0.7;
+}
+
+/* Threat badges */
+.card-badge.threat {
+    background: rgba(60, 20, 20, 0.6);
+    border: 1px solid rgba(200, 80, 80, 0.4);
+    color: rgba(239, 180, 180, 0.9);
+}
+.card-badge.must-answer {
+    background: rgba(233, 57, 70, 0.6);
+    border: 1px solid rgba(233, 57, 70, 0.9);
+    color: #fff;
+    box-shadow: 0 0 8px rgba(233, 57, 70, 0.3);
+}
+</style>
+</head>
+<body>
+<div id="overlay" class="no-match">
+    <div class="opp-line" id="opp-line">
+        <span class="waiting" id="waiting-msg">Waiting for match...</span>
+    </div>
+    <div class="key-play" id="key-play" style="display:none">
+        <div class="key-play-indicator medium" id="key-play-indicator"></div>
+        <div class="key-play-content">
+            <div class="key-play-action" id="key-play-action"></div>
+            <div class="key-play-card" id="key-play-card"></div>
+            <div class="key-play-reason" id="key-play-reason"></div>
+        </div>
+    </div>
+    <div class="threat-line" id="threat-line"></div>
+    <div class="do-now" id="do-now"></div>
+    <div class="phase-line" id="phase-line"></div>
+    <div class="hint-line" id="hint-line">Right ⌘ for feedback</div>
+    <div class="feedback-btns" id="feedback-btns">
+        <div class="fb-btn good" onclick="sendFeedback('up')" title="Good advice">✓</div>
+        <div class="fb-btn bad" onclick="sendFeedback('down')" title="Bad advice">✗</div>
+    </div>
+    <div id="interactive-indicator">⌘R FEEDBACK</div>
+    <div id="debrief" style="display:none;text-align:center;padding:8px 0"></div>
+</div>
+
+<div id="threat-badges"></div>
+<div id="hand-badges"></div>
+
+<script>
+let ws = null;
+let currentStrategyInfo = null;
+let isMyTurn = false;
+let inMatch = false;
+
+// Shared action family mappings
+const FAMILY_TYPE = {
+    cast_spell: 'cast', play_land: 'cast', activate: 'cast',
+    attack: 'attack', block: 'block', pass: 'hold',
+};
+const FAMILY_LABEL = {
+    cast_spell: 'CAST', play_land: 'PLAY LAND', activate: 'ACTIVATE',
+    attack: 'ATTACK', block: 'BLOCK', pass: 'HOLD',
+};
+
+function connect() {
+    ws = new WebSocket(`ws://${location.hostname}:8765/ws`);
+    ws.onopen = () => {
+        // Request current state (we might have missed earlier messages)
+        ws.send(JSON.stringify({type: 'request_state'}));
+    };
+    ws.onclose = () => setTimeout(connect, 2000);
+    ws.onerror = () => {};
+    ws.onmessage = (evt) => {
+        const msg = JSON.parse(evt.data);
+        switch (msg.type) {
+            case 'state_update':
+                updateState(msg.data);
+                break;
+            case 'advice':
+                updateAdvice(msg.data);
+                break;
+            case 'strategy_info':
+                currentStrategyInfo = msg.data;
+                updateOppLine(msg.data);
+                // Strategy info means a match is active
+                if (msg.data && msg.data.strategy_name && !inMatch) {
+                    inMatch = true;
+                    document.getElementById('overlay').classList.remove('no-match');
+                }
+                break;
+            case 'match_start':
+                inMatch = true;
+                document.getElementById('overlay').classList.remove('no-match');
+                break;
+            case 'match_end':
+                inMatch = false;
+                resetOverlay();
+                showDebrief(msg.data);
+                break;
+        }
+    };
+}
+
+function updateState(state) {
+    const ti = state.turn || {};
+    isMyTurn = ti.is_my_turn === true;
+    const overlay = document.getElementById('overlay');
+
+    // Show overlay if we get state updates (match is active)
+    if (ti.number > 0 && !inMatch) {
+        inMatch = true;
+        overlay.classList.remove('no-match');
+    }
+
+    // Always show overlay — opponent turn shows intel, blocking expands fully
+    const isBlocking = state.pending_request === 'GREMessageType_DeclareBlockersReq';
+    overlay.classList.remove('compact');
+    if (isMyTurn || isBlocking) {
+        document.getElementById('do-now').classList.add('visible');
+        overlay.classList.remove('opp-turn');
+    } else {
+        document.getElementById('do-now').classList.remove('visible');
+        overlay.classList.add('opp-turn');
+    }
+
+    // Phase line
+    const phase = ti.phase_display || '';
+    const turnNum = ti.number || '';
+    if (turnNum) {
+        document.getElementById('phase-line').textContent =
+            `T${turnNum} · ${phase} · ${isMyTurn ? 'Your turn' : 'Opp turn'}`;
+    }
+
+    updateHandBadges(state);
+    updateThreatBadges(state);
+}
+
+function updateOppLine(info) {
+    const el = document.getElementById('opp-line');
+    const waitMsg = document.getElementById('waiting-msg');
+
+    if (info && info.opp_deck) {
+        const conf = info.opp_confidence || 0;
+        const confClass = conf >= 80 ? 'high' : conf >= 50 ? 'mid' : 'low';
+        waitMsg.style.display = 'none';
+        el.innerHTML = `<span class="opp-deck">${info.opp_deck}</span>`
+            + `<span class="opp-conf ${confClass}">${conf}%</span>`;
+    } else if (info && info.strategy_name) {
+        waitMsg.style.display = 'none';
+        el.innerHTML = `<span class="opp-deck">${info.strategy_name}</span>`;
+    } else {
+        waitMsg.style.display = '';
+        waitMsg.textContent = 'Waiting for match...';
+    }
+}
+
+function updateAdvice(data) {
+    const items = data.items || data || [];
+    lastAdvice = items;
+    if (!items.length) return;
+
+    // Advice means match is active
+    if (!inMatch) {
+        inMatch = true;
+        document.getElementById('overlay').classList.remove('no-match');
+    }
+
+    // Find spotlight (highest priority with action_scores)
+    const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
+    const sorted = [...items].sort((a, b) => {
+        const pa = priorityOrder[a.priority] ?? 4;
+        const pb = priorityOrder[b.priority] ?? 4;
+        if (pa !== pb) return pa - pb;
+        const sa = a.action_scores?.length ? Math.max(...a.action_scores.map(s => s.score)) : 0;
+        const sb = b.action_scores?.length ? Math.max(...b.action_scores.map(s => s.score)) : 0;
+        return sb - sa;
+    });
+
+    // Key play = first "now" item (heuristic or strategy, not intel)
+    const nowItems = sorted.filter(a => a.source !== 'intel');
+    const intelItems = sorted.filter(a => a.source === 'intel');
+
+    const keyPlay = nowItems[0];
+    if (keyPlay) {
+        const el = document.getElementById('key-play');
+        const indicator = document.getElementById('key-play-indicator');
+        const actionEl = document.getElementById('key-play-action');
+        const cardEl = document.getElementById('key-play-card');
+        const reasonEl = document.getElementById('key-play-reason');
+
+        el.style.display = 'flex';
+        indicator.className = 'key-play-indicator ' + (keyPlay.priority || 'medium');
+
+        // Extract card name and action from structured data
+        const scores = keyPlay.action_scores || [];
+        const topScore = scores.find(s => s.target) || scores[0];
+        const cardName = topScore?.target || '';
+        const family = topScore?.family || '';
+        const actionLabel = FAMILY_LABEL[family] || '';
+        const actionCss = FAMILY_TYPE[family] || '';
+
+        if (cardName) {
+            // Structured: action label + big card name + reason
+            actionEl.textContent = actionLabel;
+            actionEl.className = 'key-play-action' + (actionCss ? ' act-' + actionCss : '');
+            cardEl.textContent = cardName;
+            // Strip card name from message to get clean reason
+            let reason = keyPlay.message;
+            if (cardName && reason.includes(cardName)) {
+                reason = reason.replace(cardName, '').replace(/:\s*$/, '').replace(/\s*\([^)]*\)\s*$/, '').trim();
+            }
+            // Remove trailing mana cost like "(o1oW)"
+            reason = reason.replace(/\s*\([o\dWUBRG]+\)\s*$/i, '').trim();
+            reasonEl.textContent = reason;
+            reasonEl.style.display = reason ? '' : 'none';
+        } else {
+            // Fallback: just show message
+            actionEl.textContent = '';
+            actionEl.className = 'key-play-action';
+            cardEl.textContent = keyPlay.message;
+            reasonEl.textContent = '';
+            reasonEl.style.display = 'none';
+        }
+    }
+
+    // Do now (next 2 items)
+    const doNow = document.getElementById('do-now');
+    const secondary = nowItems.slice(1, 4);
+    if (secondary.length && isMyTurn) {
+        doNow.classList.add('visible');
+        doNow.innerHTML = secondary.map(a => {
+            const s = (a.action_scores || []).find(s => s.target);
+            if (s) {
+                const name = s.target;
+                // Bold the card name in the message
+                const highlighted = a.message.replace(name, `<strong>${name}</strong>`);
+                return `<div class="do-now-item">${highlighted}</div>`;
+            }
+            return `<div class="do-now-item">${a.message}</div>`;
+        }).join('');
+    } else {
+        doNow.classList.remove('visible');
+    }
+
+    // Threat line (from intel)
+    const threat = intelItems.find(a => a.priority === 'high' || a.priority === 'critical');
+    const threatEl = document.getElementById('threat-line');
+    if (threat) {
+        threatEl.textContent = '⚠ ' + threat.message;
+        threatEl.classList.add('visible');
+    } else {
+        threatEl.classList.remove('visible');
+    }
+}
+
+function updateHandBadges(state) {
+    const el = document.getElementById('hand-badges');
+    if (!inMatch || !lastAdvice) { el.classList.remove('visible'); return; }
+
+    // Collect recommendations: card name → {action, priority}
+    const recs = new Map(); // name → {action, priority}
+    for (const a of lastAdvice) {
+        const scores = a.action_scores || [];
+        for (const s of scores) {
+            if (!s.target) continue;
+            if (recs.has(s.target)) continue; // keep first (highest priority)
+            recs.set(s.target, {
+                action: FAMILY_TYPE[s.family] || 'cast',
+                label: (FAMILY_MAP[s.family] || 'cast').toUpperCase(),
+                priority: a.priority || 'medium',
+            });
+        }
+    }
+
+    if (!recs.size) { el.classList.remove('visible'); return; }
+
+    // Build chips
+    const chips = [];
+    for (const [name, r] of recs) {
+        const priClass = r.priority === 'critical' ? ' chip-critical' : '';
+        chips.push(
+            `<span class="rec-chip chip-${r.action}${priClass}">` +
+            `<span class="chip-action">${r.label}</span>` +
+            `<span class="chip-name">${name}</span>` +
+            `</span>`
+        );
+    }
+
+    el.innerHTML = chips.join('');
+    el.classList.add('visible');
+}
+
+function updateThreatBadges(state) {
+    const el = document.getElementById('threat-badges');
+    const opp = state.opp_battlefield || [];
+    const creatures = opp.filter(c => c.is_creature && c.power > 0)
+        .sort((a, b) => b.power - a.power).slice(0, 7);
+
+    if (!creatures.length || !inMatch) { el.classList.remove('visible'); return; }
+
+    const mustAnswer = new Set();
+    if (currentStrategyInfo && currentStrategyInfo.opp_key_threats) {
+        currentStrategyInfo.opp_key_threats.forEach(t => {
+            const name = typeof t === 'string' ? t : t.card;
+            if (name) mustAnswer.add(name);
+        });
+    }
+
+    const cardWidth = Math.min(75, Math.floor(window.innerWidth * 0.45 / creatures.length));
+    const gap = Math.max(2, Math.floor((window.innerWidth * 0.45 - cardWidth * creatures.length) / Math.max(1, creatures.length - 1)));
+
+    el.style.gap = gap + 'px';
+    el.innerHTML = creatures.map(c => {
+        const isMust = mustAnswer.has(c.name);
+        const cls = 'card-badge ' + (isMust ? 'must-answer' : 'threat');
+        const shortName = c.name.length > 10 ? c.name.substring(0, 9) + '…' : c.name;
+        return `<div class="${cls}" style="width:${cardWidth}px">
+            <span class="badge-name">${shortName}</span>
+            <span class="badge-sub">${c.power}/${c.toughness}</span>
+        </div>`;
+    }).join('');
+    el.classList.add('visible');
+}
+
+let lastAdvice = null;
+let feedbackMode = false;
+let feedbackAdviceSnapshot = null;
+
+// Called by native overlay (Swift/Rust) when modifier key is pressed/released
+function setInteractiveMode(active) {
+    feedbackMode = active;
+    const btns = document.getElementById('feedback-btns');
+    const indicator = document.getElementById('interactive-indicator');
+
+    if (active && inMatch && lastAdvice && lastAdvice.length > 0) {
+        // Snapshot current advice for race condition protection
+        feedbackAdviceSnapshot = {
+            decision_id: lastAdvice[0]?.decision_id || null,
+            message: lastAdvice[0]?.message || '',
+            timestamp: Date.now()
+        };
+        btns.classList.add('visible');
+        indicator.classList.add('visible');
+        // Reset sent state
+        document.querySelectorAll('.fb-btn').forEach(b => b.classList.remove('sent'));
+    } else {
+        btns.classList.remove('visible');
+        indicator.classList.remove('visible');
+        feedbackAdviceSnapshot = null;
+    }
+}
+
+function sendFeedback(vote) {
+    if (!ws || ws.readyState !== WebSocket.OPEN || !feedbackAdviceSnapshot) return;
+
+    // Disable buttons
+    document.querySelectorAll('.fb-btn').forEach(b => b.classList.add('sent'));
+
+    ws.send(JSON.stringify({
+        type: 'feedback',
+        vote: vote,
+        decision_id: feedbackAdviceSnapshot.decision_id,
+        advice_text: feedbackAdviceSnapshot.message,
+        snapshot_ts: feedbackAdviceSnapshot.timestamp
+    }));
+
+    // Visual confirmation flash
+    const overlay = document.getElementById('overlay');
+    const cls = vote === 'up' ? 'feedback-good' : 'feedback-bad';
+    overlay.classList.add(cls);
+    setTimeout(() => overlay.classList.remove(cls), 500);
+}
+
+function showDebrief(data) {
+    const overlay = document.getElementById('overlay');
+    overlay.classList.remove('no-match');
+    const result = data?.result || '?';
+    const resultColor = result === 'Win' ? '#81c784' : '#ef5350';
+
+    // Hide game elements, show debrief
+    document.getElementById('opp-line').style.display = 'none';
+    document.getElementById('key-play').style.display = 'none';
+    document.getElementById('threat-line').classList.remove('visible');
+    document.getElementById('do-now').classList.remove('visible');
+    document.getElementById('phase-line').textContent = '';
+
+    const debrief = document.getElementById('debrief');
+    debrief.innerHTML = `
+        <div style="font-size:18px;font-weight:700;color:${resultColor}">${result}</div>
+        <div style="font-size:11px;color:#888;margin-top:4px">Match complete</div>
+        <div style="margin-top:8px;font-size:11px">
+            <a href="http://localhost:8765/review" target="_blank"
+               style="color:#90caf9;text-decoration:none">
+                Open Post-Game Review →
+            </a>
+        </div>
+    `;
+    debrief.style.display = 'block';
+
+    // Auto-hide after 15 seconds
+    setTimeout(() => {
+        debrief.style.display = 'none';
+        overlay.classList.add('no-match');
+        document.getElementById('opp-line').style.display = '';
+    }, 15000);
+}
+
+function resetOverlay() {
+    inMatch = false;
+    document.getElementById('hand-badges').classList.remove('visible');
+    document.getElementById('threat-badges').classList.remove('visible');
+    document.getElementById('key-play').style.display = 'none';
+    document.getElementById('threat-line').classList.remove('visible');
+    document.getElementById('do-now').classList.remove('visible');
+    document.getElementById('debrief').style.display = 'none';
+    document.getElementById('opp-line').style.display = '';
+    document.getElementById('opp-line').innerHTML =
+        '<span class="waiting" id="waiting-msg">Waiting for match...</span>';
+    document.getElementById('phase-line').textContent = '';
+}
+
+connect();
+
+// ─── Reposition overlay with Option + Arrow keys ───
+// Option + arrows = 10px, Option + Shift + arrows = 50px
+function moveOverlay(dx, dy) {
+    const el = document.getElementById('overlay');
+    const curX = parseInt(el.style.left) || 8;
+    const curY = parseInt(el.style.top) || 8;
+    el.style.left = (curX + dx) + 'px';
+    el.style.top = (curY + dy) + 'px';
+    localStorage.setItem('overlay-x', el.style.left);
+    localStorage.setItem('overlay-y', el.style.top);
+}
+
+// Restore saved position
+(function() {
+    const el = document.getElementById('overlay');
+    const savedX = localStorage.getItem('overlay-x');
+    const savedY = localStorage.getItem('overlay-y');
+    if (savedX) el.style.left = savedX;
+    if (savedY) el.style.top = savedY;
+})();
+</script>
+</body>
+</html>

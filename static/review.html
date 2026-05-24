@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scryglass — Post-Game Review</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #1a1a2e; color: #e0e0e0; font-family: 'Inter', 'Segoe UI', system-ui, sans-serif; }
+
+#app { max-width: 900px; margin: 0 auto; padding: 16px; }
+
+header {
+    display: flex; align-items: center; gap: 16px;
+    padding: 12px 20px; background: #16213e; border-radius: 8px;
+    border: 1px solid #0f3460; margin-bottom: 16px;
+}
+header h1 { font-size: 20px; color: #e94560; }
+header a { color: #90caf9; text-decoration: none; font-size: 13px; }
+header a:hover { color: #fff; }
+.nav-links { margin-left: auto; display: flex; gap: 16px; }
+
+.match-header {
+    background: #16213e; border-radius: 8px; padding: 16px 20px;
+    border: 1px solid #0f3460; margin-bottom: 16px;
+    display: flex; align-items: center; gap: 16px;
+}
+.match-result { font-size: 24px; font-weight: 700; }
+.match-result.Win { color: #81c784; }
+.match-result.Loss { color: #ef5350; }
+.match-meta { font-size: 13px; color: #888; }
+.match-meta strong { color: #ccc; }
+
+.summary-bar {
+    display: flex; gap: 12px; margin-bottom: 16px;
+}
+.summary-card {
+    background: #16213e; border-radius: 6px; padding: 10px 16px;
+    border: 1px solid #0f3460; text-align: center; flex: 1;
+}
+.summary-card .value { font-size: 20px; font-weight: 600; color: #90caf9; }
+.summary-card .label { font-size: 11px; color: #666; margin-top: 2px; }
+
+.timeline { margin-top: 16px; }
+
+.turn-card {
+    background: #16213e; border-radius: 8px; padding: 12px 16px;
+    border: 1px solid #0f3460; margin-bottom: 8px;
+}
+.turn-card.key { border-left: 3px solid #F4A261; }
+.turn-header {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 6px; font-size: 12px; color: #888;
+}
+.turn-num { font-weight: 600; color: #90caf9; font-size: 14px; }
+
+.advice-item {
+    padding: 4px 0; padding-left: 12px; font-size: 13px;
+    border-left: 2px solid transparent; margin-bottom: 2px;
+}
+.advice-item.critical { border-left-color: #E63946; color: #fff; }
+.advice-item.high { border-left-color: #F4A261; }
+.advice-item.medium { border-left-color: #6C9A8B; color: #aaa; }
+.advice-source {
+    font-size: 10px; color: #555; margin-left: 4px;
+    text-transform: uppercase;
+}
+.advice-phase {
+    font-size: 10px; color: #444; margin-right: 6px;
+}
+
+.filter-bar {
+    display: flex; gap: 8px; margin-bottom: 12px;
+}
+.filter-btn {
+    background: #1a1a2e; border: 1px solid #333; color: #888;
+    padding: 4px 12px; border-radius: 4px; cursor: pointer; font-size: 12px;
+}
+.filter-btn.active { border-color: #90caf9; color: #90caf9; }
+.filter-btn:hover { border-color: #666; }
+
+.empty { color: #555; font-style: italic; text-align: center; padding: 40px; }
+.loading { color: #888; text-align: center; padding: 40px; }
+
+.match-list { margin-bottom: 16px; }
+.match-list-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 8px 12px; background: #16213e; border-radius: 6px;
+    border: 1px solid #0f3460; margin-bottom: 4px; cursor: pointer;
+}
+.match-list-item:hover { border-color: #90caf9; }
+.match-list-item .result { font-weight: 600; width: 40px; }
+.match-list-item .result.Win { color: #81c784; }
+.match-list-item .result.Loss { color: #ef5350; }
+</style>
+</head>
+<body>
+<div id="app">
+    <header>
+        <h1>Post-Game Review</h1>
+        <div class="nav-links">
+            <a href="/">Advisor</a>
+            <a href="/manage">Manage</a>
+            <a href="/decks">Decks</a>
+        </div>
+    </header>
+
+    <div id="match-list"></div>
+    <div id="review-content"><div class="loading">Loading latest match...</div></div>
+</div>
+
+<script>
+let currentFilter = 'key'; // 'key' | 'all'
+
+async function loadMatchList() {
+    const res = await fetch('/api/review/matches');
+    if (!res.ok) return;
+    const matches = await res.json();
+    const el = document.getElementById('match-list');
+    el.innerHTML = matches.slice(0, 10).map(m => `
+        <div class="match-list-item" onclick="loadReview('${m.match_id}')">
+            <span class="result ${m.result}">${m.result || '?'}</span>
+            <span><strong>${m.my_deck || '?'}</strong> vs ${m.opp_deck || '?'}</span>
+            <span style="margin-left:auto;color:#555;font-size:11px">${m.started?.split('T')[0] || ''}</span>
+        </div>
+    `).join('');
+}
+
+async function loadReview(matchId) {
+    const el = document.getElementById('review-content');
+    el.innerHTML = '<div class="loading">Loading...</div>';
+
+    const url = matchId ? `/api/review/${matchId}` : '/api/review/latest';
+    const res = await fetch(url);
+    if (!res.ok) {
+        el.innerHTML = '<div class="empty">No match data found. Play a game first!</div>';
+        return;
+    }
+    const data = await res.json();
+    renderReview(data);
+}
+
+function renderReview(data) {
+    const el = document.getElementById('review-content');
+    const m = data.match;
+    const keyMoments = data.key_moments || [];
+
+    let html = '';
+
+    // Match header
+    html += `<div class="match-header">
+        <span class="match-result ${m.result}">${m.result || '?'}</span>
+        <div>
+            <div class="match-meta"><strong>${m.my_deck || 'Unknown'}</strong> vs <strong>${m.opp_deck || 'Unknown'}</strong></div>
+            <div class="match-meta">${m.started || ''}</div>
+        </div>
+    </div>`;
+
+    // Summary
+    html += `<div class="summary-bar">
+        <div class="summary-card"><div class="value">${data.total_turns}</div><div class="label">Turns</div></div>
+        <div class="summary-card"><div class="value">${keyMoments.length}</div><div class="label">Key Moments</div></div>
+        <div class="summary-card"><div class="value">${data.total_advice}</div><div class="label">Total Advice</div></div>
+    </div>`;
+
+    // Filter
+    html += `<div class="filter-bar">
+        <button class="filter-btn ${currentFilter === 'key' ? 'active' : ''}" onclick="setFilter('key')">Key Moments</button>
+        <button class="filter-btn ${currentFilter === 'all' ? 'active' : ''}" onclick="setFilter('all')">All Turns</button>
+    </div>`;
+
+    // Timeline
+    html += '<div class="timeline">';
+
+    if (currentFilter === 'key') {
+        if (!keyMoments.length) {
+            html += '<div class="empty">No key moments detected.</div>';
+        }
+        for (const km of keyMoments) {
+            html += renderTurnCard(km.turn, km.advice, true);
+        }
+    } else {
+        const turns = data.turns || {};
+        for (const [turnNum, advices] of Object.entries(turns)) {
+            const isKey = keyMoments.some(k => k.turn === parseInt(turnNum));
+            html += renderTurnCard(parseInt(turnNum), advices, isKey);
+        }
+    }
+
+    html += '</div>';
+    el.innerHTML = html;
+}
+
+function renderTurnCard(turn, advices, isKey) {
+    const phaseMap = { 'Phase_Main1': 'Main 1', 'Phase_Main2': 'Main 2', 'Phase_Combat': 'Combat' };
+    let html = `<div class="turn-card ${isKey ? 'key' : ''}">`;
+    html += `<div class="turn-header"><span class="turn-num">T${turn}</span>`;
+    html += `<span>${advices.length} advice${advices.length > 1 ? 's' : ''}</span></div>`;
+
+    for (const a of advices.slice(0, 5)) {
+        const phase = phaseMap[a.phase] || a.phase || '';
+        html += `<div class="advice-item ${a.priority}">`;
+        if (phase) html += `<span class="advice-phase">${phase}</span>`;
+        html += `${esc(a.message)}`;
+        html += `<span class="advice-source">${a.source}</span>`;
+        html += '</div>';
+    }
+    if (advices.length > 5) {
+        html += `<div style="font-size:11px;color:#555;padding-left:12px">+${advices.length - 5} more</div>`;
+    }
+
+    html += '</div>';
+    return html;
+}
+
+function setFilter(f) {
+    currentFilter = f;
+    loadReview(currentMatchId);
+}
+
+function esc(s) {
+    return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+let currentMatchId = null;
+const origLoadReview = loadReview;
+loadReview = async function(matchId) {
+    currentMatchId = matchId;
+    await origLoadReview(matchId);
+};
+
+// Load latest on page load
+loadReview(null);
+</script>
+</body>
+</html>

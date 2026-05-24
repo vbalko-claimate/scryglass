@@ -1,6 +1,1072 @@
 {
   "meta_decks": [
     {
+      "name": "Izzet Lessons",
+      "archetype": "combo",
+      "colors": [
+        "U",
+        "R"
+      ],
+      "signal_cards": {
+        "Gran-Gran": 0.11,
+        "Boomerang Basics": 0.11,
+        "Combustion Technique": 0.11,
+        "Firebending Lesson": 0.11,
+        "Monument to Endurance": 0.11,
+        "Accumulate Wisdom": 0.11,
+        "Abandon Attachments": 0.11,
+        "Artist's Talent": 0.11
+      },
+      "key_threats": [
+        {
+          "card": "Artist's Talent",
+          "danger": "high",
+          "reason": "Spell-copying engine that snowballs card advantage and doubles burn output",
+          "removal_priority": 1,
+          "must_answer": true
+        },
+        {
+          "card": "Combustion Technique",
+          "danger": "high",
+          "reason": "Primary burn finisher; combo kill enabler when copied or chained",
+          "removal_priority": 2,
+          "must_answer": true
+        },
+        {
+          "card": "Monument to Endurance",
+          "danger": "medium",
+          "reason": "Grants resilience and reach, making the combo harder to disrupt",
+          "removal_priority": 3,
+          "must_answer": true
+        },
+        {
+          "card": "Gran-Gran",
+          "danger": "medium",
+          "reason": "Value creature that generates resources and threatens the board if unanswered",
+          "removal_priority": 4
+        }
+      ],
+      "speed": "medium",
+      "typical_kill_turn": 6,
+      "hidden_reach": 0,
+      "description": "Izzet Lessons leverages spell-copying and card advantage engines to assemble a critical mass of burn and tempo, threatening a combo kill around turn 6. Artist's Talent and Accumulate Wisdom fuel the engine while Combustion Technique provides the finishing burst damage. Meta share: 11.9%.",
+      "meta_share": 0.086,
+      "key_cards": [
+        "Archmage Emeritus",
+        "Teach by Example",
+        "Galvanic Iteration",
+        "Lorehold Command"
+      ]
+    },
+    {
+      "name": "Mono-Green Landfall",
+      "archetype": "midrange",
+      "colors": [
+        "G"
+      ],
+      "signal_cards": {
+        "Earthbender Ascension": 0.12,
+        "Mightform Harmonizer": 0.12,
+        "Esper Origins": 0.12,
+        "Sazh's Chocobo": 0.12,
+        "Llanowar Elves": 0.12,
+        "Icetill Explorer": 0.12,
+        "Badgermole Cub": 0.12,
+        "Surrak, Elusive Hunter": 0.05
+      },
+      "key_threats": [
+        {
+          "card": "Earthbender Ascension",
+          "danger": "high",
+          "reason": "Turns landfall into huge burst turns",
+          "removal_priority": 1,
+          "must_answer": true
+        },
+        {
+          "card": "Mightform Harmonizer",
+          "danger": "high",
+          "reason": "Creates sudden combat lethals",
+          "removal_priority": 1,
+          "must_answer": true
+        },
+        {
+          "card": "Sazh's Chocobo",
+          "danger": "medium",
+          "reason": "Early pressure into oversized board",
+          "removal_priority": 3
+        }
+      ],
+      "speed": "medium",
+      "typical_kill_turn": 6,
+      "hidden_reach": 8,
+      "description": "Ground-centric landfall deck with explosive combat steps",
+      "meta_share": 0.127,
+      "key_cards": [
+        "Nissa, Ascended Animist",
+        "Lotus Cobra",
+        "Scute Swarm",
+        "Kazandu Mammoth",
+        "Ashaya, Soul of the Wild"
+      ]
+    },
+    {
+      "name": "Izzet Prowess",
+      "archetype": "aggro",
+      "colors": [
+        "U",
+        "R"
+      ],
+      "signal_cards": {
+        "Opt": 0.11,
+        "Stormchaser's Talent": 0.11,
+        "Burst Lightning": 0.11,
+        "Boomerang Basics": 0.11,
+        "Stock Up": 0.11,
+        "Sleight of Hand": 0.11,
+        "Slickshot Show-Off": 0.11,
+        "Eddymurk Crab": 0.08
+      },
+      "key_threats": [
+        {
+          "card": "Firebending Student",
+          "danger": "high",
+          "reason": "Grows with every instant/sorcery — becomes huge fast",
+          "removal_priority": 1,
+          "must_answer": true
+        },
+        {
+          "card": "Balmor, Battlemage Captain",
+          "danger": "high",
+          "reason": "Gives all creatures trample + pump on spells",
+          "removal_priority": 1,
+          "must_answer": true
+        },
+        {
+          "card": "Vivi Ornitier",
+          "danger": "high",
+          "reason": "Drains life on spells, hard to race",
+          "removal_priority": 1,
+          "must_answer": true
+        },
+        {
+          "card": "Drake Hatcher",
+          "danger": "medium",
+          "reason": "Creates flying tokens on spells — go-wide threat",
+          "removal_priority": 2
+        }
+      ],
+      "speed": "very_fast",
+      "typical_kill_turn": 5,
+      "hidden_reach": 6,
+      "description": "Creature-based prowess deck. Creatures grow huge with each spell. Remove Firebending Student and Balmor before they snowball.",
+      "meta_share": 0.195,
+      "key_cards": [
+        "Monastery Swiftspear",
+        "Burst Lightning",
+        "Slickshot Show-Off",
+        "Shock",
+        "Spellgorger Weird"
+      ]
+    },
+    {
+      "name": "Dimir Excruciator",
+      "archetype": "combo",
+      "colors": [
+        "U",
+        "B"
+      ],
+      "signal_cards": {
+        "Deceit": 0.12,
+        "Superior Spider-Man": 0.12,
+        "Requiting Hex": 0.12,
+        "Doomsday Excruciator": 0.09,
+        "Harvester of Misery": 0.09,
+        "Winternight Stories": 0.09,
+        "Bitter Triumph": 0.09,
+        "Overlord of the Balemurk": 0.09
+      },
+      "key_threats": [
+        {
+          "card": "Doomsday Excruciator",
+          "danger": "high",
+          "reason": "Ends games quickly once it resolves",
+          "removal_priority": 1,
+          "must_answer": true
+        },
+        {
+          "card": "Deadly Cover-Up",
+          "danger": "high",
+          "reason": "Punishes overextension",
+          "removal_priority": 2
+        },
+        {
+          "card": "Restless Reef",
+          "danger": "medium",
+          "reason": "Turns stalled games into losses",
+          "removal_priority": 3
+        }
+      ],
+      "speed": "medium",
+      "typical_kill_turn": 7,
+      "hidden_reach": 7,
+      "description": "Disruptive combo-control deck with sweepers and a fast closer",
+      "key_cards": [
+        "Excruciator",
+        "Mindlink Mech",
+        "Duress"
+      ]
+    },
+    {
+      "name": "Dimir Midrange",
+      "archetype": "midrange",
+      "colors": [
+        "U",
+        "B"
+      ],
+      "signal_cards": {
+        "Floodpits Drowner": 0.12,
+        "Kaito, Bane of Nightmares": 0.12,
+        "Spyglass Siren": 0.12,
+        "Deep-Cavern Bat": 0.12,
+        "Enduring Curiosity": 0.09,
+        "Requiting Hex": 0.09,
+        "Tishana's Tidebinder": 0.09,
+        "Cecil, Dark Knight": 0.05
+      },
+      "key_threats": [
+        {
+          "card": "Kaito",
+          "danger": "high",
+          "reason": "Runs away with cards and tempo",
+          "removal_priority": 1,
+          "must_answer": true
+        },
+        {
+          "card": "Enduring Curiosity",
+          "danger": "high",
+          "reason": "Snowballs small flyers into advantage",
+          "removal_priority": 1,
+          "must_answer": true
+        },
+        {
+          "card": "Deep-Cavern Bat",
+          "danger": "medium",
+          "reason": "Disrupts your curve while pressuring life",
+          "removal_priority": 3
+        }
+      ],
+      "speed": "medium",
+      "typical_kill_turn": 7,
+      "hidden_reach": 3,
+      "description": "Tempo-midrange deck built on flyers, discard, and Kaito",
+      "meta_share": 0.093,
+      "key_cards": [
+        "Kaito Shizuki",
+        "Sheoldred, the Apocalypse",
+        "Go for the Throat",
+        "Preacher of the Schism",
+        "Faerie Mastermind"
+      ]
+    },
+    {
+      "name": "Izzet Spellementals",
+      "archetype": "midrange",
+      "colors": [
+        "U",
+        "R"
+      ],
+      "signal_cards": {
+        "Sunderflock": 0.11,
+        "Eddymurk Crab": 0.11,
+        "Opt": 0.11,
+        "Burst Lightning": 0.11,
+        "Hearth Elemental": 0.11,
+        "Sleight of Hand": 0.11,
+        "Spell Snare": 0.08,
+        "Winternight Stories": 0.04
+      },
+      "key_threats": [
+        {
+          "card": "Sunderflock",
+          "danger": "high",
+          "reason": "Premier payoff elemental; snowballs quickly when cheap spells chain together each turn.",
+          "removal_priority": 1,
+          "must_answer": true
+        },
+        {
+          "card": "Hearth Elemental",
+          "danger": "high",
+          "reason": "Scales with spell volume; threatens lethal damage if left unchecked for a turn cycle.",
+          "removal_priority": 2,
+          "must_answer": true
+        },
+        {
+          "card": "Eddymurk Crab",
+          "danger": "medium",
+          "reason": "Grinds incremental value off every spell cast; fuels late-game card advantage engine.",
+          "removal_priority": 3,
+          "must_answer": true
+        },
+        {
+          "card": "Winternight Stories",
+          "danger": "medium",
+          "reason": "Recurring noncreature value source; difficult to interact with via creature removal.",
+          "removal_priority": 4
+        }
+      ],
+      "speed": "medium",
+      "typical_kill_turn": 7,
+      "hidden_reach": 0,
+      "description": "Izzet Spellementals chains cheap cantrips and burn to trigger elemental payoffs, building an overwhelming board while maintaining card flow. Dangerous because each cantrip doubles as both selection and a creature trigger, making removal exchanges inefficient. Meta share: 5.0%.",
+      "meta_share": 0.079,
+      "key_cards": [
+        "Risen Reef",
+        "Omnath, Locus of the Roil",
+        "Lightning Bolt",
+        "Quasiduplicate"
+      ]
+    },
+    {
+      "name": "Azorius Tempo",
+      "archetype": "midrange",
+      "colors": [
+        "W",
+        "U"
+      ],
+      "signal_cards": {
+        "High Noon": 0.12,
+        "Floodpits Drowner": 0.12,
+        "Aang, Swift Savior": 0.12,
+        "Aven Interrupter": 0.12,
+        "Voice of Victory": 0.12,
+        "Seam Rip": 0.08,
+        "Avatar's Wrath": 0.05,
+        "No More Lies": 0.05
+      },
+      "key_threats": [
+        {
+          "card": "High Noon",
+          "danger": "high",
+          "reason": "Constrains your spell windows",
+          "removal_priority": 1,
+          "must_answer": true
+        },
+        {
+          "card": "Aven Interrupter",
+          "danger": "medium",
+          "reason": "Punishes key curve turns",
+          "removal_priority": 3
+        },
+        {
+          "card": "Aang, Destiny's Greatest Ally",
+          "danger": "high",
+          "reason": "Dominates tempo and skies",
+          "removal_priority": 1,
+          "must_answer": true
+        }
+      ],
+      "speed": "medium",
+      "typical_kill_turn": 7,
+      "hidden_reach": 2,
+      "description": "Tempo deck that wins by constraining mana and sequencing",
+      "meta_share": 0.045,
+      "key_cards": [
+        "Warden of the Inner Sky",
+        "Skrelv, Defector Mite",
+        "Spell Pierce",
+        "Loran of the Third Path"
+      ]
+    },
+    {
+      "name": "Mono-Red Aggro",
+      "archetype": "aggro",
+      "colors": [
+        "R"
+      ],
+      "signal_cards": {
+        "Razorkin Needlehead": 0.12,
+        "Burnout Bashtronaut": 0.12,
+        "Burst Lightning": 0.12,
+        "Hexing Squelcher": 0.12,
+        "Hired Claw": 0.12,
+        "Nova Hellkite": 0.12,
+        "Ojer Axonil, Deepest Might": 0.08,
+        "Sear": 0.05
+      },
+      "key_threats": [
+        {
+          "card": "Burnout Bashtronaut",
+          "danger": "high",
+          "reason": "Fast pressure that punishes stumbles",
+          "removal_priority": 2
+        },
+        {
+          "card": "Sunspine Lynx",
+          "danger": "high",
+          "reason": "Top-end threat that closes races",
+          "removal_priority": 1,
+          "must_answer": true
+        },
+        {
+          "card": "Screaming Nemesis",
+          "danger": "high",
+          "reason": "Turns off your lifegain plan",
+          "removal_priority": 1,
+          "must_answer": true
+        }
+      ],
+      "speed": "very_fast",
+      "typical_kill_turn": 5,
+      "hidden_reach": 7,
+      "description": "Fast burn deck that demands early blocks and lifegain. Monstrous Rage banned, Heartfire Hero nerfed to 0/1.",
+      "meta_share": 0.04,
+      "key_cards": [
+        "Kumano Faces Kakkazan",
+        "Play with Fire",
+        "Lightning Strike",
+        "Feldon, Ronom Excavator"
+      ]
+    },
+    {
+      "name": "Jeskai Control",
+      "archetype": "control",
+      "colors": [
+        "W",
+        "U",
+        "R"
+      ],
+      "signal_cards": {
+        "Consult the Star Charts": 0.13,
+        "Get Lost": 0.13,
+        "No More Lies": 0.13,
+        "Lightning Helix": 0.13,
+        "Jeskai Revelation": 0.09,
+        "Stock Up": 0.09,
+        "Three Steps Ahead": 0.05,
+        "Seam Rip": 0.05
+      },
+      "key_threats": [
+        {
+          "card": "Day of Judgment",
+          "danger": "high",
+          "reason": "Sweeper that punishes overcommitment",
+          "removal_priority": 2
+        },
+        {
+          "card": "Temporary Lockdown",
+          "danger": "high",
+          "reason": "Cleans up your cheap board",
+          "removal_priority": 2
+        },
+        {
+          "card": "Jeskai Revelation",
+          "danger": "medium",
+          "reason": "Takes over once they stabilize",
+          "removal_priority": 3
+        }
+      ],
+      "speed": "slow",
+      "typical_kill_turn": 9,
+      "hidden_reach": 4,
+      "description": "Removal-heavy control deck with wraths and late card advantage",
+      "meta_share": 0.03,
+      "key_cards": [
+        "Teferi, Who Slows the Sunset",
+        "The Wandering Emperor",
+        "Sunfall",
+        "Memory Deluge"
+      ]
+    },
+    {
+      "name": "Temur Harmonizer Combo",
+      "archetype": "combo",
+      "colors": [
+        "U",
+        "R",
+        "G"
+      ],
+      "signal_cards": {
+        "Consult the Star Charts": 0.13,
+        "Mightform Harmonizer": 0.13,
+        "Stock Up": 0.13,
+        "Full Bore": 0.13,
+        "Burst Lightning": 0.09,
+        "Icetill Explorer": 0.09,
+        "Sear": 0.09,
+        "Earthbender Ascension": 0.05
+      },
+      "key_threats": [
+        {
+          "card": "Mightform Harmonizer",
+          "danger": "high",
+          "reason": "Core combo engine; converts cheap spells into lethal damage if untouched",
+          "removal_priority": 1,
+          "must_answer": true
+        },
+        {
+          "card": "Earthbender Ascension",
+          "danger": "high",
+          "reason": "Enchantment-based alternate win condition; harder to remove than creatures",
+          "removal_priority": 2,
+          "must_answer": true
+        },
+        {
+          "card": "Consult the Star Charts",
+          "danger": "medium",
+          "reason": "Finds combo pieces and accelerates mana; enables consistent turn-6 kills",
+          "removal_priority": 3
+        },
+        {
+          "card": "Icetill Explorer",
+          "danger": "medium",
+          "reason": "Value creature that fixes mana and replaces itself; fuels combo setup",
+          "removal_priority": 4
+        }
+      ],
+      "speed": "medium",
+      "typical_kill_turn": 6,
+      "hidden_reach": 0,
+      "description": "Temur Harmonizer Combo builds toward a turn-6 kill by chaining cheap spells through Mightform Harmonizer to generate explosive damage or overwhelming board presence. Consult the Star Charts and Stock Up provide the card velocity to assemble the combo consistently. Meta share: 2.6%.",
+      "meta_share": 0.025,
+      "key_cards": [
+        "Enigmatic Incarnation",
+        "Fable of the Mirror-Breaker",
+        "Leyline Binding"
+      ]
+    },
+    {
+      "name": "Bant Airbending Combo",
+      "archetype": "combo",
+      "colors": [
+        "W",
+        "U",
+        "G"
+      ],
+      "signal_cards": {
+        "Aang, Swift Savior": 0.11,
+        "Interdimensional Web Watch": 0.11,
+        "Llanowar Elves": 0.11,
+        "Badgermole Cub": 0.11,
+        "Aang, at the Crossroads": 0.11,
+        "Bramble Familiar": 0.11,
+        "Doc Aurlock, Grizzled Genius": 0.11,
+        "Appa, Steadfast Guardian": 0.11
+      },
+      "key_threats": [
+        {
+          "card": "Doc Aurlock, Grizzled Genius",
+          "danger": "high",
+          "reason": "Enables casting adventures from exile, turning Bramble Familiar into an infinite loop engine.",
+          "removal_priority": 1,
+          "must_answer": true
+        },
+        {
+          "card": "Aang, Swift Savior",
+          "danger": "high",
+          "reason": "Bounce/flicker effect closes the combo loop; without it, no infinite iteration.",
+          "removal_priority": 2,
+          "must_answer": true
+        },
+        {
+          "card": "Bramble Familiar",
+          "danger": "high",
+          "reason": "Mana production plus Fetch Quest tutor; the card being looped for the kill.",
+          "removal_priority": 3,
+          "must_answer": true
+        },
+        {
+          "card": "Llanowar Elves",
+          "danger": "medium",
+          "reason": "Turn-1 ramp enables turn-5 kills; removing it buys a critical turn.",
+          "removal_priority": 4
+        }
+      ],
+      "speed": "medium",
+      "typical_kill_turn": 6,
+      "hidden_reach": 0,
+      "description": "Bant Airbending exploits Aang's bounce/flicker ability to loop Bramble Familiar and Doc Aurlock's adventure-from-exile engine, generating infinite mana and tutors to assemble a deterministic kill. Dangerous because it can threaten the combo through interaction while ramping ahead on mana. Meta share: 2.5%.",
+      "key_cards": [
+        "Collected Company",
+        "Prosperous Innkeeper"
+      ]
+    },
+    {
+      "name": "Boros Dragons",
+      "archetype": "aggro",
+      "colors": [
+        "W",
+        "R"
+      ],
+      "signal_cards": {
+        "Momo, Friendly Flier": 0.1,
+        "Maelstrom of the Spirit Dragon": 0.1,
+        "Sarkhan, Dragon Ascendant": 0.1,
+        "Burst Lightning": 0.1,
+        "Voice of Victory": 0.1,
+        "Clarion Conqueror": 0.1,
+        "Magmatic Hellkite": 0.1,
+        "Nova Hellkite": 0.1
+      },
+      "key_threats": [
+        {
+          "card": "Sarkhan, Dragon Ascendant",
+          "danger": "high",
+          "reason": "Planeswalker that generates dragon tokens and threatens an ultimate that ends the game.",
+          "removal_priority": 1,
+          "must_answer": true
+        },
+        {
+          "card": "Clarion Conqueror",
+          "danger": "high",
+          "reason": "Creates tokens on attack, building overwhelming board presence if not immediately removed.",
+          "removal_priority": 2,
+          "must_answer": true
+        },
+        {
+          "card": "Maelstrom of the Spirit Dragon",
+          "danger": "high",
+          "reason": "Board wipe or massive damage spell that punishes wide boards and stabilization attempts.",
+          "removal_priority": 3,
+          "must_answer": true
+        },
+        {
+          "card": "Magmatic Hellkite",
+          "danger": "medium",
+          "reason": "Large evasive body with built-in removal, dominates combat and picks off creatures.",
+          "removal_priority": 4
+        }
+      ],
+      "speed": "fast",
+      "typical_kill_turn": 6,
+      "hidden_reach": 0,
+      "description": "Boros Dragons leverages efficient dragon creatures and burn spells to close games quickly by turn 6. The deck combines evasive flying threats with powerful ETB/attack triggers that snowball if left unchecked. Meta share: 2.5%.",
+      "meta_share": 0.035,
+      "key_cards": [
+        "Thundermaw Hellkite",
+        "Moonveil Regent",
+        "Shivan Devastator"
+      ]
+    },
+    {
+      "name": "Simic Ouroboroid",
+      "archetype": "combo",
+      "colors": [
+        "U",
+        "G"
+      ],
+      "signal_cards": {
+        "Llanowar Elves": 0.11,
+        "Badgermole Cub": 0.11,
+        "Gene Pollinator": 0.11,
+        "Nature's Rhythm": 0.11,
+        "Spider Manifestation": 0.11,
+        "Quantum Riddler": 0.11,
+        "Spider-Sense": 0.08,
+        "Ouroboroid": 0.08
+      },
+      "key_threats": [
+        {
+          "card": "Ouroboroid",
+          "danger": "high",
+          "reason": "Combo finisher that ends the game immediately if it resolves untouched",
+          "removal_priority": 1,
+          "must_answer": true
+        },
+        {
+          "card": "Gene Pollinator",
+          "danger": "high",
+          "reason": "Key enabler that copies or generates pieces feeding the Ouroboroid combo",
+          "removal_priority": 2,
+          "must_answer": true
+        },
+        {
+          "card": "Quantum Riddler",
+          "danger": "medium",
+          "reason": "Digs for combo pieces and provides card selection to ensure consistent turn-5 kills",
+          "removal_priority": 3,
+          "must_answer": true
+        },
+        {
+          "card": "Llanowar Elves",
+          "danger": "medium",
+          "reason": "Turn-1 mana dork accelerates the entire combo by a full turn",
+          "removal_priority": 4
+        }
+      ],
+      "speed": "very_fast",
+      "typical_kill_turn": 5,
+      "hidden_reach": 0,
+      "description": "Simic ramp-combo deck that uses mana acceleration and token generators to assemble an Ouroboroid kill by turn 5. Extremely linear but resilient to single-point removal thanks to redundant enablers. Meta share: 2.5%.",
+      "key_cards": [
+        "Ouroboroid",
+        "Llanowar Elves"
+      ]
+    },
+    {
+      "name": "4c Ouroboroid",
+      "archetype": "combo",
+      "colors": [
+        "U",
+        "B",
+        "R",
+        "G"
+      ],
+      "signal_cards": {
+        "Llanowar Elves": 0.11,
+        "Badgermole Cub": 0.11,
+        "Gene Pollinator": 0.11,
+        "Nature's Rhythm": 0.11,
+        "Spider Manifestation": 0.11,
+        "Quantum Riddler": 0.11,
+        "Mockingbird": 0.08,
+        "Keen-Eyed Curator": 0.08
+      },
+      "key_threats": [
+        {
+          "card": "Quantum Riddler",
+          "danger": "high",
+          "reason": "Core combo engine; draws into the loop and enables deterministic kill sequences.",
+          "removal_priority": 1,
+          "must_answer": true
+        },
+        {
+          "card": "Gene Pollinator",
+          "danger": "high",
+          "reason": "Creates the self-replicating loop that generates lethal board state or damage.",
+          "removal_priority": 2,
+          "must_answer": true
+        },
+        {
+          "card": "Nature's Rhythm",
+          "danger": "high",
+          "reason": "Enchantment-based recursion engine; harder to remove and powers repeated triggers.",
+          "removal_priority": 3,
+          "must_answer": true
+        },
+        {
+          "card": "Mockingbird",
+          "danger": "medium",
+          "reason": "Copies any combo piece for redundancy; removes single-point-of-failure weakness.",
+          "removal_priority": 4
+        }
+      ],
+      "speed": "very_fast",
+      "typical_kill_turn": 5,
+      "hidden_reach": 0,
+      "description": "A 4-color creature combo deck that uses mana acceleration into copy effects and recursive triggers to assemble a lethal loop, typically winning turn 5 through Gene Pollinator chains amplified by Mockingbird and Nature's Rhythm. Extremely fragile to early interaction but nearly unstoppable if it resolves its engine. Meta share: 1.8%.",
+      "key_cards": [
+        "Ouroboroid",
+        "Soulflayer",
+        "Fable of the Mirror-Breaker"
+      ]
+    },
+    {
+      "name": "Rakdos Monument",
+      "archetype": "midrange",
+      "colors": [
+        "B",
+        "R"
+      ],
+      "signal_cards": {
+        "Iron-Shield Elf": 0.11,
+        "Moonshadow": 0.11,
+        "Marauding Mako": 0.11,
+        "Cool but Rude": 0.11,
+        "Flamewake Phoenix": 0.11,
+        "Bloodthorn Flail": 0.11,
+        "Inti, Seneschal of the Sun": 0.08,
+        "Monument to Endurance": 0.08
+      },
+      "key_threats": [
+        {
+          "card": "Monument to Endurance",
+          "danger": "high",
+          "reason": "Grows every creature on entry; activated ability grants trample/lifelink for lethal swings",
+          "removal_priority": 1,
+          "must_answer": true
+        },
+        {
+          "card": "Inti, Seneschal of the Sun",
+          "danger": "high",
+          "reason": "Generates card advantage and +1/+1 counters with trample on each attack",
+          "removal_priority": 2,
+          "must_answer": true
+        },
+        {
+          "card": "Flamewake Phoenix",
+          "danger": "medium",
+          "reason": "Keeps recurring from graveyard; nearly impossible to permanently remove",
+          "removal_priority": 3
+        },
+        {
+          "card": "Bloodthorn Flail",
+          "danger": "medium",
+          "reason": "Auto-equips on creature entry; turns every body into an immediate threat",
+          "removal_priority": 4
+        }
+      ],
+      "speed": "medium",
+      "typical_kill_turn": 7,
+      "hidden_reach": 0,
+      "description": "Rakdos Monument builds a board of increasingly large creatures via Monument to Endurance counters, then uses its activated ability to grant trample and lifelink for devastating alpha strikes. Flamewake Phoenix and Inti provide relentless recursion and card advantage that grind opponents out. Meta share: 1.8%."
+    },
+    {
+      "name": "Azorius Control",
+      "archetype": "control",
+      "colors": [
+        "W",
+        "U"
+      ],
+      "signal_cards": {
+        "High Noon": 0.12,
+        "Floodpits Drowner": 0.12,
+        "Aang, Swift Savior": 0.12,
+        "Aven Interrupter": 0.12,
+        "Seam Rip": 0.12,
+        "Voice of Victory": 0.12,
+        "Avatar's Wrath": 0.08,
+        "Enduring Innocence": 0.08
+      },
+      "key_threats": [
+        {
+          "card": "High Noon",
+          "danger": "high",
+          "reason": "Shuts down instant-speed interaction; warps entire game around its presence",
+          "removal_priority": 1,
+          "must_answer": true
+        },
+        {
+          "card": "Enduring Innocence",
+          "danger": "high",
+          "reason": "Recurring card advantage engine; returns as enchantment after removal, extremely resilient",
+          "removal_priority": 2,
+          "must_answer": true
+        },
+        {
+          "card": "Floodpits Drowner",
+          "danger": "medium",
+          "reason": "Taps down threats and provides inevitability as a win condition",
+          "removal_priority": 3,
+          "must_answer": true
+        },
+        {
+          "card": "Aven Interrupter",
+          "danger": "medium",
+          "reason": "Flash disruption exiles key spells; taxes future casts from exile",
+          "removal_priority": 4
+        }
+      ],
+      "speed": "slow",
+      "typical_kill_turn": 9,
+      "hidden_reach": 0,
+      "description": "Azorius Control leverages High Noon to lock opponents out of instant-speed interaction, then grinds to victory with resilient threats and card advantage engines. Dangerous because it neutralizes reactive strategies while generating inevitability through Enduring Innocence and evasive finishers. Meta share: 1.4%."
+    },
+    {
+      "name": "Sultai Ouroboroid",
+      "archetype": "combo",
+      "colors": [
+        "U",
+        "B",
+        "G"
+      ],
+      "signal_cards": {
+        "Gene Pollinator": 0.15,
+        "Nature's Rhythm": 0.15,
+        "Spider Manifestation": 0.15,
+        "Mockingbird": 0.11,
+        "Ouroboroid": 0.11,
+        "Innkeeper's Talent": 0.11,
+        "Llanowar Elves": 0.06
+      },
+      "key_threats": [
+        {
+          "card": "Ouroboroid",
+          "danger": "high",
+          "reason": "Central combo piece; triggers exponential self-copying chain that wins the game.",
+          "removal_priority": 1,
+          "must_answer": true
+        },
+        {
+          "card": "Gene Pollinator",
+          "danger": "high",
+          "reason": "Key enabler that starts or extends the copy chain alongside Ouroboroid.",
+          "removal_priority": 2,
+          "must_answer": true
+        },
+        {
+          "card": "Mockingbird",
+          "danger": "medium",
+          "reason": "Redundant copy effect that can substitute for or accelerate the combo.",
+          "removal_priority": 3,
+          "must_answer": true
+        },
+        {
+          "card": "Llanowar Elves",
+          "danger": "medium",
+          "reason": "Accelerates combo by one turn; removing it delays the kill to turn 6.",
+          "removal_priority": 4
+        }
+      ],
+      "speed": "very_fast",
+      "typical_kill_turn": 5,
+      "hidden_reach": 0,
+      "description": "Sultai Ouroboroid builds an exponential copy chain, using mana acceleration and copy enablers to flood the board with Ouroboroid tokens as early as turn 5. The deck is dangerous because once the chain starts, a single unanswered trigger cascades into a lethal board state. Meta share: 1.3%."
+    },
+    {
+      "name": "Izzet Elementals",
+      "archetype": "midrange",
+      "colors": [
+        "U",
+        "R"
+      ],
+      "signal_cards": {
+        "Ashling, Rekindled": 0.1,
+        "Bounce Off": 0.1,
+        "Deceit": 0.1,
+        "Eclipsed Realms": 0.1,
+        "Flamebraider": 0.1,
+        "Winternight Stories": 0.1,
+        "Roaming Throne": 0.1,
+        "Vibrance": 0.1
+      },
+      "key_threats": [
+        {
+          "card": "Roaming Throne",
+          "danger": "high",
+          "reason": "Doubles all elemental triggers; turns Ashling into an unstoppable damage engine",
+          "removal_priority": 1,
+          "must_answer": true
+        },
+        {
+          "card": "Ashling, Rekindled",
+          "danger": "high",
+          "reason": "Core damage payoff; every elemental ETB becomes direct damage to any target",
+          "removal_priority": 2,
+          "must_answer": true
+        },
+        {
+          "card": "Flamebraider",
+          "danger": "medium",
+          "reason": "Generates elemental tokens that fuel Ashling triggers and build board pressure",
+          "removal_priority": 3,
+          "must_answer": true
+        },
+        {
+          "card": "Winternight Stories",
+          "danger": "medium",
+          "reason": "Sustained card advantage and value engine that keeps elemental threats flowing",
+          "removal_priority": 4
+        }
+      ],
+      "speed": "medium",
+      "typical_kill_turn": 7,
+      "hidden_reach": 0,
+      "description": "Izzet Elementals builds a synergy engine around elemental tribal triggers, using Ashling as a damage multiplier and Roaming Throne to double those triggers, converting each new elemental into a burn spell that closes games quickly. Meta share: 1.3%."
+    },
+    {
+      "name": "Sultai Reanimator",
+      "archetype": "combo",
+      "colors": [
+        "U",
+        "B",
+        "G"
+      ],
+      "signal_cards": {
+        "Superior Spider-Man": 0.12,
+        "Wistfulness": 0.12,
+        "Deceit": 0.12,
+        "Bringer of the Last Gift": 0.12,
+        "Formidable Speaker": 0.08,
+        "Overlord of the Balemurk": 0.08,
+        "Bitter Triumph": 0.08,
+        "Requiting Hex": 0.08
+      },
+      "key_threats": [
+        {
+          "card": "Bringer of the Last Gift",
+          "danger": "high",
+          "reason": "Returns ALL creatures from graveyard to battlefield; game-ending if it resolves.",
+          "removal_priority": 1,
+          "must_answer": true
+        },
+        {
+          "card": "Overlord of the Balemurk",
+          "danger": "high",
+          "reason": "Mills and recurs threats on ETB; enables the entire graveyard engine.",
+          "removal_priority": 2,
+          "must_answer": true
+        },
+        {
+          "card": "Superior Spider-Man",
+          "danger": "medium",
+          "reason": "Evasive resilient threat that generates value; strong reanimation target.",
+          "removal_priority": 3,
+          "must_answer": true
+        },
+        {
+          "card": "Formidable Speaker",
+          "danger": "medium",
+          "reason": "Early value creature that filters draws and fills the graveyard consistently.",
+          "removal_priority": 4
+        }
+      ],
+      "speed": "medium",
+      "typical_kill_turn": 7,
+      "hidden_reach": 0,
+      "description": "Sultai Reanimator fills the graveyard with high-value creatures using discard and mill effects, then cheats them all into play with Bringer of the Last Gift for an overwhelming board state. The deck is dangerous because it can recover from removal-heavy games and win in a single explosive turn. Meta share: 1.1%."
+    },
+    {
+      "name": "Gruul Landfall",
+      "archetype": "midrange",
+      "colors": [
+        "R",
+        "G"
+      ],
+      "signal_cards": {
+        "Sazh's Chocobo": 0.13,
+        "Llanowar Elves": 0.13,
+        "Mightform Harmonizer": 0.13,
+        "Snakeskin Veil": 0.13,
+        "Tifa Lockhart": 0.13,
+        "Earthbender Ascension": 0.09,
+        "Icetill Explorer": 0.09,
+        "Full Bore": 0.09
+      },
+      "key_threats": [
+        {
+          "card": "Earthbender Ascension",
+          "danger": "high",
+          "reason": "Enchantment-based landfall engine that snowballs; harder to interact with than creatures.",
+          "removal_priority": 1,
+          "must_answer": true
+        },
+        {
+          "card": "Tifa Lockhart",
+          "danger": "high",
+          "reason": "Powerful midrange beater that closes games fast with landfall triggers active.",
+          "removal_priority": 2,
+          "must_answer": true
+        },
+        {
+          "card": "Mightform Harmonizer",
+          "danger": "high",
+          "reason": "Landfall payoff creature that grows beyond removal range if left unchecked.",
+          "removal_priority": 3,
+          "must_answer": true
+        },
+        {
+          "card": "Llanowar Elves",
+          "danger": "medium",
+          "reason": "Turn-one mana dork accelerates the entire gameplan by a full turn.",
+          "removal_priority": 4
+        }
+      ],
+      "speed": "medium",
+      "typical_kill_turn": 6,
+      "hidden_reach": 0,
+      "description": "Gruul Landfall ramps with mana dorks into landfall payoffs that snowball with each land drop, threatening lethal by turn 6. Snakeskin Veil punishes spot removal, making timing and sequencing critical for opponents. Meta share: 1.2%."
+    },
+    {
       "name": "Selesnya Rabbits",
       "archetype": "aggro",
       "colors": [
@@ -250,6 +1316,13 @@
           "reason": "Enchantment synergy value engine",
           "removal_priority": 2,
           "must_answer": true
+        },
+        {
+          "card": "Arabella, Abandoned Doll",
+          "danger": "high",
+          "reason": "Drains X life on attack where X = small creatures; snowballs fast",
+          "removal_priority": 1,
+          "must_answer": true
         }
       ],
       "speed": "fast",
@@ -382,47 +1455,6 @@
       "description": "Flash-based tempo. Plays on your turn to grow Cutthroat. Force them to play on their own turn. Remove Cutthroat before it snowballs."
     },
     {
-      "name": "Mono-Green Landfall",
-      "archetype": "midrange",
-      "colors": [
-        "G"
-      ],
-      "signal_cards": {
-        "Llanowar Elves": 0.24,
-        "Badgermole Cub": 0.22,
-        "Icetill Explorer": 0.18,
-        "Sazh's Chocobo": 0.2,
-        "Fabled Passage": 0.16,
-        "Innkeeper's Talent": 0.16
-      },
-      "key_threats": [
-        {
-          "card": "Earthbender Ascension",
-          "danger": "high",
-          "reason": "Turns landfall into huge burst turns",
-          "removal_priority": 1,
-          "must_answer": true
-        },
-        {
-          "card": "Mightform Harmonizer",
-          "danger": "high",
-          "reason": "Creates sudden combat lethals",
-          "removal_priority": 1,
-          "must_answer": true
-        },
-        {
-          "card": "Sazh's Chocobo",
-          "danger": "medium",
-          "reason": "Early pressure into oversized board",
-          "removal_priority": 3
-        }
-      ],
-      "speed": "medium_fast",
-      "typical_kill_turn": 6,
-      "hidden_reach": 8,
-      "description": "Ground-centric landfall deck with explosive combat steps"
-    },
-    {
       "name": "Izzet Spells",
       "archetype": "combo",
       "colors": [
@@ -463,87 +1495,6 @@
       "typical_kill_turn": 7,
       "hidden_reach": 5,
       "description": "Spell-heavy tempo/combo with Chorus synergies and prowess. Includes Izzet Lessons and Izzet Chorus variants."
-    },
-    {
-      "name": "Dimir Excruciator",
-      "archetype": "combo",
-      "colors": [
-        "U",
-        "B"
-      ],
-      "signal_cards": {
-        "Deceit": 0.22,
-        "Stock Up": 0.22,
-        "Requiting Hex": 0.18,
-        "Superior Spider-Man": 0.18,
-        "Restless Reef": 0.2
-      },
-      "key_threats": [
-        {
-          "card": "Doomsday Excruciator",
-          "danger": "high",
-          "reason": "Ends games quickly once it resolves",
-          "removal_priority": 1,
-          "must_answer": true
-        },
-        {
-          "card": "Deadly Cover-Up",
-          "danger": "high",
-          "reason": "Punishes overextension",
-          "removal_priority": 2
-        },
-        {
-          "card": "Restless Reef",
-          "danger": "medium",
-          "reason": "Turns stalled games into losses",
-          "removal_priority": 3
-        }
-      ],
-      "speed": "medium_slow",
-      "typical_kill_turn": 7,
-      "hidden_reach": 7,
-      "description": "Disruptive combo-control deck with sweepers and a fast closer"
-    },
-    {
-      "name": "Dimir Midrange",
-      "archetype": "midrange",
-      "colors": [
-        "U",
-        "B"
-      ],
-      "signal_cards": {
-        "Spyglass Siren": 0.22,
-        "Deep-Cavern Bat": 0.24,
-        "Azure Beastbinder": 0.18,
-        "Kaito": 0.18,
-        "Enduring Curiosity": 0.18
-      },
-      "key_threats": [
-        {
-          "card": "Kaito",
-          "danger": "high",
-          "reason": "Runs away with cards and tempo",
-          "removal_priority": 1,
-          "must_answer": true
-        },
-        {
-          "card": "Enduring Curiosity",
-          "danger": "high",
-          "reason": "Snowballs small flyers into advantage",
-          "removal_priority": 1,
-          "must_answer": true
-        },
-        {
-          "card": "Deep-Cavern Bat",
-          "danger": "medium",
-          "reason": "Disrupts your curve while pressuring life",
-          "removal_priority": 3
-        }
-      ],
-      "speed": "medium",
-      "typical_kill_turn": 7,
-      "hidden_reach": 3,
-      "description": "Tempo-midrange deck built on flyers, discard, and Kaito"
     },
     {
       "name": "Simic Rhythm",
@@ -587,128 +1538,6 @@
       "description": "Explosive combo-aggro deck with massive single-turn damage"
     },
     {
-      "name": "Azorius Tempo",
-      "archetype": "midrange",
-      "colors": [
-        "W",
-        "U"
-      ],
-      "signal_cards": {
-        "Aven Interrupter": 0.22,
-        "High Noon": 0.22,
-        "No More Lies": 0.18,
-        "Floodpits Drowner": 0.18,
-        "Aang, Destiny's Greatest Ally": 0.2
-      },
-      "key_threats": [
-        {
-          "card": "High Noon",
-          "danger": "high",
-          "reason": "Constrains your spell windows",
-          "removal_priority": 1,
-          "must_answer": true
-        },
-        {
-          "card": "Aven Interrupter",
-          "danger": "medium",
-          "reason": "Punishes key curve turns",
-          "removal_priority": 3
-        },
-        {
-          "card": "Aang, Destiny's Greatest Ally",
-          "danger": "high",
-          "reason": "Dominates tempo and skies",
-          "removal_priority": 1,
-          "must_answer": true
-        }
-      ],
-      "speed": "medium",
-      "typical_kill_turn": 7,
-      "hidden_reach": 2,
-      "description": "Tempo deck that wins by constraining mana and sequencing"
-    },
-    {
-      "name": "Jeskai Control",
-      "archetype": "control",
-      "colors": [
-        "W",
-        "U",
-        "R"
-      ],
-      "signal_cards": {
-        "Floodfarm Verge": 0.18,
-        "No More Lies": 0.18,
-        "Lightning Helix": 0.22,
-        "Consult the Star Charts": 0.18,
-        "Jeskai Revelation": 0.24
-      },
-      "key_threats": [
-        {
-          "card": "Day of Judgment",
-          "danger": "high",
-          "reason": "Sweeper that punishes overcommitment",
-          "removal_priority": 2
-        },
-        {
-          "card": "Temporary Lockdown",
-          "danger": "high",
-          "reason": "Cleans up your cheap board",
-          "removal_priority": 2
-        },
-        {
-          "card": "Jeskai Revelation",
-          "danger": "medium",
-          "reason": "Takes over once they stabilize",
-          "removal_priority": 3
-        }
-      ],
-      "speed": "slow",
-      "typical_kill_turn": 9,
-      "hidden_reach": 4,
-      "description": "Removal-heavy control deck with wraths and late card advantage"
-    },
-    {
-      "name": "Mono-Red Aggro",
-      "archetype": "aggro",
-      "colors": [
-        "R"
-      ],
-      "signal_cards": {
-        "Hired Claw": 0.24,
-        "Burnout Bashtronaut": 0.22,
-        "Hexing Squelcher": 0.2,
-        "Burst Lightning": 0.18,
-        "Sunspine Lynx": 0.16,
-        "Heartfire Hero": 0.14
-      },
-      "key_threats": [
-        {
-          "card": "Burnout Bashtronaut",
-          "danger": "high",
-          "reason": "Fast pressure that punishes stumbles",
-          "removal_priority": 2
-        },
-        {
-          "card": "Sunspine Lynx",
-          "danger": "high",
-          "reason": "Top-end threat that closes races",
-          "removal_priority": 1,
-          "must_answer": true
-        },
-        {
-          "card": "Screaming Nemesis",
-          "danger": "high",
-          "reason": "Turns off your lifegain plan",
-          "removal_priority": 1,
-          "must_answer": true
-        }
-      ],
-      "speed": "very_fast",
-      "typical_kill_turn": 5,
-      "hidden_reach": 7,
-      "description": "Fast burn deck that demands early blocks and lifegain. Monstrous Rage banned, Heartfire Hero nerfed to 0/1."
-    },
-    {
       "name": "WU Auras/Voltron",
       "archetype": "aggro",
       "colors": [
@@ -748,54 +1577,6 @@
       "typical_kill_turn": 6,
       "hidden_reach": 4,
       "description": "Stacks enchantments on one evasive creature. Kill the creature and everything collapses."
-    },
-    {
-      "name": "Izzet Prowess",
-      "archetype": "aggro",
-      "colors": [
-        "U",
-        "R"
-      ],
-      "signal_cards": {
-        "Firebending Student": 0.24,
-        "Balmor, Battlemage Captain": 0.22,
-        "Drake Hatcher": 0.2,
-        "Vivi Ornitier": 0.18,
-        "Stormchaser's Talent": 0.16
-      },
-      "key_threats": [
-        {
-          "card": "Firebending Student",
-          "danger": "high",
-          "reason": "Grows with every instant/sorcery — becomes huge fast",
-          "removal_priority": 1,
-          "must_answer": true
-        },
-        {
-          "card": "Balmor, Battlemage Captain",
-          "danger": "high",
-          "reason": "Gives all creatures trample + pump on spells",
-          "removal_priority": 1,
-          "must_answer": true
-        },
-        {
-          "card": "Vivi Ornitier",
-          "danger": "high",
-          "reason": "Drains life on spells, hard to race",
-          "removal_priority": 1,
-          "must_answer": true
-        },
-        {
-          "card": "Drake Hatcher",
-          "danger": "medium",
-          "reason": "Creates flying tokens on spells — go-wide threat",
-          "removal_priority": 2
-        }
-      ],
-      "speed": "fast",
-      "typical_kill_turn": 5,
-      "hidden_reach": 6,
-      "description": "Creature-based prowess deck. Creatures grow huge with each spell. Remove Firebending Student and Balmor before they snowball."
     },
     {
       "name": "Dimir (observed)",
@@ -869,6 +1650,357 @@
       "typical_kill_turn": 10,
       "hidden_reach": 0,
       "description": ""
+    },
+    {
+      "name": "White (observed)",
+      "archetype": "unknown",
+      "colors": [
+        "W"
+      ],
+      "signal_cards": {
+        "Voice of Victory": 0.15,
+        "Clarion Conqueror": 0.15,
+        "Veteran Survivor": 0.15,
+        "Spellbook Vendor": 0.15,
+        "Optimistic Scavenger": 0.15,
+        "Seam Rip": 0.15
+      },
+      "key_threats": [
+        {
+          "card": "Clarion Conqueror",
+          "danger": "high",
+          "reason": "Converts every life gain into a 1/1 Knight token; creates overwhelming boards fast",
+          "removal_priority": 1,
+          "must_answer": true
+        },
+        {
+          "card": "Optimistic Scavenger",
+          "danger": "high",
+          "reason": "Grows with each life gain trigger; becomes lethal quickly if unanswered",
+          "removal_priority": 2,
+          "must_answer": true
+        },
+        {
+          "card": "Voice of Victory",
+          "danger": "medium",
+          "reason": "Anthem effect pumps the wide token board into lethal combat damage",
+          "removal_priority": 3
+        },
+        {
+          "card": "Spellbook Vendor",
+          "danger": "low",
+          "reason": "Key enabler that triggers all lifegain payoffs; removing it slows the engine",
+          "removal_priority": 4
+        }
+      ],
+      "speed": "fast",
+      "typical_kill_turn": 7,
+      "hidden_reach": 0,
+      "description": "Mono-white lifegain synergy deck that chains cheap life gain triggers into explosive board presence through token generation and +1/+1 counter growth. Dangerous because it converts innocuous life gain into lethal board states that snowball out of control by turn 5-6."
+    },
+    {
+      "name": "Red (observed)",
+      "archetype": "unknown",
+      "colors": [
+        "R"
+      ],
+      "signal_cards": {
+        "Burnout Bashtronaut": 0.3,
+        "Ojer Axonil, Deepest Might": 0.15,
+        "Tiger-Dillo": 0.15,
+        "Ball Lightning": 0.15
+      },
+      "key_threats": [],
+      "speed": "fast",
+      "typical_kill_turn": 10,
+      "hidden_reach": 0,
+      "description": ""
+    },
+    {
+      "name": "Black (observed)",
+      "archetype": "unknown",
+      "colors": [
+        "B"
+      ],
+      "signal_cards": {
+        "Deep-Cavern Bat": 0.3,
+        "Unholy Annex // Ritual Chamber": 0.15,
+        "Bloodletter of Aclazotz": 0.15,
+        "Demon": 0.15,
+        "Unstoppable Slasher": 0.15
+      },
+      "key_threats": [],
+      "speed": "medium",
+      "typical_kill_turn": 10,
+      "hidden_reach": 0,
+      "description": ""
+    },
+    {
+      "name": "Selesnya (observed)",
+      "archetype": "unknown",
+      "colors": [
+        "G",
+        "W"
+      ],
+      "signal_cards": {
+        "Felidar Retreat": 0.15,
+        "Cat Beast": 0.15,
+        "Enduring Innocence": 0.15,
+        "Woodland Acolyte": 0.15,
+        "Authority of the Consuls": 0.15,
+        "Overlord of the Hauntwoods": 0.15,
+        "Sapling Nursery": 0.15,
+        "Treefolk": 0.15,
+        "Seam Rip": 0.15,
+        "Llanowar Elves": 0.15
+      },
+      "key_threats": [],
+      "speed": "medium",
+      "typical_kill_turn": 10,
+      "hidden_reach": 0,
+      "description": ""
+    },
+    {
+      "name": "Green (observed)",
+      "archetype": "unknown",
+      "colors": [
+        "G"
+      ],
+      "signal_cards": {
+        "Llanowar Elves": 0.15,
+        "Summon: Fenrir": 0.15,
+        "Dragon Sniper": 0.15,
+        "Innkeeper's Talent": 0.15,
+        "Summoner's Grimoire": 0.15,
+        "Hero": 0.15,
+        "Hunter's Talent": 0.15
+      },
+      "key_threats": [],
+      "speed": "medium",
+      "typical_kill_turn": 10,
+      "hidden_reach": 0,
+      "description": ""
+    },
+    {
+      "name": "Rakdos (observed)",
+      "archetype": "unknown",
+      "colors": [
+        "B",
+        "R"
+      ],
+      "signal_cards": {
+        "Stadium Headliner": 0.15,
+        "Burnout Bashtronaut": 0.15,
+        "Warrior": 0.15,
+        "Hazoret, Godseeker": 0.15,
+        "Boggart Cursecrafter": 0.15,
+        "Slickshot Show-Off": 0.15,
+        "Black Mage's Rod": 0.15,
+        "Hero": 0.15,
+        "Kuja, Genome Sorcerer": 0.15,
+        "Wizard": 0.15
+      },
+      "key_threats": [],
+      "speed": "medium",
+      "typical_kill_turn": 10,
+      "hidden_reach": 0,
+      "description": ""
+    },
+    {
+      "name": "Orzhov (observed)",
+      "archetype": "unknown",
+      "colors": [
+        "B",
+        "W"
+      ],
+      "signal_cards": {
+        "Warrior": 0.3,
+        "Map": 0.3,
+        "Vengeful Bloodwitch": 0.15,
+        "Dalkovan Packbeasts": 0.15,
+        "Exalted Sunborn": 0.15,
+        "The Seriema": 0.15,
+        "Delney, Streetwise Lookout": 0.15,
+        "Overlord of the Balemurk": 0.15,
+        "Zoraline, Cosmos Caller": 0.15,
+        "Splitskin Doll": 0.15
+      },
+      "key_threats": [],
+      "speed": "medium",
+      "typical_kill_turn": 10,
+      "hidden_reach": 0,
+      "description": ""
+    },
+    {
+      "name": "Blue (observed)",
+      "archetype": "unknown",
+      "colors": [
+        "U"
+      ],
+      "signal_cards": {
+        "Shoreline Looter": 0.15,
+        "Illvoi Galeblade": 0.15,
+        "Monk": 0.15,
+        "Marang River Regent": 0.15
+      },
+      "key_threats": [],
+      "speed": "medium",
+      "typical_kill_turn": 10,
+      "hidden_reach": 0,
+      "description": ""
+    },
+    {
+      "name": "Gruul (observed)",
+      "archetype": "unknown",
+      "colors": [
+        "G",
+        "R"
+      ],
+      "signal_cards": {
+        "Ruby, Daring Tracker": 0.15,
+        "Courageous Goblin": 0.15,
+        "Axgard Cavalry": 0.15,
+        "Skyraker Giant": 0.15,
+        "Llanowar Elves": 0.15,
+        "Railway Brawler": 0.15,
+        "Terror of the Peaks": 0.15,
+        "Trumpeting Carnosaur": 0.15,
+        "Map": 0.15,
+        "Badgermole Cub": 0.15
+      },
+      "key_threats": [],
+      "speed": "fast",
+      "typical_kill_turn": 10,
+      "hidden_reach": 0,
+      "description": ""
+    },
+    {
+      "name": "Simic (observed)",
+      "archetype": "unknown",
+      "colors": [
+        "G",
+        "U"
+      ],
+      "signal_cards": {
+        "Llanowar Elves": 0.3,
+        "Sazh's Chocobo": 0.15,
+        "Bristlebane Battler": 0.15,
+        "Bonny Pall, Clearcutter": 0.15,
+        "Beau": 0.15,
+        "Primeval Bounty": 0.15,
+        "Tatyova, Benthic Druid": 0.15,
+        "Bigfin Bouncer": 0.15,
+        "Loot, Exuberant Explorer": 0.15
+      },
+      "key_threats": [],
+      "speed": "medium",
+      "typical_kill_turn": 10,
+      "hidden_reach": 0,
+      "description": ""
+    },
+    {
+      "name": "BUW (observed)",
+      "archetype": "unknown",
+      "colors": [
+        "B",
+        "U",
+        "W"
+      ],
+      "signal_cards": {
+        "Nowhere to Run": 0.15,
+        "Grim Bauble": 0.15,
+        "Momentum Breaker": 0.15,
+        "Sunpearl Kirin": 0.15,
+        "Stormchaser's Talent": 0.15,
+        "Otter": 0.15,
+        "Dream Beavers": 0.15,
+        "Super Shredder": 0.15,
+        "Turncoat Kunoichi": 0.15,
+        "Ninja Turtle Spirit": 0.15
+      },
+      "key_threats": [],
+      "speed": "medium",
+      "typical_kill_turn": 10,
+      "hidden_reach": 0,
+      "description": ""
+    },
+    {
+      "name": "Boros (observed)",
+      "archetype": "unknown",
+      "colors": [
+        "R",
+        "W"
+      ],
+      "signal_cards": {
+        "Charming Scoundrel": 0.15,
+        "Treasure": 0.15,
+        "Trumpeting Carnosaur": 0.15,
+        "Elspeth, Storm Slayer": 0.15,
+        "Soldier": 0.15,
+        "Caretaker's Talent": 0.15,
+        "Koya, Death from Above": 0.15,
+        "Nettle Guard": 0.15,
+        "Mabel, Heir to Cragflame": 0.15,
+        "Cragflame": 0.15
+      },
+      "key_threats": [],
+      "speed": "fast",
+      "typical_kill_turn": 10,
+      "hidden_reach": 0,
+      "description": ""
+    },
+    {
+      "name": "Golgari (observed)",
+      "archetype": "unknown",
+      "colors": [
+        "B",
+        "G"
+      ],
+      "signal_cards": {
+        "Dawn's Light Archer": 0.3,
+        "Morcant's Loyalist": 0.3,
+        "Moldering Gym // Weight Room": 0.15,
+        "Slavering Branchsnapper": 0.15,
+        "Eclipsed Elf": 0.15,
+        "Creakwood Safewright": 0.15,
+        "Scarblade Scout": 0.15,
+        "Gloom Ripper": 0.15,
+        "Wary Watchdog": 0.15,
+        "Patchwork Beastie": 0.15
+      },
+      "key_threats": [],
+      "speed": "medium",
+      "typical_kill_turn": 10,
+      "hidden_reach": 0,
+      "description": ""
+    },
+    {
+      "name": "BGU (observed)",
+      "archetype": "unknown",
+      "colors": [
+        "B",
+        "G",
+        "U"
+      ],
+      "signal_cards": {
+        "Donatello, Turtle Techie": 0.3,
+        "Leatherhead, Swamp Stalker": 0.15,
+        "Krang & Shredder": 0.15,
+        "Genghis Frog": 0.15,
+        "Mutagen": 0.15,
+        "Michelangelo, Game Master": 0.15,
+        "Crustacean Commando": 0.15,
+        "Ice Cream Kitty": 0.15,
+        "Guac & Marshmallow Pizza": 0.15,
+        "Putrid Pals": 0.15
+      },
+      "key_threats": [],
+      "speed": "medium",
+      "typical_kill_turn": 10,
+      "hidden_reach": 0,
+      "description": ""
     }
-  ]
+  ],
+  "_updated": "2026-03-26",
+  "_source": "AetherHub, MTGDecks.net, magic.gg (March 2026)"
 }

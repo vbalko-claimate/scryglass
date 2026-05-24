@@ -24,10 +24,14 @@ class GameStateTracker:
         self.on_match_start: Callable[[], None] | None = None
         self.on_match_end: Callable[[bool], None] | None = None
         self.on_my_card_played: Callable[[str, str, int, int], None] | None = None
+        # Spell/ability observation callback: (event_type, card_name, colors, card_types, oracle_text, source_card_name)
+        self.on_stack_observed: Callable[[str, dict], None] | None = None
         self._match_active = False
         self._last_logged_turn = 0
         # B1: recent annotations for death-cause resolution
         self._recent_annotations: list[dict] = []
+        # B3b: persistent aura→target attachment map (aura_iid → target_iid)
+        self._attachment_map: dict[int, int] = {}
         # B5: auto-tap solutions keyed by instance_id
         self._last_auto_tap: dict[int, dict] = {}
         # Track instance IDs already seen on battlefield to avoid
@@ -35,6 +39,9 @@ class GameStateTracker:
         # re-sends all objects (clearing self.state.objects loses
         # the old_obj needed for entering-battlefield detection).
         self._seen_on_bf: set[int] = set()
+        self._seen_on_stack: set[int] = set()
+        self._pending_connect_context: dict[str, object] = {}
+        self._last_decision_snapshot_key: tuple[int, str] = (-1, "")
 
     @property
     def match_active(self) -> bool:
@@ -68,18 +75,11 @@ class GameStateTracker:
             config = room_info.get("gameRoomConfig", {})
             match_id = config.get("matchId", "")
             players = room_info.get("players", [])
+            reserved = config.get("reservedPlayers", [])
+            pending_connect = dict(self._pending_connect_context)
 
-            # Find our seat and opponent
-            my_seat = 0
-            opp_seat = 0
-            opp_name = ""
-            for p in config.get("reservedPlayers", []):
-                if p.get("userId") == self.state.match_info.match_id:
-                    continue
-                # We detect our seat from ConnectResp, but set opp info here
-                for pl in players:
-                    if pl.get("userId") != p.get("userId"):
-                        continue
+            if match_id and self.state.match_info.match_id and match_id != self.state.match_info.match_id:
+                self.reset()
 
             # Store player names for later
             self._player_names = {
@@ -88,20 +88,35 @@ class GameStateTracker:
             }
 
             # Find our account name and opponent from reservedPlayers (has userId)
-            reserved = config.get("reservedPlayers", [])
             self._all_reserved = reserved
             my_user_id = getattr(self, "_my_user_id", None)
+            my_seat = 0
+            opp_seat = 0
 
             # Extract opponent name directly from reservedPlayers
             self._opp_name_from_room = ""
             self._my_account_name = ""
             for p in reserved:
+                seat = p.get("systemSeatId", 0)
                 if my_user_id and p.get("userId") == my_user_id:
                     self._my_account_name = p.get("playerName", "")
+                    my_seat = seat
                 elif my_user_id and p.get("userId") != my_user_id:
                     self._opp_name_from_room = p.get("playerName", "")
+                    opp_seat = seat
+
+            if not my_seat:
+                my_seat = int(pending_connect.get("my_seat_id", 0) or 0)
+            if my_seat and not opp_seat:
+                opp_seat = 1 if my_seat == 2 else 2
 
             self.state.match_info.match_id = match_id
+            if my_seat:
+                self.state.my_seat_id = my_seat
+            if opp_seat:
+                self.state.match_info.opponent_seat_id = opp_seat
+            if pending_connect.get("my_deck"):
+                self.state.my_deck = list(pending_connect.get("my_deck", []))
             self._match_active = True
             log.info("Match started: %s", match_id)
 
@@ -146,7 +161,8 @@ class GameStateTracker:
 
         if msg_type == "GREMessageType_ConnectResp":
             self._handle_connect_resp(gm)
-        elif msg_type == "GREMessageType_GameStateMessage":
+        elif msg_type in ("GREMessageType_GameStateMessage",
+                           "GREMessageType_QueuedGameStateMessage"):
             self._handle_game_state_message(gm)
         elif msg_type == "GREMessageType_DieRollResultsResp":
             self._handle_die_roll(gm)
@@ -159,6 +175,7 @@ class GameStateTracker:
             "GREMessageType_ChooseStartingPlayerReq",
         ):
             self.state.pending_request = msg_type
+            self._save_decision_context(msg_type)
             if self.on_decision_point:
                 self.on_decision_point(self.state, msg_type)
         elif msg_type == "GREMessageType_IntermissionReq":
@@ -173,6 +190,10 @@ class GameStateTracker:
 
         deck_msg = resp.get("deckMessage", {})
         self.state.my_deck = deck_msg.get("deckCards", [])
+        self._pending_connect_context = {
+            "my_seat_id": self.state.my_seat_id,
+            "my_deck": list(self.state.my_deck),
+        }
 
         # Set opponent seat
         opp_seat = 1 if self.state.my_seat_id == 2 else 2
@@ -250,6 +271,10 @@ class GameStateTracker:
             self._apply_diff_state(gsm)
 
         self.state.game_state_id = state_id
+        # A new game state invalidates the previous explicit decision request.
+        # Decision-point handlers already receive a frozen snapshot, so clearing
+        # here prevents stale mulligan/attack prompts from leaking forward.
+        self.state.pending_request = None
 
         # Notify listener
         if self.on_state_change:
@@ -296,6 +321,9 @@ class GameStateTracker:
         for obj in gsm.get("gameObjects", []):
             self._add_or_update_object(obj)
 
+        # Track stack spells
+        self._detect_stack_spells(gsm)
+
         # Remove deleted
         for iid in gsm.get("diffDeletedInstanceIds", []):
             self.state.objects.pop(iid, None)
@@ -317,7 +345,18 @@ class GameStateTracker:
         self._parse_actions(gsm.get("actions", []))
 
         # Annotations
-        self.state.annotations = gsm.get("annotations", [])
+        new_annotations = gsm.get("annotations", [])
+        self.state.annotations = new_annotations
+        # SPRINT 1 — persistent annotations are a SEPARATE list from
+        # `annotations`; this is where MTGA puts TargetSpec
+        # (recording the chosen target object) and similar
+        # cross-state choices. Combine both lists when persisting
+        # for the replay exporter.
+        persistent = gsm.get("persistentAnnotations", [])
+        if new_annotations or persistent:
+            self._save_user_choice_annotations(
+                list(new_annotations) + list(persistent)
+            )
 
     def _apply_diff_state(self, gsm: dict):
         """Apply a diff update to the current state."""
@@ -342,7 +381,7 @@ class GameStateTracker:
                 if new_life is not None and new_life != old_life:
                     mid = self.state.match_info.match_id
                     if mid:
-                        who = "me" if seat == self.state.my_seat_id else "opp"
+                        who = self._seat_role(seat)
                         save_match_event(mid, "life_change",
                             game_number=self.state.match_info.game_number,
                             turn_number=self.state.turn_info.turn_number,
@@ -364,6 +403,28 @@ class GameStateTracker:
         if new_annotations:
             self.state.annotations = new_annotations
             self._recent_annotations = new_annotations
+            # B3b: update persistent attachment map from AttachmentCreated annotations
+            for ann in new_annotations:
+                if "AnnotationType_AttachmentCreated" in ann.get("type", []):
+                    aura_iid = ann.get("affectorId")
+                    aids = ann.get("affectedIds", [])
+                    if aura_iid and aids:
+                        self._attachment_map[aura_iid] = aids[0]
+        # SPRINT 1 — persist user-choice annotations so the
+        # replay exporter can reconstruct per-action choices
+        # (spell targets, X values, modal modes, life-cost mana
+        # payments). These are the bits MTGA records but our
+        # event log was dropping. The annotations join with
+        # spell_cast / ability / card_played events later via
+        # `affector_id` (the spell/ability's instanceId).
+        # `persistentAnnotations` lives separately from the
+        # standard `annotations` list — that's where TargetSpec
+        # records the chosen target object during a cast.
+        persistent = gsm.get("persistentAnnotations", [])
+        if new_annotations or persistent:
+            self._save_user_choice_annotations(
+                list(new_annotations) + list(persistent)
+            )
 
         # Zones (merge — replace changed zones)
         for z in gsm.get("zones", []):
@@ -379,6 +440,12 @@ class GameStateTracker:
         # Game objects (merge)
         for obj in gsm.get("gameObjects", []):
             self._add_or_update_object(obj)
+
+        # Track instants/sorceries via stack zone membership
+        # (objects may already have a different zoneId in their gameObject
+        #  by the time the diff arrives, so we detect stack presence from
+        #  the zone's objectInstanceIds list instead)
+        self._detect_stack_spells(gsm)
 
         # Remove deleted objects
         for iid in gsm.get("diffDeletedInstanceIds", []):
@@ -402,34 +469,29 @@ class GameStateTracker:
         if "actions" in gsm:
             self._parse_actions(gsm["actions"])
 
-        # Log start of my turn for mana tracking
+        # Log turn boundaries for replay reconstruction. We emit
+        # turn_start for BOTH players' turns (the original version
+        # gated on `new_active == self.state.my_seat_id`, which lost
+        # half the turn boundaries and made downstream replay
+        # validation impossible). The `active_player` field in the
+        # payload tells consumers whose turn just started ("me" or
+        # "opp"), so the replay exporter doesn't need to alternate
+        # from a starting-player heuristic.
         if ti:
             new_turn = ti.get("turnNumber", 0)
             new_active = ti.get("activePlayer", 0)
-            if (new_turn > 0 and new_active == self.state.my_seat_id
+            if (new_turn > 0
                     and new_turn != self._last_logged_turn
                     and self.state.match_info.match_id):
                 self._last_logged_turn = new_turn
                 lands = self.state.my_lands()
                 me = self.state.my_player()
                 opp = self.state.opp_player()
-                # B4: board state snapshot
-                my_creatures = []
-                for o in self.state.my_creatures():
-                    c = card_cache.get(o.grp_id)
-                    my_creatures.append({
-                        "name": c.name if c else o.name,
-                        "power": o.power, "toughness": o.toughness,
-                        "tapped": o.is_tapped,
-                    })
-                opp_creatures = []
-                for o in self.state.opp_creatures():
-                    c = card_cache.get(o.grp_id)
-                    opp_creatures.append({
-                        "name": c.name if c else o.name,
-                        "power": o.power, "toughness": o.toughness,
-                        "tapped": o.is_tapped,
-                    })
+                snapshot = self._build_state_snapshot(include_actions=False)
+                active_label = (
+                    "me" if new_active == self.state.my_seat_id
+                    else ("opp" if new_active else "unknown")
+                )
                 save_match_event(
                     self.state.match_info.match_id, "turn_start",
                     game_number=self.state.match_info.game_number,
@@ -437,8 +499,15 @@ class GameStateTracker:
                     phase="turn_start",
                     data={"available_mana": len(lands),
                           "total_lands": len(lands),
-                          "my_creatures": my_creatures,
-                          "opp_creatures": opp_creatures,
+                          "active_player": active_label,
+                          "active_seat_id": new_active,
+                          "my_seat_id": self.state.my_seat_id,
+                          "my_creatures": snapshot["my_creatures"],
+                          "opp_creatures": snapshot["opp_creatures"],
+                          "my_battlefield": snapshot["my_battlefield"],
+                          "opp_battlefield": snapshot["opp_battlefield"],
+                          "my_hand": snapshot["my_hand"],
+                          "stack": snapshot["stack"],
                           "my_hand_size": len(self.state.my_hand()),
                           "my_life": me.life_total if me else 0,
                           "opp_life": opp.life_total if opp else 0})
@@ -467,7 +536,9 @@ class GameStateTracker:
             is_tapped=obj.get("isTapped", False),
             has_summoning_sickness=obj.get("hasSummoningSickness", False),
             object_type=obj.get("type", "GameObjectType_Card").replace("GameObjectType_", ""),
-            attached_to_id=None,  # B3: resolved via annotations, not object field
+            attached_to_id=self._attachment_map.get(iid),  # B3: from AttachmentCreated annotations
+            source_grp_id=obj.get("objectSourceGrpId", 0),
+            parent_id=obj.get("parentId", 0)
         )
 
         # Check if object is entering battlefield (zone-type based, not owner-based)
@@ -497,9 +568,20 @@ class GameStateTracker:
         else:
             self._seen_on_bf.discard(iid)
 
-        # Log opponent cards entering battlefield
+        # Log opponent cards entering battlefield. Lands ARE included
+        # (the replay engine needs to see them to apply life-payment
+        # for shock lands and gain-life triggers for "enters; gain 1
+        # life" lands like Dismal Backwater / Promising Vein).
+        # Tokens (Map, Rabbit, etc.) ARE included with `is_token: true`
+        # so the exporter can decide whether to feed them into opp.plays
+        # (currently does — net positive across the corpus, even though
+        # it causes Map double-counting on Spyglass Siren matches —
+        # because most token-creating abilities aren't implemented and
+        # the re-cast path is the only way the token shows up at all).
+        obj_type = obj.get("type", "GameObjectType_Card")
+        is_token = "Token" in obj_type or obj.get("isToken", False)
         if (entering_bf and opp_seat and owner == opp_seat and card
-                and not card.is_land and grp_id > 0
+                and grp_id > 0
                 and self.state.match_info.match_id):
             save_match_event(
                 self.state.match_info.match_id, "opp_card_played",
@@ -508,20 +590,92 @@ class GameStateTracker:
                 phase=self.state.turn_info.phase,
                 data={"name": card.name, "grp_id": grp_id,
                       "card_types": card.card_types,
-                      "colors": card.colors})
+                      "colors": card.colors,
+                      "is_land": card.is_land,
+                      "is_token": is_token,
+                      "enters_tapped": obj.get("isTapped", False),
+                      "instance_id": iid})
+
+        if (on_battlefield and was_on_bf and old_obj and card
+                and self.state.match_info.match_id):
+            stats_changed = (
+                old_obj.power != game_obj.power
+                or old_obj.toughness != game_obj.toughness
+            )
+            if stats_changed:
+                save_match_event(
+                    self.state.match_info.match_id, "permanent_stats_changed",
+                    game_number=self.state.match_info.game_number,
+                    turn_number=self.state.turn_info.turn_number,
+                    phase=self.state.turn_info.phase,
+                    data={
+                        "name": card.name,
+                        "grp_id": grp_id,
+                        "controller": self._seat_role(game_obj.controller_seat_id),
+                        "owner": self._seat_role(owner),
+                        "old_power": old_obj.power,
+                        "new_power": game_obj.power,
+                        "old_toughness": old_obj.toughness,
+                        "new_toughness": game_obj.toughness,
+                    })
 
         # Set attack/block state from game object data
         game_obj.attack_state = obj.get("attackState")
+        prev_block_state = game_obj.block_state
         game_obj.block_state = obj.get("blockState")
 
-        # Log my card entering battlefield
+        # Sprint 4 — synthesize block_declared events for OPPONENT'S
+        # blocks. The existing path (`_handle_client_message
+        # DeclareBlockersResp`) only catches MY blocks (sent by the
+        # client). Opp's blocks arrive via GameStateMessage updates
+        # marking the creature's `blockState`. We detect the
+        # transition None/Empty → "Blocking" and emit a block event
+        # in the same shape so the replay exporter can route it.
+        if (
+            opp_seat
+            and owner == opp_seat
+            and game_obj.block_state
+            and game_obj.block_state != prev_block_state
+            and self.state.match_info.match_id
+        ):
+            attackers_blocked = obj.get("blockInfo", {}).get("attackerIds", [])
+            if attackers_blocked:
+                attacker_names = []
+                for a_iid in attackers_blocked:
+                    a_obj = self.state.objects.get(a_iid)
+                    a_card = card_cache.get(a_obj.grp_id) if a_obj else None
+                    attacker_names.append({
+                        "name": a_card.name if a_card else (a_obj.name if a_obj else "?"),
+                        "id": a_iid,
+                        "power": a_obj.power if a_obj else 0,
+                        "toughness": a_obj.toughness if a_obj else 0,
+                    })
+                save_match_event(
+                    self.state.match_info.match_id, "block_declared",
+                    game_number=self.state.match_info.game_number,
+                    turn_number=self.state.turn_info.turn_number,
+                    phase=self.state.turn_info.phase,
+                    data={
+                        "blocker": card.name if card else game_obj.name,
+                        "blocker_id": iid,
+                        "blocker_power": game_obj.power,
+                        "blocker_toughness": game_obj.toughness,
+                        "attackers": attacker_names,
+                        "owner": "opp",
+                    })
+
+        # Log my card entering battlefield (tokens included; see
+        # opp_card_played comment for rationale).
         if (entering_bf and my_seat and owner == my_seat and card
-                and grp_id > 0 and self.state.match_info.match_id):
+                and grp_id > 0
+                and self.state.match_info.match_id):
             play_data = {"name": card.name, "grp_id": grp_id,
                          "card_types": card.card_types,
                          "colors": card.colors,
                          "cmc": card.cmc,
-                         "is_land": card.is_land}
+                         "is_land": card.is_land,
+                         "enters_tapped": obj.get("isTapped", False),
+                         "instance_id": iid}
             # B5: attach mana spent info
             auto_tap = self._last_auto_tap.pop(iid, None)
             if auto_tap:
@@ -554,6 +708,8 @@ class GameStateTracker:
                             target_iid = aids[0]
                             break
             if target_iid:
+                # Wire attached_to_id on the aura object so _get_aura_abilities works
+                game_obj.attached_to_id = target_iid
                 target_obj = self.state.objects.get(target_iid)
                 target_card = card_cache.get(target_obj.grp_id) if target_obj else None
                 target_owner = ("me" if target_obj and target_obj.owner_seat_id == my_seat
@@ -601,6 +757,44 @@ class GameStateTracker:
                           "power": game_obj.power,
                           "toughness": game_obj.toughness})
 
+        # Track cards leaving the hand (hand disruption: exile/discard by opponent)
+        in_hand = obj_zone and obj_zone.type == "ZoneType_Hand"
+        was_in_hand = False
+        if old_obj:
+            old_zone_for_hand = self.state.zones.get(old_obj.zone_id)
+            was_in_hand = old_zone_for_hand and old_zone_for_hand.type == "ZoneType_Hand"
+
+        leaving_hand = was_in_hand and not in_hand and not on_battlefield
+        if (leaving_hand and my_seat and owner == my_seat and card
+                and grp_id > 0 and self.state.match_info.match_id):
+            dest_zone_h = self.state.zones.get(game_obj.zone_id)
+            dest_type_h = dest_zone_h.type if dest_zone_h else "unknown"
+            dest_label_h = {
+                "ZoneType_Exile": "exiled",
+                "ZoneType_Graveyard": "discarded",
+                "ZoneType_Stack": None,      # being cast — ignore
+                "ZoneType_Battlefield": None, # played — ignore
+            }.get(dest_type_h)
+            if dest_label_h:
+                caused_by_h = self._resolve_removal_cause(iid)
+                if not caused_by_h or caused_by_h.get("seat") != opp_seat:
+                    caused_by_h = None
+            if dest_label_h and caused_by_h:
+                event_data_h: dict = {
+                    "name": card.name, "grp_id": grp_id,
+                    "destination": dest_label_h,
+                    "card_types": card.card_types,
+                }
+                event_data_h["caused_by"] = caused_by_h["name"]
+                event_data_h["caused_by_type"] = caused_by_h["type"]
+                save_match_event(
+                    self.state.match_info.match_id, "hand_disrupted",
+                    game_number=self.state.match_info.game_number,
+                    turn_number=self.state.turn_info.turn_number,
+                    phase=self.state.turn_info.phase,
+                    data=event_data_h)
+                self.state.hand_disrupted_count += 1
+
         # Track creatures leaving the battlefield (death/exile/bounce)
         leaving_bf = was_on_bf and not on_battlefield
         if (leaving_bf and old_obj and card and grp_id > 0
@@ -615,7 +809,7 @@ class GameStateTracker:
                 "ZoneType_Library": "tucked",
             }.get(dest_type, "removed")
 
-            who = "me" if owner == my_seat else "opp"
+            who = self._seat_role(owner)
             event_data = {
                 "name": card.name, "grp_id": grp_id,
                 "owner": who,
@@ -644,6 +838,99 @@ class GameStateTracker:
                 data=event_data)
 
         self.state.objects[iid] = game_obj
+
+    def _detect_stack_spells(self, gsm: dict):
+        """Detect instants/sorceries entering the stack via zone membership.
+
+        GRE often sends instant/sorcery objects with their *final* zoneId
+        (graveyard/limbo) even though they appear in the stack zone's
+        objectInstanceIds list.  So we track them through zones, not objects.
+        """
+        if not self.state.match_info.match_id:
+            return
+        opp_seat = self.state.match_info.opponent_seat_id
+        my_seat = self.state.my_seat_id
+
+        for z in gsm.get("zones", []):
+            if z.get("type") != "ZoneType_Stack":
+                continue
+            for iid in z.get("objectInstanceIds", []):
+                if iid in self._seen_on_stack:
+                    continue  # already logged
+                self._seen_on_stack.add(iid)
+
+                obj = self.state.objects.get(iid)
+                if not obj:
+                    continue
+                owner = obj.owner_seat_id
+
+                # --- Ability on stack ---
+                if obj.object_type == "Ability":
+                    source_card = card_cache.get(obj.source_grp_id)
+                    if not source_card:
+                        continue
+                    ability_data = {
+                        "name": source_card.name,
+                        "source_grp_id": obj.source_grp_id,
+                        "ability_grp_id": obj.grp_id,
+                        "parent_id": obj.parent_id,
+                        "instance_id": iid,
+                    }
+                    event_type = None
+                    if opp_seat and owner == opp_seat:
+                        event_type = "opp_ability"
+                        log.info("Opponent ability: %s", source_card.name)
+                    elif my_seat and owner == my_seat:
+                        event_type = "ability"
+                        log.info("Player ability: %s", source_card.name)
+                    if event_type:
+                        save_match_event(
+                            self.state.match_info.match_id, event_type,
+                            game_number=self.state.match_info.game_number,
+                            turn_number=self.state.turn_info.turn_number,
+                            phase=self.state.turn_info.phase,
+                            data=ability_data)
+                        if self.on_stack_observed:
+                            self.on_stack_observed(event_type, {
+                                "name": source_card.name,
+                                "colors": source_card.colors,
+                            })
+                    continue
+
+                # --- Instant/Sorcery spell on stack ---
+                card = card_cache.get(obj.grp_id)
+                if not card or obj.grp_id <= 0:
+                    continue
+                if "Instant" not in (card.card_types or []) and \
+                   "Sorcery" not in (card.card_types or []):
+                    continue
+
+                spell_data = {
+                    "name": card.name,
+                    "grp_id": obj.grp_id,
+                    "card_types": card.card_types,
+                    "colors": card.colors,
+                    "cmc": card.cmc,
+                    "oracle_text": (card.oracle_text[:200]
+                                    if card.oracle_text else ""),
+                    "instance_id": iid,
+                }
+                event_type = None
+                if opp_seat and owner == opp_seat:
+                    event_type = "opp_spell_cast"
+                    log.info("Opponent spell cast: %s", card.name)
+                elif my_seat and owner == my_seat:
+                    event_type = "spell_cast"
+                    log.info("Player spell cast: %s", card.name)
+                if event_type:
+                    save_match_event(
+                        self.state.match_info.match_id, event_type,
+                        game_number=self.state.match_info.game_number,
+                        turn_number=self.state.turn_info.turn_number,
+                        phase=self.state.turn_info.phase,
+                        data=spell_data)
+                    if self.on_stack_observed:
+                        self.on_stack_observed(event_type, spell_data)
 
     def _parse_actions(self, actions_data: list[dict]):
         """Parse available actions."""
@@ -810,8 +1097,245 @@ class GameStateTracker:
             if (any("DamageDealt" in t for t in ann_types)
                     and cause_type == "spell"):
                 cause_type = "combat"
-            return {"name": source_name, "type": cause_type}
+            return {
+                "name": source_name,
+                "type": cause_type,
+                "seat": source_obj.controller_seat_id if source_obj else 0,
+            }
         return None
+
+    def _seat_role(self, seat: int) -> str:
+        if seat and seat == self.state.my_seat_id:
+            return "me"
+        if seat and seat == self.state.match_info.opponent_seat_id:
+            return "opp"
+        return "unknown"
+
+    def _resolve_iid_to_card_name(self, iid: int) -> str | None:
+        """Best-effort instanceId → card name. Used by annotation
+        capture below. Returns None if unknown."""
+        obj = self.state.objects.get(iid)
+        if not obj:
+            return None
+        if obj.grp_id and obj.grp_id > 0:
+            card = card_cache.get(obj.grp_id)
+            if card:
+                return card.name
+        return obj.name or None
+
+    def _ann_details_map(self, ann: dict) -> dict:
+        """Flatten an annotation's `details` list of key/value pairs
+        into a `{key: value}` dict (single-value scalars only)."""
+        out = {}
+        for d in ann.get("details") or []:
+            key = d.get("key")
+            if not key:
+                continue
+            for vk in ("valueInt32", "valueString", "valueDouble"):
+                if vk in d:
+                    arr = d[vk]
+                    if isinstance(arr, list) and arr:
+                        out[key] = arr[0]
+                    break
+        return out
+
+    def _save_user_choice_annotations(self, annotations: list[dict]) -> None:
+        """Persist annotations needed by the replay exporter to
+        reconstruct per-action user choices: spell targets, X values,
+        modal modes, life-cost mana payments. Saved as match_events
+        with type=`annotation` and `data.kind` identifying the
+        annotation subtype. Off by default (`save_match_event` is a
+        no-op when match_id is missing).
+
+        Resolved card names are attached when the affector/affected
+        ids point to known game objects so the exporter doesn't need
+        to re-walk the game-state DB.
+        """
+        mid = self.state.match_info.match_id
+        if not mid:
+            return
+        for ann in annotations:
+            ann_types = ann.get("type") or []
+            kind = None
+            if "AnnotationType_TargetSpec" in ann_types:
+                kind = "target_spec"
+            elif "AnnotationType_PlayerSubmittedTargets" in ann_types:
+                kind = "submitted_targets"
+            elif "AnnotationType_ManaPaid" in ann_types:
+                kind = "mana_paid"
+            elif "AnnotationType_UserActionTaken" in ann_types:
+                kind = "user_action_taken"
+            elif "AnnotationType_ModifiedLife" in ann_types:
+                # Life delta tied to a specific source. affectorId =
+                # the spell/ability/effect that changed life;
+                # affectedIds[0] = the player whose life changed
+                # (system seat id); details.life = signed delta.
+                # Captured so the exporter can detect Bitter Triumph
+                # style additional-cost life payments and feed the
+                # choice back to ScriptedPlayer.
+                kind = "modified_life"
+            elif "AnnotationType_CounterAdded" in ann_types:
+                # X-cost ability activations (Mossborn Hydra
+                # `{X}{G}: This creature gets X +1/+1 counters`) emit
+                # one CounterAdded annotation per counter added.
+                # affectorId = the ability/source that put the
+                # counter; affectedIds[0] = the permanent that
+                # received it; details.transaction_amount = how many
+                # counters (usually 1 — multi-counter spells fire
+                # the annotation N times). Replay exporter sums
+                # these per ability source to reconstruct X.
+                kind = "counter_added"
+            else:
+                continue
+
+            affector_id = ann.get("affectorId")
+            affected_ids = ann.get("affectedIds") or []
+            data = {
+                "kind": kind,
+                "ann_id": ann.get("id"),
+                "affector_id": affector_id,
+                "affected_ids": list(affected_ids),
+                "details": self._ann_details_map(ann),
+            }
+            # Resolve names for downstream joining. Affector is
+            # typically the spell/ability on stack; affected are
+            # targets or the source of a payment. For
+            # PlayerSubmittedTargets, affectorId is a player seat —
+            # we don't resolve seats, but the affected_ids list
+            # references the spell whose targets were just submitted.
+            if kind != "submitted_targets" and affector_id:
+                name = self._resolve_iid_to_card_name(affector_id)
+                if name:
+                    data["affector_name"] = name
+            names = []
+            for iid in affected_ids:
+                n = self._resolve_iid_to_card_name(iid)
+                if n:
+                    names.append(n)
+            if names:
+                data["affected_names"] = names
+
+            save_match_event(
+                mid, "annotation",
+                game_number=self.state.match_info.game_number,
+                turn_number=self.state.turn_info.turn_number,
+                phase=self.state.turn_info.phase,
+                data=data)
+
+    def _snapshot_battlefield(self, seat: int) -> list[dict]:
+        cards: list[dict] = []
+        for obj in self.state.objects_in_zone("ZoneType_Battlefield"):
+            if obj.controller_seat_id != seat:
+                continue
+            card = card_cache.get(obj.grp_id)
+            card_types = card.card_types if card else obj.card_types
+            cards.append({
+                "name": card.name if card else obj.name,
+                "grp_id": obj.grp_id,
+                "types": card_types,
+                "subtypes": card.subtypes if card else obj.subtypes,
+                "power": obj.power,
+                "toughness": obj.toughness,
+                "tapped": obj.is_tapped,
+                "summoning_sick": obj.has_summoning_sickness,
+            })
+        cards.sort(key=lambda c: (0 if "Creature" in c["types"] else 1, c["name"]))
+        return cards
+
+    def _snapshot_hand(self, seat: int) -> list[dict]:
+        cards: list[dict] = []
+        for obj in self.state.objects_in_zone("ZoneType_Hand", seat):
+            card = card_cache.get(obj.grp_id)
+            cards.append({
+                "name": card.name if card else obj.name,
+                "grp_id": obj.grp_id,
+                "cmc": card.cmc if card else 0,
+                "types": card.card_types if card else obj.card_types,
+                "mana_cost": card.mana_cost if card else "",
+            })
+        return cards
+
+    def _snapshot_actions(self, seat: int) -> list[dict]:
+        actions: list[dict] = []
+        for action in self.state.available_actions:
+            if action.seat_id != seat:
+                continue
+            obj = self.state.objects.get(action.instance_id or 0)
+            card = card_cache.get(obj.grp_id) if obj else (
+                card_cache.get(action.grp_id) if action.grp_id else None
+            )
+            actions.append({
+                "action_type": action.action_type,
+                "name": card.name if card else (obj.name if obj else ""),
+                "grp_id": action.grp_id or (obj.grp_id if obj else 0),
+                "instance_id": action.instance_id or 0,
+                "ability_grp_id": action.ability_grp_id or 0,
+            })
+        return actions
+
+    def _build_state_snapshot(self, include_actions: bool = True) -> dict:
+        my_seat = self.state.my_seat_id
+        opp_seat = self.state.match_info.opponent_seat_id
+        me = self.state.my_player()
+        opp = self.state.opp_player()
+        my_battlefield = self._snapshot_battlefield(my_seat) if my_seat else []
+        opp_battlefield = self._snapshot_battlefield(opp_seat) if opp_seat else []
+        stack_cards = []
+        for obj in self.state.stack():
+            card = card_cache.get(obj.grp_id)
+            stack_cards.append({
+                "name": card.name if card else obj.name,
+                "grp_id": obj.grp_id,
+                "controller": self._seat_role(obj.controller_seat_id),
+                "types": card.card_types if card else obj.card_types,
+            })
+
+        snapshot = {
+            "my_life": me.life_total if me else None,
+            "opp_life": opp.life_total if opp else None,
+            "my_hand_size": len(self.state.my_hand()),
+            "opp_hand_size": len(self.state.objects_in_zone("ZoneType_Hand", opp_seat)),
+            "my_battlefield": my_battlefield,
+            "opp_battlefield": opp_battlefield,
+            "my_creatures": [c for c in my_battlefield if "Creature" in c["types"]],
+            "opp_creatures": [c for c in opp_battlefield if "Creature" in c["types"]],
+            "my_hand": self._snapshot_hand(my_seat) if my_seat else [],
+            "stack": stack_cards,
+        }
+        if include_actions:
+            snapshot["legal_actions"] = self._snapshot_actions(my_seat) if my_seat else []
+        return snapshot
+
+    def _save_decision_context(self, request_type: str):
+        mid = self.state.match_info.match_id
+        if not mid:
+            return
+        key = (self.state.game_state_id, request_type)
+        if key == self._last_decision_snapshot_key:
+            return
+        self._last_decision_snapshot_key = key
+        save_match_event(
+            mid, "decision_context",
+            game_number=self.state.match_info.game_number,
+            turn_number=self.state.turn_info.turn_number,
+            phase=self.state.turn_info.phase,
+            data={
+                "decision_id": f"{mid}_{self.state.match_info.game_number}_{self.state.game_state_id}",
+                "request_type": request_type,
+                "phase_display": self.state.turn_info.phase_display,
+                "game_state_id": self.state.game_state_id,
+                "my_seat_id": self.state.my_seat_id,
+                "opp_seat_id": self.state.match_info.opponent_seat_id,
+                "active_player": self.state.turn_info.active_player,
+                "priority_player": self.state.turn_info.priority_player,
+                "decision_player": self.state.turn_info.decision_player,
+                "available_action_count": len(self.state.available_actions),
+                "my_action_count": len([
+                    a for a in self.state.available_actions
+                    if a.seat_id == self.state.my_seat_id
+                ]),
+                **self._build_state_snapshot(include_actions=True),
+            })
 
     def reset(self):
         """Reset state for a new match."""
@@ -819,8 +1343,12 @@ class GameStateTracker:
         self._match_active = False
         self._last_logged_turn = 0
         self._recent_annotations = []
+        self._attachment_map = {}
         self._last_auto_tap = {}
         self._seen_on_bf = set()
+        self._seen_on_stack = set()
+        self._pending_connect_context = {}
+        self._last_decision_snapshot_key = (-1, "")
 
 
 def _safe_int(val) -> int:

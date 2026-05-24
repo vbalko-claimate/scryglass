@@ -1,0 +1,7 @@
+# Install with:
+#   sudo install -o root -g wheel -m 0755 tools/templates/mtga-read-collection.sh /usr/local/sbin/mtga-read-collection
+#   sudo visudo -f /etc/sudoers.d/mtga-read-collection
+#
+# Then paste the line below after replacing the username if needed.
+
+vladimirbalko ALL=(root) NOPASSWD: /usr/local/sbin/mtga-read-collection

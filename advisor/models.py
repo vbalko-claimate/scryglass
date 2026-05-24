@@ -2,7 +2,66 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from enum import Enum
 from typing import Any
+
+
+# ─── Canonical Actions ─────────────────────────────────────────
+
+class ActionFamily(str, Enum):
+    CAST_SPELL = "cast_spell"
+    PLAY_LAND = "play_land"
+    ATTACK = "attack"
+    BLOCK = "block"
+    ACTIVATE = "activate"
+    PASS = "pass"  # includes "hold" (don't cast X)
+
+
+@dataclass
+class ActionScore:
+    family: ActionFamily
+    score: float  # 0-1 normalized
+    target: str = ""  # card name
+    source: str = ""  # "heuristic" | "strategy"
+    rule_id: str = ""
+    rule_layer: str = ""
+    rule_weight: float = 1.0
+
+
+@dataclass
+class RuleHit:
+    rule_id: str
+    layer: str
+    weight: float
+    priority: str
+    action_scores: list[ActionScore] = field(default_factory=list)
+    matched_card: str = ""
+    matched_threat: str = ""
+    raw_message: str = ""
+    tags: list[str] = field(default_factory=list)
+
+
+@dataclass
+class RuleMetrics:
+    """Accumulated performance metrics for a rule."""
+    fired: int = 0
+    decisions: int = 0
+    selected: int = 0
+    wins_when_fired: int = 0
+    games_when_fired: int = 0
+    cofire_rules: dict[str, int] = field(default_factory=dict)
+
+    @property
+    def trigger_rate(self) -> float:
+        return self.fired / max(1, self.decisions)
+
+    @property
+    def selection_swing(self) -> float:
+        return self.selected / max(1, self.fired)
+
+    @property
+    def win_rate_when_fired(self) -> float:
+        return self.wins_when_fired / max(1, self.games_when_fired)
 
 
 @dataclass
@@ -21,6 +80,7 @@ class CardInfo:
     expansion: str = ""
     abilities: list[str] = field(default_factory=list)
     oracle_text: str = ""
+    roles: set[str] = field(default_factory=set)
 
     @property
     def is_creature(self) -> bool:
@@ -70,6 +130,8 @@ class GameObject:
     counters: dict[str, int] = field(default_factory=dict)
     abilities: list[dict] = field(default_factory=list)
     object_type: str = "Card"  # Card, Ability, Token
+    source_grp_id: int = 0  # for Ability: grp_id of the source card
+    parent_id: int = 0  # for Ability: instance_id of the parent object
 
     @property
     def is_creature(self) -> bool:
@@ -176,6 +238,9 @@ class GameState:
     game_state_id: int = 0
     annotations: list[dict] = field(default_factory=list)
 
+    # Hand disruption counter — incremented when opponent exiles/discards from our hand
+    hand_disrupted_count: int = 0
+
     # Helpers
     def my_player(self) -> PlayerState | None:
         return self.players.get(self.my_seat_id)
@@ -241,3 +306,12 @@ class Advice:
     details: str = ""
     confidence: float = 0.0
     recommended_cards: list[str] = field(default_factory=list)
+    action_scores: list[ActionScore] = field(default_factory=list)
+    decision_id: str | None = None
+
+    @property
+    def rule_id(self) -> str:
+        """Extract 'layer:rule_id' from details '[layer:rule_id] w:...'."""
+        if self.details and self.details.startswith("[") and "]" in self.details:
+            return self.details[1:self.details.index("]")]
+        return ""

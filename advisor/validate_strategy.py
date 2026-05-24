@@ -1,0 +1,151 @@
+"""Validate and fix an existing strategy JSON file.
+
+Usage:
+    uv run python -m advisor.validate_strategy PATH [--fix] [--dry-run]
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+from pathlib import Path
+
+# Reuse the validator from the generator
+from .generate_rules import _validate_and_fix_rules
+from .version import ENGINE_VERSION
+
+
+def validate_strategy(path: Path, fix: bool = False) -> list[str]:
+    """Validate a strategy file and optionally fix issues.
+
+    Returns list of issues found.
+    """
+    data = json.loads(path.read_text())
+    rules = data.get("rules", [])
+    issues: list[str] = []
+
+    # ── Check 1: Hold/use pair detection (informational) ──
+    # NOTE: conflicts_with is deprecated for non-mulligan rules.
+    # The engine auto-detects hold/use conflicts via action_family at runtime.
+    # This check only warns about stale conflicts_with on non-mulligan rules.
+    from collections import defaultdict
+    from .actions import is_hold_rule
+    for r in rules:
+        if r.get("layer") == "mulligan":
+            continue
+        if r.get("conflicts_with"):
+            issues.append(f"STALE: {r['id']} has conflicts_with (deprecated for non-mulligan rules)")
+
+    # ── Check 2: Rules without any conditions ──
+    for r in rules:
+        has_conditions = any([
+            r.get("phase"), r.get("my_turn") is not None, r.get("turn_min"),
+            r.get("turn_max"), r.get("step"), r.get("life_below"),
+            r.get("life_above"), r.get("opp_life_below"), r.get("mana_min"),
+            r.get("hand_lands_min"), r.get("my_creatures_min"),
+            r.get("opp_creatures_min"), r.get("opp_speed"),
+            r.get("opp_has_must_answer"), r.get("require"),
+        ])
+        if not has_conditions:
+            issues.append(f"SPAM: {r['id']} has no conditions — will fire every phase")
+
+    # Check 3 removed: hold/use override pattern deprecated.
+    # Engine auto-detects hold/use conflicts via action_family.
+
+    # ── Check 3: Duplicate IDs ──
+    seen_ids: set[str] = set()
+    for r in rules:
+        if r["id"] in seen_ids:
+            issues.append(f"DUPLICATE: {r['id']}")
+        seen_ids.add(r["id"])
+
+    # ── Check 5: Missing action_family ──
+    missing_af = [
+        r for r in rules
+        if not r.get("action_family")
+        and r.get("layer") != "mulligan"
+        and not (r.get("phase") and "Mulligan" in r.get("phase", []))
+    ]
+    if missing_af:
+        issues.append(
+            f"ACTION_FAMILY: {len(missing_af)} rules missing action_family"
+            + ("" if fix else " (use --fix to auto-populate)")
+        )
+
+    # ── Check 6: Missing _source ──
+    missing_source = [r for r in rules if not r.get("_source")]
+    if missing_source:
+        issues.append(
+            f"SOURCE: {len(missing_source)} rules missing _source"
+            + ("" if fix else " (use --fix to auto-populate)")
+        )
+
+    # ── Check 7: Pruned rules should have weight 0.0 ──
+    for r in rules:
+        if r.get("pruned") and r.get("weight", 1.0) != 0.0:
+            issues.append(f"PRUNED_WEIGHT: {r['id']} is pruned but weight={r.get('weight')}")
+
+    # ── Check 8: Version check ──
+    saved_version = data.get("_engine_version", "")
+    if saved_version and saved_version != ENGINE_VERSION:
+        issues.append(f"VERSION: saved with engine {saved_version}, current is {ENGINE_VERSION}")
+
+    # ── Check 9: Global biases range ──
+    biases = data.get("global_biases", {})
+    for family, value in biases.items():
+        if not -0.5 <= value <= 0.5:
+            issues.append(f"BIAS_RANGE: {family}={value} outside [-0.5, 0.5]")
+
+    if fix and issues:
+        print(f"Fixing {len(issues)} issues...", file=sys.stderr)
+        data["rules"] = _validate_and_fix_rules(rules)
+
+        # Auto-populate action_family on rules that lack it
+        from .actions import infer_action_family
+        for r in data["rules"]:
+            if r.get("action_family"):
+                continue
+            if r.get("layer") == "mulligan":
+                continue
+            if r.get("phase") and "Mulligan" in r.get("phase", []):
+                continue
+            family = infer_action_family(r.get("action", ""), rule_tags=r.get("tags", []))
+            r["action_family"] = family.value
+            print(f"  Added action_family={family.value} to rule {r['id']}", file=sys.stderr)
+
+        # Auto-populate _source on rules that lack it
+        source_added = 0
+        for r in data["rules"]:
+            if not r.get("_source"):
+                r["_source"] = "manual"
+                source_added += 1
+        if source_added:
+            print(f"  Added _source='manual' to {source_added} rules", file=sys.stderr)
+
+        path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n")
+        print(f"Written: {path}", file=sys.stderr)
+
+    return issues
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Validate a strategy JSON file")
+    parser.add_argument("path", type=Path, help="Strategy JSON file")
+    parser.add_argument("--fix", action="store_true", help="Auto-fix issues")
+    parser.add_argument("--dry-run", action="store_true", help="Show issues without fixing")
+    args = parser.parse_args()
+
+    issues = validate_strategy(args.path, fix=args.fix and not args.dry_run)
+
+    if issues:
+        print(f"\n{len(issues)} issues found in {args.path.name}:")
+        for issue in issues:
+            print(f"  {issue}")
+        if not args.fix:
+            print(f"\nRun with --fix to auto-fix conflict and phase issues.")
+    else:
+        print(f"No issues found in {args.path.name}")
+
+
+if __name__ == "__main__":
+    main()

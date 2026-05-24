@@ -79,16 +79,17 @@ Each rule is a JSON object:
     "zone": "hand",              // hand, battlefield, opp_battlefield, graveyard, opp_graveyard, stack
     "match": {
       "name": "Card Name",      // exact name (string or ["Name1", "Name2"])
-      "keyword": "Lifelink",    // ability keyword
+      "keyword": "Lifelink",    // ability keyword (supports pipe: "destroy|exile|damage")
       "type": "Creature",       // Creature, Instant, Sorcery, Enchantment, Artifact, Land
       "cmc_min": 3, "cmc_max": 2,
-      "power_min": 4, "toughness_min": 3,
-      "castable": true,         // castable with current mana
+      "power_min": 4, "toughness_min": 3, "toughness_max": 5,  // uses LIVE power/toughness (with buffs)
+      "castable": true,         // castable with current mana (checks BOTH CMC and color match)
       "color": "R"
     },
     "min_count": 1, "max_count": 3,
     "absent": true,             // card must NOT be in zone
-    "tapped": false             // true = tapped, false = untapped
+    "tapped": false,            // true = tapped, false = untapped
+    "prefer": "synergy_first"   // optional: re-sort matches by hand synergy (for {card} placeholder)
   }
   ```
 
@@ -109,8 +110,9 @@ These require an identified opponent deck (from meta_decks.json) to evaluate.
 
 **Output:**
 - `action` (string, required): Short advice. Supports `{card}` and `{threat}` placeholders.
+- `action_family` (string, optional): Canonical action type. One of: `cast_spell`, `play_land`, `attack`, `block`, `activate`, `pass`. When set, the engine uses it directly; when omitted, the engine infers from action text. Prefer setting explicitly for unambiguous rules.
 - `priority`: "critical" | "high" | "medium" | "low"
-- `conflicts_with` (string[]): Rule IDs this overrides
+- `conflicts_with` (string[], DEPRECATED): Legacy field. Only used for mulligan rules. For non-mulligan hold/use conflicts, the engine auto-detects via action_family. New rules should NOT include conflicts_with.
 
 **Learning (set defaults):**
 - `weight` (float): 1.0 neutral. 1.2-1.5 for confident rules.
@@ -159,13 +161,35 @@ Each MetaDeck describes an opponent deck for recognition and threat assessment.
 - **situation (5)**: Board state triggers. Life totals, creature counts, racing.
 - **meta_gameplan (6)**: Matchup strategy. Can use `opp_speed`, `opp_has_must_answer`, `opp_has_vulnerability`. Highest priority, overrides lower layers.
 
+### Heuristics Engine (automatic — do NOT duplicate in rules)
+
+The heuristics engine runs alongside strategy rules and handles these automatically:
+- **Mulligan evaluation**: land count, color availability, early play assessment, tapped lands, aggro/tempo reactive filtering
+- **Removal targeting**: best target selection, ward cost calculation, hexproof/shroud/indestructible detection (including from auras), aura removal suggestions
+- **Combat math**: lethal detection, double strike power multiplier, blocker assignment
+- **Creature prioritization**: curve-out ordering, evasion preference on empty board, flash hold vs deploy
+- **Threat warnings**: Seam Rip awareness, opponent speed-based deployment advice
+
+Do NOT create rules for these — the heuristics engine does them better with live game state.
+Focus rules on: deck-specific synergies, card combos, matchup gameplans, and sequencing that requires deck knowledge.
+
+### Safety Checks (automatic)
+
+The rule engine applies these checks after a rule fires:
+- If `{card}` is in hand and action suggests casting: verifies you have enough mana (suppresses if not)
+- If `{card}` is a creature on battlefield and action suggests attacking: verifies it can attack (not summoning sick/tapped)
+- If `{threat}` is targeted by removal: warns about hexproof, ward, indestructible
+- You do NOT need to add mana checks or protection checks in your rules — the engine handles them.
+
 ### Design Principles
 
 1. Rules fire every ~100ms. Keep them simple.
 2. More conditions = less false positives. Under-trigger > wrong advice.
-3. Use `conflicts_with` for mutually exclusive advice.
+3. Hold/use conflicts are auto-detected via `action_family`. Only use `conflicts_with` for mulligan rules.
 4. Action text SHORT (<80 chars). Displayed in compact overlay.
 5. Mulligan rules: always include `hand_lands_min/max` + `hand_size_min`.
 6. Meta decks: 3-5 signal cards, weights sum to ~1.0.
 7. Don't duplicate general.json rules — override them via `general_overrides` if needed.
 8. `vulnerabilities` should list 3-6 cards that specifically counter YOUR deck's plan.
+9. Don't duplicate heuristics engine logic — focus on deck-specific knowledge the engine can't derive.
+10. `keyword` supports pipe-separated alternatives: `"destroy|exile|damage"`.

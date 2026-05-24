@@ -2,14 +2,19 @@
 from __future__ import annotations
 
 import asyncio
+import copy
 import json
 import logging
+import sys
 from dataclasses import asdict
+from datetime import datetime, timezone
 from pathlib import Path
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
+
+from fastapi.responses import JSONResponse, PlainTextResponse
 
 from .advisor_engine import AdvisorEngine, generate_match_summary
 from .database import (
@@ -19,19 +24,238 @@ from .database import (
     get_stats_mulligan, get_stats_my_cards, get_stats_opp_cards,
     get_stats_color_matchups, get_stats_opponents, get_stats_overview,
     get_stats_recent_trend, get_stats_weaknesses, get_match_timeline,
-    import_cards_from_mtga, init_db,
+    import_cards_from_mtga, init_db, verify_db, USER_DATA_DIR, PERSISTENT_DIR,
 )
 from .game_state import GameStateTracker
 from .llm_advisor import get_backend, set_backend
 from .log_watcher import LogWatcher
 from .models import Advice, GameState
+from .reporting import build_match_report, get_latest_completed_match_id
+from .deck_routes import router as deck_router
+from .strategy import (
+    RULES_DIR, DECKS_ROOT, META_DECKS_PATH,
+    load_meta_decks, load_strategy, _load_strategy_file,
+    _all_strategy_paths,
+)
+from . import deck_storage
+from .collection_refresh import DEFAULT_SOURCE as COLLECTION_SOURCE, sync_collection_snapshot
 
 log = logging.getLogger(__name__)
 
+from .database import LOG_ARCHIVE_DIR as ARCHIVE_DIR
+
+
+def _archive_player_log(log_path: Path):
+    """Copy Player.log to archive dir so raw GRE data survives MTGA restarts."""
+    if not log_path.exists():
+        return
+    import shutil
+    from datetime import datetime
+    ARCHIVE_DIR.mkdir(parents=True, exist_ok=True)
+    stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    dest = ARCHIVE_DIR / f"Player_{stamp}.log"
+    # Skip if file is tiny (empty session) or already archived this minute
+    size = log_path.stat().st_size
+    if size < 1000:
+        return
+    # Avoid duplicate archives
+    existing = sorted(ARCHIVE_DIR.glob("Player_*.log"))
+    if existing:
+        last = existing[-1]
+        if last.stat().st_size == size:
+            return  # same size = same log, already archived
+    shutil.copy2(log_path, dest)
+    log.info("Archived Player.log (%d KB) -> %s", size // 1024, dest.name)
+
+    # Keep only last 50 archives
+    archives = sorted(ARCHIVE_DIR.glob("Player_*.log"))
+    for old in archives[:-50]:
+        old.unlink()
+
+
 app = FastAPI(title="MTGA Advisor")
+app.include_router(deck_router)
+
+
+@app.get("/health")
+async def health():
+    """Health check for sidecar readiness."""
+    from .version import APP_VERSION, ENGINE_VERSION
+    return {
+        "status": "ok",
+        "app_version": APP_VERSION,
+        "engine_version": ENGINE_VERSION,
+        "card_count": card_cache.size,
+        "match_active": tracker.match_active,
+        "ws_clients": len(clients),
+    }
+
+
+@app.get("/match-status")
+async def match_status():
+    """Is a match currently active? Used by overlay to show/hide."""
+    return {"active": tracker.match_active}
+
+
+def _save_feedback(msg: dict, tracker) -> None:
+    """Save advice feedback to JSONL file in user data dir."""
+    from datetime import datetime
+    from pathlib import Path
+    import os
+
+    entry = {
+        "timestamp": datetime.now().isoformat(),
+        "vote": msg.get("vote"),
+        "decision_id": msg.get("decision_id"),
+        "advice_text": msg.get("advice_text"),
+        "match_id": tracker.state.match_info.match_id if tracker.state else None,
+        "turn": tracker.state.turn_info.turn_number if tracker.state else None,
+    }
+
+    data_dir = Path(os.environ.get("SCRY_USER_DATA", Path.home() / "MTG" / "mtg-data"))
+    feedback_path = data_dir / "feedback.jsonl"
+    feedback_path.parent.mkdir(parents=True, exist_ok=True)
+
+    with open(feedback_path, "a") as f:
+        f.write(json.dumps(entry, default=str) + "\n")
+
+    log.info("Feedback saved: %s on decision_id=%s", msg.get("vote"), msg.get("decision_id"))
+
+
+@app.get("/api/review/matches")
+async def review_match_list():
+    """List recent matches for review selection."""
+    from .database import get_connection
+    conn = get_connection()
+    try:
+        rows = conn.execute("""
+            SELECT match_id, my_deck_name, opp_deck_name, result, started_at
+            FROM matches
+            WHERE result != ''
+            ORDER BY started_at DESC
+            LIMIT 20
+        """).fetchall()
+        return [
+            {"match_id": r[0], "my_deck": r[1], "opp_deck": r[2], "result": r[3], "started": r[4]}
+            for r in rows
+        ]
+    finally:
+        conn.close()
+
+
+@app.get("/api/review/latest")
+async def latest_match_review():
+    """Review the most recent completed match."""
+    from .database import get_connection
+    conn = get_connection()
+    try:
+        row = conn.execute(
+            "SELECT match_id FROM matches WHERE result != '' ORDER BY started_at DESC LIMIT 1"
+        ).fetchone()
+        if not row:
+            return JSONResponse({"error": "No completed matches"}, status_code=404)
+        match_id = row[0]
+    finally:
+        conn.close()
+    return await match_review_detail(match_id)
+
+
+@app.get("/api/review/{match_id}")
+async def match_review_detail(match_id: str):
+    """Post-game review — key advice per turn for a match."""
+    from .database import get_connection
+    conn = get_connection()
+    try:
+        # Match info
+        match_row = conn.execute(
+            "SELECT match_id, my_deck_name, opp_deck_name, result, started_at, ended_at "
+            "FROM matches WHERE match_id = ?", (match_id,)
+        ).fetchone()
+        if not match_row:
+            return JSONResponse({"error": "Match not found"}, status_code=404)
+
+        match_info = {
+            "match_id": match_row[0],
+            "my_deck": match_row[1],
+            "opp_deck": match_row[2],
+            "result": match_row[3],
+            "started": match_row[4],
+            "ended": match_row[5],
+        }
+
+        # Advice grouped by turn
+        rows = conn.execute("""
+            SELECT turn_number, phase, source, priority, message, details, id
+            FROM advice_log
+            WHERE match_id = ?
+            AND source IN ('heuristic', 'strategy')
+            AND priority IN ('critical', 'high', 'medium')
+            ORDER BY turn_number, id
+        """, (match_id,)).fetchall()
+
+        # T0 mulligan: keep only advice from the final hand (last cluster by ID)
+        t0_rows = [r for r in rows if r[0] == 0]
+        other_rows = [r for r in rows if r[0] != 0]
+        if t0_rows:
+            # Find the last mulligan/keep advice ID — everything after it is the final hand
+            last_keep_id = 0
+            for r in t0_rows:
+                msg = r[4].lower()
+                if msg.startswith("keep") or msg.startswith("mulligan") or msg.startswith("risky keep"):
+                    last_keep_id = r[6]  # id column
+            if last_keep_id:
+                t0_rows = [r for r in t0_rows if r[6] >= last_keep_id]
+
+        turns: dict[int, list] = {}
+        seen: set[tuple] = set()  # dedup same rule/message in same turn+phase
+        for turn, phase, source, priority, message, details, _id in (t0_rows + other_rows):
+            rule_id = ""
+            if details and details.startswith("[") and "]" in details:
+                rule_id = details[1:details.index("]")]
+            dedup_key = (turn, phase, rule_id) if rule_id else (turn, phase, message)
+            if dedup_key in seen:
+                continue
+            seen.add(dedup_key)
+            turns.setdefault(turn, []).append({
+                "phase": phase,
+                "source": source,
+                "priority": priority,
+                "message": message,
+                "details": details or "",
+            })
+
+        # Key moments — turns with critical/high advice
+        key_moments = []
+        for turn_num, advices in sorted(turns.items()):
+            critical = [a for a in advices if a["priority"] in ("critical", "high")]
+            if critical:
+                key_moments.append({
+                    "turn": turn_num,
+                    "advice": critical[:3],
+                    "all_advice_count": len(advices),
+                })
+
+        return {
+            "match": match_info,
+            "turns": {str(k): v for k, v in sorted(turns.items())},
+            "key_moments": key_moments,
+            "total_turns": max(turns.keys()) if turns else 0,
+            "total_advice": sum(len(v) for v in turns.values()),
+        }
+    finally:
+        conn.close()
+
+
+@app.get("/review")
+async def review_page():
+    return FileResponse(str(STATIC_DIR / "review.html"),
+                        headers={"Cache-Control": "no-cache, no-store, must-revalidate"})
 
 # Static files
-STATIC_DIR = Path(__file__).parent.parent / "static"
+# PyInstaller bundles static/ into _MEIPASS; normal dev uses repo root
+import sys
+_BASE_DIR = Path(sys._MEIPASS) if getattr(sys, '_MEIPASS', None) else Path(__file__).parent.parent
+STATIC_DIR = _BASE_DIR / "static"
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 # Global state
@@ -59,10 +283,12 @@ def state_to_dict(state: GameState) -> dict:
     me = state.my_player()
     opp = state.opp_player()
 
-    # Hand cards with resolved names
+    # Hand cards with resolved names, sorted to match MTGA visual order
+    # MTGA sorts: non-lands by CMC ascending, then lands at the right
     hand = []
     for obj in state.my_hand():
         card = card_cache.get(obj.grp_id)
+        is_land = "Land" in (card.card_types if card else [])
         hand.append({
             "instance_id": obj.instance_id,
             "grp_id": obj.grp_id,
@@ -74,7 +300,9 @@ def state_to_dict(state: GameState) -> dict:
             "toughness": card.toughness if card else "",
             "colors": card.colors if card else [],
             "abilities": card.abilities if card else [],
+            "is_land": is_land,
         })
+    hand.sort(key=lambda c: (c["is_land"], c["cmc"], c["name"]))
 
     # Battlefields
     def bf_cards(bf_list):
@@ -135,12 +363,13 @@ def advice_to_list(advice_list: list[Advice]) -> list[dict]:
 
 def on_state_change(state: GameState):
     """Callback when game state changes — run advice immediately, broadcast async."""
+    state_snapshot = copy.deepcopy(state)
     # Broadcast state update (fire and forget)
     asyncio.get_event_loop().create_task(
-        broadcast({"type": "state_update", "data": state_to_dict(state)})
+        broadcast({"type": "state_update", "data": state_to_dict(state_snapshot)})
     )
     # Run advisor synchronously so advice is ready before next message
-    asyncio.get_event_loop().create_task(_run_advice(state))
+    asyncio.get_event_loop().create_task(_run_advice(state_snapshot))
 
 
 async def _run_advice(state: GameState):
@@ -150,8 +379,9 @@ async def _run_advice(state: GameState):
 
 def on_decision_point(state: GameState, request_type: str):
     """Callback when a decision point is reached — advice runs inline."""
+    state_snapshot = copy.deepcopy(state)
     asyncio.get_event_loop().create_task(
-        _handle_decision(state, request_type)
+        _handle_decision(state_snapshot, request_type)
     )
 
 
@@ -193,6 +423,13 @@ def on_threat_update(threats: list[dict]):
     """Callback when threat assessments change."""
     asyncio.get_event_loop().create_task(
         broadcast({"type": "threat_assessment", "data": threats})
+    )
+
+
+def on_llm_status(status: dict):
+    """Callback when LLM pending/ready state changes."""
+    asyncio.get_event_loop().create_task(
+        broadcast({"type": "llm_status", "data": status})
     )
 
 
@@ -272,6 +509,7 @@ async def startup():
     )
 
     # Init DB & backup
+    verify_db()
     init_db()
     backup_db()
 
@@ -284,24 +522,71 @@ async def startup():
     card_cache.load()
     log.info("Card cache loaded: %d cards", card_cache.size)
 
+    # Export card cache to JSON for Forge/Docker (no MTGA DB there)
+    if card_cache.size > 0:
+        exported = card_cache.export_json()
+        log.info("Card cache exported to JSON: %d cards", exported)
+
+    # Migrate decks from SQLite to filesystem (one-time)
+    from . import deck_storage
+    db_path = Path(__file__).parent.parent / "data" / "advisor.db"
+    migrated = deck_storage.migrate_from_db(db_path)
+    if migrated:
+        log.info("Migrated %d decks from SQLite to filesystem", migrated)
+
     # Set up callbacks
     tracker.on_state_change = on_state_change
     tracker.on_decision_point = on_decision_point
     tracker.on_match_start = on_match_start
-    tracker.on_match_end = advisor.on_match_end
+    def on_match_end_handler(won: bool):
+        advisor.on_match_end(won)
+        result = "Win" if won else "Loss"
+        asyncio.get_event_loop().create_task(
+            broadcast({"type": "match_end", "data": {"result": result}})
+        )
+    tracker.on_match_end = on_match_end_handler
     advisor.on_advice = on_advice
     advisor.on_strategy_info = on_strategy_info
     advisor.on_threat_update = on_threat_update
+    advisor.on_llm_status = on_llm_status
     tracker.on_my_card_played = advisor.check_card_played
+    tracker.on_stack_observed = advisor.on_stack_observed
 
-    # Catch up on current log (clear events first to avoid duplicates on restart)
-    log.info("Reading existing log...")
+    # Archive Player.log (and Player-prev.log) before processing
+    _archive_player_log(watcher.log_path)
+    prev_log = watcher.log_path.parent / "Player-prev.log"
+    _archive_player_log(prev_log)
+
+    # Catch up on current log — resume from last known position
+    # IMPORTANT: Disable auto-LLM during replay to prevent hundreds of Claude CLI calls
+    prev_auto_llm = advisor.auto_llm_enabled
+    advisor.set_auto_llm(False)
+
+    # Get saved log position from DB (if any)
+    from .database import get_connection
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT value FROM meta WHERE key = 'log_position'")
+    row = cur.fetchone()
+    resume_pos = int(row[0]) if row else 0
+    conn.close()
+
     clear_match_events()
-    messages = watcher.read_from_beginning()
+    log.info("Reading log from position %d (LLM disabled during replay)...", resume_pos)
+    messages = watcher.read_from_beginning(resume_position=resume_pos)
     for msg in messages:
         tracker.process_message(msg)
-    log.info("Processed %d existing messages. Match active: %s",
+    advisor.set_auto_llm(prev_auto_llm)
+    log.info("Processed %d new messages. Match active: %s",
              len(messages), tracker.match_active)
+
+    # Save current position for next startup
+    conn = get_connection()
+    conn.execute(
+        "INSERT OR REPLACE INTO meta (key, value) VALUES ('log_position', ?)",
+        (str(watcher._position),))
+    conn.commit()
+    conn.close()
 
     # Backfill opponent deck names from match event data
     _backfill_opp_decks()
@@ -343,6 +628,27 @@ async def websocket_endpoint(ws: WebSocket):
             "data": advisor.active_threats,
         }, default=str))
 
+    await ws.send_text(json.dumps({
+        "type": "backend_changed",
+        "data": {"backend": get_backend()},
+    }, default=str))
+    await ws.send_text(json.dumps({
+        "type": "llm_auto_changed",
+        "data": {
+            "enabled": advisor.auto_llm_enabled,
+            "mode": advisor.advice_mode,
+            "scope": advisor.llm_scope,
+        },
+    }, default=str))
+    await ws.send_text(json.dumps({
+        "type": "strategy_info",
+        "data": advisor.current_strategy_info(),
+    }, default=str))
+    await ws.send_text(json.dumps({
+        "type": "llm_status",
+        "data": advisor.llm_status,
+    }, default=str))
+
     try:
         while True:
             data = await ws.receive_text()
@@ -364,12 +670,26 @@ async def websocket_endpoint(ws: WebSocket):
                         "data": advice_to_list([summary]),
                     }, default=str))
 
+            elif msg.get("action") == "toggle_llm":
+                advisor.set_auto_llm(bool(msg.get("enabled")))
+                await broadcast({
+                    "type": "llm_auto_changed",
+                    "data": {
+                        "enabled": advisor.auto_llm_enabled,
+                        "mode": advisor.advice_mode,
+                        "scope": advisor.llm_scope,
+                    },
+                })
+
             elif msg.get("action") == "set_backend":
                 set_backend(msg.get("backend", "claude_cli"))
-                await ws.send_text(json.dumps({
+                await broadcast({
                     "type": "backend_changed",
                     "data": {"backend": get_backend()},
-                }, default=str))
+                })
+
+            elif msg.get("type") == "feedback":
+                _save_feedback(msg, tracker)
 
     except WebSocketDisconnect:
         clients.remove(ws)
@@ -388,7 +708,13 @@ async def current_state():
 
 @app.get("/api/backend")
 async def llm_backend():
-    return {"backend": get_backend(), "available": ["claude_cli", "ollama", "anthropic_api"]}
+    return {
+        "backend": get_backend(),
+        "available": ["claude_cli", "ollama", "anthropic_api"],
+        "auto_llm": advisor.auto_llm_enabled,
+        "advice_mode": advisor.advice_mode,
+        "llm_scope": advisor.llm_scope,
+    }
 
 
 @app.get("/api/debug/test-threats")
@@ -549,7 +875,703 @@ async def match_summary_endpoint(match_id: str):
     return {"match_id": match_id, "summary": summary}
 
 
+@app.get("/api/match-report/latest")
+async def match_report_latest_endpoint():
+    """Download a deterministic report for the latest completed match."""
+    match_id = get_latest_completed_match_id()
+    if not match_id:
+        raise HTTPException(status_code=404, detail="No completed match found")
+    filename, report = build_match_report(match_id)
+    return PlainTextResponse(
+        report,
+        media_type="text/markdown; charset=utf-8",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "X-Match-Id": match_id,
+        },
+    )
+
+
+@app.get("/api/match-report/{match_id}")
+async def match_report_endpoint(match_id: str):
+    """Download a deterministic report for a specific match."""
+    try:
+        filename, report = build_match_report(match_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    return PlainTextResponse(
+        report,
+        media_type="text/markdown; charset=utf-8",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "X-Match-Id": match_id,
+        },
+    )
+
+
 @app.get("/api/match-timeline/{match_id}")
 async def match_timeline_endpoint(match_id: str):
     """Get structured turn-by-turn timeline for a match."""
     return get_match_timeline(match_id)
+
+
+# ─── Management API ─────────────────────────────────────────────
+
+@app.get("/manage")
+async def manage_page():
+    return FileResponse(str(STATIC_DIR / "manage.html"),
+                        headers={"Cache-Control": "no-cache, no-store, must-revalidate"})
+
+
+@app.get("/decks")
+async def decks_page():
+    return FileResponse(str(STATIC_DIR / "decks.html"),
+                        headers={"Cache-Control": "no-cache, no-store, must-revalidate"})
+
+
+@app.get("/loading")
+async def loading_page():
+    return FileResponse(str(STATIC_DIR / "loading.html"),
+                        headers={"Cache-Control": "no-cache, no-store, must-revalidate"})
+
+
+@app.get("/setup")
+async def setup_page():
+    return FileResponse(str(STATIC_DIR / "setup.html"),
+                        headers={"Cache-Control": "no-cache, no-store, must-revalidate"})
+
+
+@app.get("/overlay")
+async def overlay_page():
+    return FileResponse(str(STATIC_DIR / "overlay.html"),
+                        headers={"Cache-Control": "no-cache, no-store, must-revalidate"})
+
+
+@app.get("/api/manage/strategies")
+async def manage_strategies():
+    """List all strategies from deck dirs and built-in."""
+    strategies = []
+    seen_names = set()
+    for path in _all_strategy_paths():
+        try:
+            data = json.loads(path.read_text())
+            name = data.get("name", path.stem)
+            if name in seen_names:
+                continue
+            seen_names.add(name)
+            # deck dirs → user, RULES_DIR → builtin
+            is_user = str(path).startswith(str(DECKS_ROOT))
+            deck_id = path.parent.name if is_user else ""
+            has_deck = (path.parent / "deck.json").exists() if is_user else False
+            strategies.append({
+                "name": name,
+                "file": path.name,
+                "deck_id": deck_id,
+                "has_deck": has_deck,
+                "source": "user" if is_user else "builtin",
+                "archetype": data.get("archetype", "unknown"),
+                "colors": data.get("colors", []),
+                "deck_signature": data.get("deck_signature", []),
+                "rule_count": len(data.get("rules", [])),
+                "stats": data.get("stats", {}),
+            })
+        except Exception:
+            continue
+    return strategies
+
+
+@app.get("/api/manage/strategy/{deck_id}")
+async def manage_strategy_detail(deck_id: str):
+    """Get full strategy JSON for a deck."""
+    # Check deck dir first
+    path = DECKS_ROOT / deck_id / "strategy.json"
+    if path.exists():
+        return json.loads(path.read_text())
+    # Fallback to built-in
+    path = RULES_DIR / f"{deck_id}.json"
+    if path.exists():
+        return json.loads(path.read_text())
+    return JSONResponse({"error": "not found"}, status_code=404)
+
+
+@app.put("/api/manage/strategy/{deck_id}")
+async def manage_strategy_save(deck_id: str, request: dict):
+    """Save strategy JSON to deck dir."""
+    path = DECKS_ROOT / deck_id / "strategy.json"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(request, indent=2, ensure_ascii=False))
+    log.info("Strategy saved via manage UI: %s", path)
+    return {"status": "ok", "path": str(path)}
+
+
+@app.delete("/api/manage/strategy/{deck_id}")
+async def manage_strategy_delete(deck_id: str):
+    """Delete a stub strategy (deck dir without deck.json)."""
+    deck_dir = DECKS_ROOT / deck_id
+    if not deck_dir.exists():
+        return JSONResponse({"error": "not found"}, status_code=404)
+    if (deck_dir / "deck.json").exists():
+        return JSONResponse({"error": "use /api/decks/{id} to delete managed decks"}, status_code=400)
+    import shutil
+    shutil.rmtree(deck_dir)
+    log.info("Deleted stub strategy: %s", deck_id)
+    return {"status": "ok", "deleted": deck_id}
+
+
+@app.get("/api/manage/ga-runs")
+async def manage_ga_runs():
+    """List all GA runs across all decks, with latest generation stats."""
+    runs = []
+    if not DECKS_ROOT.exists():
+        return runs
+    for deck_dir in sorted(DECKS_ROOT.iterdir()):
+        ga_dir = deck_dir / "ga_logs"
+        if not ga_dir.exists():
+            continue
+        for log_file in sorted(ga_dir.glob("*.ga_log.json")):
+            try:
+                data = json.loads(log_file.read_text())
+                if not isinstance(data, list) or not data:
+                    continue
+                last = data[-1]
+                first = data[0]
+                runs.append({
+                    "deck_id": deck_dir.name,
+                    "file": log_file.name,
+                    "generations": len(data),
+                    "best_fitness": round(last.get("best_fitness", 0), 4),
+                    "avg_fitness": round(last.get("avg_fitness", 0), 4),
+                    "best_record": last.get("best_record", ""),
+                    "elapsed_h": round(sum(e.get("elapsed_s", 0) for e in data) / 3600, 1),
+                    "matchups": last.get("best_matchups", {}),
+                    "started": first.get("timestamp", ""),
+                    "status": "completed",
+                })
+            except Exception:
+                continue
+
+        # Check for live status.json (written by GA runner during execution)
+        status_file = ga_dir / "status.json"
+        if status_file.exists():
+            try:
+                status = json.loads(status_file.read_text())
+                # If status is newer than last log entry, GA is running
+                runs.append({
+                    "deck_id": deck_dir.name,
+                    "file": status.get("run_name", "live"),
+                    "generations": status.get("generation", 0),
+                    "best_fitness": round(status.get("best_fitness", 0), 4),
+                    "avg_fitness": round(status.get("avg_fitness", 0), 4),
+                    "best_record": status.get("best_record", ""),
+                    "elapsed_h": round(status.get("elapsed_s", 0) / 3600, 1),
+                    "matchups": status.get("best_matchups", {}),
+                    "started": status.get("started", ""),
+                    "status": "running",
+                    "progress": status.get("progress", ""),
+                })
+            except Exception:
+                pass
+
+    runs.sort(key=lambda r: (r["status"] == "running", r["best_fitness"]), reverse=True)
+    return runs
+
+
+@app.get("/api/manage/ga-live")
+async def manage_ga_live():
+    """Check for live GA status from Studio via SSH.
+
+    Reads status.json files written by simlab's forge_ga during execution.
+    """
+    import subprocess
+    try:
+        result = subprocess.run(
+            ["ssh", "-o", "ConnectTimeout=5", "-o", "BatchMode=yes", "studio",
+             "find ~/ga-workspace -name status.json -newer ~/ga-workspace/.ga_check_marker "
+             "-exec cat {} \\; 2>/dev/null; touch ~/ga-workspace/.ga_check_marker"],
+            capture_output=True, text=True, timeout=10,
+        )
+        statuses = []
+        for line in result.stdout.strip().splitlines():
+            line = line.strip()
+            if line.startswith("{"):
+                try:
+                    statuses.append(json.loads(line))
+                except json.JSONDecodeError:
+                    pass
+
+        # Also check if GA processes are running
+        ps_result = subprocess.run(
+            ["ssh", "-o", "ConnectTimeout=3", "-o", "BatchMode=yes", "studio",
+             "pgrep -af 'ga-optimize|ga-staged' 2>/dev/null | head -3"],
+            capture_output=True, text=True, timeout=8,
+        )
+        processes = [l.strip() for l in ps_result.stdout.strip().splitlines() if l.strip()]
+
+        return {
+            "reachable": True,
+            "statuses": statuses,
+            "processes": processes,
+            "running": len(processes) > 0 or any(s.get("status") == "running" for s in statuses),
+        }
+    except (subprocess.TimeoutExpired, FileNotFoundError, Exception) as e:
+        return {
+            "reachable": False,
+            "statuses": [],
+            "processes": [],
+            "running": None,
+            "error": str(e),
+        }
+
+
+@app.get("/api/manage/general-rules")
+async def manage_general_rules():
+    """Get general.json rules."""
+    path = RULES_DIR / "general.json"
+    if not path.exists():
+        return JSONResponse({"error": "general.json not found"}, status_code=404)
+    return json.loads(path.read_text())
+
+
+@app.put("/api/manage/general-rules")
+async def manage_general_rules_save(request: dict):
+    """Save general.json."""
+    path = RULES_DIR / "general.json"
+    path.write_text(json.dumps(request, indent=2, ensure_ascii=False))
+    log.info("General rules saved via manage UI")
+    return {"status": "ok"}
+
+
+@app.get("/api/manage/meta-decks")
+async def manage_meta_decks():
+    """Get meta_decks.json."""
+    if not META_DECKS_PATH.exists():
+        return {"meta_decks": []}
+    return json.loads(META_DECKS_PATH.read_text())
+
+
+@app.put("/api/manage/meta-decks")
+async def manage_meta_decks_save(request: dict):
+    """Save meta_decks.json."""
+    META_DECKS_PATH.parent.mkdir(parents=True, exist_ok=True)
+    META_DECKS_PATH.write_text(json.dumps(request, indent=2, ensure_ascii=False))
+    log.info("Meta decks saved via manage UI (%d decks)", len(request.get("meta_decks", [])))
+    return {"status": "ok"}
+
+
+@app.get("/api/manage/decks")
+async def manage_decks():
+    """List decks from filesystem (new deck dir structure)."""
+    from .deck_lifecycle import DeckService
+    svc = DeckService()
+    return svc.list_decks()
+
+
+@app.get("/api/manage/deck/{deck_id}")
+async def manage_deck_detail(deck_id: str):
+    """Get full deck detail."""
+    from .deck_lifecycle import DeckService
+    svc = DeckService()
+    result = svc.get_deck(deck_id)
+    if not result:
+        return JSONResponse({"error": "not found"}, status_code=404)
+    return result
+
+
+@app.get("/api/manage/guides")
+async def manage_guides():
+    """List guide markdown files from deck dirs."""
+    guides = []
+    if DECKS_ROOT.exists():
+        for deck_dir in sorted(DECKS_ROOT.iterdir()):
+            if not deck_dir.is_dir():
+                continue
+            guides_dir = deck_dir / "guides"
+            if not guides_dir.exists():
+                continue
+            for path in sorted(guides_dir.glob("*.md")):
+                guides.append({
+                    "file": path.name,
+                    "deck_id": deck_dir.name,
+                    "name": path.stem.replace("_", " ").title(),
+                    "source": "user",
+                    "size_bytes": path.stat().st_size,
+                })
+    return guides
+
+
+@app.get("/api/manage/guide/{deck_id}/{filename}")
+async def manage_guide_detail(deck_id: str, filename: str):
+    """Get guide markdown content from deck dir."""
+    path = DECKS_ROOT / deck_id / "guides" / filename
+    if path.exists() and path.suffix == ".md":
+        return {"file": filename, "deck_id": deck_id, "content": path.read_text()}
+    return JSONResponse({"error": "not found"}, status_code=404)
+
+
+_sync_lock = asyncio.Lock()
+
+
+@app.post("/api/manage/sync-meta")
+async def manage_sync_meta():
+    """Run meta deck sync: scrape MTGGoldfish + merge + LLM enrichment."""
+    if _sync_lock.locked():
+        return JSONResponse({"error": "Sync already in progress"}, status_code=409)
+
+    async with _sync_lock:
+        script = Path(__file__).parent.parent / "tools" / "update_meta.py"
+        proc = await asyncio.create_subprocess_exec(
+            sys.executable, str(script),
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.STDOUT,
+            cwd=str(script.parent.parent),
+        )
+        stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=300)
+        output = stdout.decode("utf-8", errors="replace") if stdout else ""
+
+        # Parse summary from output
+        lines = output.split("\n")
+        summary_lines = []
+        in_summary = False
+        for line in lines:
+            if "SUMMARY" in line:
+                in_summary = True
+                continue
+            if in_summary and line.strip().startswith(("From ", "Kept ", "Need ", "Written", "Backup")):
+                summary_lines.append(line.strip())
+
+        return {
+            "status": "ok" if proc.returncode == 0 else "error",
+            "returncode": proc.returncode,
+            "summary": summary_lines,
+            "output": output[-3000:],  # last 3k chars
+        }
+
+
+_collection_refresh_lock = asyncio.Lock()
+_collection_refresh_task: asyncio.Task | None = None
+_collection_refresh_status: dict = {
+    "state": "idle",
+    "running": False,
+    "phase": "idle",
+    "message": "Idle",
+    "detail": "",
+    "started_at": None,
+    "updated_at": None,
+    "summary": None,
+    "error": None,
+    "recent_output": [],
+}
+
+
+def _now_iso() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def _collection_recent_output(lines: list[str], limit: int = 12) -> list[str]:
+    return lines[-limit:]
+
+
+def _update_collection_refresh_status(
+    *,
+    state: str | None = None,
+    running: bool | None = None,
+    phase: str | None = None,
+    message: str | None = None,
+    detail: str | None = None,
+    summary: dict | None = None,
+    error: str | None = None,
+    recent_output: list[str] | None = None,
+    started_at: str | None = None,
+) -> None:
+    if state is not None:
+        _collection_refresh_status["state"] = state
+    if running is not None:
+        _collection_refresh_status["running"] = running
+    if phase is not None:
+        _collection_refresh_status["phase"] = phase
+    if message is not None:
+        _collection_refresh_status["message"] = message
+    if detail is not None:
+        _collection_refresh_status["detail"] = detail
+    if summary is not None:
+        _collection_refresh_status["summary"] = summary
+    if error is not None:
+        _collection_refresh_status["error"] = error
+    if recent_output is not None:
+        _collection_refresh_status["recent_output"] = recent_output
+    if started_at is not None:
+        _collection_refresh_status["started_at"] = started_at
+    _collection_refresh_status["updated_at"] = _now_iso()
+
+
+def _collection_refresh_snapshot() -> dict:
+    return copy.deepcopy(_collection_refresh_status)
+
+
+def _parse_collection_progress_line(line: str) -> tuple[str, str] | None:
+    text = line.strip()
+    if not text:
+        return None
+    if "MTGA PID:" in text or "Attached to PID" in text:
+        return ("attaching", "Attaching to MTGA process...")
+    if "Known offsets failed" in text:
+        return ("layout_scan", "Searching for current memory layout...")
+    if "type_info_table at" in text:
+        return ("layout_found", "Memory layout found. Resolving collection structures...")
+    if "Class 'AwsInventoryServiceWrapper' not found" in text:
+        return ("auto_discovery", "Direct inventory signature changed. Switching to auto-discovery...")
+    if "falling back to collection-only dictionary scan" in text.lower():
+        return ("collection_scan", "Searching for collection data automatically...")
+    if "candidate(s)" in text and "Heap range" in text:
+        return ("collection_candidates", "Collection candidates found. Validating structures...")
+    if "Using dictionary candidate at" in text:
+        return ("collection_found", "Collection structure found. Reading cards...")
+    if "Found" in text and "cards in memory" in text:
+        return ("reading_collection", "Reading collection from MTGA memory...")
+    if "Read" in text and "unique cards" in text:
+        return ("syncing_snapshot", "Collection loaded. Syncing snapshot into app data...")
+    if "Saved to" in text and "my_collection_memory.json" in text:
+        return ("raw_saved", "Raw memory snapshot saved. Finalizing refresh...")
+    return None
+
+
+async def _read_collection_refresh_stderr(stream: asyncio.StreamReader, sink: list[str]) -> None:
+    while True:
+        line = await stream.readline()
+        if not line:
+            break
+        text = line.decode("utf-8", errors="replace").rstrip()
+        if not text:
+            continue
+        sink.append(text)
+        parsed = _parse_collection_progress_line(text)
+        if parsed:
+            phase, message = parsed
+            _update_collection_refresh_status(
+                state="running",
+                running=True,
+                phase=phase,
+                message=message,
+                detail=text,
+                recent_output=_collection_recent_output(sink),
+            )
+        else:
+            _update_collection_refresh_status(
+                recent_output=_collection_recent_output(sink),
+            )
+
+
+def _collection_summary_message(summary: dict) -> str:
+    inventory = summary.get("inventory") or {}
+    wildcards = inventory.get("wildcards") or {}
+    if wildcards:
+        wc = (
+            f"{wildcards.get('common', 0)}C/"
+            f"{wildcards.get('uncommon', 0)}U/"
+            f"{wildcards.get('rare', 0)}R/"
+            f"{wildcards.get('mythic', 0)}M"
+        )
+    else:
+        wc = "WC unknown"
+    return f"{summary.get('unique_cards', '?')} cards synced · {wc}"
+
+
+async def _run_collection_refresh_job() -> None:
+    wrapper_cmd = ["sudo", "-n", "/usr/local/sbin/mtga-read-collection"]
+    started_at = _now_iso()
+    stderr_lines: list[str] = []
+    proc: asyncio.subprocess.Process | None = None
+
+    _update_collection_refresh_status(
+        state="running",
+        running=True,
+        phase="starting",
+        message="Starting MTGA memory reader...",
+        detail="Launching sudo-approved wrapper",
+        summary=None,
+        error=None,
+        recent_output=[],
+        started_at=started_at,
+    )
+
+    try:
+        proc = await asyncio.create_subprocess_exec(
+            *wrapper_cmd,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+            cwd=str(Path(__file__).parent.parent),
+        )
+        stdout_task = asyncio.create_task(proc.stdout.read())
+        stderr_task = asyncio.create_task(_read_collection_refresh_stderr(proc.stderr, stderr_lines))
+        await asyncio.wait_for(proc.wait(), timeout=180)
+        stdout = (await stdout_task).decode("utf-8", errors="replace") if proc.stdout else ""
+        await stderr_task
+
+        if proc.returncode != 0:
+            detail = "\n".join(_collection_recent_output(stderr_lines, limit=20)) or stdout[-2000:] or "Collection refresh failed"
+            _update_collection_refresh_status(
+                state="error",
+                running=False,
+                phase="error",
+                message="Collection refresh failed",
+                detail=detail,
+                error=detail,
+                recent_output=_collection_recent_output(stderr_lines, limit=20),
+            )
+            return
+
+        _update_collection_refresh_status(
+            state="running",
+            running=True,
+            phase="syncing_snapshot",
+            message="Syncing snapshot into app data...",
+            detail="Refreshing repo-local snapshot files",
+            recent_output=_collection_recent_output(stderr_lines),
+        )
+        try:
+            payload = sync_collection_snapshot(
+                COLLECTION_SOURCE,
+                stderr_text="\n".join(stderr_lines),
+                command="sudo /usr/local/sbin/mtga-read-collection",
+                returncode=proc.returncode or 0,
+                stdout_text=stdout,
+            )
+        except Exception as exc:
+            detail = str(exc)
+            _update_collection_refresh_status(
+                state="error",
+                running=False,
+                phase="error",
+                message="Collection snapshot sync failed",
+                detail=detail,
+                error=detail,
+                recent_output=_collection_recent_output(stderr_lines, limit=20),
+            )
+            return
+
+        _update_collection_refresh_status(
+            state="ok",
+            running=False,
+            phase="completed",
+            message=_collection_summary_message(payload),
+            detail="Collection refresh complete",
+            summary=payload,
+            error=None,
+            recent_output=_collection_recent_output(stderr_lines, limit=20),
+        )
+    except asyncio.TimeoutError:
+        if proc and proc.returncode is None:
+            proc.kill()
+            await proc.wait()
+        detail = "Collection refresh timed out while reading MTGA memory"
+        _update_collection_refresh_status(
+            state="error",
+            running=False,
+            phase="timeout",
+            message="Collection refresh timed out",
+            detail=detail,
+            error=detail,
+            recent_output=_collection_recent_output(stderr_lines, limit=20),
+        )
+    except Exception as exc:
+        detail = str(exc)
+        _update_collection_refresh_status(
+            state="error",
+            running=False,
+            phase="error",
+            message="Collection refresh failed",
+            detail=detail,
+            error=detail,
+            recent_output=_collection_recent_output(stderr_lines, limit=20),
+        )
+    finally:
+        global _collection_refresh_task
+        _collection_refresh_task = None
+
+
+@app.post("/api/manage/refresh-collection")
+async def manage_refresh_collection():
+    """Refresh local collection snapshot via the sudo-approved memory reader wrapper."""
+    async with _collection_refresh_lock:
+        global _collection_refresh_task
+        if _collection_refresh_task and not _collection_refresh_task.done():
+            return JSONResponse(
+                {
+                    "status": "running",
+                    "detail": "Collection refresh already in progress",
+                    "progress": _collection_refresh_snapshot(),
+                },
+                status_code=409,
+            )
+
+        _update_collection_refresh_status(
+            state="running",
+            running=True,
+            phase="starting",
+            message="Starting MTGA memory reader...",
+            detail="Queued collection refresh job",
+            summary=None,
+            error=None,
+            recent_output=[],
+            started_at=_now_iso(),
+        )
+        _collection_refresh_task = asyncio.create_task(_run_collection_refresh_job())
+
+        return JSONResponse(
+            {
+                "status": "started",
+                "progress": _collection_refresh_snapshot(),
+            },
+            status_code=202,
+        )
+
+
+@app.get("/api/manage/refresh-collection-status")
+async def manage_refresh_collection_status():
+    """Return current state of the background collection refresh job."""
+    return _collection_refresh_snapshot()
+
+
+@app.get("/api/manage/collection-stats")
+async def manage_collection_stats():
+    """Return current collection stats from the raw snapshot."""
+    raw_path = PERSISTENT_DIR / "mtga_collection_raw.json"
+    if not raw_path.exists():
+        return {"status": "no_data", "message": "No collection snapshot found. Run Refresh first."}
+
+    import json as _json
+    data = _json.loads(raw_path.read_text())
+    if not data or not isinstance(data, dict):
+        return {"status": "no_data", "message": "Collection snapshot is empty."}
+
+    total_unique = len(data)
+    total_copies = sum(data.values())
+
+    # Analyze by rarity using card cache
+    rarities: dict[str, dict] = {}
+    for grp_id_str, count in data.items():
+        card = card_cache.get(int(grp_id_str))
+        r = (card.rarity if card else "unknown") or "unknown"
+        if r not in rarities:
+            rarities[r] = {"unique": 0, "copies": 0}
+        rarities[r]["unique"] += 1
+        rarities[r]["copies"] += count
+
+    # Read wildcards from Untapped inventory if available
+    wildcards = {}
+    inv_path = PERSISTENT_DIR / "mtga_inventory.json"
+    if inv_path.exists():
+        try:
+            inv = _json.loads(inv_path.read_text())
+            wildcards = inv.get("wildcards", {})
+        except Exception:
+            pass
+
+    return {
+        "status": "ok",
+        "total_unique": total_unique,
+        "total_copies": total_copies,
+        "rarities": rarities,
+        "wildcards": wildcards,
+        "snapshot_date": raw_path.stat().st_mtime,
+    }

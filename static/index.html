@@ -4,75 +4,163 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MTGA Play Advisor</title>
-    <link rel="stylesheet" href="/static/style.css?v=3">
+    <link rel="stylesheet" href="/static/style.css?v=15">
+    <script>document.documentElement.className='profile-'+(localStorage.getItem('scry-profile')||'full');</script>
 </head>
 <body>
     <div id="app">
         <header>
-            <h1>MTGA Advisor</h1>
-            <a href="/stats" style="color:#90caf9;text-decoration:none;font-size:12px">Stats</a>
-            <div id="status">
-                <span id="connection-status" class="status-dot disconnected"></span>
-                <span id="match-status">Waiting for match...</span>
+            <div class="brand-block">
+                <h1>MTGA Advisor</h1>
+                <div class="header-links">
+                    <a href="/stats">Stats</a>
+                    <a href="/review">Review</a>
+                    <a href="/manage">Manage</a>
+                    <a href="/decks">Decks</a>
+                </div>
             </div>
-            <div id="turn-info"></div>
+            <div class="header-status">
+                <div id="profile-switcher">
+                    <button class="profile-btn" data-profile="focus" title="Focus — just the play (Ctrl+1)">F</button>
+                    <button class="profile-btn" data-profile="full" title="Full — everything (Ctrl+2)">A</button>
+                    <button class="profile-btn" data-profile="tactical" title="Tactical — advice + threats (Ctrl+3)">T</button>
+                </div>
+                <div id="status">
+                    <span id="connection-status" class="status-dot disconnected"></span>
+                    <span id="match-status">Waiting for match...</span>
+                </div>
+                <div id="turn-info"></div>
+            </div>
             <div id="strategy-info" class="strategy-info" style="display:none"></div>
         </header>
 
-        <section id="opponent-zone" class="zone">
-            <div class="zone-header">
-                <span id="opp-name">Opponent</span>
-                <span id="opp-life" class="life">20</span>
-                <span id="opp-meta" class="opp-meta"></span>
+        <main id="main-layout">
+            <div id="vital-bar">
+                <span class="vb-label">You:</span> <span id="vb-my-life" class="vb-life">20</span>
+                <span id="vb-mana" class="vb-mana"></span>
+                <span class="vb-sep">|</span>
+                <span class="vb-label">Opp:</span> <span id="vb-opp-life" class="vb-life vb-opp">20</span>
+                <span id="vb-opp-meta" class="vb-meta"></span>
             </div>
-            <div id="opp-meta-details" class="opp-meta-details" style="display:none"></div>
-            <div id="opp-battlefield" class="card-row"></div>
-        </section>
+            <div id="board-column">
+                <section id="opponent-zone" class="zone">
+                    <div class="zone-header">
+                        <span id="opp-name">Opponent</span>
+                        <span id="opp-life" class="life">20</span>
+                        <span id="opp-meta" class="opp-meta"></span>
+                    </div>
+                    <div id="opp-meta-details" class="opp-meta-details" style="display:none"></div>
+                    <div id="opp-battlefield" class="card-row"></div>
+                </section>
 
-        <section id="threat-panel" style="display:none">
-            <div class="threat-header">
-                <h3>Opponent Threats</h3>
-                <span id="threat-count"></span>
+                <section id="my-zone" class="zone">
+                    <div id="my-battlefield" class="card-row"></div>
+                    <div class="zone-header">
+                        <span id="my-name">You</span>
+                        <span id="my-life" class="life">20</span>
+                        <span id="mana-info" class="mana-info"></span>
+                    </div>
+                </section>
+
+                <section id="hand-zone">
+                    <div class="hand-header">
+                        <h3>Hand</h3>
+                        <span class="hand-note">Live view of castable pressure and interaction</span>
+                    </div>
+                    <div id="hand-cards" class="card-row"></div>
+                </section>
             </div>
-            <div id="threat-list"></div>
-        </section>
 
-        <section id="advice-panel">
-            <div class="advice-header">
-                <h2>Advice</h2>
-                <button id="ask-ai-btn" onclick="askLLM()">Ask AI</button>
-                <button id="summary-btn" onclick="matchSummary()">Match Summary</button>
-                <select id="backend-select" onchange="setBackend(this.value)">
-                    <option value="claude_cli">Claude CLI</option>
-                    <option value="ollama">Ollama (local)</option>
-                    <option value="anthropic_api">API</option>
-                </select>
-            </div>
-            <div id="advice-list"></div>
-        </section>
+            <aside id="decision-column">
+                <section id="advice-panel">
+                    <div class="advice-headline">
+                        <div>
+                            <h2>Decision HUD</h2>
+                            <p id="advice-subtitle">Heuristics pilot the turn. LLM supplements when needed.</p>
+                        </div>
+                        <span id="llm-status-pill" class="llm-status-pill idle">LLM idle</span>
+                    </div>
 
-        <section id="my-zone" class="zone">
-            <div id="my-battlefield" class="card-row"></div>
-            <div class="zone-header">
-                <span id="my-name">You</span>
-                <span id="my-life" class="life">20</span>
-                <span id="mana-info" class="mana-info"></span>
-            </div>
-        </section>
+                    <div class="advice-toolbar primary">
+                        <button id="ask-ai-btn" onclick="askLLM()">Ask AI</button>
+                        <label class="toggle" title="Run LLM automatically on live decision points">
+                            <input id="auto-llm-toggle" type="checkbox" onchange="toggleLLM(this.checked)">
+                            <span>Auto LLM</span>
+                            <span id="llm-mode-label"></span>
+                        </label>
+                    </div>
 
-        <section id="hand-zone">
-            <h3>Hand</h3>
-            <div id="hand-cards" class="card-row"></div>
-        </section>
+                    <div class="advice-toolbar secondary">
+                        <label class="backend-select-wrap">
+                            <span>Backend</span>
+                            <select id="backend-select" onchange="setBackend(this.value)">
+                                <option value="claude_cli">Claude CLI</option>
+                                <option value="ollama">Ollama</option>
+                                <option value="anthropic_api">API</option>
+                            </select>
+                        </label>
+                        <button id="summary-btn" onclick="matchSummary()">Match Summary</button>
+                        <button id="report-btn" onclick="exportLastGame()">Export Last Game</button>
+                    </div>
+
+                    <div class="advice-groups">
+                        <section class="advice-section now">
+                            <div class="advice-section-header">
+                                <h3>Do Now</h3>
+                                <span class="advice-section-note">Immediate play guidance</span>
+                            </div>
+                            <div id="decision-actions-summary"></div>
+                            <div id="advice-key-play" class="advice-spotlight" style="display:none"></div>
+                            <div id="advice-now-list" class="advice-list"></div>
+                        </section>
+
+                        <section class="advice-section context">
+                            <div class="advice-section-header">
+                                <h3>Context</h3>
+                                <span class="advice-section-note">Threat model, matchup reads, AI supplement</span>
+                            </div>
+                            <div id="advice-context-list" class="advice-list"></div>
+                        </section>
+                    </div>
+                </section>
+
+                <section id="threat-radar-panel" style="display:none">
+                    <div class="threat-radar-header">
+                        <h3>Opponent Radar</h3>
+                        <span id="threat-radar-count"></span>
+                    </div>
+                    <div id="threat-radar-summary" class="threat-radar-summary"></div>
+                    <div id="threat-radar-list"></div>
+                </section>
+            </aside>
+        </main>
 
         <footer>
             <span id="library-count">Library: 0</span>
             <span id="graveyard-count">Graveyard: 0</span>
             <span id="stack-count"></span>
             <span id="game-state-id"></span>
+            <span id="footer-version" class="footer-version" onclick="showAbout()" title="About Scryglass"></span>
+            <button id="debug-toggle" class="debug-toggle" onclick="toggleDebugPanel()">Debug</button>
         </footer>
+        <div id="about-overlay" class="about-overlay" style="display:none" onclick="if(event.target===this)hideAbout()">
+            <div class="about-dialog">
+                <h2>Scryglass</h2>
+                <p class="about-subtitle">MTGA Play Advisor</p>
+                <table class="about-table" id="about-details"></table>
+                <button class="about-close" onclick="hideAbout()">Close</button>
+            </div>
+        </div>
+        <div id="debug-panel" class="debug-panel" style="display:none"></div>
     </div>
 
-    <script src="/static/app.js?v=3"></script>
+    <script>
+    // First-run check — redirect to setup if never visited before
+    if (!localStorage.getItem('scry-setup-done')) {
+        localStorage.setItem('scry-setup-done', '1');
+        window.location.href = '/setup';
+    }
+    </script>
+    <script src="/static/app.js?v=14"></script>
 </body>
 </html>

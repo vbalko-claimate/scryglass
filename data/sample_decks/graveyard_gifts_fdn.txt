@@ -1,0 +1,22 @@
+Deck
+4 Opt (FDN) 512
+2 Inspiration from Beyond (FDN) 43
+1 Kiora, the Rising Tide (FDN) 45
+3 Gleaming Barrier (FDN) 252
+2 Brineborn Cutthroat (FDN) 152
+4 Stab (FDN) 71
+2 Arbiter of Woe (FDN) 55
+1 Abyssal Harvester (FDN) 54
+2 Crow of Dark Tidings (FDN) 519
+4 Dimir Guildgate (FDN) 688
+4 Dreadwing Scavenger (FDN) 118
+4 Dismal Backwater (DFT) 254
+1 Temple of Deceit (FDN) 697
+1 Rise of the Dark Realms (FDN) 183
+2 Billowing Shriekmass (FDN) 56
+2 Essence Scatter (FDN) 153
+2 Bake into a Pie (FDN) 169
+3 Zombify (FDN) 187
+1 Arcanis the Omnipotent (FDN) 585
+7 Island (FDN) 275
+8 Swamp (FDN) 276

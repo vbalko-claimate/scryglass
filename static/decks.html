@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MTGA Advisor — Deck Management</title>
+    <style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #1a1a2e; color: #e0e0e0; font-family: 'Segoe UI', system-ui, sans-serif; }
+
+#app {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-height: 100vh;
+}
+
+header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 20px;
+    background: #16213e;
+    border-radius: 8px;
+    border: 1px solid #0f3460;
+}
+header h1 { font-size: 20px; color: #e94560; }
+header a { color: #90caf9; text-decoration: none; font-size: 13px; }
+header a:hover { color: #fff; }
+.nav-links { margin-left: auto; display: flex; gap: 16px; }
+
+/* Layout */
+.main-grid {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 16px;
+    flex: 1;
+}
+
+/* Panels */
+.panel {
+    background: #16213e;
+    border: 1px solid #0f3460;
+    border-radius: 8px;
+    padding: 16px;
+}
+.panel h2 { font-size: 16px; color: #e94560; margin-bottom: 12px; }
+
+/* Deck list */
+.deck-list-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 12px;
+}
+.deck-item {
+    padding: 10px 12px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-bottom: 6px;
+}
+.deck-item:hover { background: rgba(255,255,255,0.04); border-color: #0f3460; }
+.deck-item.active { background: #0f3460; border-color: #e94560; }
+.deck-item-name { font-weight: 600; font-size: 13px; margin-bottom: 3px; display: flex; align-items: center; gap: 6px; }
+.deck-item-meta { font-size: 11px; color: #888; display: flex; gap: 10px; flex-wrap: wrap; }
+
+/* Color dots */
+.color-dot {
+    display: inline-block; width: 12px; height: 12px; border-radius: 50%;
+    margin-right: 1px; vertical-align: middle; border: 1px solid rgba(255,255,255,0.2);
+}
+.color-W { background: #f5f0d0; }
+.color-U { background: #1a6fb0; }
+.color-B { background: #3d3040; }
+.color-R { background: #c03030; }
+.color-G { background: #2d7a1e; }
+
+/* Badges */
+.badge {
+    display: inline-block; padding: 1px 7px; border-radius: 3px;
+    font-size: 10px; font-weight: 600;
+}
+.badge-deployed { background: rgba(76,175,80,0.2); color: #4caf50; border: 1px solid rgba(76,175,80,0.3); }
+.badge-rules { background: rgba(33,150,243,0.15); color: #90caf9; border: 1px solid rgba(33,150,243,0.2); }
+.badge-warn { background: rgba(255,193,7,0.15); color: #ffc107; border: 1px solid rgba(255,193,7,0.2); }
+.badge-ga { background: rgba(255,152,0,0.15); color: #ffa500; border: 1px solid rgba(255,152,0,0.3); }
+
+/* Buttons */
+.btn {
+    padding: 6px 14px; border-radius: 4px; border: none;
+    font-size: 12px; cursor: pointer; transition: all 0.2s;
+}
+.btn-primary { background: #e94560; color: #fff; }
+.btn-primary:hover { background: #c73650; }
+.btn-secondary { background: #0f3460; color: #90caf9; border: 1px solid #2196f3; }
+.btn-secondary:hover { background: #1a4a80; }
+.btn-small { padding: 3px 10px; font-size: 11px; }
+.btn-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Dropdown wrapper */
+.dropdown { position: relative; display: inline-block; }
+.dropdown-menu {
+    display: none; position: absolute; top: 100%; left: 0; margin-top: 4px;
+    background: #0f3460; border: 1px solid #2196f3; border-radius: 4px;
+    min-width: 180px; z-index: 10; overflow: hidden;
+}
+.dropdown-menu.open { display: block; }
+.dropdown-menu button {
+    display: block; width: 100%; padding: 8px 14px; border: none; background: none;
+    color: #90caf9; font-size: 12px; text-align: left; cursor: pointer;
+}
+.dropdown-menu button:hover { background: rgba(255,255,255,0.06); }
+
+/* Detail sections */
+.detail-section {
+    background: #1a1a2e; border: 1px solid #0f3460; border-radius: 6px;
+    padding: 14px; margin-bottom: 12px;
+}
+.detail-section h3 { font-size: 14px; color: #e94560; margin-bottom: 8px; }
+
+/* Version list */
+.version-item {
+    padding: 8px 10px; border-radius: 4px; margin-bottom: 4px;
+    font-size: 12px; display: flex; align-items: center; gap: 8px;
+    background: rgba(15,52,96,0.3); border: 1px solid transparent;
+}
+.version-item:hover { border-color: #0f3460; }
+.version-item .v-num { font-weight: 700; color: #e94560; min-width: 32px; }
+.version-item .v-date { color: #888; min-width: 80px; }
+.version-item .v-summary { color: #e0e0e0; flex: 1; }
+.version-item .v-badges { display: flex; gap: 4px; margin-left: auto; }
+
+/* Deck textarea */
+.deck-textarea {
+    width: 100%; min-height: 200px; background: #0d1b2a; color: #e0e0e0;
+    border: 1px solid #0f3460; border-radius: 6px; padding: 10px;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 12px;
+    line-height: 1.5; resize: vertical; white-space: pre;
+}
+.deck-textarea:focus { outline: 1px solid #e94560; }
+.deck-textarea[readonly] { opacity: 0.7; }
+
+/* Matchup bar */
+.matchup-bar {
+    display: flex; height: 20px; border-radius: 4px; overflow: hidden; margin-top: 8px;
+}
+.matchup-bar .win { background: #4caf50; }
+.matchup-bar .loss { background: #f44336; }
+.matchup-bar .draw { background: #666; }
+
+/* Warning */
+.warning-box {
+    background: rgba(255,152,0,0.1); border: 1px solid rgba(255,152,0,0.3);
+    border-radius: 6px; padding: 10px 14px; font-size: 12px; color: #ffcc80;
+    margin-bottom: 12px;
+}
+
+/* Empty state */
+.empty-state {
+    color: #555; font-style: italic; font-size: 13px; padding: 40px 16px;
+    text-align: center;
+}
+
+/* Modal */
+.modal-overlay {
+    display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.6); z-index: 100; align-items: center; justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+    background: #16213e; border: 1px solid #0f3460; border-radius: 8px;
+    padding: 24px; width: 480px; max-width: 90vw; max-height: 90vh; overflow-y: auto;
+}
+.modal h2 { font-size: 16px; color: #e94560; margin-bottom: 16px; }
+.modal label { display: block; font-size: 12px; color: #888; margin-bottom: 4px; }
+.modal input[type="text"] {
+    width: 100%; padding: 8px 12px; background: #0d1b2a; border: 1px solid #0f3460;
+    border-radius: 4px; color: #e0e0e0; font-size: 13px; margin-bottom: 12px;
+}
+.modal input[type="text"]:focus { outline: 1px solid #e94560; }
+
+/* Toast */
+.toast {
+    position: fixed; bottom: 24px; right: 24px; background: #4caf50; color: #fff;
+    padding: 10px 20px; border-radius: 6px; font-size: 13px; z-index: 200;
+    opacity: 0; transition: opacity 0.3s; pointer-events: none;
+}
+.toast.show { opacity: 1; }
+.toast.error { background: #f44336; }
+
+/* Loading */
+.loading { color: #888; font-size: 13px; padding: 20px; text-align: center; }
+
+/* Editable description */
+.editable-desc {
+    width: 100%; padding: 6px 10px; background: #0d1b2a; border: 1px solid #0f3460;
+    border-radius: 4px; color: #e0e0e0; font-size: 12px; resize: vertical; min-height: 40px;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+}
+.editable-desc:focus { outline: 1px solid #e94560; }
+
+/* Responsive */
+@media (max-width: 800px) {
+    .main-grid { grid-template-columns: 1fr; }
+}
+    </style>
+</head>
+<body>
+    <div id="app">
+        <header>
+            <h1>Deck Management</h1>
+            <div class="nav-links">
+                <a href="/">Advisor</a>
+                <a href="/manage">Manage</a>
+                <a href="/stats">Stats</a>
+            </div>
+        </header>
+
+        <div class="main-grid">
+            <div class="panel" id="deck-list-panel">
+                <div class="deck-list-header">
+                    <h2>Decks</h2>
+                    <button class="btn btn-primary btn-small" onclick="openCreateModal()">+ Create Deck</button>
+                </div>
+                <div id="deck-list"><div class="loading">Loading...</div></div>
+            </div>
+
+            <div class="panel" id="deck-detail-panel">
+                <div id="deck-detail">
+                    <div class="empty-state">Select a deck or create a new one</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Modal -->
+    <div id="create-modal" class="modal-overlay">
+        <div class="modal">
+            <h2>Create New Deck</h2>
+            <label for="new-deck-name">Deck Name</label>
+            <input type="text" id="new-deck-name" placeholder="e.g. Azorius Control">
+            <label for="new-deck-list">Deck List (paste from MTGA)</label>
+            <textarea id="new-deck-list" class="deck-textarea" style="min-height:260px"
+                placeholder="Deck&#10;4 Lightning Bolt&#10;4 Monastery Swiftspear&#10;..."></textarea>
+            <div class="btn-row" style="margin-top:12px; justify-content:flex-end;">
+                <button class="btn btn-secondary" onclick="closeCreateModal()">Cancel</button>
+                <button class="btn btn-primary" id="create-btn" onclick="createDeck()">Create</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+<script>
+// -- State --
+let decks = [];
+let selectedDeckId = null;
+let openDropdown = null;
+
+// -- Toast --
+function showToast(msg, isError = false) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast show' + (isError ? ' error' : '');
+    setTimeout(() => t.className = 'toast', 2500);
+}
+
+// -- Color dots --
+function colorDots(colors) {
+    return (colors || []).map(c => '<span class="color-dot color-' + c + '"></span>').join('');
+}
+
+// -- Format date --
+function fmtDate(d) {
+    if (!d) return '';
+    const dt = new Date(d);
+    return dt.toLocaleDateString() + ' ' + dt.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+}
+
+// -- API helpers --
+async function apiFetch(url, opts) {
+    try {
+        const res = await fetch(url, opts);
+        if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            throw new Error(data.detail || data.error || 'Request failed (' + res.status + ')');
+        }
+        return res.json();
+    } catch (e) {
+        showToast(e.message, true);
+        throw e;
+    }
+}
+
+// -- Load Decks --
+async function loadDecks() {
+    try {
+        decks = await apiFetch('/api/decks');
+        renderDeckList(decks);
+    } catch (e) {
+        document.getElementById('deck-list').innerHTML =
+            '<div class="empty-state">Failed to load decks</div>';
+    }
+}
+
+function renderDeckList(list) {
+    const el = document.getElementById('deck-list');
+    if (!list.length) {
+        el.innerHTML = '<div class="empty-state">No decks yet. Create one to get started.</div>';
+        return;
+    }
+    el.innerHTML = list.map(d => {
+        const id = d.deck_id || d.deck_id;
+        const isActive = id === selectedDeckId;
+        const badges = [];
+        if (d.card_count === 0) badges.push('<span class="badge badge-warn">no decklist</span>');
+        if (d.is_active || d.deployed_version) badges.push('<span class="badge badge-deployed">deployed</span>');
+        if (d.rules_count) badges.push('<span class="badge badge-rules">' + d.rules_count + ' rules</span>');
+        else badges.push('<span class="badge badge-warn">no rules</span>');
+        if (d.ga_fitness) badges.push('<span class="badge badge-ga">GA ' + (d.ga_fitness * 100).toFixed(0) + '%</span>');
+        const ver = d.active_version || d.version || '';
+        return '<div class="deck-item' + (isActive ? ' active' : '') + '" onclick="loadDeckDetail(\'' + id + '\')">'
+            + '<div class="deck-item-name">' + colorDots(d.colors) + ' ' + escHtml(d.name) + '</div>'
+            + '<div class="deck-item-meta">'
+            + (d.archetype ? '<span>' + escHtml(d.archetype) + '</span>' : '')
+            + (ver ? '<span>v' + ver + '</span>' : '')
+            + badges.join('')
+            + '</div></div>';
+    }).join('');
+}
+
+// -- Load Deck Detail --
+async function loadDeckDetail(deckId) {
+    selectedDeckId = deckId;
+    renderDeckList(decks);
+    const el = document.getElementById('deck-detail');
+    el.innerHTML = '<div class="loading">Loading...</div>';
+
+    try {
+        const detail = await apiFetch('/api/decks/' + deckId);
+        renderDeckDetail(detail);
+    } catch (e) {
+        el.innerHTML = '<div class="empty-state">Failed to load deck</div>';
+    }
+}
+
+function renderDeckDetail(d) {
+    const el = document.getElementById('deck-detail');
+    const versions = d.versions || [];
+    // Get deck list from active version
+    const activeVer = (d.versions || []).find(v => v.is_active) || (d.versions || [])[0] || {};
+    const currentList = activeVer.deck_list || d.deck_list || '';
+    const missing = d.missing_cards || [];
+
+    let html = '<div class="deck-list-header">'
+        + '<h2>' + colorDots(d.colors) + ' ' + escHtml(d.name) + '</h2>'
+        + (d.archetype ? '<span style="font-size:12px;color:#888">' + escHtml(d.archetype) + '</span>' : '')
+        + '</div>';
+
+    // Description
+    html += '<div style="margin-bottom:12px">'
+        + '<textarea class="editable-desc" id="deck-desc" placeholder="Deck description...">'
+        + escHtml(d.description || '') + '</textarea>'
+        + '<button class="btn btn-secondary btn-small" style="margin-top:4px" '
+        + 'onclick="saveDescription(\'' + d.deck_id + '\')">Save Description</button>'
+        + '</div>';
+
+    // Action buttons
+    html += '<div class="btn-row" style="margin-bottom:12px">'
+        + '<div class="dropdown">'
+        + '<button class="btn btn-primary btn-small" onclick="toggleDropdown(event,\'gen-dd\')">Generate Rules &#9662;</button>'
+        + '<div class="dropdown-menu" id="gen-dd">'
+        + '<button onclick="generateRules(\'' + d.deck_id + '\',' + (d.active_version || 1) + ',\'auto\')">Auto (heuristic)</button>'
+        + '<button onclick="generateRules(\'' + d.deck_id + '\',' + (d.active_version || 1) + ',\'llm\')">LLM-assisted</button>'
+        + '<button onclick="generateRules(\'' + d.deck_id + '\',' + (d.active_version || 1) + ',\'expert\')">Expert review</button>'
+        + '</div></div>'
+        + '<button class="btn btn-secondary btn-small" onclick="deployVersion(\'' + d.deck_id + '\',' + (d.active_version || 1) + ')">Deploy</button>'
+        + '</div>';
+
+    // Missing cards
+    if (missing.length) {
+        html += '<div class="warning-box">Missing from collection: '
+            + missing.map(c => '<strong>' + escHtml(c.name) + '</strong> x' + c.count).join(', ')
+            + '</div>';
+    }
+
+    // Versions
+    if (versions.length) {
+        html += '<div class="detail-section"><h3>Versions</h3>';
+        const sorted = [...versions].sort((a, b) => (b.version || 0) - (a.version || 0));
+        sorted.forEach(v => {
+            const badges = [];
+            if (v.is_active) badges.push('<span class="badge badge-deployed">deployed</span>');
+            if (v.rules_count) badges.push('<span class="badge badge-rules">' + v.rules_count + ' rules</span>');
+            if (v.ga_fitness != null) badges.push('<span class="badge badge-ga">GA ' + v.ga_fitness.toFixed(2) + '</span>');
+            html += '<div class="version-item">'
+                + '<span class="v-num">v' + (v.version_number || '?') + '</span>'
+                + '<span class="v-date">' + fmtDate(v.created_at) + '</span>'
+                + '<span class="v-summary">' + escHtml(v.change_summary || '') + '</span>'
+                + '<span class="v-badges">' + badges.join('') + '</span>'
+                + '</div>';
+        });
+        html += '</div>';
+    }
+
+    // GA results
+    if (d.ga_results) {
+        html += '<div class="detail-section"><h3>GA Results</h3>'
+            + '<div style="font-size:12px;color:#888;margin-bottom:6px">Fitness: <strong style="color:#ffa500">'
+            + (d.ga_results.fitness || 0).toFixed(3) + '</strong></div>';
+        const matchups = d.ga_results.matchups || [];
+        if (matchups.length) {
+            matchups.forEach(m => {
+                const total = (m.wins || 0) + (m.losses || 0) + (m.draws || 0);
+                if (!total) return;
+                const wPct = ((m.wins / total) * 100).toFixed(0);
+                html += '<div style="font-size:11px;margin-bottom:4px">'
+                    + escHtml(m.opponent) + ' &mdash; ' + wPct + '% (' + m.wins + 'W/' + m.losses + 'L)'
+                    + '<div class="matchup-bar">'
+                    + '<div class="win" style="width:' + (m.wins / total * 100) + '%"></div>'
+                    + '<div class="loss" style="width:' + (m.losses / total * 100) + '%"></div>'
+                    + '<div class="draw" style="width:' + ((m.draws || 0) / total * 100) + '%"></div>'
+                    + '</div></div>';
+            });
+        }
+        html += '</div>';
+    }
+
+    // Current deck list (readonly) — only show if we have one
+    const hasDecklist = activeVer.card_count > 0;
+    if (hasDecklist) {
+        html += '<div class="detail-section"><h3>Current Deck List</h3>'
+            + '<textarea class="deck-textarea" readonly>' + escHtml(currentList) + '</textarea>'
+            + '</div>';
+    }
+
+    // Edit / new version — or set decklist for promoted stubs
+    const editLabel = hasDecklist ? 'Edit Deck List' : 'Set Deck List';
+    const editPlaceholder = hasDecklist ? 'Paste updated MTGA deck list here...' : 'Paste MTGA deck list to complete this deck...';
+    html += '<div class="detail-section"><h3>' + editLabel + '</h3>';
+    if (!hasDecklist) {
+        html += '<div class="warning-box" style="margin-bottom:8px">This deck has rules but no decklist. Paste one below to complete it.</div>';
+    }
+    html += '<textarea class="deck-textarea" id="edit-deck-list" placeholder="' + editPlaceholder + '">'
+        + escHtml(hasDecklist ? currentList : '') + '</textarea>'
+        + '<div class="btn-row" style="margin-top:8px">';
+    if (hasDecklist) {
+        html += '<button class="btn btn-primary btn-small" onclick="addVersion(\'' + d.deck_id + '\')">Save as New Version</button>';
+    } else {
+        html += '<button class="btn btn-primary btn-small" onclick="setDecklist(\'' + d.deck_id + '\',' + (activeVer.version_number || 1) + ')">Set Decklist</button>';
+    }
+    html += '</div></div>';
+
+    el.innerHTML = html;
+}
+
+// -- Create Deck --
+function openCreateModal() {
+    document.getElementById('create-modal').classList.add('open');
+    document.getElementById('new-deck-name').value = '';
+    document.getElementById('new-deck-list').value = '';
+    document.getElementById('new-deck-name').focus();
+}
+function closeCreateModal() {
+    document.getElementById('create-modal').classList.remove('open');
+}
+
+async function createDeck() {
+    const name = document.getElementById('new-deck-name').value.trim();
+    const deckList = document.getElementById('new-deck-list').value.trim();
+    if (!name) { showToast('Deck name is required', true); return; }
+    if (!deckList) { showToast('Deck list is required', true); return; }
+
+    const btn = document.getElementById('create-btn');
+    btn.disabled = true; btn.textContent = 'Creating...';
+    try {
+        const res = await apiFetch('/api/decks', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({name, deck_list: deckList})
+        });
+        showToast('Deck "' + name + '" created');
+        closeCreateModal();
+        await loadDecks();
+        if (res.deck_id || res.id) loadDeckDetail(res.deck_id || res.id);
+    } catch (e) { /* toast shown by apiFetch */ }
+    btn.disabled = false; btn.textContent = 'Create';
+}
+
+// -- Actions --
+async function generateRules(deckId, version, mode) {
+    closeAllDropdowns();
+    showToast('Generating rules (' + mode + ')...');
+    try {
+        await apiFetch('/api/decks/' + deckId + '/versions/' + version + '/generate-rules', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({mode})
+        });
+        showToast('Rules generated');
+        loadDeckDetail(deckId);
+    } catch (e) { /* toast shown */ }
+}
+
+async function deployVersion(deckId, version) {
+    try {
+        await apiFetch('/api/decks/' + deckId + '/versions/' + version + '/deploy', {method:'POST'});
+        showToast('Version ' + version + ' deployed');
+        await loadDecks();
+        loadDeckDetail(deckId);
+    } catch (e) { /* toast shown */ }
+}
+
+async function setDecklist(deckId, version) {
+    const deckList = document.getElementById('edit-deck-list').value.trim();
+    if (!deckList) { showToast('Deck list cannot be empty', true); return; }
+    try {
+        await apiFetch('/api/decks/' + deckId + '/versions/' + version + '/decklist', {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({deck_list: deckList})
+        });
+        showToast('Decklist set');
+        await loadDecks();
+        loadDeckDetail(deckId);
+    } catch (e) { /* toast shown */ }
+}
+
+async function addVersion(deckId) {
+    const deckList = document.getElementById('edit-deck-list').value.trim();
+    if (!deckList) { showToast('Deck list cannot be empty', true); return; }
+    try {
+        await apiFetch('/api/decks/' + deckId + '/versions', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({deck_list: deckList})
+        });
+        showToast('New version added');
+        await loadDecks();
+        loadDeckDetail(deckId);
+    } catch (e) { /* toast shown */ }
+}
+
+async function saveDescription(deckId) {
+    const desc = document.getElementById('deck-desc').value;
+    try {
+        await apiFetch('/api/decks/' + deckId, {
+            method: 'PATCH',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({description: desc})
+        });
+        showToast('Description saved');
+    } catch (e) { /* toast shown */ }
+}
+
+// -- Dropdown --
+function toggleDropdown(e, id) {
+    e.stopPropagation();
+    const menu = document.getElementById(id);
+    const isOpen = menu.classList.contains('open');
+    closeAllDropdowns();
+    if (!isOpen) { menu.classList.add('open'); openDropdown = id; }
+}
+function closeAllDropdowns() {
+    document.querySelectorAll('.dropdown-menu.open').forEach(m => m.classList.remove('open'));
+    openDropdown = null;
+}
+document.addEventListener('click', closeAllDropdowns);
+
+// -- Helpers --
+function escHtml(text) {
+    const d = document.createElement('div');
+    d.textContent = text || '';
+    return d.innerHTML;
+}
+
+// -- Init --
+document.addEventListener('DOMContentLoaded', loadDecks);
+</script>
+</body>
+</html>

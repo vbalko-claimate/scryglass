@@ -4,6 +4,59 @@ let reconnectTimer = null;
 let currentState = null;
 let currentAdvice = [];
 let currentThreats = [];
+let currentStrategyInfo = null;
+let currentLlmStatus = null;
+
+// ─── Profile System ───
+const PROFILES = ['focus', 'full', 'tactical'];
+const PROFILE_MAX_SUPPORT = { focus: 2, full: 3, tactical: 5 };
+let currentProfile = localStorage.getItem('scry-profile') || 'full';
+
+function setProfile(profile) {
+    if (!PROFILES.includes(profile)) return;
+    currentProfile = profile;
+    localStorage.setItem('scry-profile', profile);
+    document.documentElement.className = 'profile-' + profile;
+    document.querySelectorAll('.profile-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.profile === profile);
+    });
+
+    // Move vital bar into/out of header based on profile
+    const vitalBar = document.getElementById('vital-bar');
+    const header = document.querySelector('header');
+    const mainLayout = document.getElementById('main-layout');
+    if (vitalBar && header && mainLayout) {
+        if (profile === 'focus' || profile === 'tactical') {
+            // Move vital bar inside header
+            header.appendChild(vitalBar);
+        } else {
+            // Move vital bar back before board-column inside main layout
+            mainLayout.insertBefore(vitalBar, mainLayout.firstChild);
+        }
+    }
+
+    syncVitalBar();
+    if (currentAdvice.length) renderAdvice(currentAdvice);
+}
+
+function syncVitalBar() {
+    if (!currentState) return;
+    const el = (id) => document.getElementById(id);
+    const vbMy = el('vb-my-life');
+    const vbMana = el('vb-mana');
+    const vbOpp = el('vb-opp-life');
+    const vbMeta = el('vb-opp-meta');
+    if (vbMy) vbMy.textContent = currentState.my_life ?? 20;
+    if (vbOpp) vbOpp.textContent = currentState.opp_life ?? 20;
+    if (vbMana) {
+        const manaEl = el('mana-info');
+        if (manaEl) vbMana.textContent = manaEl.textContent;
+    }
+    if (vbMeta) {
+        const metaEl = el('opp-meta');
+        if (metaEl) vbMeta.innerHTML = metaEl.innerHTML;
+    }
+}
 
 function connect() {
     const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -30,6 +83,7 @@ function connect() {
             case 'state_update':
                 currentState = msg.data;
                 renderState(msg.data);
+                renderDebugPanel();
                 break;
             case 'advice':
                 renderAdvice(msg.data);
@@ -37,8 +91,19 @@ function connect() {
             case 'backend_changed':
                 document.getElementById('backend-select').value = msg.data.backend;
                 break;
+            case 'llm_auto_changed':
+                document.getElementById('auto-llm-toggle').checked = !!msg.data.enabled;
+                document.getElementById('llm-mode-label').textContent =
+                    msg.data.mode ? `(${msg.data.mode}${msg.data.scope ? `, ${msg.data.scope}` : ''})` : '';
+                break;
             case 'strategy_info':
+                currentStrategyInfo = msg.data || null;
                 renderStrategyInfo(msg.data);
+                renderDebugPanel();
+                break;
+            case 'llm_status':
+                currentLlmStatus = msg.data || null;
+                renderLLMStatus(currentLlmStatus);
                 break;
             case 'threat_assessment':
                 console.log('Threat assessment received:', msg.data.length, 'threats');
@@ -108,6 +173,8 @@ function renderState(state) {
         stackCount > 0 ? `Stack: ${stackCount}` : '';
     document.getElementById('game-state-id').textContent =
         `State #${state.game_state_id || 0}`;
+    updateAdviceSubtitle();
+    syncVitalBar();
 }
 
 function renderCardRow(containerId, cards, isHand = false) {
@@ -187,21 +254,32 @@ function renderStrategyInfo(info) {
         const confClass = conf >= 80 ? 'high' : conf >= 50 ? 'mid' : 'low';
         oppMeta.innerHTML = `<span class="opp-deck-badge ${confClass}">${info.opp_deck} (${conf}%)</span>`;
 
-        // Details row
-        let parts = [];
+        const parts = [];
         if (info.opp_archetype) parts.push(info.opp_archetype);
         if (info.opp_speed) parts.push(`speed: ${info.opp_speed}`);
         if (info.opp_kill_turn) parts.push(`kills T${info.opp_kill_turn}`);
         if (info.opp_hidden_reach) parts.push(`reach: ${info.opp_hidden_reach} dmg`);
 
-        let threats = (info.opp_key_threats || []).map(t => typeof t === 'string' ? t : t.card || t).join(', ');
-        if (threats) parts.push(`threats: ${threats}`);
+        const keyThreats = (info.opp_key_threats || []).map(t => {
+            if (typeof t === 'string') return { card: t, reason: '' };
+            return t || {};
+        });
+        const mustAnswer = keyThreats
+            .filter(t => t.must_answer || t.removal_priority === 1)
+            .slice(0, 3)
+            .map(t => `<strong>${t.card}</strong>${t.reason ? `: ${t.reason}` : ''}`);
+        const seen = (info.opp_cards_seen || []).join(', ');
 
-        let seen = (info.opp_cards_seen || []).join(', ');
-        if (seen) parts.push(`seen: ${seen}`);
+        const lines = [];
+        if (parts.length) lines.push(parts.join(' | '));
+        if (info.opp_plan) lines.push(`<span class="opp-plan-label">plan:</span> ${info.opp_plan}`);
+        if (mustAnswer.length) {
+            lines.push(`<span class="opp-plan-label">must answer:</span> ${mustAnswer.join(' | ')}`);
+        }
+        if (seen) lines.push(`<span class="opp-plan-label">seen:</span> ${seen}`);
 
-        if (parts.length) {
-            oppDetails.textContent = parts.join(' | ');
+        if (lines.length) {
+            oppDetails.innerHTML = lines.join('<br>');
             oppDetails.style.display = 'block';
         }
     } else {
@@ -213,148 +291,229 @@ function renderStrategyInfo(info) {
             oppDetails.style.display = 'none';
         }
     }
+
+    renderThreatRadar(currentThreats, info);
+
+    // Sync vital bar opp meta
+    const vbOppMeta = document.getElementById('vb-opp-meta');
+    if (vbOppMeta) {
+        const metaEl = document.getElementById('opp-meta');
+        if (metaEl) vbOppMeta.innerHTML = metaEl.innerHTML;
+    }
+}
+
+function buildThreatRadarItems(threats, info) {
+    const live = (threats || [])
+        .sort((a, b) => {
+            const aScore = (a.must_answer ? 100 : 0) + (a.category === 'engine' ? 20 : 0) + (a.danger || 0);
+            const bScore = (b.must_answer ? 100 : 0) + (b.category === 'engine' ? 20 : 0) + (b.danger || 0);
+            return bScore - aScore;
+        });
+    const liveNames = new Set(live.map(t => t.name));
+    const watch = ((info && info.opp_key_threats) || [])
+        .map(item => typeof item === 'string' ? { card: item } : (item || {}))
+        .filter(item => item.card && !liveNames.has(item.card));
+    return { live, watch };
+}
+
+function renderThreatRadar(threats, info) {
+    const panel = document.getElementById('threat-radar-panel');
+    const summary = document.getElementById('threat-radar-summary');
+    const container = document.getElementById('threat-radar-list');
+    const counter = document.getElementById('threat-radar-count');
+    if (!panel || !summary || !container || !counter) return;
+
+    const { live, watch } = buildThreatRadarItems(threats, info);
+    const plan = info && info.opp_plan ? info.opp_plan : '';
+    const seen = (info && info.opp_cards_seen && info.opp_cards_seen.length)
+        ? info.opp_cards_seen.join(', ')
+        : '';
+
+    if (!live.length && !watch.length && !plan && !seen) {
+        panel.style.display = 'none';
+        summary.innerHTML = '';
+        container.innerHTML = '';
+        counter.textContent = '';
+        return;
+    }
+
+    panel.style.display = 'block';
+    counter.textContent = `${live.length} live${watch.length ? ` · ${watch.length} watch` : ''}`;
+
+    const summaryBits = [];
+    if (plan) summaryBits.push(`<div><span class="threat-radar-label">Their plan:</span> ${formatMessage(plan)}</div>`);
+    if (seen) summaryBits.push(`<div><span class="threat-radar-label">Seen:</span> ${seen}</div>`);
+    summary.innerHTML = summaryBits.join('');
+
+    const liveItems = live.map(t => {
+        const danger = t.danger || 2;
+        const dangerClass = `danger-${danger}`;
+        const labels = [];
+        if (t.role) labels.push(t.role.replace('-', ' '));
+        if (t.category === 'engine') labels.push('engine');
+        if (t.must_answer || t.priority === 'must-remove') labels.push('must-answer');
+        else if ((t.priority || '') && t.priority !== 'monitor') labels.push((t.priority || '').replace('-', ' '));
+        else labels.push('live');
+        const typeLine = t.type_line ? `<span class="radar-type">${t.type_line}</span>` : '';
+        const manaCost = t.mana_cost ? `<span class="radar-cost">${formatMana(t.mana_cost)}</span>` : '';
+        const hint = t.decision_hint ? `<div class="radar-hint">${formatMessage(t.decision_hint)}</div>` : '';
+        const reason = t.reason && t.reason !== t.summary
+            ? `<div class="radar-reason">${formatMessage(t.reason)}</div>` : '';
+        const analyzing = t.source === 'heuristic'
+            ? '<span class="radar-analyzing">analyzing...</span>' : '';
+        return `<div class="radar-item live ${dangerClass}">
+            <div class="radar-top">
+                <span class="danger-badge ${dangerClass}">${danger}</span>
+                <span class="radar-name">${t.name}</span>
+                ${manaCost}
+            </div>
+            <div class="radar-tags">${labels.map(label => `<span class="radar-tag">${label}</span>`).join('')}</div>
+            <div class="radar-summary">${formatMessage(t.summary || t.reason || '')}</div>
+            ${hint}
+            ${reason}
+            <div class="radar-bottom">
+                ${typeLine}
+                ${analyzing}
+            </div>
+        </div>`;
+    });
+
+    const watchItems = watch.map(t => `<div class="radar-item watch">
+        <div class="radar-top">
+            <span class="radar-watch-badge">?</span>
+            <span class="radar-name">${t.card}</span>
+        </div>
+        <div class="radar-tags"><span class="radar-tag">watch for</span></div>
+        <div class="radar-summary">${formatMessage(t.reason || 'Important payoff or enabler for this archetype.')}</div>
+    </div>`);
+
+    container.innerHTML = [...liveItems, ...watchItems].join('');
 }
 
 function renderThreats(threats) {
-    const panel = document.getElementById('threat-panel');
-    const container = document.getElementById('threat-list');
-    const counter = document.getElementById('threat-count');
-
     if (!threats || !threats.length) {
         currentThreats = [];
-        panel.style.display = 'none';
+        renderThreatRadar(currentThreats, currentStrategyInfo);
         highlightCards();
         return;
     }
 
     currentThreats = threats;
-    panel.style.display = 'block';
-    counter.textContent = threats.length;
-
-    container.innerHTML = threats.map(t => {
-        const danger = t.danger || 2;
-        const dangerClass = `danger-${danger}`;
-        const priorityClass = (t.priority || 'monitor').replace(/\s+/g, '-');
-        const priorityLabel = (t.priority || 'monitor').replace('-', ' ');
-        const analyzing = t.source === 'heuristic'
-            ? '<span class="threat-analyzing">analyzing...</span>' : '';
-
-        return `<div class="threat-item ${dangerClass}">
-            <div class="threat-top">
-                <span class="danger-badge ${dangerClass}">${danger}</span>
-                <span class="threat-name">${t.name}</span>
-                <span class="threat-cost">${formatMana(t.mana_cost || '')}</span>
-            </div>
-            <div class="threat-summary">${formatMessage(t.summary || '')}</div>
-            <div class="threat-bottom">
-                <span class="threat-priority ${priorityClass}">${priorityLabel}</span>
-                <span class="threat-type">${t.type_line || ''}</span>
-                ${analyzing}
-            </div>
-        </div>`;
-    }).join('');
-
+    renderThreatRadar(currentThreats, currentStrategyInfo);
     highlightCards();
 }
 
+// A2: Map action family → strip type and label
+const FAMILY_STRIP = {
+    cast_spell: { type: 'cast',   label: 'CAST' },
+    play_land:  { type: 'cast',   label: 'LAND' },
+    attack:     { type: 'attack', label: 'ATTACK' },
+    block:      { type: 'block',  label: 'BLOCK' },
+    activate:   { type: 'cast',   label: 'ACTIVATE' },
+    pass:       { type: 'hold',   label: 'HOLD' },
+};
+
 function highlightCards() {
-    // Clear all existing highlights
+    // Clear all action strips and threat highlights
     document.querySelectorAll('.card').forEach(el => {
-        el.classList.remove('highlight-attack', 'highlight-block', 'highlight-cast',
-                            'highlight-target', 'highlight-threat');
-        const badge = el.querySelector('.action-badge');
+        el.classList.remove('action-rec', 'action-cast', 'action-attack', 'action-block',
+                            'action-hold', 'action-target', 'highlight-threat',
+                            'priority-medium', 'priority-high', 'priority-critical');
+        delete el.dataset.actionLabel;
+        const badge = el.querySelector('.badge-threat');
         if (badge) badge.remove();
     });
 
     if (!currentState) return;
 
-    // Collect known card names by zone
-    const myBfNames = new Set((currentState.my_battlefield || []).map(c => c.name));
-    const oppBfNames = new Set((currentState.opp_battlefield || []).map(c => c.name));
-    const handNames = new Set((currentState.hand || []).map(c => c.name));
-
-    // Parse advice to find mentioned cards and actions
+    // Structured path: use action_scores from advice
     for (const a of currentAdvice) {
-        const msg = (a.message || '').toLowerCase();
+        const scores = a.action_scores || [];
+        const priority = a.priority || 'medium';
+        for (const actionScore of scores) {
+            const target = actionScore.target;
+            if (!target) continue;
+            const family = actionScore.family || 'cast_spell';
+            const mapping = FAMILY_STRIP[family] || FAMILY_STRIP.cast_spell;
 
-        // Attack advice
-        if (msg.includes('attack with') || msg.includes('lethal')) {
-            for (const name of myBfNames) {
-                if (msg.toLowerCase().includes(name.toLowerCase())) {
-                    addHighlight('my-battlefield', name, 'highlight-attack', 'ATK');
-                }
+            if (family === 'cast_spell' || family === 'play_land' || family === 'activate') {
+                addStrip('hand-cards', target, mapping.type, mapping.label, priority);
+                addStrip('my-battlefield', target, mapping.type, mapping.label, priority);
             }
-            // "attack with all" — highlight all untapped creatures
+            if (family === 'attack') {
+                addStrip('my-battlefield', target, mapping.type, mapping.label, priority);
+            }
+            if (family === 'block') {
+                addStrip('my-battlefield', target, mapping.type, mapping.label, priority);
+            }
+        }
+
+        // Fallback for advice without action_scores — parse message for card names
+        if (!scores.length) {
+            const msg = (a.message || '').toLowerCase();
+            const handNames = (currentState.hand || []).map(c => c.name);
+            const myBfNames = (currentState.my_battlefield || []).map(c => c.name);
+
             if (msg.includes('attack with all') || msg.includes('lethal')) {
                 (currentState.my_battlefield || []).forEach(c => {
                     if ((c.card_types || []).includes('Creature') && !c.is_tapped && !c.has_summoning_sickness) {
-                        addHighlight('my-battlefield', c.name, 'highlight-attack', 'ATK');
+                        addStrip('my-battlefield', c.name, 'attack', 'ATTACK', priority);
                     }
                 });
-            }
-        }
-
-        // Block advice
-        if (msg.includes('block') && !msg.includes("can't block")) {
-            for (const name of myBfNames) {
-                if (msg.toLowerCase().includes(name.toLowerCase()) && !msg.startsWith('block ' + name.toLowerCase())) {
-                    addHighlight('my-battlefield', name, 'highlight-block', 'BLK');
+            } else if (msg.includes('attack with')) {
+                for (const name of myBfNames) {
+                    if (msg.includes(name.toLowerCase())) addStrip('my-battlefield', name, 'attack', 'ATTACK', priority);
                 }
-            }
-            // Highlight the attacker being blocked on opponent side
-            for (const name of oppBfNames) {
-                if (msg.toLowerCase().includes(name.toLowerCase())) {
-                    addHighlight('opp-battlefield', name, 'highlight-target', 'TGT');
+            } else if (msg.includes('block') && !msg.includes("can't block")) {
+                for (const name of myBfNames) {
+                    if (msg.includes(name.toLowerCase())) addStrip('my-battlefield', name, 'block', 'BLOCK', priority);
                 }
-            }
-        }
-
-        // Removal advice
-        if (msg.includes('remove') || msg.includes('destroy') || msg.includes('exile')) {
-            for (const name of oppBfNames) {
-                if (msg.toLowerCase().includes(name.toLowerCase())) {
-                    addHighlight('opp-battlefield', name, 'highlight-target', 'TGT');
+            } else if (msg.includes('remove') || msg.includes('destroy') || msg.includes('exile')) {
+                const oppBfNames = (currentState.opp_battlefield || []).map(c => c.name);
+                for (const name of oppBfNames) {
+                    if (msg.includes(name.toLowerCase())) addStrip('opp-battlefield', name, 'target', 'TARGET', priority);
                 }
-            }
-            // Highlight the removal spell in hand
-            for (const name of handNames) {
-                if (msg.toLowerCase().includes(name.toLowerCase())) {
-                    addHighlight('hand-cards', name, 'highlight-cast', 'CAST');
+                for (const name of handNames) {
+                    if (msg.includes(name.toLowerCase())) addStrip('hand-cards', name, 'cast', 'CAST', priority);
                 }
-            }
-        }
-
-        // Cast advice
-        if (msg.includes('cast ')) {
-            for (const name of handNames) {
-                if (msg.toLowerCase().includes(name.toLowerCase())) {
-                    addHighlight('hand-cards', name, 'highlight-cast', 'CAST');
+            } else if (msg.includes('cast ') || msg.includes('deploy')) {
+                for (const name of handNames) {
+                    if (msg.includes(name.toLowerCase())) addStrip('hand-cards', name, 'cast', 'CAST', priority);
                 }
             }
         }
     }
 
-    // Highlight opponent permanents from threat panel (danger >= 4)
+    // Threat highlights on opponent permanents (separate system)
     for (const t of currentThreats) {
         if (t.danger >= 4) {
-            addHighlight('opp-battlefield', t.name, 'highlight-threat',
-                         t.priority === 'must-remove' ? 'KILL' : 'TGT');
+            const container = document.getElementById('opp-battlefield');
+            if (!container) continue;
+            container.querySelectorAll('.card').forEach(el => {
+                if (el.dataset.name === t.name && !el.classList.contains('highlight-threat')) {
+                    el.classList.add('highlight-threat');
+                    if (!el.querySelector('.badge-threat')) {
+                        const badge = document.createElement('span');
+                        badge.className = 'badge-threat';
+                        badge.textContent = t.priority === 'must-remove' ? 'KILL' : 'TGT';
+                        el.appendChild(badge);
+                    }
+                }
+            });
         }
     }
 }
 
-function addHighlight(containerId, cardName, cssClass, badgeText) {
+function addStrip(containerId, cardName, stripType, label, priority) {
     const container = document.getElementById(containerId);
     if (!container) return;
     container.querySelectorAll('.card').forEach(el => {
-        if (el.dataset.name === cardName && !el.classList.contains(cssClass)) {
-            el.classList.add(cssClass);
-            if (badgeText && !el.querySelector('.action-badge')) {
-                const badge = document.createElement('span');
-                badge.className = `action-badge badge-${cssClass.replace('highlight-', '')}`;
-                badge.textContent = badgeText;
-                el.appendChild(badge);
-            }
+        if (el.dataset.name === cardName && !el.classList.contains('action-rec')) {
+            el.classList.add('action-rec', `action-${stripType}`);
+            // Use highest priority if multiple advice target same card
+            const priClass = `priority-${priority}`;
+            el.classList.add(priClass);
+            el.dataset.actionLabel = label;
         }
     });
 }
@@ -363,6 +522,8 @@ function clearScreen() {
     currentState = null;
     currentAdvice = [];
     currentThreats = [];
+    currentStrategyInfo = null;
+    currentLlmStatus = null;
     document.getElementById('match-status').textContent = 'New match starting...';
     document.getElementById('turn-info').textContent = '';
     document.getElementById('opp-life').textContent = '20';
@@ -372,7 +533,11 @@ function clearScreen() {
     document.getElementById('opp-battlefield').innerHTML = '<span class="empty-state">Empty</span>';
     document.getElementById('my-battlefield').innerHTML = '<span class="empty-state">Empty</span>';
     document.getElementById('hand-cards').innerHTML = '<span class="empty-state">Empty</span>';
-    document.getElementById('advice-list').innerHTML = '<span class="empty-state">New match — good luck!</span>';
+    document.getElementById('decision-actions-summary').innerHTML = '';
+    document.getElementById('advice-key-play').style.display = 'none';
+    document.getElementById('advice-key-play').innerHTML = '';
+    document.getElementById('advice-now-list').innerHTML = '<span class="empty-state">New match — good luck!</span>';
+    document.getElementById('advice-context-list').innerHTML = '<span class="empty-state">Opponent intel and AI notes will appear here.</span>';
     document.getElementById('library-count').textContent = 'Library: 0';
     document.getElementById('graveyard-count').textContent = 'Graveyard: 0';
     document.getElementById('stack-count').textContent = '';
@@ -380,8 +545,12 @@ function clearScreen() {
     document.getElementById('strategy-info').style.display = 'none';
     document.getElementById('opp-meta').innerHTML = '';
     document.getElementById('opp-meta-details').style.display = 'none';
-    document.getElementById('threat-panel').style.display = 'none';
-    document.getElementById('threat-list').innerHTML = '';
+    document.getElementById('threat-radar-panel').style.display = 'none';
+    document.getElementById('threat-radar-summary').innerHTML = '';
+    document.getElementById('threat-radar-list').innerHTML = '';
+    document.getElementById('threat-radar-count').textContent = '';
+    updateAdviceSubtitle();
+    renderLLMStatus({ state: 'idle', label: 'LLM idle', source: 'auto', wait: false });
 }
 
 function formatMessage(text) {
@@ -397,29 +566,287 @@ function resetAskButton() {
     if (btn) { btn.textContent = 'Ask AI'; btn.disabled = false; }
 }
 
-function renderAdvice(adviceList) {
-    resetAskButton();
-    resetSummaryButton();
-    const container = document.getElementById('advice-list');
-    if (!adviceList || !adviceList.length) {
-        currentAdvice = [];
-        container.innerHTML = '<span class="empty-state">No advice yet — play a game!</span>';
+function updateAdviceSubtitle() {
+    const el = document.getElementById('advice-subtitle');
+    if (!el) return;
+
+    const status = currentLlmStatus || { state: 'idle' };
+    if (!currentState || !currentState.turn || !currentState.turn.number) {
+        el.textContent = status.state === 'pending'
+            ? 'Live state loading. LLM supplement is already spinning up.'
+            : 'Heuristics pilot the turn. LLM supplements when needed.';
         return;
     }
 
-    currentAdvice = adviceList;
+    const turn = currentState.turn;
+    const owner = turn.is_my_turn ? 'Your turn' : "Opponent's turn";
+    const phase = turn.phase_display || 'Unknown phase';
+    let text = `${owner} · ${phase}`;
+    if (status.state === 'pending') {
+        text += ' · LLM supplement incoming';
+    } else if (status.state === 'done') {
+        text += ' · LLM note landed';
+    }
+    el.textContent = text;
+}
 
-    // Sort by priority
-    const order = { critical: 0, high: 1, medium: 2, low: 3 };
-    adviceList.sort((a, b) => (order[a.priority] || 3) - (order[b.priority] || 3));
+function renderLLMStatus(status) {
+    const pill = document.getElementById('llm-status-pill');
+    const panel = document.getElementById('advice-panel');
+    const safe = status || { state: 'idle', label: 'LLM idle', source: 'auto', wait: false };
+    const state = safe.state || 'idle';
+    const source = safe.source || 'auto';
+    const turn = safe.turn_number ? ` · T${safe.turn_number}` : '';
+    const phase = safe.phase_display ? ` · ${safe.phase_display}` : '';
 
-    container.innerHTML = adviceList.map(a => `
-        <div class="advice-item ${a.priority}">
-            <div class="advice-message">${formatMessage(a.message)}</div>
+    if (panel) {
+        panel.classList.toggle('llm-pending', state === 'pending');
+    }
+    updateAdviceSubtitle();
+    if (!pill) return;
+
+    pill.className = `llm-status-pill ${state}`;
+    pill.textContent = `${safe.label || 'LLM idle'}${turn}${phase}`;
+    pill.title = safe.wait
+        ? 'LLM supplement is still running for the current spot.'
+        : 'No pending LLM work for the current spot.';
+
+    if (state !== 'pending') {
+        resetAskButton();
+    }
+    if (state === 'pending' && source === 'manual') {
+        const btn = document.getElementById('ask-ai-btn');
+        if (btn) {
+            btn.textContent = 'Thinking...';
+            btn.disabled = true;
+        }
+    }
+}
+
+function isContextAdvice(item) {
+    const source = (item.source || '').toLowerCase();
+    const msg = (item.message || '').toLowerCase();
+    if (source === 'intel' || source.startsWith('llm')) return true;
+    return (
+        msg.startsWith('their plan:') ||
+        msg.startsWith('must answer') ||
+        msg.startsWith('watch for') ||
+        msg.startsWith('engine online:') ||
+        msg.startsWith('primary threat:')
+    );
+}
+
+// A1: Family label map for action badges
+const ACTION_FAMILY_LABELS = {
+    cast_spell: 'CAST',
+    play_land:  'LAND',
+    attack:     'ATK',
+    block:      'BLK',
+    activate:   'ACT',
+    pass:       'HOLD',
+};
+
+function renderAdviceItems(items, emptyText) {
+    if (!items.length) {
+        return `<span class="empty-state">${emptyText}</span>`;
+    }
+
+    return items.map(a => {
+        // A1: Build action badge from first action_score family
+        let badgeHtml = '';
+        const scores = a.action_scores || [];
+        if (scores.length) {
+            const topFamily = scores.reduce((best, cur) =>
+                cur.score > best.score ? cur : best, scores[0]).family;
+            const label = ACTION_FAMILY_LABELS[topFamily] || topFamily.toUpperCase();
+            badgeHtml = `<span class="advice-action-badge action-${topFamily}">${label}</span>`;
+        }
+
+        // A5: Rule provenance tooltip
+        let titleAttr = '';
+        const ruledScores = scores.filter(s => s.rule_id);
+        if (ruledScores.length) {
+            const tips = ruledScores.map(s =>
+                `[${s.rule_layer || '?'}] ${s.rule_id} w:${s.rule_weight ?? '?'}`);
+            titleAttr = ` title="${tips.join(' | ').replace(/"/g, '&quot;')}"`;
+        }
+
+        // Cross-highlight: first action_score target
+        const cardTarget = scores.find(s => s.target)?.target || '';
+        const targetAttr = cardTarget ? ` data-card-target="${cardTarget.replace(/"/g, '&quot;')}"` : '';
+
+        return `
+        <div class="advice-item ${a.priority}"${titleAttr}${targetAttr}>
+            <div class="advice-message">${badgeHtml}${formatMessage(a.message)}</div>
             <span class="advice-source">[${a.source}]</span>
             ${a.details ? `<div class="advice-details">${a.details}</div>` : ''}
         </div>
-    `).join('');
+    `;
+    }).join('');
+}
+
+function spotlightScore(item) {
+    const priorityScore = { critical: 400, high: 300, medium: 200, low: 100 };
+    let score = priorityScore[item.priority] || 0;
+
+    // A3: If action_scores exist, use max score from them as the primary signal
+    const actionScores = item.action_scores || [];
+    if (actionScores.length) {
+        const maxActionScore = Math.max(...actionScores.map(a => a.score));
+        // Scale 0-1 action score into 0-200 range, added on top of priority
+        score += maxActionScore * 200;
+        // Strongly prefer specific advice (names a card) over generic
+        const hasTarget = actionScores.some(a => a.target && a.target.length > 0);
+        if (hasTarget) {
+            score += 150;  // big bonus for naming a specific card
+        } else {
+            score -= 100;  // penalty for generic advice as spotlight
+        }
+        return score;
+    }
+
+    // Fallback: existing text heuristic when no action_scores
+    const source = (item.source || '').toLowerCase();
+    const msg = (item.message || '').toLowerCase();
+
+    if (source === 'heuristic') score += 40;
+    else if (source === 'strategy') score += 25;
+    else if (source.startsWith('llm')) score += 10;
+
+    if (/^(remove|must block|must answer|attack|don't attack|block|cast|hold)/.test(msg)) {
+        score += 25;
+    }
+    if (msg.startsWith('play a land')) score -= 50;
+    if (msg.startsWith('their plan:') || msg.startsWith('primary threat:')) score -= 100;
+
+    return score;
+}
+
+function renderSpotlightAdvice(item) {
+    if (!item) return '';
+
+    // A1: Badge for spotlight
+    let badgeHtml = '';
+    const scores = item.action_scores || [];
+    if (scores.length) {
+        const topFamily = scores.reduce((best, cur) =>
+            cur.score > best.score ? cur : best, scores[0]).family;
+        const label = ACTION_FAMILY_LABELS[topFamily] || topFamily.toUpperCase();
+        badgeHtml = `<span class="advice-action-badge action-${topFamily}">${label}</span> `;
+    }
+
+    // A5: Rule provenance tooltip on spotlight
+    let titleAttr = '';
+    const ruledScores = scores.filter(s => s.rule_id);
+    if (ruledScores.length) {
+        const tips = ruledScores.map(s =>
+            `[${s.rule_layer || '?'}] ${s.rule_id} w:${s.rule_weight ?? '?'}`);
+        titleAttr = ` title="${tips.join(' | ').replace(/"/g, '&quot;')}"`;
+    }
+
+    return `
+        <div class="advice-spotlight-card ${item.priority}"${titleAttr}>
+            <div class="advice-spotlight-label">${badgeHtml}Key Play</div>
+            <div class="advice-spotlight-message">${formatMessage(item.message)}</div>
+            <div class="advice-spotlight-meta">
+                <span class="advice-spotlight-source">${item.source}</span>
+                ${item.details ? `<span class="advice-spotlight-details">${item.details}</span>` : ''}
+            </div>
+        </div>
+    `;
+}
+
+function renderDecisionSummary(adviceList) {
+    const el = document.getElementById('decision-actions-summary');
+    if (!el) return;
+
+    if (!adviceList || !adviceList.length) {
+        el.innerHTML = '';
+        return;
+    }
+
+    // Collect all action families with their best score
+    const familyBest = {};
+    for (const a of adviceList) {
+        for (const s of (a.action_scores || [])) {
+            if (!familyBest[s.family] || s.score > familyBest[s.family]) {
+                familyBest[s.family] = s.score;
+            }
+        }
+    }
+
+    const families = Object.entries(familyBest);
+    if (!families.length) {
+        el.innerHTML = '';
+        return;
+    }
+
+    // Sort by score descending
+    families.sort((a, b) => b[1] - a[1]);
+    const badges = families.map(([family]) => {
+        const label = ACTION_FAMILY_LABELS[family] || family.toUpperCase();
+        return `<span class="summary-family advice-action-badge action-${family}">${label}</span>`;
+    });
+    el.innerHTML = `Choose: ${badges.join(' ')}`;
+}
+
+function renderAdvice(adviceList) {
+    resetAskButton();
+    resetSummaryButton();
+    const spotlightContainer = document.getElementById('advice-key-play');
+    const nowContainer = document.getElementById('advice-now-list');
+    const contextContainer = document.getElementById('advice-context-list');
+    if (!spotlightContainer || !nowContainer || !contextContainer) return;
+
+    // A4: Update decision action summary
+    renderDecisionSummary(adviceList);
+
+    if (!adviceList || !adviceList.length) {
+        currentAdvice = [];
+        spotlightContainer.style.display = 'none';
+        spotlightContainer.innerHTML = '';
+        nowContainer.innerHTML = '<span class="empty-state">No advice yet — play a game!</span>';
+        contextContainer.innerHTML = '<span class="empty-state">Opponent intel and AI notes will appear here.</span>';
+        return;
+    }
+
+    const order = { critical: 0, high: 1, medium: 2, low: 3 };
+    const sortedAdvice = [...adviceList].sort(
+        (a, b) => (order[a.priority] || 3) - (order[b.priority] || 3)
+    );
+    currentAdvice = sortedAdvice;
+
+    let nowItems = sortedAdvice.filter(a => !isContextAdvice(a));
+    let contextItems = sortedAdvice.filter(a => isContextAdvice(a));
+
+    if (!nowItems.length && sortedAdvice.length) {
+        const fallback = sortedAdvice.find(a => (a.source || '').toLowerCase() !== 'intel') || sortedAdvice[0];
+        nowItems = [fallback];
+        contextItems = sortedAdvice.filter(a => a !== fallback);
+    }
+
+    const spotlight = [...nowItems].sort((a, b) => spotlightScore(b) - spotlightScore(a))[0] || null;
+    const supportItems = spotlight ? nowItems.filter(a => a !== spotlight) : nowItems;
+
+    if (spotlight) {
+        spotlightContainer.style.display = '';
+        spotlightContainer.innerHTML = renderSpotlightAdvice(spotlight);
+    } else {
+        spotlightContainer.style.display = 'none';
+        spotlightContainer.innerHTML = '';
+    }
+
+    nowItems = supportItems.slice(0, PROFILE_MAX_SUPPORT[currentProfile] || 3);
+    contextItems = contextItems.slice(0, 5);
+
+    nowContainer.innerHTML = renderAdviceItems(
+        nowItems,
+        spotlight ? 'No secondary actions for this spot.' : 'Waiting for a concrete play recommendation.'
+    );
+    contextContainer.innerHTML = renderAdviceItems(
+        contextItems,
+        'No extra context for this spot.'
+    );
 
     highlightCards();
 }
@@ -430,11 +857,12 @@ function askLLM() {
         const btn = document.getElementById('ask-ai-btn');
         btn.textContent = 'Thinking...';
         btn.disabled = true;
-        // Claude CLI can take up to 40s, reset after 45s
-        setTimeout(() => {
-            btn.textContent = 'Ask AI';
-            btn.disabled = false;
-        }, 45000);
+        renderLLMStatus({
+            state: 'pending',
+            label: 'LLM thinking...',
+            source: 'manual',
+            wait: true,
+        });
     }
 }
 
@@ -456,6 +884,11 @@ function resetSummaryButton() {
     if (btn) { btn.textContent = 'Match Summary'; btn.disabled = false; }
 }
 
+function resetReportButton() {
+    const btn = document.getElementById('report-btn');
+    if (btn) { btn.textContent = 'Export Last Game'; btn.disabled = false; }
+}
+
 function toggleLLM(enabled) {
     if (ws && ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify({ action: 'toggle_llm', enabled }));
@@ -468,5 +901,249 @@ function setBackend(backend) {
     }
 }
 
+async function exportLastGame() {
+    const btn = document.getElementById('report-btn');
+    if (!btn) return;
+    btn.textContent = 'Exporting...';
+    btn.disabled = true;
+
+    try {
+        const resp = await fetch('/api/match-report/latest', { cache: 'no-store' });
+        if (!resp.ok) {
+            throw new Error(`HTTP ${resp.status}`);
+        }
+
+        const text = await resp.text();
+        const disposition = resp.headers.get('Content-Disposition') || '';
+        const match = disposition.match(/filename=\"([^\"]+)\"/);
+        const filename = match ? match[1] : 'mtga-match-report.md';
+        const blob = new Blob([text], { type: 'text/markdown;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+    } catch (err) {
+        console.error('Failed to export report', err);
+        alert('Failed to export the latest completed game report.');
+    } finally {
+        resetReportButton();
+    }
+}
+
+// ─── Profile Switcher Init ───
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.profile-btn').forEach(btn => {
+        btn.addEventListener('click', () => setProfile(btn.dataset.profile));
+    });
+    setProfile(currentProfile);
+});
+
+document.addEventListener('keydown', (e) => {
+    if (e.target.matches('input, textarea, select')) return;
+    if (e.ctrlKey && !e.shiftKey && !e.altKey) {
+        if (e.key === '1') { e.preventDefault(); setProfile('focus'); }
+        if (e.key === '2') { e.preventDefault(); setProfile('full'); }
+        if (e.key === '3') { e.preventDefault(); setProfile('tactical'); }
+    }
+    // Toggle overlay with backtick (`) key
+    if (e.key === '`' && !e.ctrlKey && !e.altKey) {
+        e.preventDefault();
+        if (window.__TAURI__) {
+            window.__TAURI__.core.invoke('toggle_overlay');
+        }
+    }
+});
+
+// ─── Debug Panel ───
+let debugVisible = false;
+
+function toggleDebugPanel() {
+    debugVisible = !debugVisible;
+    const panel = document.getElementById('debug-panel');
+    const btn = document.getElementById('debug-toggle');
+    panel.style.display = debugVisible ? 'block' : 'none';
+    btn.classList.toggle('active', debugVisible);
+    if (debugVisible) renderDebugPanel();
+}
+
+function renderDebugPanel() {
+    const panel = document.getElementById('debug-panel');
+    if (!panel || !debugVisible) return;
+
+    const info = currentStrategyInfo;
+    const dbg = info?.debug || {};
+    const state = currentState;
+
+    let html = '<div class="debug-grid">';
+
+    // Strategy info
+    html += '<div class="debug-section">';
+    html += '<div class="debug-heading">Strategy</div>';
+    html += debugRow('Name', info?.strategy_name || 'none');
+    html += debugRow('Archetype', info?.archetype || '—');
+    html += debugRow('Colors', (dbg.colors || []).join(', ') || '—');
+    html += debugRow('Rules', info?.rule_count || 0);
+    html += debugRow('General overrides', dbg.general_overrides || 0);
+    html += debugRow('Engine', dbg.engine_version || '—');
+    html += '</div>';
+
+    // Rules by layer
+    html += '<div class="debug-section">';
+    html += '<div class="debug-heading">Rules by Layer</div>';
+    const layers = dbg.rules_by_layer || {};
+    if (Object.keys(layers).length) {
+        html += Object.entries(layers)
+            .sort((a, b) => b[1] - a[1])
+            .map(([k, v]) => `<span class="debug-badge layer-badge">${k}: ${v}</span>`)
+            .join(' ');
+    } else {
+        html += '<span class="debug-value">—</span>';
+    }
+    html += '</div>';
+
+    // Stats
+    html += '<div class="debug-section">';
+    html += '<div class="debug-heading">Stats</div>';
+    const stats = dbg.stats || {};
+    html += debugRow('Games', stats.games || 0);
+    html += debugRow('Win rate', stats.games > 0
+        ? ((stats.wins / stats.games) * 100).toFixed(0) + '%'
+        : '—');
+    html += '</div>';
+
+    // Deck signature
+    html += '<div class="debug-section">';
+    html += '<div class="debug-heading">Deck Signature</div>';
+    html += '<span class="debug-value">' + (dbg.deck_signature || []).join(', ') + '</span>';
+    html += '</div>';
+
+    // Vulnerabilities
+    if (dbg.vulnerabilities?.length) {
+        html += '<div class="debug-section">';
+        html += '<div class="debug-heading">Vulnerabilities</div>';
+        html += dbg.vulnerabilities.map(v => {
+            if (typeof v === 'string') return `<span class="debug-badge vuln-badge">${v}</span>`;
+            return `<span class="debug-badge vuln-badge">${v.card || v.name || '?'}${v.severity ? ' (' + v.severity + ')' : ''}</span>`;
+        }).join(' ');
+        html += '</div>';
+    }
+
+    // Global biases
+    const biases = dbg.biases || {};
+    if (Object.keys(biases).length) {
+        html += '<div class="debug-section">';
+        html += '<div class="debug-heading">Global Biases</div>';
+        html += Object.entries(biases)
+            .map(([k, v]) => `<span class="debug-badge bias-badge">${k}: ${v > 0 ? '+' : ''}${v}</span>`)
+            .join(' ');
+        html += '</div>';
+    }
+
+    // Opponent
+    html += '<div class="debug-section">';
+    html += '<div class="debug-heading">Opponent</div>';
+    html += debugRow('Deck', info?.opp_deck || 'unknown');
+    html += debugRow('Confidence', info?.opp_confidence ? info.opp_confidence + '%' : '—');
+    html += debugRow('Archetype', info?.opp_archetype || '—');
+    html += debugRow('Matchup WR', info?.matchup_wr != null
+        ? (info.matchup_wr * 100).toFixed(0) + '% (' + info.matchup_games + 'g)'
+        : '—');
+    html += debugRow('Cards seen', info?.opp_cards_seen?.length || 0);
+    html += '</div>';
+
+    // Game state
+    if (state) {
+        const ti = state.turn || {};
+        html += '<div class="debug-section">';
+        html += '<div class="debug-heading">Game State</div>';
+        html += debugRow('Turn', ti.number || '—');
+        html += debugRow('Phase', ti.phase_display || state.phase || '—');
+        html += debugRow('Active player', ti.is_my_turn === true ? 'you' : ti.is_my_turn === false ? 'opp' : '—');
+        html += debugRow('My life', state.my_life || '—');
+        html += debugRow('Opp life', state.opp_life || '—');
+        html += debugRow('Meta decks', info?.meta_deck_count || 0);
+        html += '</div>';
+    }
+
+    html += '</div>';
+    panel.innerHTML = html;
+}
+
+function debugRow(label, value) {
+    return `<div><span class="debug-label">${label}:</span> <span class="debug-value">${value}</span></div>`;
+}
+
+// ─── Cross-Highlight: advice ↔ card hover ───
+(function setupCrossHighlight() {
+    // Advice → card: hover advice item highlights matching card
+    document.addEventListener('mouseover', e => {
+        const item = e.target.closest('.advice-item[data-card-target]');
+        if (!item) return;
+        const name = item.dataset.cardTarget;
+        document.querySelectorAll(`.card[data-name="${CSS.escape(name)}"]`).forEach(
+            el => el.classList.add('cross-highlight'));
+    });
+    document.addEventListener('mouseout', e => {
+        const item = e.target.closest('.advice-item[data-card-target]');
+        if (!item) return;
+        document.querySelectorAll('.card.cross-highlight').forEach(
+            el => el.classList.remove('cross-highlight'));
+    });
+
+    // Card → advice: hover card highlights matching advice
+    document.addEventListener('mouseover', e => {
+        const card = e.target.closest('.card[data-name]');
+        if (!card) return;
+        const name = card.dataset.name;
+        document.querySelectorAll(`.advice-item[data-card-target="${CSS.escape(name)}"]`).forEach(
+            el => el.classList.add('cross-highlight'));
+    });
+    document.addEventListener('mouseout', e => {
+        const card = e.target.closest('.card[data-name]');
+        if (!card) return;
+        document.querySelectorAll('.advice-item.cross-highlight').forEach(
+            el => el.classList.remove('cross-highlight'));
+    });
+})();
+
+// ─── Version & About ───
+let _appVersion = null;
+let _engineVersion = null;
+let _cardCount = null;
+
+async function loadVersion() {
+    try {
+        const res = await fetch('/health');
+        const data = await res.json();
+        _appVersion = data.app_version;
+        _engineVersion = data.engine_version;
+        _cardCount = data.card_count;
+        const el = document.getElementById('footer-version');
+        if (el) el.textContent = `v${_appVersion}`;
+    } catch {}
+}
+
+function showAbout() {
+    const el = document.getElementById('about-details');
+    if (!el) return;
+    el.innerHTML = `
+        <tr><td>App</td><td>${_appVersion || '—'}</td></tr>
+        <tr><td>Engine</td><td>${_engineVersion || '—'}</td></tr>
+        <tr><td>Cards</td><td>${_cardCount?.toLocaleString() || '—'}</td></tr>
+        <tr><td>Strategy</td><td>${currentStrategyInfo?.strategy_name || 'none'}</td></tr>
+        <tr><td>Rules</td><td>${currentStrategyInfo?.rule_count || 0}</td></tr>
+    `;
+    document.getElementById('about-overlay').style.display = 'flex';
+}
+
+function hideAbout() {
+    document.getElementById('about-overlay').style.display = 'none';
+}
+
 // Init
 connect();
+loadVersion();

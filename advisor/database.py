@@ -1,6 +1,7 @@
 """Persistent SQLite database with automatic backups."""
 import glob
 import json
+import logging
 import os
 import re
 import shutil
@@ -12,19 +13,38 @@ from pathlib import Path
 from .enums import DB_COLORS, DB_TYPES, RARITY_MAP
 from .models import CardInfo
 
+log = logging.getLogger(__name__)
+
 # Paths
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 USER_DATA_DIR = Path(os.environ.get("SCRY_USER_DATA", Path.home() / "MTG" / "mtg-data"))
-DB_PATH = DATA_DIR / "advisor.db"
-BACKUP_DIR = DATA_DIR / "backups"
+# Persistent data lives in USER_DATA_DIR so it survives PyInstaller temp dir cleanup.
+# DATA_DIR may point to a volatile _MEI* extraction when running as a bundled binary.
+PERSISTENT_DIR = USER_DATA_DIR / "app_data"
+DB_PATH = PERSISTENT_DIR / "advisor.db"
+BACKUP_DIR = PERSISTENT_DIR / "backups"
+LOG_ARCHIVE_DIR = PERSISTENT_DIR / "log_archive"
 MTGA_DB_GLOB = str(Path.home() / "Library" / "Application Support" / "Steam" / "steamapps" / "common" / "MTGA" / "MTGA_Data" / "Downloads" / "Raw" / "Raw_CardDatabase_*.mtga")
 
 MAX_BACKUPS = 10
 
+_dirs_ensured = False
+
 
 def _ensure_dirs():
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
-    BACKUP_DIR.mkdir(parents=True, exist_ok=True)
+    global _dirs_ensured
+    if _dirs_ensured:
+        return
+    PERSISTENT_DIR.mkdir(parents=True, exist_ok=True)
+    BACKUP_DIR.mkdir(exist_ok=True)
+    LOG_ARCHIVE_DIR.mkdir(exist_ok=True)
+    _dirs_ensured = True
+
+
+def _apply_pragmas(conn: sqlite3.Connection) -> sqlite3.Connection:
+    conn.execute("PRAGMA journal_mode=WAL")
+    conn.execute("PRAGMA foreign_keys=ON")
+    return conn
 
 
 def backup_db():
@@ -44,13 +64,33 @@ def backup_db():
     return backup_path
 
 
+def verify_db():
+    """Run integrity check on the database. Call once at startup, not per-connection."""
+    _ensure_dirs()
+    try:
+        conn = sqlite3.connect(str(DB_PATH))
+        conn.execute("PRAGMA integrity_check").fetchone()
+        conn.close()
+    except (sqlite3.DatabaseError, sqlite3.OperationalError) as e:
+        log.error("Database corrupted: %s — attempting recovery from backup", e)
+        backups = sorted(BACKUP_DIR.glob("advisor_*.db"), reverse=True)
+        for backup in backups:
+            try:
+                shutil.copy2(backup, DB_PATH)
+                conn = sqlite3.connect(str(DB_PATH))
+                conn.execute("PRAGMA integrity_check").fetchone()
+                conn.close()
+                log.info("Recovered from backup: %s", backup.name)
+                return
+            except (sqlite3.DatabaseError, sqlite3.OperationalError):
+                continue
+        log.warning("No usable backup found — creating fresh database")
+        DB_PATH.unlink(missing_ok=True)
+
+
 def get_connection() -> sqlite3.Connection:
     """Get a connection to the persistent database."""
-    _ensure_dirs()
-    conn = sqlite3.connect(str(DB_PATH))
-    conn.execute("PRAGMA journal_mode=WAL")
-    conn.execute("PRAGMA foreign_keys=ON")
-    return conn
+    return _apply_pragmas(sqlite3.connect(str(DB_PATH)))
 
 
 def init_db():
@@ -113,6 +153,30 @@ def init_db():
             timestamp TEXT DEFAULT CURRENT_TIMESTAMP
         );
 
+        CREATE TABLE IF NOT EXISTS llm_calls (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            match_id TEXT DEFAULT '',
+            game_number INTEGER DEFAULT 1,
+            turn_number INTEGER DEFAULT 0,
+            phase TEXT DEFAULT '',
+            request_type TEXT DEFAULT '',
+            source TEXT DEFAULT '',
+            backend TEXT DEFAULT '',
+            advice_mode TEXT DEFAULT '',
+            llm_scope TEXT DEFAULT '',
+            state_id INTEGER DEFAULT 0,
+            accepted INTEGER DEFAULT 1,
+            message TEXT DEFAULT '',
+            duration_ms INTEGER,
+            total_cost_usd REAL,
+            input_tokens INTEGER,
+            output_tokens INTEGER,
+            cache_creation_input_tokens INTEGER,
+            cache_read_input_tokens INTEGER,
+            session_id TEXT DEFAULT '',
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        );
+
         CREATE TABLE IF NOT EXISTS meta (
             key TEXT PRIMARY KEY,
             value TEXT,
@@ -121,7 +185,42 @@ def init_db():
 
         CREATE INDEX IF NOT EXISTS idx_match_events_match ON match_events(match_id);
         CREATE INDEX IF NOT EXISTS idx_advice_log_match ON advice_log(match_id);
+        CREATE INDEX IF NOT EXISTS idx_llm_calls_match ON llm_calls(match_id);
         CREATE INDEX IF NOT EXISTS idx_cards_name ON cards(name);
+
+        -- Deck lifecycle tables
+        CREATE TABLE IF NOT EXISTS decks (
+            deck_id     TEXT PRIMARY KEY,
+            user_id     TEXT NOT NULL DEFAULT 'local',
+            name        TEXT NOT NULL,
+            description TEXT DEFAULT '',
+            colors      TEXT DEFAULT '[]',
+            archetype   TEXT DEFAULT '',
+            created_at  TEXT DEFAULT CURRENT_TIMESTAMP,
+            updated_at  TEXT DEFAULT CURRENT_TIMESTAMP
+        );
+        CREATE INDEX IF NOT EXISTS idx_decks_user ON decks(user_id);
+
+        CREATE TABLE IF NOT EXISTS deck_versions (
+            version_id      INTEGER PRIMARY KEY AUTOINCREMENT,
+            deck_id         TEXT NOT NULL REFERENCES decks(deck_id) ON DELETE CASCADE,
+            version_number  INTEGER NOT NULL,
+            deck_list       TEXT NOT NULL,
+            deck_list_hash  TEXT NOT NULL,
+            card_count      INTEGER DEFAULT 0,
+            change_summary  TEXT DEFAULT '',
+            rules_path      TEXT DEFAULT '',
+            rules_source    TEXT DEFAULT '',
+            rules_count     INTEGER DEFAULT 0,
+            rules_validated INTEGER DEFAULT 0,
+            ga_status       TEXT DEFAULT 'not_started',
+            ga_fitness      REAL DEFAULT 0,
+            ga_generations  INTEGER DEFAULT 0,
+            is_active       INTEGER DEFAULT 0,
+            created_at      TEXT DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(deck_id, version_number)
+        );
+        CREATE INDEX IF NOT EXISTS idx_versions_deck ON deck_versions(deck_id);
     """)
     # Add deck name columns (migration for existing DBs)
     try:
@@ -191,6 +290,18 @@ def import_cards_from_mtga():
         WHERE c.IsPrimaryCard = 1 AND c.IsToken = 0
     """)
 
+    # Build subtype ID → name map from Enums table
+    subtype_map: dict[str, str] = {}
+    try:
+        for val, loc in mtga_conn.execute("""
+            SELECT e.Value, l.Loc FROM Enums e
+            JOIN Localizations_enUS l ON e.LocId = l.LocId AND l.Formatted = 1
+            WHERE e.Type = 'SubType'
+        """):
+            subtype_map[str(val)] = re.sub(r"<[^>]+>", "", loc)
+    except sqlite3.Error:
+        pass  # older DB versions might not have this
+
     conn = get_connection()
     count = 0
     batch = []
@@ -201,7 +312,8 @@ def import_cards_from_mtga():
         name = re.sub(r"<[^>]+>", "", name_raw or "")
         colors = [DB_COLORS.get(c, c) for c in (colors_str or "").split(",") if c.strip() and c.strip() in DB_COLORS]
         card_types = [DB_TYPES.get(t, t) for t in (types_str or "").split(",") if t.strip() and t.strip() in DB_TYPES]
-        subtypes_list = [s.strip() for s in (subtypes_str or "").split(",") if s.strip()]
+        subtypes_list = [subtype_map.get(s.strip(), s.strip())
+                         for s in (subtypes_str or "").split(",") if s.strip()]
         abilities = _parse_abilities(mtga_conn, ability_ids or "")
         rarity_name = RARITY_MAP.get(rarity, "Unknown")
 
@@ -230,16 +342,92 @@ def import_cards_from_mtga():
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, batch)
 
+    # Import tokens (lightweight — just name/types/P/T for display)
+    token_batch = []
+    mtga_cur.execute("""
+        SELECT c.GrpId, l.Loc, c.Colors, c.Types, c.Subtypes,
+               c.Power, c.Toughness, c.ExpansionCode
+        FROM Cards c
+        JOIN Localizations_enUS l ON c.TitleId = l.LocId AND l.Formatted = 1
+        WHERE c.IsToken = 1
+    """)
+    for row in mtga_cur.fetchall():
+        grp_id, name_raw, colors_str, types_str, subtypes_str, power, toughness, exp = row
+        name = re.sub(r"<[^>]+>", "", name_raw or "")
+        colors = [DB_COLORS.get(c, c) for c in (colors_str or "").split(",") if c.strip() and c.strip() in DB_COLORS]
+        card_types = [DB_TYPES.get(t, t) for t in (types_str or "").split(",") if t.strip() and t.strip() in DB_TYPES]
+        subtypes_list = [subtype_map.get(s.strip(), s.strip())
+                         for s in (subtypes_str or "").split(",") if s.strip()]
+        token_batch.append((
+            grp_id, name, "", 0,
+            json.dumps(colors), json.dumps(card_types), json.dumps(subtypes_list),
+            power or "", toughness or "", "Token", exp or "",
+            "[]", "", "mtga_token",
+        ))
+    if token_batch:
+        conn.executemany("""
+            INSERT OR REPLACE INTO cards
+            (grp_id, name, mana_cost, cmc, colors, card_types, subtypes,
+             power, toughness, rarity, expansion, abilities, oracle_text, source)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, token_batch)
+    token_count = len(token_batch)
+
     # Store import metadata
     conn.execute(
         "INSERT OR REPLACE INTO meta (key, value, updated_at) VALUES (?, ?, ?)",
-        ("last_card_import", json.dumps({"count": count, "mtga_db": mtga_path}),
+        ("last_card_import", json.dumps({"count": count, "tokens": token_count, "mtga_db": mtga_path}),
          datetime.now().isoformat()),
     )
     conn.commit()
     conn.close()
     mtga_conn.close()
     return count
+
+
+def _classify_roles(card: CardInfo) -> set[str]:
+    """Classify a card's functional roles from abilities/oracle text and types."""
+    roles: set[str] = set()
+    # MTGA stores rules text in abilities array, oracle_text is often empty
+    text = " ".join(card.abilities + [card.oracle_text]).lower()
+    types = card.card_types
+
+    # Removal (targeted)
+    if re.search(r"destroy target|exile target|deals? \d+ damage to (target|any)|target creature gets -\d+/-\d+", text):
+        roles.add("removal")
+    # Fight / bite
+    if re.search(r"fights? target|deals damage equal to its power to target", text):
+        roles.add("removal")
+    # Bounce (exclude graveyard recursion like "return target card from your graveyard")
+    if re.search(r"return target .* to .*(hand|owner)", text) and "from your graveyard" not in text:
+        roles.add("removal")
+    # Sacrifice-based removal
+    if re.search(r"(target|each) (player|opponent) sacrifices", text):
+        roles.add("removal")
+    # Sweeper
+    if re.search(r"destroy all|exile all|all creatures get -|deals? \d+ damage to each", text):
+        roles.add("sweeper")
+        roles.add("removal")
+    # Aura-based removal (Pacifism, Banishing Light, Sheltered by Ghosts)
+    if "Enchantment" in types and re.search(r"exile target|can't attack|can't block", text):
+        roles.add("removal")
+    # Counterspell
+    if re.search(r"counter target", text):
+        roles.add("counterspell")
+    # Protection
+    if re.search(r"(gains?|has) (hexproof|indestructible|protection from)|phase out|can't be (the target|destroyed)", text):
+        roles.add("protection")
+    # Pump / combat trick
+    if re.search(r"(gets?|gains?) \+\d+/\+\d+", text) and "Instant" in types:
+        roles.add("pump")
+    # Card draw
+    if re.search(r"draw (a|two|three|\d+) card", text):
+        roles.add("draw")
+    # Ramp
+    if re.search(r"search your library for .* (land|basic)", text) or re.search(r"add \{", text):
+        roles.add("ramp")
+
+    return roles
 
 
 def get_card(grp_id: int) -> CardInfo | None:
@@ -268,15 +456,34 @@ def get_card(grp_id: int) -> CardInfo | None:
     )
 
 
+# Read bundled cache from package; write exports to DATA_DIR (writable)
+_BUNDLED_CARDS_JSON = Path(__file__).parent.parent / "data" / "cards_cache.json"
+CARDS_JSON_PATH = DATA_DIR / "cards_cache.json"
+
+
 class CardCache:
-    """In-memory card cache backed by persistent DB."""
+    """In-memory card cache backed by persistent DB, with JSON fallback."""
 
     def __init__(self):
         self._cache: dict[int, CardInfo] = {}
         self._loaded = False
 
     def load(self):
-        """Load all cards into memory from persistent DB."""
+        """Load all cards into memory. Tries DB first, falls back to JSON."""
+        if self._loaded:
+            return
+        try:
+            self._load_from_db()
+        except Exception:
+            pass
+        if not self._cache:
+            self._load_from_json()
+        # Classify roles for all cards
+        for card in self._cache.values():
+            card.roles = _classify_roles(card)
+        self._loaded = True
+
+    def _load_from_db(self):
         conn = get_connection()
         cur = conn.cursor()
         cur.execute("SELECT grp_id, name, mana_cost, cmc, colors, card_types, "
@@ -290,8 +497,38 @@ class CardCache:
                 rarity=row[9], expansion=row[10], abilities=json.loads(row[11]),
                 oracle_text=row[12],
             )
-        self._loaded = True
         conn.close()
+
+    def _load_from_json(self):
+        # Check writable location first, then bundled fallback
+        json_path = CARDS_JSON_PATH if CARDS_JSON_PATH.exists() else _BUNDLED_CARDS_JSON
+        if not json_path.exists():
+            return
+        cards = json.loads(json_path.read_text())
+        for c in cards:
+            self._cache[c["grp_id"]] = CardInfo(
+                grp_id=c["grp_id"], name=c["name"], mana_cost=c.get("mana_cost", ""),
+                cmc=c.get("cmc", 0), colors=c.get("colors", []),
+                card_types=c.get("card_types", []), subtypes=c.get("subtypes", []),
+                power=c.get("power", ""), toughness=c.get("toughness", ""),
+                rarity=c.get("rarity", ""), expansion=c.get("expansion", ""),
+                abilities=c.get("abilities", []), oracle_text=c.get("oracle_text", ""),
+            )
+
+    def export_json(self):
+        """Export current cache to JSON for use in environments without DB."""
+        cards = []
+        for card in self._cache.values():
+            cards.append({
+                "grp_id": card.grp_id, "name": card.name, "mana_cost": card.mana_cost,
+                "cmc": card.cmc, "colors": card.colors, "card_types": card.card_types,
+                "subtypes": card.subtypes, "power": card.power, "toughness": card.toughness,
+                "rarity": card.rarity, "expansion": card.expansion,
+                "abilities": card.abilities, "oracle_text": card.oracle_text,
+            })
+        CARDS_JSON_PATH.parent.mkdir(parents=True, exist_ok=True)
+        CARDS_JSON_PATH.write_text(json.dumps(cards, ensure_ascii=False))
+        return len(cards)
 
     def get(self, grp_id: int) -> CardInfo | None:
         if not self._loaded:
@@ -301,6 +538,13 @@ class CardCache:
     def get_name(self, grp_id: int) -> str:
         card = self.get(grp_id)
         return card.name if card else f"Unknown({grp_id})"
+
+    def get_by_name(self, name: str) -> CardInfo | None:
+        if not self._loaded:
+            self.load()
+        if not hasattr(self, '_name_index'):
+            self._name_index = {c.name: c for c in self._cache.values()}
+        return self._name_index.get(name)
 
     @property
     def size(self) -> int:
@@ -344,11 +588,24 @@ def save_match_event(match_id: str, event_type: str, **kwargs):
 
 
 def clear_match_events():
-    """Clear log-derived events (rebuilt from log). Preserve real-time-only events."""
+    """Clear log-derived events (rebuilt from log). Preserve real-time-only events.
+
+    Keeps: advice_compliance, decision_eval, decision_outcome — these are
+    generated at runtime and cannot be reconstructed from log replay.
+    They form the training contract for the data flywheel.
+    """
     conn = get_connection()
-    # Keep advice_compliance — can't be regenerated from log replay
+    PRESERVE_TYPES = (
+        'advice_compliance',
+        'decision_eval',
+        'decision_outcome',
+    )
+    placeholders = ",".join("?" for _ in PRESERVE_TYPES)
     conn.execute(
-        "DELETE FROM match_events WHERE event_type != 'advice_compliance'")
+        f"DELETE FROM match_events WHERE event_type NOT IN ({placeholders})",
+        PRESERVE_TYPES)
+    conn.execute("DELETE FROM advice_log")
+    conn.execute("DELETE FROM meta WHERE key LIKE 'summary_%'")
     conn.commit()
     conn.close()
 
@@ -356,15 +613,66 @@ def clear_match_events():
 def save_advice(match_id: str, advice_data: dict):
     """Log an advice entry."""
     conn = get_connection()
+    params = (
+        match_id,
+        advice_data.get("game_number", 1),
+        advice_data.get("turn_number", 0),
+        advice_data.get("phase", ""),
+        advice_data["source"],
+        advice_data.get("priority", "medium"),
+        advice_data["message"],
+    )
+    existing = conn.execute(
+        "SELECT 1 FROM advice_log WHERE match_id = ? AND game_number = ? "
+        "AND turn_number = ? AND phase = ? AND source = ? AND priority = ? "
+        "AND message = ? ORDER BY id DESC LIMIT 1",
+        params,
+    ).fetchone()
+    if existing:
+        conn.close()
+        return
     conn.execute(
         "INSERT INTO advice_log (match_id, game_number, turn_number, phase, "
         "source, priority, message, details, game_state_summary) "
         "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-        (match_id, advice_data.get("game_number", 1),
-         advice_data.get("turn_number", 0), advice_data.get("phase", ""),
-         advice_data["source"], advice_data.get("priority", "medium"),
-         advice_data["message"], advice_data.get("details", ""),
+        (params[0], params[1], params[2], params[3],
+         params[4], params[5], params[6], advice_data.get("details", ""),
          json.dumps(advice_data.get("game_state_summary", {}))),
+    )
+    conn.commit()
+    conn.close()
+
+
+def save_llm_call(call_data: dict):
+    """Persist LLM latency/token usage independently of replayed advice logs."""
+    conn = get_connection()
+    conn.execute(
+        "INSERT INTO llm_calls (match_id, game_number, turn_number, phase, request_type, "
+        "source, backend, advice_mode, llm_scope, state_id, accepted, message, duration_ms, "
+        "total_cost_usd, input_tokens, output_tokens, cache_creation_input_tokens, "
+        "cache_read_input_tokens, session_id) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        (
+            call_data.get("match_id", ""),
+            call_data.get("game_number", 1),
+            call_data.get("turn_number", 0),
+            call_data.get("phase", ""),
+            call_data.get("request_type", ""),
+            call_data.get("source", ""),
+            call_data.get("backend", ""),
+            call_data.get("advice_mode", ""),
+            call_data.get("llm_scope", ""),
+            call_data.get("state_id", 0),
+            1 if call_data.get("accepted", True) else 0,
+            call_data.get("message", ""),
+            call_data.get("duration_ms"),
+            call_data.get("total_cost_usd"),
+            call_data.get("input_tokens"),
+            call_data.get("output_tokens"),
+            call_data.get("cache_creation_input_tokens"),
+            call_data.get("cache_read_input_tokens"),
+            call_data.get("session_id", ""),
+        ),
     )
     conn.commit()
     conn.close()
@@ -381,6 +689,9 @@ def get_match_history(limit: int = 20) -> list[dict]:
         (limit,),
     )
     rows = cur.fetchall()
+    if not rows:
+        conn.close()
+        return []
     # Check which matches have cached summaries
     match_ids = [r[0] for r in rows]
     placeholders = ",".join("?" for _ in match_ids)
@@ -1060,7 +1371,7 @@ def get_match_data_for_summary(match_id: str) -> dict:
     # Advice log
     cur.execute(
         "SELECT turn_number, phase, source, priority, message "
-        "FROM advice_log WHERE match_id = ? ORDER BY id",
+        "FROM advice_log WHERE match_id = ? AND source != 'llm_summary' ORDER BY id",
         (match_id,))
     advice = [
         {"turn": r[0], "phase": r[1], "source": r[2],
@@ -1154,6 +1465,8 @@ def get_match_timeline(match_id: str) -> dict:
                 "attacks": [], "opp_attacks": [],
                 "removals": [], "life_changes": [],
                 "blocks": [], "enchantments": [],
+                "permanent_changes": [],
+                "decision_points": [],
                 "board_snapshot": None,
                 "compliance": None,
             }
@@ -1167,6 +1480,10 @@ def get_match_timeline(match_id: str) -> dict:
                 t["board_snapshot"] = {
                     "my_creatures": data.get("my_creatures", []),
                     "opp_creatures": data.get("opp_creatures", []),
+                    "my_battlefield": data.get("my_battlefield", []),
+                    "opp_battlefield": data.get("opp_battlefield", []),
+                    "my_hand": data.get("my_hand", []),
+                    "stack": data.get("stack", []),
                     "my_hand_size": data.get("my_hand_size", 0),
                     "my_life": data.get("my_life", 0),
                     "opp_life": data.get("opp_life", 0),
@@ -1231,6 +1548,28 @@ def get_match_timeline(match_id: str) -> dict:
                 "aura": data.get("aura", "?"),
                 "target": data.get("target", "?"),
                 "target_owner": data.get("target_owner", "?"),
+            })
+        elif etype == "permanent_stats_changed":
+            t["permanent_changes"].append({
+                "name": data.get("name", "?"),
+                "controller": data.get("controller", "?"),
+                "owner": data.get("owner", "?"),
+                "old_power": data.get("old_power", 0),
+                "new_power": data.get("new_power", 0),
+                "old_toughness": data.get("old_toughness", 0),
+                "new_toughness": data.get("new_toughness", 0),
+            })
+        elif etype == "decision_context":
+            t["decision_points"].append({
+                "request_type": data.get("request_type", ""),
+                "phase_display": data.get("phase_display", ""),
+                "my_life": data.get("my_life"),
+                "opp_life": data.get("opp_life"),
+                "my_hand": data.get("my_hand", []),
+                "my_battlefield": data.get("my_battlefield", []),
+                "opp_battlefield": data.get("opp_battlefield", []),
+                "stack": data.get("stack", []),
+                "legal_actions": data.get("legal_actions", []),
             })
         elif etype == "advice_compliance":
             t["compliance"] = {

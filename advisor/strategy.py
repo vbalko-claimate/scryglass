@@ -17,12 +17,17 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from .database import card_cache, USER_DATA_DIR
-from .models import Advice, GameState, GameObject
+from .models import ActionFamily, ActionScore, Advice, GameState, GameObject, RuleHit
+from .actions import infer_action_family, is_hold_rule, score_from_priority, render_advice
+from .version import ENGINE_VERSION, SCHEMA_VERSION
 
 log = logging.getLogger(__name__)
 
 RULES_DIR = Path(__file__).parent.parent / "data" / "strategies"
-USER_RULES_DIR = USER_DATA_DIR / "strategies"
+DECKS_ROOT = USER_DATA_DIR / "decks"
+
+# ─── Hot-reload: mtime-based cache invalidation ────────────────
+_strategy_cache: dict[str, tuple[float, Strategy]] = {}  # path -> (mtime, strategy)
 
 # Layer priority (higher = more specific)
 LAYERS = {
@@ -54,13 +59,17 @@ class CardMatcher:
     cmc_max: int | None = None
     power_min: int | None = None
     toughness_min: int | None = None
+    toughness_max: int | None = None
     castable: bool = False  # must be castable with current mana
     color: str | None = None
+    role: str | None = None  # functional role: "removal", "protection", "draw", etc.
+    exclude: CardMatcher | None = None  # reject cards matching this sub-matcher
 
     @staticmethod
     def from_dict(d: dict) -> CardMatcher:
         if isinstance(d, str):
             return CardMatcher(name=d)
+        excl_raw = d.get("exclude")
         return CardMatcher(
             name=d.get("name"),
             keyword=d.get("keyword"),
@@ -69,8 +78,11 @@ class CardMatcher:
             cmc_max=d.get("cmc_max"),
             power_min=d.get("power_min"),
             toughness_min=d.get("toughness_min"),
+            toughness_max=d.get("toughness_max"),
             castable=d.get("castable", False),
             color=d.get("color"),
+            role=d.get("role"),
+            exclude=CardMatcher.from_dict(excl_raw) if excl_raw else None,
         )
 
 
@@ -119,6 +131,7 @@ class Rule:
     life_below: int | None = None
     life_above: int | None = None
     opp_life_below: int | None = None
+    opp_life_above: int | None = None
     mana_min: int | None = None
     hand_lands_min: int | None = None
     hand_lands_max: int | None = None
@@ -136,6 +149,7 @@ class Rule:
 
     # Output
     action: str = ""  # advice text, supports {card}, {threat} placeholders
+    action_family: str | None = None  # canonical: cast_spell, play_land, attack, block, activate, pass
     priority: str = "medium"
     conflicts_with: list[str] = field(default_factory=list)
 
@@ -143,6 +157,11 @@ class Rule:
     weight: float = 1.0
     times_fired: int = 0
     times_correct: int = 0
+
+    metrics: dict = field(default_factory=dict)  # serialized RuleMetrics
+
+    # Provenance
+    source: str = ""  # "mechanical" | "llm" | "manual" | "ga"
 
     @property
     def layer_priority(self) -> int:
@@ -174,6 +193,7 @@ class Strategy:
     general_overrides: list[str] = field(default_factory=list)  # general rule IDs replaced by deck rules
     vulnerabilities: list[dict] = field(default_factory=list)  # cards that specifically threaten THIS deck
     stats: dict = field(default_factory=lambda: {"games": 0, "wins": 0, "losses": 0})
+    global_biases: dict[str, float] = field(default_factory=dict)
 
     def win_rate(self) -> float:
         return self.stats["wins"] / self.stats["games"] if self.stats["games"] else 0.0
@@ -189,11 +209,28 @@ class OpponentTracker:
         self.seen_colors: set[str] = set()
         self.identified_deck: MetaDeck | None = None
         self.confidence: float = 0.0
+        self.spent_removal: list[str] = []  # removal spells already used
+        self.ability_triggers: dict[str, int] = {}  # source_card_name: trigger_count
 
     def observe(self, card_name: str, colors: list[str]):
         """Track a card the opponent played."""
         self.seen_cards[card_name] = self.seen_cards.get(card_name, 0) + 1
         self.seen_colors.update(colors)
+
+    def observe_spell(self, card_name: str, colors: list[str],
+                      card_types: list[str], oracle_text: str = ""):
+        """Track a spell cast (instant/sorcery) — also detects removal."""
+        self.observe(card_name, colors)
+        # Detect removal spells
+        text = oracle_text.lower()
+        if any(kw in text for kw in ("destroy", "exile", "damage",
+                                      "return target", "-x/-x", "gets -")):
+            self.spent_removal.append(card_name)
+
+    def observe_ability(self, source_card_name: str):
+        """Track a triggered/activated ability firing."""
+        self.ability_triggers[source_card_name] = (
+            self.ability_triggers.get(source_card_name, 0) + 1)
 
     def identify(self, meta_decks: list[MetaDeck]) -> MetaDeck | None:
         """Try to identify opponent's deck from observed cards."""
@@ -257,6 +294,8 @@ class OpponentTracker:
         self.seen_colors.clear()
         self.identified_deck = None
         self.confidence = 0.0
+        self.spent_removal.clear()
+        self.ability_triggers.clear()
 
 
 # ─── Color / Archetype Helpers ─────────────────────────────────
@@ -365,9 +404,17 @@ def save_meta_decks(meta_decks: list[MetaDeck]):
 # ─── Card Matching ──────────────────────────────────────────────
 
 def _has_keyword(card_abilities: list[str], keyword: str) -> bool:
-    """Check if any ability string contains the keyword (case-insensitive)."""
-    kw = keyword.lower()
-    return any(kw in ab.lower() for ab in card_abilities)
+    """Check if any ability string contains the keyword (case-insensitive).
+
+    Supports '|' as OR: "destroy|exile" matches if any ability contains
+    either "destroy" or "exile".
+    """
+    keywords = [k.strip().lower() for k in keyword.split("|")]
+    for ab in card_abilities:
+        ab_l = ab.lower()
+        if any(kw in ab_l for kw in keywords):
+            return True
+    return False
 
 
 def _has_protection(card_abilities: list[str]) -> set[str]:
@@ -392,15 +439,38 @@ def _card_matches(obj: GameObject, matcher: CardMatcher, mana: int = 99,
                    untapped_lands: list[GameObject] | None = None) -> bool:
     """Check if a game object matches a CardMatcher."""
     card = card_cache.get(obj.grp_id)
+
     if not card:
-        return False
+        # Fallback for objects not in card cache (e.g. Forge-only cards with grp_id=0).
+        # Use data directly from the GameObject for basic matching.
+        if matcher.name:
+            names = matcher.name if isinstance(matcher.name, list) else [matcher.name]
+            if obj.name not in names:
+                return False
+        if matcher.card_type:
+            # Check against GRE-format types on the object (e.g. "CardType_Creature")
+            gre_type = f"CardType_{matcher.card_type}"
+            if gre_type not in obj.card_types:
+                return False
+        if matcher.keyword:
+            return False  # can't check keywords without card data
+        if matcher.castable:
+            return False  # can't verify castability without cmc
+        if matcher.power_min is not None and obj.power < matcher.power_min:
+            return False
+        if matcher.toughness_min is not None and obj.toughness < matcher.toughness_min:
+            return False
+        return True
 
     if matcher.name:
         names = matcher.name if isinstance(matcher.name, list) else [matcher.name]
         if card.name not in names:
             return False
-    if matcher.keyword and not _has_keyword(card.abilities, matcher.keyword):
-        return False
+    if matcher.keyword:
+        # Check both abilities and oracle_text for keyword match
+        oracle = [card.oracle_text] if card.oracle_text else []
+        if not _has_keyword(card.abilities + oracle, matcher.keyword):
+            return False
     if matcher.card_type and matcher.card_type not in card.card_types:
         return False
     if matcher.cmc_min is not None and card.cmc < matcher.cmc_min:
@@ -411,8 +481,13 @@ def _card_matches(obj: GameObject, matcher: CardMatcher, mana: int = 99,
         return False
     if matcher.toughness_min is not None and obj.toughness < matcher.toughness_min:
         return False
-    if matcher.castable and card.cmc > mana:
+    if matcher.toughness_max is not None and obj.toughness > matcher.toughness_max:
         return False
+    if matcher.castable:
+        if "Land" in card.card_types:
+            return False  # lands are not castable spells
+        if card.cmc > mana:
+            return False
     # Color-aware castability: check if untapped lands can pay colored pips
     if matcher.castable and untapped_lands is not None and card.mana_cost:
         from .heuristics import _can_pay_mana_cost
@@ -420,6 +495,12 @@ def _card_matches(obj: GameObject, matcher: CardMatcher, mana: int = 99,
             return False
     if matcher.color:
         if matcher.color not in card.colors:
+            return False
+    if matcher.role:
+        if matcher.role not in card.roles:
+            return False
+    if matcher.exclude:
+        if _card_matches(obj, matcher.exclude, mana, untapped_lands):
             return False
     return True
 
@@ -487,12 +568,18 @@ def _speed_category(speed: str) -> str:
     return "slow"  # medium_slow, slow
 
 
-def evaluate_rules(rules: list[Rule], state: GameState,
-                   opp_tracker: OpponentTracker | None = None,
-                   vulnerabilities: list[dict] | None = None) -> list[Advice]:
-    """Evaluate all rules against current game state."""
+def evaluate_rules_v2(rules: list[Rule], state: GameState,
+                      opp_tracker: OpponentTracker | None = None,
+                      vulnerabilities: list[dict] | None = None,
+                      max_results: int = 5) -> tuple[list[RuleHit], list[Advice]]:
+    """Evaluate all rules against current game state — structured output.
+
+    Returns (rule_hits, advice) where each RuleHit carries ActionScore objects
+    and advice is the rendered Advice list (backward-compatible).
+    max_results: maximum number of items to return (0 = unlimited).
+    """
     if not rules:
-        return []
+        return [], []
 
     ti = state.turn_info
     is_my_turn = ti.active_player == state.my_seat_id
@@ -505,12 +592,15 @@ def evaluate_rules(rules: list[Rule], state: GameState,
     untapped_lands = state.my_untapped_lands()
     mana = len(untapped_lands)
 
-    results: list[tuple[Rule, Advice]] = []
+    results: list[tuple[Rule, RuleHit]] = []
     fired_ids: set[str] = set()
 
     for rule in rules:
         if rule.weight < MIN_WEIGHT:
             continue
+
+        # Initialize effective priority — branches below may downgrade it
+        prio = rule.priority
 
         # --- Phase / timing ---
         is_mull_rule = rule.phase and "Mulligan" in rule.phase
@@ -540,6 +630,9 @@ def evaluate_rules(rules: list[Rule], state: GameState,
                 continue
         if rule.opp_life_below is not None:
             if not opp or opp.life_total >= rule.opp_life_below:
+                continue
+        if rule.opp_life_above is not None:
+            if not opp or opp.life_total <= rule.opp_life_above:
                 continue
         if rule.mana_min is not None and mana < rule.mana_min:
             continue
@@ -609,20 +702,30 @@ def evaluate_rules(rules: list[Rule], state: GameState,
                 break
             if card_obj:
                 if zc.zone.startswith("opp"):
-                    matched_threat = card_obj
+                    if not matched_threat:  # keep first opp match for {threat}
+                        matched_threat = card_obj
                 else:
-                    matched_card = card_obj
+                    if not matched_card:  # keep first own match for {card}
+                        matched_card = card_obj
         if not zone_ok:
             continue
 
         # --- All conditions passed ---
         msg = rule.action
+        matched_card_name = ""
+        matched_threat_name = ""
         if matched_card:
             c = card_cache.get(matched_card.grp_id)
-            msg = msg.replace("{card}", c.name if c else matched_card.name)
+            matched_card_name = c.name if c else matched_card.name
+            msg = msg.replace("{card}", matched_card_name)
+            # If message doesn't mention the matched card, append it for specificity
+            if matched_card_name and matched_card_name not in msg and "{card}" not in rule.action:
+                mana_cost = c.mana_cost if c else ""
+                msg = f"{msg}: {matched_card_name}" + (f" ({mana_cost})" if mana_cost else "")
         if matched_threat:
             c = card_cache.get(matched_threat.grp_id)
-            msg = msg.replace("{threat}", c.name if c else matched_threat.name)
+            matched_threat_name = c.name if c else matched_threat.name
+            msg = msg.replace("{threat}", matched_threat_name)
 
         # Enrich meta_gameplan messages with specific card info
         if rule.opp_has_must_answer is True and opp_tracker and opp_tracker.identified_deck:
@@ -677,6 +780,21 @@ def evaluate_rules(rules: list[Rule], state: GameState,
                         if "attack" in action_lower and not matched_card.can_attack:
                             continue
 
+            # If rendered message names a specific card, verify it's in hand and castable.
+            # This catches rules that match by keyword/type but mention a specific card.
+            if not matched_card and matched_card_name:
+                # Message names a card from {card} placeholder — check it's actually available
+                found_in_hand = False
+                for h_obj in hand:
+                    hc = card_cache.get(h_obj.grp_id)
+                    if hc and hc.name == matched_card_name:
+                        found_in_hand = True
+                        if hc.cmc > mana:
+                            found_in_hand = False  # can't afford it
+                        break
+                if not found_in_hand:
+                    continue  # suppress: card not in hand or not castable
+
             # If rule targets an opponent's creature, check for hexproof/indestructible
             if matched_threat and rule.layer in ("threat_response", "meta_gameplan"):
                 tc = card_cache.get(matched_threat.grp_id)
@@ -693,37 +811,133 @@ def evaluate_rules(rules: list[Rule], state: GameState,
                         if "ward" in prot:
                             msg += " (has ward — extra mana needed)"
 
-        # Effective priority (weight boosts it)
-        prio = rule.priority
+        # Effective priority — prio was set to rule.priority at the top of this
+        # loop iteration and may have been downgraded by the must-answer branch.
+        # Apply weight boost on top of whatever prio currently is.
         if rule.weight > 1.5:
             prio_order = ["low", "medium", "high", "critical"]
             idx = prio_order.index(prio) if prio in prio_order else 1
             prio = prio_order[min(idx + 1, 3)]
 
-        confidence = min(0.9, 0.5 + rule.weight * 0.2)
-        advice = Advice(
-            source="strategy",
+        # --- Build ActionScore ---
+        # Mulligan rules don't produce game actions — skip ActionScore
+        if rule.layer == "mulligan":
+            action_score = None
+        else:
+            # Schema-first: use declared action_family when available, infer as fallback
+            if rule.action_family:
+                try:
+                    family = ActionFamily(rule.action_family)
+                except ValueError:
+                    log.warning("Rule %s has invalid action_family=%r, falling back to inference",
+                                rule.id, rule.action_family)
+                    family = infer_action_family(msg, phase=ti.phase, rule_tags=rule.tags)
+            else:
+                family = infer_action_family(msg, phase=ti.phase, rule_tags=rule.tags)
+            target = matched_card_name or matched_threat_name
+            score = score_from_priority(prio, rule.weight)
+            action_score = ActionScore(
+                family=family,
+                score=score,
+                target=target,
+                source="strategy",
+                rule_id=rule.id,
+                rule_layer=rule.layer,
+                rule_weight=rule.weight,
+            )
+
+        hit = RuleHit(
+            rule_id=rule.id,
+            layer=rule.layer,
+            weight=rule.weight,
             priority=prio,
-            message=msg,
-            details=f"[{rule.layer}:{rule.id}] w:{rule.weight:.2f}",
-            confidence=confidence,
+            action_scores=[action_score] if action_score else [],
+            matched_card=matched_card_name,
+            matched_threat=matched_threat_name,
+            raw_message=msg,
+            tags=list(rule.tags),
         )
-        results.append((rule, advice))
+        results.append((rule, hit))
         fired_ids.add(rule.id)
         rule.times_fired += 1
 
     # --- Conflict resolution ---
     suppressed: set[str] = set()
+    # Explicit conflicts — only for mulligan layer (legacy)
     for rule, _ in results:
-        for cid in rule.conflicts_with:
-            suppressed.add(cid)
+        if rule.layer == "mulligan":
+            for cid in rule.conflicts_with:
+                suppressed.add(cid)
 
-    # Remove suppressed, sort by layer (desc) then priority
+    # Auto-detect hold/use conflicts: if a "use" rule and a "hold" rule both
+    # reference the same card, the more specific one (use) suppresses hold.
+    hold_rules: dict[str, list[str]] = {}  # card_name → [rule_ids]
+    use_rules: dict[str, list[str]] = {}   # card_name → [rule_ids]
+    for rule, hit in results:
+        # Use action_family from RuleHit (already resolved with fallback)
+        family_value = hit.action_scores[0].family.value if hit.action_scores else ""
+        is_hold = is_hold_rule(family_value, rule.action)
+        for zc in rule.require:
+            if zc.match.name:
+                names = zc.match.name if isinstance(zc.match.name, list) else [zc.match.name]
+                for n in names:
+                    if is_hold:
+                        hold_rules.setdefault(n, []).append(rule.id)
+                    else:
+                        use_rules.setdefault(n, []).append(rule.id)
+    # When both hold and use fire for same card, suppress the lower-priority one.
+    rule_by_id = {r.id: (r, h) for r, h in results}
+    prio_rank = {"critical": 0, "high": 1, "medium": 2, "low": 3}
+    for card, hold_ids in hold_rules.items():
+        if card not in use_rules:
+            continue
+        fired_use_ids = [uid for uid in use_rules[card] if uid in fired_ids]
+        if not fired_use_ids:
+            continue
+        for hold_id in hold_ids:
+            if hold_id not in fired_ids:
+                continue
+            hold_rule, hold_hit = rule_by_id[hold_id]
+            hold_score = (hold_rule.layer_priority, -prio_rank.get(hold_hit.priority, 4), hold_rule.weight)
+            for uid in fired_use_ids:
+                use_rule, use_hit = rule_by_id[uid]
+                use_score = (use_rule.layer_priority, -prio_rank.get(use_hit.priority, 4), use_rule.weight)
+                if use_score >= hold_score:
+                    suppressed.add(hold_id)
+                else:
+                    suppressed.add(uid)
+
+    # Remove suppressed and low-weight rules, sort by layer → priority → weight
+    DISPLAY_WEIGHT_THRESHOLD = 0.3
     prio_map = {"critical": 0, "high": 1, "medium": 2, "low": 3}
-    filtered = [(r, a) for r, a in results if r.id not in suppressed]
-    filtered.sort(key=lambda x: (-x[0].layer_priority, prio_map.get(x[1].priority, 4)))
+    filtered = [(r, h) for r, h in results
+                if r.id not in suppressed and r.weight >= DISPLAY_WEIGHT_THRESHOLD]
+    filtered.sort(key=lambda x: (
+        -x[0].layer_priority,
+        prio_map.get(x[1].priority, 4),
+        -x[0].weight,
+    ))
 
-    return [a for _, a in filtered[:3]]
+    if max_results:
+        filtered = filtered[:max_results]
+
+    hits = [h for _, h in filtered]
+    advice = render_advice(hits)
+    return hits, advice
+
+
+def evaluate_rules(rules: list[Rule], state: GameState,
+                   opp_tracker: OpponentTracker | None = None,
+                   vulnerabilities: list[dict] | None = None,
+                   max_results: int = 5) -> list[Advice]:
+    """Evaluate all rules against current game state (backward-compatible wrapper).
+
+    max_results: maximum number of advice items to return (0 = unlimited).
+    """
+    _, advice = evaluate_rules_v2(rules, state, opp_tracker=opp_tracker,
+                                  vulnerabilities=vulnerabilities,
+                                  max_results=max_results)
+    return advice
 
 
 # ─── Opponent Card Tracking ─────────────────────────────────────
@@ -829,11 +1043,11 @@ def generate_rules(archetype: str, info: dict) -> list[Rule]:
         Rule(id="gen_play_land", layer="general",
              phase=["Main"], my_turn=True,
              require=[ZoneCondition("hand", CardMatcher(card_type="Land"))],
-             action="Play a land", priority="low", weight=0.5),
+             action="Play a land", action_family="play_land", priority="low", weight=0.5),
         Rule(id="gen_attack_before_main2", layer="general", tags=["tempo"],
              phase=["Main"], my_turn=True, step="Phase_Main1",
              action="Attack before casting in Main 2 — don't reveal info",
-             priority="low", weight=0.6),
+             action_family="attack", priority="low", weight=0.6),
     ])
 
     # ── Layer 1: Archetype ──
@@ -842,39 +1056,47 @@ def generate_rules(archetype: str, info: dict) -> list[Rule]:
             Rule(id="arch_curve_out", layer="archetype", tags=["tempo"],
                  phase=["Main"], my_turn=True, turn_max=4,
                  require=[ZoneCondition("hand", CardMatcher(card_type="Creature", castable=True))],
-                 action="Cast {card} — curve out early", priority="high", weight=1.2),
+                 action="Cast {card} — curve out early", action_family="cast_spell",
+                 priority="high", weight=1.2),
             Rule(id="arch_go_wide", layer="archetype", tags=["aggro"],
                  phase=["Combat"], my_turn=True, my_creatures_min=3,
-                 action="Attack with everything — go wide", priority="medium"),
+                 action="Attack with everything — go wide", action_family="attack",
+                 priority="medium"),
             Rule(id="arch_push_lethal", layer="archetype",
                  phase=["Main"], my_turn=True, opp_life_below=8,
-                 action="Opponent is low — push for lethal", priority="high", weight=1.3),
+                 action="Opponent is low — push for lethal", action_family="attack",
+                 priority="high", weight=1.3),
         ])
     elif archetype == "midrange":
         rules.extend([
             Rule(id="arch_biggest_threat", layer="archetype",
                  phase=["Main"], my_turn=True,
                  require=[ZoneCondition("hand", CardMatcher(card_type="Creature", castable=True, cmc_min=3))],
-                 action="Cast {card} — biggest threat", priority="medium"),
+                 action="Cast {card} — biggest threat", action_family="cast_spell",
+                 priority="medium"),
             Rule(id="arch_trade_up", layer="archetype", tags=["defensive"],
                  phase=["Combat"], my_turn=False,
                  require=[ZoneCondition("opp_battlefield", CardMatcher(card_type="Creature"))],
                  my_creatures_min=1,
-                 action="Look for favorable blocks — trade up", priority="medium"),
+                 action="Look for favorable blocks — trade up", action_family="block",
+                 priority="medium"),
         ])
     elif archetype == "control":
         rules.extend([
             Rule(id="arch_hold_mana", layer="archetype", tags=["reactive"],
                  phase=["Main"], my_turn=True, mana_min=2,
                  require=[ZoneCondition("hand", CardMatcher(card_type="Instant"))],
-                 action="Hold mana for {card} — don't tap out", priority="high", weight=1.2),
+                 action="Hold mana for {card} — don't tap out", action_family="pass",
+                 priority="high", weight=1.2),
             Rule(id="arch_boardwipe", layer="archetype",
                  phase=["Main"], my_turn=True, opp_creatures_min=3,
                  require=[ZoneCondition("hand", CardMatcher(card_type="Sorcery", castable=True))],
-                 action="Board wipe time — cast {card}", priority="high", weight=1.3),
+                 action="Board wipe time — cast {card}", action_family="cast_spell",
+                 priority="high", weight=1.3),
             Rule(id="arch_dont_overextend", layer="archetype",
                  phase=["Main"], my_turn=True, my_creatures_min=2,
-                 action="Don't overextend — opponent may have a wipe", priority="low"),
+                 action="Don't overextend — opponent may have a wipe", action_family="pass",
+                 priority="low"),
         ])
 
     # ── Layer 2: Mulligan ──
@@ -1048,15 +1270,16 @@ def generate_strategy(state: GameState) -> Strategy:
 
 def _strategy_path(name: str) -> Path:
     safe_name = name.replace(" ", "_").replace("/", "_").replace("'", "").lower()
-    # Check user dir first, then built-in
-    user_path = USER_RULES_DIR / f"{safe_name}.json"
-    if user_path.exists():
-        return user_path
+    # Check deck dirs first (new format)
+    deck_path = DECKS_ROOT / safe_name / "strategy.json"
+    if deck_path.exists():
+        return deck_path
+    # Then built-in strategies
     builtin_path = RULES_DIR / f"{safe_name}.json"
     if builtin_path.exists():
         return builtin_path
-    # New strategies go to user dir
-    return user_path
+    # New strategies go to deck dir
+    return deck_path
 
 
 def _rule_to_dict(r: Rule) -> dict:
@@ -1081,6 +1304,7 @@ def _rule_to_dict(r: Rule) -> dict:
                  "type": zc.match.card_type, "cmc_min": zc.match.cmc_min,
                  "cmc_max": zc.match.cmc_max, "power_min": zc.match.power_min,
                  "toughness_min": zc.match.toughness_min,
+                 "toughness_max": zc.match.toughness_max,
                  "castable": zc.match.castable or None,
                  "color": zc.match.color,
              }.items() if v is not None and v is not False},
@@ -1091,7 +1315,7 @@ def _rule_to_dict(r: Rule) -> dict:
              }
             for zc in r.require
         ]
-    for attr in ["life_below", "life_above", "opp_life_below", "mana_min",
+    for attr in ["life_below", "life_above", "opp_life_below", "opp_life_above", "mana_min",
                  "hand_lands_min", "hand_lands_max", "hand_size_min", "hand_size_max",
                  "hand_castable_min", "hand_castable_max", "my_creatures_min", "opp_creatures_min",
                  "opp_speed", "opp_has_must_answer", "opp_has_vulnerability"]:
@@ -1099,11 +1323,16 @@ def _rule_to_dict(r: Rule) -> dict:
         if v is not None:
             d[attr] = v
     d["action"] = r.action
+    if r.action_family:
+        d["action_family"] = r.action_family
     d["priority"] = r.priority
     if r.conflicts_with:
         d["conflicts_with"] = r.conflicts_with
     d["weight"] = r.weight
     d["stats"] = {"fired": r.times_fired, "correct": r.times_correct}
+    d["metrics"] = r.metrics
+    if r.source:
+        d["_source"] = r.source
     return d
 
 
@@ -1132,6 +1361,7 @@ def _rule_from_dict(d: dict) -> Rule:
         life_below=d.get("life_below"),
         life_above=d.get("life_above"),
         opp_life_below=d.get("opp_life_below"),
+        opp_life_above=d.get("opp_life_above"),
         mana_min=d.get("mana_min"),
         hand_lands_min=d.get("hand_lands_min"),
         hand_lands_max=d.get("hand_lands_max"),
@@ -1145,17 +1375,19 @@ def _rule_from_dict(d: dict) -> Rule:
         opp_has_must_answer=d.get("opp_has_must_answer"),
         opp_has_vulnerability=d.get("opp_has_vulnerability"),
         action=d.get("action", ""),
+        action_family=d.get("action_family"),
         priority=d.get("priority", "medium"),
         conflicts_with=d.get("conflicts_with", []),
         weight=d.get("weight", 1.0),
         times_fired=stats.get("fired", 0),
         times_correct=stats.get("correct", 0),
+        metrics=d.get("metrics", {}),
+        source=d.get("_source", ""),
     )
 
 
 def save_strategy(strategy: Strategy):
-    """Save strategy to JSON in user data dir."""
-    USER_RULES_DIR.mkdir(parents=True, exist_ok=True)
+    """Save strategy to deck dir (decks/{deck_id}/strategy.json)."""
     # Don't save merged general rules — only deck-specific ones
     deck_rules = [r for r in strategy.rules if r.id not in
                   {gr.id for gr in _load_general_rules()}]
@@ -1169,9 +1401,14 @@ def save_strategy(strategy: Strategy):
         "vulnerabilities": strategy.vulnerabilities,
         "stats": strategy.stats,
     }
+    if strategy.global_biases:
+        data["global_biases"] = strategy.global_biases
+    data["_engine_version"] = ENGINE_VERSION
+    data["_schema_version"] = SCHEMA_VERSION
     path = _strategy_path(strategy.name)
+    path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(data, indent=2))
-    log.info("Strategy saved: %s → %s", strategy.name, path.name)
+    log.info("Strategy saved: %s → %s", strategy.name, path)
 
 
 def load_strategy(name: str) -> Strategy | None:
@@ -1181,11 +1418,37 @@ def load_strategy(name: str) -> Strategy | None:
     return _load_strategy_file(path)
 
 
-def _load_strategy_file(path: Path) -> Strategy | None:
+def load_raw_strategy(name: str) -> dict | None:
+    """Load raw JSON dict for a strategy file (no parsing into Strategy objects)."""
+    path = _strategy_path(name)
+    if not path.exists():
+        return None
+    return json.loads(path.read_text())
+
+
+def _load_strategy_file(path: Path, *, use_cache: bool = True) -> Strategy | None:
+    # Hot-reload: return cached if mtime unchanged
+    try:
+        mtime = path.stat().st_mtime
+    except OSError:
+        mtime = 0
+
+    if use_cache:
+        cached = _strategy_cache.get(str(path))
+        if cached and cached[0] == mtime:
+            return cached[1]
+
     try:
         data = json.loads(path.read_text())
+        saved_version = data.get("_engine_version", "")
+        if saved_version and saved_version != ENGINE_VERSION:
+            log.warning("Strategy %s was saved with engine %s (current: %s) — re-optimize recommended",
+                        path.stem, saved_version, ENGINE_VERSION)
+        saved_schema = data.get("_schema_version", "")
+        if saved_schema and saved_schema != SCHEMA_VERSION:
+            log.warning("Strategy %s uses schema %s (current: %s)", path.stem, saved_schema, SCHEMA_VERSION)
         rules = [_rule_from_dict(r) for r in data.get("rules", [])]
-        return Strategy(
+        strat = Strategy(
             name=data["name"],
             deck_signature=data.get("deck_signature", []),
             colors=data.get("colors", []),
@@ -1194,19 +1457,43 @@ def _load_strategy_file(path: Path) -> Strategy | None:
             general_overrides=data.get("general_overrides", []),
             vulnerabilities=data.get("vulnerabilities", []),
             stats=data.get("stats", {"games": 0, "wins": 0, "losses": 0}),
+            global_biases=data.get("global_biases", {}),
         )
+        # Cache with mtime captured at start (single stat, no race)
+        if use_cache:
+            _strategy_cache[str(path)] = (mtime, strat)
+        return strat
     except Exception as e:
         log.error("Failed to load strategy %s: %s", path, e)
         return None
 
 
-def _all_strategy_dirs() -> list[Path]:
-    """Return all directories to search for strategy files.
-    User strategies take priority over built-in ones."""
-    dirs = [RULES_DIR]
-    if USER_RULES_DIR.exists() and USER_RULES_DIR != RULES_DIR:
-        dirs.insert(0, USER_RULES_DIR)
-    return dirs
+def _all_strategy_paths() -> list[Path]:
+    """Return all strategy file paths to search.
+    User deck strategies (decks/*/strategy.json) first, then built-in."""
+    paths = []
+    # User deck strategies
+    if DECKS_ROOT.exists():
+        for deck_dir in DECKS_ROOT.iterdir():
+            if deck_dir.is_dir():
+                strat = deck_dir / "strategy.json"
+                if strat.exists():
+                    paths.append(strat)
+    # Built-in strategies
+    if RULES_DIR.exists():
+        for p in RULES_DIR.glob("*.json"):
+            if p.name not in ("meta_decks.json", "general.json"):
+                paths.append(p)
+    return paths
+
+
+def invalidate_strategy_cache() -> int:
+    """Clear the strategy mtime cache. Returns number of entries cleared."""
+    n = len(_strategy_cache)
+    _strategy_cache.clear()
+    if n:
+        log.info("Invalidated strategy cache (%d entries)", n)
+    return n
 
 
 def find_matching_strategy(state: GameState) -> Strategy | None:
@@ -1218,26 +1505,31 @@ def find_matching_strategy(state: GameState) -> Strategy | None:
 
     best_match = None
     best_score = 0.0
+    best_is_managed = False
 
-    for strategy_dir in _all_strategy_dirs():
-        for path in strategy_dir.glob("*.json"):
-            if path.name in ("meta_decks.json", "general.json"):
+    for path in _all_strategy_paths():
+        try:
+            data = json.loads(path.read_text())
+            sig = data.get("deck_signature", [])
+            if not sig:
                 continue
-            try:
-                data = json.loads(path.read_text())
-                sig = data.get("deck_signature", [])
-                if not sig:
-                    continue
-                matched = [s for s in sig if s in deck_names]
-                missing = [s for s in sig if s not in deck_names]
-                score = len(matched) / len(sig)
-                log.info("Strategy match: %s — %.0f%% (%d/%d) matched=%s missing=%s",
-                         path.stem, score * 100, len(matched), len(sig), matched, missing)
-                if score > best_score and score >= 0.5:
-                    best_score = score
-                    best_match = path
-            except Exception:
-                continue
+            matched = [s for s in sig if s in deck_names]
+            missing = [s for s in sig if s not in deck_names]
+            score = len(matched) / len(sig)
+            # Managed decks (with deck.json) get priority over stubs at same score
+            is_managed = (path.parent / "deck.json").exists()
+            log.info("Strategy match: %s — %.0f%% (%d/%d) managed=%s matched=%s missing=%s",
+                     path.parent.name if path.name == "strategy.json" else path.stem,
+                     score * 100, len(matched), len(sig), is_managed, matched, missing)
+            if score >= 0.5 and (
+                score > best_score
+                or (score == best_score and is_managed and not best_is_managed)
+            ):
+                best_score = score
+                best_match = path
+                best_is_managed = is_managed
+        except Exception:
+            continue
 
     if best_match:
         strat = _load_strategy_file(best_match)
