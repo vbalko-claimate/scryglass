@@ -510,8 +510,25 @@ def build_replay_record(match: dict, events: list[dict], game_number: int) -> di
             et = evt["event_type"]
             d = evt["data"]
             iid = d.get("instance_id")
+            # Artifact tokens that the engine creates implicitly from
+            # their parent's ETB ability (Map from Spyglass Siren,
+            # Food from Witch's Cottage, Treasure from Brokers,
+            # Clue from Glass Casket) should NOT also be put into
+            # the player's `plays` list — the engine would treat the
+            # re-emit as a fresh cast and double the token count on
+            # battlefield. Creature tokens (Soldier, Rabbit, Spirit)
+            # ARE kept because most of their creator abilities
+            # aren't implemented in the engine; the re-cast path is
+            # the only way they appear on opp's BF for damage math.
+            _SAC_TOKEN_NAMES = {"Map", "Food", "Treasure", "Clue", "Blood",
+                                "Powerstone", "Gold"}
+            is_sac_token = (
+                d.get("is_token") and d.get("name") in _SAC_TOKEN_NAMES
+            )
             if et in ("card_played", "spell_cast"):
                 name = d.get("name", "?")
+                if is_sac_token:
+                    continue
                 me_side["plays"].append(name)
                 if d.get("is_land") and d.get("enters_tapped"):
                     me_side["lands_entered_tapped"].append(name)
@@ -519,6 +536,8 @@ def build_replay_record(match: dict, events: list[dict], game_number: int) -> di
                 _attach_life_choice(me_side, name, iid, life_change_by_source)
             elif et in ("opp_card_played", "opp_spell_cast"):
                 name = d.get("name", "?")
+                if is_sac_token:
+                    continue
                 opp_side["plays"].append(name)
                 if d.get("is_land") and d.get("enters_tapped"):
                     opp_side["lands_entered_tapped"].append(name)

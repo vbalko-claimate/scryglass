@@ -572,6 +572,14 @@ class GameStateTracker:
         # (the replay engine needs to see them to apply life-payment
         # for shock lands and gain-life triggers for "enters; gain 1
         # life" lands like Dismal Backwater / Promising Vein).
+        # Tokens (Map, Rabbit, etc.) ARE included with `is_token: true`
+        # so the exporter can decide whether to feed them into opp.plays
+        # (currently does — net positive across the corpus, even though
+        # it causes Map double-counting on Spyglass Siren matches —
+        # because most token-creating abilities aren't implemented and
+        # the re-cast path is the only way the token shows up at all).
+        obj_type = obj.get("type", "GameObjectType_Card")
+        is_token = "Token" in obj_type or obj.get("isToken", False)
         if (entering_bf and opp_seat and owner == opp_seat and card
                 and grp_id > 0
                 and self.state.match_info.match_id):
@@ -584,6 +592,7 @@ class GameStateTracker:
                       "card_types": card.card_types,
                       "colors": card.colors,
                       "is_land": card.is_land,
+                      "is_token": is_token,
                       "enters_tapped": obj.get("isTapped", False),
                       "instance_id": iid})
 
@@ -655,9 +664,11 @@ class GameStateTracker:
                         "owner": "opp",
                     })
 
-        # Log my card entering battlefield
+        # Log my card entering battlefield (tokens included; see
+        # opp_card_played comment for rationale).
         if (entering_bf and my_seat and owner == my_seat and card
-                and grp_id > 0 and self.state.match_info.match_id):
+                and grp_id > 0
+                and self.state.match_info.match_id):
             play_data = {"name": card.name, "grp_id": grp_id,
                          "card_types": card.card_types,
                          "colors": card.colors,
