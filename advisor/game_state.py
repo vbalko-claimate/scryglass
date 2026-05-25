@@ -1193,6 +1193,23 @@ class GameStateTracker:
                 # the annotation N times). Replay exporter sums
                 # these per ability source to reconstruct X.
                 kind = "counter_added"
+            elif "AnnotationType_ZoneTransfer" in ann_types:
+                # Cards moving between zones. affectorId, when set,
+                # is the source object that CAUSED the transfer
+                # (e.g. an ETB-fetch ability putting a basic land
+                # onto the battlefield, a Cascade exile from the
+                # cascading spell, Fabled Passage's sac trigger
+                # putting a land onto the battlefield). When the
+                # transfer is a manual hand-played land or a normal
+                # cast resolution, affectorId is typically 0/missing.
+                # affectedIds[0] is the iid of the card that moved.
+                # details contains zone_src / zone_dest enum codes
+                # the consumer can use to filter to specific moves.
+                # Replay exporter joins by affectedIds[0] to attach
+                # cause_object_id onto card_played / opp_card_played
+                # entries so the consumer can distinguish manual
+                # plays from effect-driven puts.
+                kind = "zone_transfer"
             else:
                 continue
 
