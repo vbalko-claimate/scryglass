@@ -1147,6 +1147,24 @@ class GameStateTracker:
                     break
         return out
 
+    def _ann_details_full(self, ann: dict) -> dict:
+        """Like `_ann_details_map` but preserves the full value array
+        instead of squashing to the first scalar. Required for
+        annotations that carry parallel arrays — Shuffle's positional
+        `OldIds` / `NewIds`, multi-target affected lists, etc."""
+        out = {}
+        for d in ann.get("details") or []:
+            key = d.get("key")
+            if not key:
+                continue
+            for vk in ("valueInt32", "valueString", "valueDouble"):
+                if vk in d:
+                    arr = d[vk]
+                    if isinstance(arr, list):
+                        out[key] = list(arr)
+                    break
+        return out
+
     def _save_user_choice_annotations(self, annotations: list[dict]) -> None:
         """Persist annotations needed by the replay exporter to
         reconstruct per-action user choices: spell targets, X values,
@@ -1210,17 +1228,77 @@ class GameStateTracker:
                 # entries so the consumer can distinguish manual
                 # plays from effect-driven puts.
                 kind = "zone_transfer"
+            elif "AnnotationType_ObjectIdChanged" in ann_types:
+                # CR 400.7 — an object that moves between zones
+                # becomes a new object with a fresh instance id. MTGA
+                # emits ObjectIdChanged to bridge the old iid (often
+                # the affectorId carried on the triggering action,
+                # e.g. the SearchReq, the just-resolved cast, the
+                # bounce target) to the new iid that lives in the
+                # post-move zone. The exporter consumes these to
+                # build an iid_aliases map so cause_object_id and
+                # spell_targets references survive zone transitions
+                # without losing the chain.
+                # details.orig_id / details.new_id are scalars;
+                # affectorId/affectedIds are typically empty here.
+                kind = "object_id_changed"
+            elif "AnnotationType_Shuffle" in ann_types:
+                # Library shuffles emit positional remappings as
+                # parallel OldIds[] / NewIds[] arrays — entry i in
+                # OldIds is the iid before the shuffle that moved to
+                # the position occupied by entry i in NewIds. Search
+                # responses for fetch lands index into library
+                # positions BEFORE the shuffle; the exporter uses
+                # this remapping to keep the post-shuffle iid stable
+                # when the fetched land later enters the battlefield.
+                kind = "shuffle"
+            elif "AnnotationType_AbilityInstanceCreated" in ann_types:
+                # An ability went on the stack as a distinct stack
+                # object with its own iid. affectorId = the
+                # permanent/spell that owns the ability;
+                # affectedIds[0] (when present) = the freshly minted
+                # ability-instance iid. This is the canonical place
+                # the wire format associates a stack object back to
+                # its source object — required for cause_object_id
+                # when the triggering ability later moves cards
+                # around without a direct source iid on the
+                # ZoneTransfer.
+                kind = "ability_instance_created"
+            elif "AnnotationType_AbilityInstanceDeleted" in ann_types:
+                # Companion to AbilityInstanceCreated: the ability
+                # finished resolving (or fizzled / was countered) and
+                # its stack iid was freed. Recorded so the exporter
+                # can prune the ability→source mapping at the right
+                # turn boundary instead of leaking it forward.
+                kind = "ability_instance_deleted"
+            elif "AnnotationType_ResolutionComplete" in ann_types:
+                # Fired when a stack object finishes resolving (cast
+                # spell, activated/triggered ability). affectorId =
+                # the resolving stack object's iid. Combined with
+                # ZoneTransfer affectorId="0" on the SAME turn, this
+                # is how the exporter resolves "which resolving
+                # object caused this card to move" when the wire
+                # format omits the explicit attribution.
+                kind = "resolution_complete"
             else:
                 continue
 
             affector_id = ann.get("affectorId")
             affected_ids = ann.get("affectedIds") or []
+            # Shuffle carries positional OldIds[] / NewIds[] arrays —
+            # the squash-to-first-scalar helper would lose the
+            # remapping. Use the array-preserving variant for it.
+            details_map = (
+                self._ann_details_full(ann)
+                if kind == "shuffle"
+                else self._ann_details_map(ann)
+            )
             data = {
                 "kind": kind,
                 "ann_id": ann.get("id"),
                 "affector_id": affector_id,
                 "affected_ids": list(affected_ids),
-                "details": self._ann_details_map(ann),
+                "details": details_map,
             }
             # Resolve names for downstream joining. Affector is
             # typically the spell/ability on stack; affected are

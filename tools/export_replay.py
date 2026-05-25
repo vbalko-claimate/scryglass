@@ -452,6 +452,35 @@ def build_replay_record(match: dict, events: list[dict], game_number: int) -> di
     # an entry are treated as manual hand-played / cast-resolution
     # transfers (cause_object_id = null in the exported JSON).
     zone_transfer_cause: dict[int, int] = {}
+    # MTGA refreshes an object's instance_id on every zone transition
+    # (CR 400.7). Captured from AnnotationType_ObjectIdChanged
+    # (kind="object_id_changed"). Maps the OLD iid → the NEW iid so
+    # downstream lookups by old iid resolve to the live one. Chains
+    # of renames are normalised below via repeated `resolve_alias`.
+    iid_aliases: dict[int, int] = {}
+    # Permanent / spell → stack-ability-instance mapping. Built from
+    # AnnotationType_AbilityInstanceCreated (kind="ability_instance_
+    # created"). affector_id is the source permanent / spell;
+    # affected_ids[0] is the freshly minted ability iid that lives on
+    # the stack. When a later ZoneTransfer attributes a move to that
+    # ability iid (rather than the source object), we chase back
+    # through this map to recover the underlying source iid that the
+    # consumer can dereference to a card name.
+    ability_to_source: dict[int, int] = {}
+
+    def resolve_alias(iid: int | None) -> int | None:
+        """Walk `iid_aliases` transitively to the current iid for
+        `iid`. Returns the input unchanged when no rename exists.
+        Capped to a small depth to defend against pathological cycles
+        in the wire format (none observed; defensive only)."""
+        if iid is None:
+            return None
+        seen: set[int] = set()
+        cur = iid
+        while cur in iid_aliases and cur not in seen:
+            seen.add(cur)
+            cur = iid_aliases[cur]
+        return cur
     # Schema v2 — set of ability iids that the user explicitly
     # activated. Built from UserActionTaken annotations whose
     # affected_ids references the ability's instance_id. The Sprint 1
@@ -504,7 +533,32 @@ def build_replay_record(match: dict, events: list[dict], game_number: int) -> di
         elif et in ("opp_spell_cast", "opp_card_played", "opp_ability"):
             side_by_iid.setdefault(iid, "opp")
             window_of_iid.setdefault(iid, event_window.get(evt["id"], 0))
-    # Second pass: collect target_spec joins + life-paid mana counts.
+    # Second pass — pre-build the iid_aliases and ability_to_source
+    # maps BEFORE walking zone_transfer joins. Both maps need to be
+    # populated game-wide so a ZoneTransfer that references a stack
+    # ability iid (created earlier the same window) or a renamed iid
+    # (CR 400.7) can resolve through them. Without this pre-pass the
+    # annotations could arrive in any order within a window and we'd
+    # under-attribute.
+    for evt in game_events:
+        if evt["event_type"] != "annotation":
+            continue
+        d = evt["data"]
+        kind = d.get("kind")
+        if kind == "object_id_changed":
+            details = d.get("details") or {}
+            orig = details.get("orig_id")
+            new = details.get("new_id")
+            if isinstance(orig, int) and isinstance(new, int) and orig != new:
+                iid_aliases.setdefault(orig, new)
+        elif kind == "ability_instance_created":
+            affected = d.get("affected_ids") or []
+            aff_id_local = d.get("affector_id")
+            if aff_id_local and affected:
+                ability_to_source.setdefault(affected[0], aff_id_local)
+
+    # Third pass: collect target_spec joins + life-paid mana counts +
+    # zone_transfer cause attribution.
     # life_pay_by_window[(side, w_idx)] = total life paid in that
     # window by that side via "{T}, Pay N life: Add ..." sources.
     life_pay_by_window: dict[tuple[str, int], int] = {}
@@ -559,17 +613,37 @@ def build_replay_record(match: dict, events: list[dict], game_number: int) -> di
             # never resolve to a name and are skipped. We also skip
             # category=Resolve (normal spell resolution from the
             # stack — not an effect-driven put).
+            #
+            # When `affector_name` is absent (the iid resolves to a
+            # stack ability instance rather than a card), chase
+            # `ability_to_source` to recover the underlying permanent
+            # that owns the ability. Then run the result through
+            # `resolve_alias` to land on the live iid after any
+            # zone-transition rename. This is the path that fills
+            # cause_object_id for ETB-fetch chains where the
+            # ZoneTransfer attributes the put to the ability stack
+            # object, not the source permanent.
             details = d.get("details") or {}
             affected = d.get("affected_ids") or []
             category = details.get("category")
-            if (
-                aff_id
-                and affected
-                and d.get("affector_name")
-                and category != "Resolve"
-            ):
-                moving_iid = affected[0]
-                zone_transfer_cause.setdefault(moving_iid, aff_id)
+            if aff_id and affected and category != "Resolve":
+                moving_iid = resolve_alias(affected[0])
+                cause = aff_id
+                if not d.get("affector_name"):
+                    chased = ability_to_source.get(aff_id)
+                    if chased is None:
+                        # Seat-id / unknown source — drop the
+                        # attribution rather than emit a bogus link.
+                        cause = None
+                    else:
+                        cause = chased
+                if cause is not None and moving_iid is not None:
+                    cause = resolve_alias(cause)
+                    zone_transfer_cause.setdefault(moving_iid, cause)
+        # NOTE: object_id_changed + ability_instance_created are
+        # pre-aggregated in the dedicated second pass above so the
+        # maps are populated game-wide before any zone_transfer
+        # resolves through them.
         elif kind == "user_action_taken":
             # Schema v2 — discriminate triggered vs activated ability
             # entries on the consumer side. MTGA emits one
