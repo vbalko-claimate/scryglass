@@ -14,6 +14,32 @@ Usage:
 The `--latest-deck` shortcut picks the most recently started match
 whose `my_deck_name` (case-insensitive substring) matches the
 argument; useful for "export the game I just finished."
+
+Schema versions:
+    1 — initial. `plays` was `list[str]`. `activations` had only
+        `{source, target}`. No top-level `counter_events`.
+    2 — adds three fields so the Glass Shard replay-v2 consumer can
+        disambiguate ambiguous MTGA log shapes:
+          • each entry in `me.plays` / `opp.plays` is now
+            `{name, cause_object_id}` (was bare string). When
+            `cause_object_id` is non-null the card was put onto the
+            battlefield by another effect (search-fetched basic,
+            Cascade reveal, Fabled Passage sac trigger, …) rather
+            than manually cast/played from hand. The Rust consumer
+            keeps a back-compat untagged deserializer that still
+            accepts the v1 bare-string shape.
+          • `counter_events: list[CounterEvent]` per turn. Each
+            element is `{turn_idx_in_turn, target_iid, counter_type,
+            amount}` and is emitted in MTGA `AnnotationType_CounterAdded`
+            order so downstream code can project per-permanent
+            counter trajectories (previously every
+            `checkpoint.my_battlefield[].plus_counters` was zero).
+          • each entry in `me.activations` / `opp.activations` now
+            carries `kind`: `"triggered"`, `"activated"`,
+            `"spell_cast"`, or `null` (ambiguous). Discriminated by
+            the presence/absence of a nearby
+            `AnnotationType_UserActionTaken` whose `affected_ids`
+            references the ability's iid.
 """
 from __future__ import annotations
 
@@ -42,7 +68,30 @@ if not os.environ.get("SCRY_USER_DATA") and not DB_PATH.exists():
     if fallback.exists():
         DB_PATH = fallback
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
+
+
+# Subset of MTGA's CounterType enum we currently translate to named
+# strings. Unknown values fall through to `f"Counter({n})"` so the
+# raw enum is still recoverable on the consumer side without needing
+# an exhaustive table here. Extend as more counter types are
+# observed in the corpus.
+COUNTER_TYPE_NAMES: dict[int, str] = {
+    1: "PlusOnePlusOne",
+    2: "MinusOneMinusOne",
+    7: "Loyalty",
+}
+
+
+def _counter_type_name(raw: int | None) -> str:
+    """Translate an MTGA CounterType int to a stable string name.
+
+    Returns `f"Counter({raw})"` for values we haven't catalogued so
+    the consumer can still distinguish them downstream without a
+    silent enum collision."""
+    if raw is None:
+        return "Unknown"
+    return COUNTER_TYPE_NAMES.get(int(raw), f"Counter({raw})")
 
 
 def load_match(conn: sqlite3.Connection, match_id: str) -> dict | None:
@@ -196,6 +245,29 @@ def _attach_life_choice(
 ADDITIONAL_COST_LIFE_CARDS: dict[str, int] = {
     "Bitter Triumph": 3,
 }
+
+
+def _classify_ability_kind(
+    ability_iid: int | None, activated_iids: set[int]
+) -> str | None:
+    """Schema v2 — return `"triggered"`, `"activated"`, or `None`
+    (ambiguous) for a stack `ability` event.
+
+    Discrimination is by membership in `activated_iids`, which was
+    populated from `AnnotationType_UserActionTaken` annotations whose
+    `affected_ids` referenced the ability's iid. Triggered abilities
+    fire from event resolution (no UserActionTaken) so their iids
+    never enter the set. When the ability's iid is missing entirely
+    (legacy events without instance_id) we fall back to `None` so the
+    consumer keeps treating it as ambiguous.
+
+    `"spell_cast"` is reserved for a future migration where spell
+    casts share the `activations` list; today they flow through
+    `spell_cast` events on the side struct and are not routed here.
+    """
+    if ability_iid is None:
+        return None
+    return "activated" if ability_iid in activated_iids else "triggered"
 
 
 def _attach_spell_target(
@@ -373,6 +445,20 @@ def build_replay_record(match: dict, events: list[dict], game_number: int) -> di
     # the cast itself). Dedup by `ann_id` because persistent
     # annotations get rebroadcast on every diff.
     targets_by_iid: dict[int, list[str]] = {}
+    # Schema v2 — cause_object_id for cards entering the battlefield
+    # via an effect (ETB-fetch basic, Cascade reveal, Fabled Passage
+    # sac trigger). Keyed by the moving card's iid → the affector
+    # source iid recorded on the ZoneTransfer annotation. iids without
+    # an entry are treated as manual hand-played / cast-resolution
+    # transfers (cause_object_id = null in the exported JSON).
+    zone_transfer_cause: dict[int, int] = {}
+    # Schema v2 — set of ability iids that the user explicitly
+    # activated. Built from UserActionTaken annotations whose
+    # affected_ids references the ability's instance_id. The Sprint 1
+    # capture path already stores these as `kind=user_action_taken`;
+    # we only consult the actionType to skip non-activation entries
+    # (priority pass, mulligan, etc.).
+    activated_ability_iids: set[int] = set()
     # Sprint 4 — per-source life delta captured from ModifiedLife.
     # Lets the exporter detect Bitter Triumph style additional-cost
     # life payments (Choice(DiscardCard, PayLife(N)) — if MTGA logs
@@ -456,6 +542,47 @@ def build_replay_record(match: dict, events: list[dict], game_number: int) -> di
             counter_amount_by_iid[aff_id] = (
                 counter_amount_by_iid.get(aff_id, 0) + int(amt)
             )
+        elif kind == "zone_transfer":
+            # Schema v2 — affector_id (the cause source) is recorded
+            # whenever an effect (search-fetch, Cascade, Fabled
+            # Passage sac trigger) moves a card; affected_ids[0] is
+            # the moving card's iid. First write wins per iid
+            # (subsequent transfers of the SAME instance — e.g. BF →
+            # GY on death — shouldn't overwrite the ETB cause).
+            #
+            # Filter out seat-id "affectors": MTGA reuses affectorId
+            # to hold the priority seat (1 / 2) on standard cast
+            # resolutions, which is not a cause object the consumer
+            # can dereference. We gate on `affector_name` (set by
+            # _save_user_choice_annotations only when the iid
+            # resolves to a known card object); seat-id affectors
+            # never resolve to a name and are skipped. We also skip
+            # category=Resolve (normal spell resolution from the
+            # stack — not an effect-driven put).
+            details = d.get("details") or {}
+            affected = d.get("affected_ids") or []
+            category = details.get("category")
+            if (
+                aff_id
+                and affected
+                and d.get("affector_name")
+                and category != "Resolve"
+            ):
+                moving_iid = affected[0]
+                zone_transfer_cause.setdefault(moving_iid, aff_id)
+        elif kind == "user_action_taken":
+            # Schema v2 — discriminate triggered vs activated ability
+            # entries on the consumer side. MTGA emits one
+            # UserActionTaken per voluntary action; for ability
+            # activations (actionType in {2,4}) affected_ids[0] is the
+            # ability's iid on the stack. Triggered abilities never
+            # get a UserActionTaken (they fire from event resolution),
+            # so their iids never enter this set.
+            details = d.get("details") or {}
+            at = details.get("actionType")
+            if at in (2, 4):
+                for ab_iid in d.get("affected_ids") or []:
+                    activated_ability_iids.add(ab_iid)
         elif kind == "mana_paid":
             affector_name = d.get("affector_name")
             color = (d.get("details") or {}).get("color")
@@ -499,12 +626,37 @@ def build_replay_record(match: dict, events: list[dict], game_number: int) -> di
 
         me_side = make_side_play()
         opp_side = make_side_play()
+        # Schema v2 — per-turn counter_events list, in observed
+        # CounterAdded annotation order. Populated below from the
+        # window's annotation events; each entry tags its position
+        # within the turn so consumers can re-interleave with other
+        # events (plays / attacks / blocks) when needed.
+        counter_events: list[dict] = []
         for evt in window_events:
             if evt["event_type"] == "annotation":
-                # Annotations are pre-aggregated GAME-WIDE below so
-                # joins survive turn-window timing skew (TargetSpec
-                # often appears in a later gamestate than the
-                # spell_cast event that triggered it).
+                # Most annotation joins are pre-aggregated GAME-WIDE
+                # above so they survive turn-window timing skew
+                # (TargetSpec often appears in a later gamestate than
+                # the spell_cast event that triggered it). The one
+                # exception is CounterAdded: those are surfaced
+                # per-turn as `counter_events` so the consumer can
+                # project per-permanent counter trajectories without
+                # losing emit order.
+                d = evt["data"]
+                if d.get("kind") == "counter_added":
+                    affected = d.get("affected_ids") or []
+                    if affected:
+                        details = d.get("details") or {}
+                        counter_events.append({
+                            "turn_idx_in_turn": len(counter_events),
+                            "target_iid": affected[0],
+                            "counter_type": _counter_type_name(
+                                details.get("counter_type")
+                            ),
+                            "amount": int(
+                                details.get("transaction_amount", 1)
+                            ),
+                        })
                 continue
 
             et = evt["event_type"]
@@ -551,7 +703,11 @@ def build_replay_record(match: dict, events: list[dict], game_number: int) -> di
                 name = d.get("name", "?")
                 if is_sac_token or not is_manual_play:
                     continue
-                me_side["plays"].append(name)
+                me_side["plays"].append({
+                    "name": name,
+                    "cause_object_id": zone_transfer_cause.get(iid)
+                    if iid else None,
+                })
                 if d.get("is_land") and d.get("enters_tapped"):
                     me_side["lands_entered_tapped"].append(name)
                 _attach_spell_target(me_side, name, iid, targets_by_iid)
@@ -560,7 +716,11 @@ def build_replay_record(match: dict, events: list[dict], game_number: int) -> di
                 name = d.get("name", "?")
                 if is_sac_token or not is_manual_play:
                     continue
-                opp_side["plays"].append(name)
+                opp_side["plays"].append({
+                    "name": name,
+                    "cause_object_id": zone_transfer_cause.get(iid)
+                    if iid else None,
+                })
                 if d.get("is_land") and d.get("enters_tapped"):
                     opp_side["lands_entered_tapped"].append(name)
                 _attach_spell_target(opp_side, name, iid, targets_by_iid)
@@ -599,6 +759,7 @@ def build_replay_record(match: dict, events: list[dict], game_number: int) -> di
                 me_side["activations"].append({
                     "source": name,
                     "target": (target_names[0] if target_names else d.get("target")),
+                    "kind": _classify_ability_kind(iid, activated_ability_iids),
                 })
                 me_side["activation_x"].append(
                     counter_amount_by_iid.get(iid, 0) if iid else 0
@@ -609,6 +770,7 @@ def build_replay_record(match: dict, events: list[dict], game_number: int) -> di
                 opp_side["activations"].append({
                     "source": name,
                     "target": (target_names[0] if target_names else d.get("target")),
+                    "kind": _classify_ability_kind(iid, activated_ability_iids),
                 })
                 opp_side["activation_x"].append(
                     counter_amount_by_iid.get(iid, 0) if iid else 0
@@ -635,6 +797,7 @@ def build_replay_record(match: dict, events: list[dict], game_number: int) -> di
             "opp": opp_side,
             "me_draws": [],
             "opp_draws": [],
+            "counter_events": counter_events,
             "checkpoint": checkpoint,
         })
 
