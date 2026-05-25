@@ -1280,6 +1280,96 @@ class GameStateTracker:
                 # object caused this card to move" when the wire
                 # format omits the explicit attribution.
                 kind = "resolution_complete"
+            elif "AnnotationType_DamageDealt" in ann_types:
+                # CR 119.3 — server-authoritative damage event.
+                # affectorId = damage source (creature, spell,
+                # ability iid); affectedIds[0] = target (creature or
+                # player seat). details.damage = signed integer
+                # (positive for damage dealt). This is the ground
+                # truth for opp_life / creature damage drift in the
+                # replay-v2 driver: when the engine computes a
+                # damage value different from what MTGA logged,
+                # this annotation is how we know.
+                kind = "damage_dealt"
+            elif "AnnotationType_DamageSource" in ann_types:
+                # Companion to DamageDealt: records the linkage
+                # back to the originating spell / ability when the
+                # damage was dealt by an effect (vs creature combat
+                # damage). affectorId = damage source iid,
+                # affectedIds[0] = the originating effect's iid.
+                # Used together with DamageDealt to disambiguate
+                # combat damage from effect damage in a single
+                # turn.
+                kind = "damage_source"
+            elif "AnnotationType_TokenCreated" in ann_types:
+                # Token creation event. affectorId = the source
+                # spell / ability / permanent that minted the
+                # token; affectedIds[0] = the new token's iid;
+                # details often includes the token's grpId and
+                # type-line. Currently the replay driver
+                # reconstructs tokens from card_played events
+                # (is_token flag); TokenCreated is the
+                # authoritative wire-level signal for opp's token
+                # army when card_played coverage is sparse.
+                kind = "token_created"
+            elif "AnnotationType_TokenDeleted" in ann_types:
+                # Token cleanup at end of phase or when leaving
+                # the battlefield (CR 110.5e). affectorId =
+                # cleanup source (usually 0 / the cleanup step
+                # itself); affectedIds[0] = the deleted token's
+                # iid. Pairs with TokenCreated to bound token
+                # lifetime — necessary for opp battlefield
+                # reconciliation across turns.
+                kind = "token_deleted"
+            elif "AnnotationType_TappedUntappedPermanent" in ann_types:
+                # Tap-state mutation. affectorId = the cause (an
+                # activation, an ability, a creature declared as
+                # attacker — CR 508.1f); affectedIds = the
+                # permanents whose tap state changed;
+                # details.tapped is a boolean. Combat-tap ground
+                # truth: a creature declared as attacker taps,
+                # vigilance creatures don't. The replay driver
+                # consults this when reconciling tap state at
+                # turn boundaries.
+                kind = "tapped_untapped_permanent"
+            elif "AnnotationType_PhaseOrStepModified" in ann_types:
+                # Explicit phase / step transition (CR 500.1).
+                # details.phase + details.step encode the new
+                # game phase. Currently the exporter infers phase
+                # boundaries from turn_start events; this
+                # annotation is the authoritative wire-level
+                # signal for multi-step turns (extra combat
+                # phases, end-step triggers, cleanup-step
+                # mutations).
+                kind = "phase_or_step_modified"
+            elif "AnnotationType_ControllerChanged" in ann_types:
+                # Permanent control swap (CR 110.2). affectorId =
+                # the spell / ability that changed control;
+                # affectedIds[0] = the permanent whose control
+                # changed; details encodes the new controller's
+                # seat id. Rare but high-impact — Threaten,
+                # Mind Control, Act of Treason variants — engine
+                # state for the affected permanent is wrong
+                # whenever the annotation is missed.
+                kind = "controller_changed"
+            elif "AnnotationType_TriggeringObject" in ann_types:
+                # Records WHICH source fired a triggered ability.
+                # affectorId = the trigger's stack iid (matches an
+                # AbilityInstanceCreated for the same iid);
+                # affectedIds = the source objects that
+                # contributed to the trigger condition (e.g. the
+                # creature that died for a "whenever a creature
+                # dies" trigger). Used together with TargetSpec
+                # to disambiguate trigger targets when multiple
+                # candidates exist.
+                kind = "triggering_object"
+            elif "AnnotationType_ResolutionStart" in ann_types:
+                # Companion to ResolutionComplete: a stack object
+                # begins resolving. Pair lets the driver bracket
+                # the resolution window and attribute any
+                # ZoneTransfer / ModifiedLife / DamageDealt that
+                # happens between the two.
+                kind = "resolution_start"
             else:
                 continue
 
