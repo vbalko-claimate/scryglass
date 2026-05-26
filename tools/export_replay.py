@@ -54,7 +54,7 @@ from typing import Any
 # Add project root to sys.path so `from advisor.database ...` works
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from advisor.database import DB_PATH  # noqa: E402
+from advisor.database import DB_PATH, card_cache  # noqa: E402
 
 # The PyInstaller-bundled scryglass.app uses SCRY_USER_DATA →
 # ~/MTG/mtg-data/app_data/advisor.db. When this script is run from
@@ -288,17 +288,64 @@ def _attach_spell_target(
         side["spell_targets"].setdefault(name, tgts[0])
 
 
+def _parse_int_pt(value) -> int | None:
+    """Parse a card's power/toughness field, handling MTGA's quirks.
+    Returns None for variable / non-numeric P/T (e.g. '*', 'X',
+    '1+*', '') so the caller can skip the +1/+1 delta inference."""
+    if value is None:
+        return None
+    s = str(value).strip()
+    if not s:
+        return None
+    try:
+        return int(s)
+    except ValueError:
+        return None
+
+
 def make_battlefield_card(bf_entry: dict) -> dict:
     """Convert a turn_start battlefield entry to ReplayRecord
-    BattlefieldCard. Counter information isn't currently tracked
-    per-permanent by scryglass — we encode P/T deltas under
-    plus_counters when both are positive and equal (a heuristic for
-    +1/+1 counters; refined by permanent_stats_changed analysis in a
-    follow-up)."""
+    BattlefieldCard.
+
+    +1/+1 counters are inferred from the difference between the
+    snapshot's effective power (`bf_entry['power']`, which MTGA
+    reports POST-modifications) and the card's printed/base power
+    looked up via card_cache. Net positive delta on BOTH power and
+    toughness is a strong signal for +1/+1 counters; we encode the
+    minimum of the two so an additive +1/+1 effect (e.g. landfall
+    on Sazh's Chocobo, Bristly Bill counter dumps, Mossborn Hydra
+    landfall doubling) reaches the engine's checkpoint compare.
+
+    The heuristic is intentionally conservative — it misses
+    static-pump-only buffs (Glorious Anthem +1/+1 to all) because
+    those add to base P/T without being counters in MTG terms. The
+    engine's static-ability pipeline computes those independently,
+    so reporting them as counters here would double-count.
+
+    -1/-1 net deltas are NOT emitted (the schema is positive-only;
+    -1/-1 counters cancel against +1/+1 via SBA and the resulting
+    net is observable as a smaller positive delta or a deficit that
+    propagates through effective P/T directly).
+    """
+    name = bf_entry.get("name", "?")
+    eff_p = _parse_int_pt(bf_entry.get("power"))
+    eff_t = _parse_int_pt(bf_entry.get("toughness"))
+    grp_id = bf_entry.get("grp_id")
+    plus_counters = 0
+    if eff_p is not None and eff_t is not None and grp_id:
+        base = card_cache.get(grp_id) if card_cache._loaded else None
+        if base is not None:
+            base_p = _parse_int_pt(base.power)
+            base_t = _parse_int_pt(base.toughness)
+            if base_p is not None and base_t is not None:
+                dp = eff_p - base_p
+                dt = eff_t - base_t
+                if dp > 0 and dt > 0:
+                    plus_counters = min(dp, dt)
     return {
-        "name": bf_entry.get("name", "?"),
+        "name": name,
         "tapped": bool(bf_entry.get("tapped", False)),
-        "plus_counters": 0,
+        "plus_counters": plus_counters,
         "loyalty": 0,
         "summoning_sick": bool(bf_entry.get("summoning_sick", False)),
     }
@@ -1010,6 +1057,11 @@ def main() -> None:
         help="output directory (one JSON per game)",
     )
     args = parser.parse_args()
+
+    # Pre-load card_cache so make_battlefield_card can compute
+    # +1/+1 counter deltas from base vs effective P/T. Idempotent.
+    if not card_cache._loaded:
+        card_cache.load()
 
     conn = sqlite3.connect(str(DB_PATH))
     conn.row_factory = None
