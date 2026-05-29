@@ -173,6 +173,15 @@ def make_side_play() -> dict:
         # the player paid life for a shock land or accepted the
         # tapped enter.
         "lands_entered_tapped": [],
+        # Creature/permanent names that LEFT this side's battlefield
+        # this turn (died, bounced, exiled, sacrificed) — derived from
+        # `creature_left_bf` events. The replay harness applies these
+        # as recorded departures so opponent permanents the engine
+        # injected but can't see removed (opp removal / sac / combat
+        # death we don't simulate) are taken off the board BEFORE the
+        # end-of-turn checkpoint diff, instead of lingering as phantoms
+        # until the post-turn prune.
+        "creatures_left": [],
     }
 
 
@@ -900,6 +909,10 @@ def build_replay_record(match: dict, events: list[dict], game_number: int) -> di
                 owner = d.get("owner", "me")
                 name = d.get("name", "?")
                 (my_gy if owner == "me" else opp_gy).append(name)
+                # Also expose as a per-turn departure signal so the
+                # harness can remove the permanent from the engine BF
+                # during this turn (not just reflect it in the GY).
+                (me_side if owner == "me" else opp_side)["creatures_left"].append(name)
 
         checkpoint = make_checkpoint(checkpoint_src, my_gy, opp_gy)
         raw_mtga = int(checkpoint_src["turn_number"] or 0) if checkpoint_src else 0
