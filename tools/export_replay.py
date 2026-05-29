@@ -182,6 +182,15 @@ def make_side_play() -> dict:
         # end-of-turn checkpoint diff, instead of lingering as phantoms
         # until the post-turn prune.
         "creatures_left": [],
+        # Net life change for THIS side during the turn, summed from
+        # `life_change` events. The replay harness applies the OPP
+        # side's value only on the opponent's OWN turn — where the
+        # engine never simulates opp life changes — so opponent
+        # self-inflicted losses (fetch / pay-life / Dark Confidant)
+        # and lifegain land on the engine naturally instead of via the
+        # post-turn opp_life sync. Our-turn combat damage is left to
+        # the engine (not double-counted).
+        "life_delta": 0,
     }
 
 
@@ -913,6 +922,14 @@ def build_replay_record(match: dict, events: list[dict], game_number: int) -> di
                 # harness can remove the permanent from the engine BF
                 # during this turn (not just reflect it in the GY).
                 (me_side if owner == "me" else opp_side)["creatures_left"].append(name)
+            elif et == "life_change":
+                # Accumulate net per-side life change for the turn.
+                # `player` is already 'me'/'opp'. Harness applies the
+                # opp value only on opp's own turn (no combat double-
+                # count). See make_side_play life_delta comment.
+                who = d.get("player", "me")
+                delta = int(d.get("delta", 0) or 0)
+                (me_side if who == "me" else opp_side)["life_delta"] += delta
 
         checkpoint = make_checkpoint(checkpoint_src, my_gy, opp_gy)
         raw_mtga = int(checkpoint_src["turn_number"] or 0) if checkpoint_src else 0
