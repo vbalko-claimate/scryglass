@@ -1069,12 +1069,25 @@ class AdvisorEngine:
 
     async def on_decision_point(self, state: GameState, request_type: str):
         await self.on_state_change(state, allow_auto_llm=True)
-        # Auto-trigger the glass-engine advice at decision points
-        # (heuristic pilot is instant; the sidecar is bundled + auto-
-        # started). Default ON — set SCRY_ENGINE_AUTO=0 (or false/off/no)
-        # to disable. Failures are swallowed so the engine sidecar being
-        # down never disrupts the decision loop (advice just won't show).
-        if os.environ.get("SCRY_ENGINE_AUTO", "1").lower() not in ("0", "false", "off", "no"):
+        # Auto-trigger the glass-engine advice — but ONLY on OUR
+        # main-phase action decisions, where main-phase play ranking is
+        # meaningful. on_decision_point also fires for mulligan, declare
+        # attackers/blockers, target selection, and the coin flip; the
+        # engine only ranks plays (cast/land/activate), so firing it
+        # there showed irrelevant "play X" advice (the "very different"
+        # report). Manual `ask_engine` (WS) stays unrestricted.
+        # Default ON — SCRY_ENGINE_AUTO=0/false/off/no disables.
+        ti = state.turn_info
+        auto_on = os.environ.get("SCRY_ENGINE_AUTO", "1").lower() not in (
+            "0", "false", "off", "no"
+        )
+        is_my_main_action = (
+            request_type == "GREMessageType_ActionsAvailableReq"
+            and "main" in (ti.phase or "").lower()
+            and ti.active_player == state.my_seat_id
+            and not state.stack()
+        )
+        if auto_on and is_my_main_action:
             try:
                 await self.ask_engine(state)
             except Exception:
