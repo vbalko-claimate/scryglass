@@ -1124,6 +1124,33 @@ class AdvisorEngine:
 
         return advice
 
+    async def ask_engine(self, state: GameState) -> Advice | None:
+        """Manually trigger glass-engine advice (the `ask_engine` WS
+        action). Additive: merges an `engine`-sourced Advice into the
+        current advice list exactly like ask_llm does for `llm`, and
+        broadcasts. No-op (returns None) if the engine sidecar isn't
+        running, so existing behavior is never disrupted."""
+        from .engine_backend import get_engine_advice
+
+        engine_state = copy.deepcopy(state)
+        ai = os.environ.get("SCRY_ENGINE_AI", "heuristic")
+        advice = await get_engine_advice(engine_state, ai=ai)
+        if advice and advice.message:
+            base = [a for a in self._last_advice if a.source.lower() != "engine"]
+            if all(a.message.lower() != advice.message.lower() for a in base):
+                base.append(advice)
+            prio = {"critical": 0, "high": 1, "medium": 2, "low": 3}
+            base.sort(
+                key=lambda a: (
+                    prio.get(a.priority, 4),
+                    -(a.action_scores[0].score if a.action_scores else 0.0),
+                )
+            )
+            self._last_advice = base[:5]
+            if self.on_advice:
+                self.on_advice(self._last_advice)
+        return advice
+
     def _update_threats(self, state: GameState):
         """Detect new opponent permanents and assess threats."""
         opp_bf = state.opp_battlefield()
