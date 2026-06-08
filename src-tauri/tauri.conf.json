@@ -50,11 +50,13 @@
     ],
     "externalBin": [
       "binaries/scry-server",
-      "binaries/overlay-helper"
+      "binaries/overlay-helper",
+      "binaries/glass-server"
     ],
     "resources": [
       "icons/tray-icon.png",
-      "icons/tray-icon@2x.png"
+      "icons/tray-icon@2x.png",
+      "resources/glass_advise_db.json"
     ],
     "macOS": {
       "dmg": {

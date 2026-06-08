@@ -64,3 +64,66 @@ pub async fn check_health() -> bool {
         Err(_) => false,
     }
 }
+
+const ENGINE_URL: &str = "http://localhost:3000";
+
+/// Start the bundled glass-engine advice sidecar (glass-server) on :3000,
+/// pointing it at the bundled compiled card DB. BEST-EFFORT and
+/// NON-FATAL: the Python advisor's `engine` advice source degrades to
+/// nothing when this isn't reachable, so any failure here is logged, not
+/// propagated. Runs in parallel with the Python sidecar at startup.
+pub async fn start_glass_engine(app: &AppHandle) {
+    use tauri::Manager;
+
+    if engine_health().await {
+        println!("[glass-engine] already running at {}", ENGINE_URL);
+        return;
+    }
+    if cfg!(debug_assertions) {
+        println!("[glass-engine] dev mode — not spawning bundled glass-server");
+        return;
+    }
+
+    let db_path = match app.path().resolve(
+        "resources/glass_advise_db.json",
+        tauri::path::BaseDirectory::Resource,
+    ) {
+        Ok(p) => p.to_string_lossy().into_owned(),
+        Err(e) => {
+            eprintln!("[glass-engine] cannot resolve bundled card DB: {}", e);
+            return;
+        }
+    };
+
+    let shell = app.shell();
+    let cmd = match shell.sidecar("glass-server") {
+        Ok(c) => c.env("GLASS_DB", db_path).env("PORT", "3000"),
+        Err(e) => {
+            eprintln!("[glass-engine] sidecar command failed: {}", e);
+            return;
+        }
+    };
+    match cmd.spawn() {
+        Ok((_rx, _child)) => println!("[glass-engine] spawned glass-server"),
+        Err(e) => {
+            eprintln!("[glass-engine] spawn failed: {} (is glass-server bundled?)", e);
+            return;
+        }
+    }
+
+    for i in 0..25 {
+        tokio::time::sleep(Duration::from_secs(1)).await;
+        if engine_health().await {
+            println!("[glass-engine] ready after {}s", i + 1);
+            return;
+        }
+    }
+    eprintln!("[glass-engine] not healthy within 25s — engine advice disabled this session");
+}
+
+async fn engine_health() -> bool {
+    match reqwest::get(format!("{}/health", ENGINE_URL)).await {
+        Ok(resp) => resp.status().is_success(),
+        Err(_) => false,
+    }
+}

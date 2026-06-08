@@ -1069,12 +1069,12 @@ class AdvisorEngine:
 
     async def on_decision_point(self, state: GameState, request_type: str):
         await self.on_state_change(state, allow_auto_llm=True)
-        # Optional gated auto-trigger of the glass-engine advice at
-        # decision points (heuristic pilot is instant). Default OFF —
-        # set SCRY_ENGINE_AUTO to enable; the manual `ask_engine` WS
-        # action works regardless. Failures are swallowed so the engine
-        # sidecar being down never disrupts the decision loop.
-        if os.environ.get("SCRY_ENGINE_AUTO"):
+        # Auto-trigger the glass-engine advice at decision points
+        # (heuristic pilot is instant; the sidecar is bundled + auto-
+        # started). Default ON — set SCRY_ENGINE_AUTO=0 (or false/off/no)
+        # to disable. Failures are swallowed so the engine sidecar being
+        # down never disrupts the decision loop (advice just won't show).
+        if os.environ.get("SCRY_ENGINE_AUTO", "1").lower() not in ("0", "false", "off", "no"):
             try:
                 await self.ask_engine(state)
             except Exception:

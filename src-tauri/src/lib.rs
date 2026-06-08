@@ -175,6 +175,13 @@ pub fn run() {
             #[cfg(target_os = "macos")]
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);
 
+            // Start the glass-engine advice sidecar in parallel (best-
+            // effort; the advisor degrades gracefully if it's absent).
+            let engine_handle = app.handle().clone();
+            tauri::async_runtime::spawn(async move {
+                sidecar::start_glass_engine(&engine_handle).await;
+            });
+
             // Start Python sidecar, then show main window
             let handle = app.handle().clone();
             tauri::async_runtime::spawn(async move {
