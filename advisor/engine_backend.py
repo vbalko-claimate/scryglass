@@ -136,7 +136,21 @@ async def get_engine_advice(
     rec = data.get("recommended")
     rec_kind = data.get("recommended_kind") or "play"
     win = float(data.get("win_prob", 0.0))
-    coverage = f"{data.get('hand_resolved', '?')}/{data.get('hand_total', '?')}"
+    resolved = int(data.get("hand_resolved", 0) or 0)
+    total = int(data.get("hand_total", 0) or 0)
+    coverage = f"{resolved}/{total}"
+    cov_ratio = resolved / total if total > 0 else 0.0
+
+    # COVERAGE GATING: when much of the hand is off-catalog (the engine
+    # can't represent those cards), the ranking may miss the real best
+    # play — so downgrade priority and flag low confidence rather than
+    # advise confidently. The advisor's other sources (heuristic/LLM)
+    # still cover the decision.
+    low_cov = cov_ratio < 0.7
+    priority = "low" if low_cov else "medium"
+    confidence = win * (cov_ratio if low_cov else 1.0)
+    flag = " ⚠ partial card coverage" if low_cov else ""
+
     top = "  ".join(
         f"{a.get('card') or a.get('kind')} {float(a.get('score', 0.0)):.0%}"
         for a in ranked[:4]
@@ -144,10 +158,10 @@ async def get_engine_advice(
     msg = f"Engine: {rec_kind} {rec}" if rec else "Engine: pass / no play"
     return Advice(
         source="engine",
-        priority="medium",
+        priority=priority,
         message=msg,
-        details=f"[engine {data.get('pilot', '')}] win {win:.0%} · coverage {coverage} · {top}",
-        confidence=win,
+        details=f"[engine {data.get('pilot', '')}] win {win:.0%} · coverage {coverage}{flag} · {top}",
+        confidence=confidence,
         recommended_cards=[rec] if rec else [],
         action_scores=scores,
     )

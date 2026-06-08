@@ -1069,6 +1069,16 @@ class AdvisorEngine:
 
     async def on_decision_point(self, state: GameState, request_type: str):
         await self.on_state_change(state, allow_auto_llm=True)
+        # Optional gated auto-trigger of the glass-engine advice at
+        # decision points (heuristic pilot is instant). Default OFF —
+        # set SCRY_ENGINE_AUTO to enable; the manual `ask_engine` WS
+        # action works regardless. Failures are swallowed so the engine
+        # sidecar being down never disrupts the decision loop.
+        if os.environ.get("SCRY_ENGINE_AUTO"):
+            try:
+                await self.ask_engine(state)
+            except Exception:
+                pass
 
     async def ask_llm(self, state: GameState) -> Advice | None:
         """Manually trigger LLM advice."""
@@ -1134,7 +1144,8 @@ class AdvisorEngine:
 
         engine_state = copy.deepcopy(state)
         ai = os.environ.get("SCRY_ENGINE_AI", "heuristic")
-        advice = await get_engine_advice(engine_state, ai=ai)
+        opp_names = self._engine_opp_deck_names()
+        advice = await get_engine_advice(engine_state, ai=ai, opp_deck_names=opp_names)
         if advice and advice.message:
             base = [a for a in self._last_advice if a.source.lower() != "engine"]
             if all(a.message.lower() != advice.message.lower() for a in base):
@@ -1150,6 +1161,35 @@ class AdvisorEngine:
             if self.on_advice:
                 self.on_advice(self._last_advice)
         return advice
+
+    def _engine_opp_deck_names(self) -> list[str]:
+        """Best-effort opponent decklist (card names, with repeats) for the
+        engine's MCTS determinization — built from observed cards + the
+        identified MetaDeck fingerprint. ~40-card pool; [] when nothing is
+        known (the engine then samples a blank opponent — fine for
+        main-phase board plays, which barely depend on the opp hand)."""
+        tracker = self._opp_tracker
+        names: list[str] = []
+        # Observed cards are the strongest signal (cap 4 copies each).
+        for card, n in tracker.seen_cards.items():
+            names.extend([card] * min(int(n), 4))
+        deck = tracker.identified_deck
+        if deck is not None:
+            for card in deck.signal_cards:
+                names.extend([card] * 3)
+            for threat in deck.key_threats:
+                c = threat.get("card") if isinstance(threat, dict) else None
+                if c:
+                    names.extend([c] * 2)
+            # Fill to ~40 with a color-appropriate basic-land base.
+            basics = {"W": "Plains", "U": "Island", "B": "Swamp",
+                      "R": "Mountain", "G": "Forest"}
+            colors = [basics[c] for c in (deck.colors or []) if c in basics]
+            i = 0
+            while len(names) < 40 and colors:
+                names.append(colors[i % len(colors)])
+                i += 1
+        return names[:40]
 
     def _update_threats(self, state: GameState):
         """Detect new opponent permanents and assess threats."""
