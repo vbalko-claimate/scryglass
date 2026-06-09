@@ -572,7 +572,15 @@ async def startup():
     resume_pos = int(row[0]) if row else 0
     conn.close()
 
-    clear_match_events()
+    # Only clear when re-reading the WHOLE log (resume_pos == 0). On an
+    # incremental resume we append only NEW events from resume_pos onward, so
+    # clearing then would wipe every PRIOR game's log-derived events
+    # (turn_start / card_played / annotations) that the resume will NOT
+    # rebuild — the bug that left ~88% of recorded games un-exportable (0
+    # turns) after each app restart. Compliance events are preserved either
+    # way (they're in the clear_match_events keep-list).
+    if resume_pos == 0:
+        clear_match_events()
     log.info("Reading log from position %d (LLM disabled during replay)...", resume_pos)
     messages = watcher.read_from_beginning(resume_position=resume_pos)
     for msg in messages:
