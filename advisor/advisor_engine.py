@@ -1069,27 +1069,44 @@ class AdvisorEngine:
 
     async def on_decision_point(self, state: GameState, request_type: str):
         await self.on_state_change(state, allow_auto_llm=True)
-        # Auto-trigger the glass-engine advice — but ONLY on OUR
-        # main-phase action decisions, where main-phase play ranking is
-        # meaningful. on_decision_point also fires for mulligan, declare
-        # attackers/blockers, target selection, and the coin flip; the
-        # engine only ranks plays (cast/land/activate), so firing it
-        # there showed irrelevant "play X" advice (the "very different"
-        # report). Manual `ask_engine` (WS) stays unrestricted.
+        # Auto-trigger the glass-engine advice on the decision types the
+        # engine actually has a corpus-validated answer for:
+        #   • OUR main-phase action decisions → rank plays (~54% top-1)
+        #   • OUR declare-attackers step      → choose_attackers (~61%)
+        #   • being asked to declare blockers  → eval_choose_blockers (~65%)
+        # Originally main-phase-only: firing the play ranker on combat /
+        # mulligan / coin-flip showed irrelevant "play X" advice (the "very
+        # different" report). Now each combat req routes to its OWN engine
+        # mode, so the advice is on-point. Target selection stays gated
+        # until the clause-aware target chooser lands (roadmap A5).
+        # Manual `ask_engine` (WS) stays unrestricted.
         # Default ON — SCRY_ENGINE_AUTO=0/false/off/no disables.
         ti = state.turn_info
         auto_on = os.environ.get("SCRY_ENGINE_AUTO", "1").lower() not in (
             "0", "false", "off", "no"
         )
+        if not auto_on:
+            return
         is_my_main_action = (
             request_type == "GREMessageType_ActionsAvailableReq"
             and "main" in (ti.phase or "").lower()
             and ti.active_player == state.my_seat_id
             and not state.stack()
         )
-        if auto_on and is_my_main_action:
+        mode = None
+        if is_my_main_action:
+            mode = "main"
+        elif (
+            request_type == "GREMessageType_DeclareAttackersReq"
+            and ti.active_player == state.my_seat_id
+        ):
+            mode = "attackers"
+        elif request_type == "GREMessageType_DeclareBlockersReq":
+            # MTGA only sends us this when we're the defending player.
+            mode = "blockers"
+        if mode is not None:
             try:
-                await self.ask_engine(state)
+                await self.ask_engine(state, mode=mode)
             except Exception:
                 pass
 
@@ -1147,18 +1164,39 @@ class AdvisorEngine:
 
         return advice
 
-    async def ask_engine(self, state: GameState) -> Advice | None:
+    async def ask_engine(
+        self,
+        state: GameState,
+        mode: str = "main",
+    ) -> Advice | None:
         """Manually trigger glass-engine advice (the `ask_engine` WS
         action). Additive: merges an `engine`-sourced Advice into the
         current advice list exactly like ask_llm does for `llm`, and
         broadcasts. No-op (returns None) if the engine sidecar isn't
-        running, so existing behavior is never disrupted."""
+        running, so existing behavior is never disrupted.
+
+        `mode` routes to the engine decision: "main" ranks plays;
+        "attackers"/"blockers" run the combat choosers. For "blockers" the
+        opponent's attacking creatures are read off the board here."""
         from .engine_backend import get_engine_advice
 
         engine_state = copy.deepcopy(state)
         ai = os.environ.get("SCRY_ENGINE_AI", "heuristic")
         opp_names = self._engine_opp_deck_names()
-        advice = await get_engine_advice(engine_state, ai=ai, opp_deck_names=opp_names)
+        attackers: list[str] = []
+        if mode == "blockers":
+            attackers = [
+                o.name
+                for o in engine_state.opp_battlefield()
+                if o.is_creature
+                and o.attack_state
+                and "Attacking" in str(o.attack_state)
+                and o.name
+            ]
+        advice = await get_engine_advice(
+            engine_state, ai=ai, opp_deck_names=opp_names,
+            mode=mode, attackers=attackers,
+        )
         if advice and advice.message:
             base = [a for a in self._last_advice if a.source.lower() != "engine"]
             if all(a.message.lower() != advice.message.lower() for a in base):
