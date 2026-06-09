@@ -590,13 +590,15 @@ def save_match_event(match_id: str, event_type: str, **kwargs):
 def clear_match_events():
     """Clear log-derived events (rebuilt from log). Preserve real-time-only events.
 
-    Keeps: advice_compliance, decision_eval, decision_outcome — these are
-    generated at runtime and cannot be reconstructed from log replay.
-    They form the training contract for the data flywheel.
+    Keeps: advice_compliance, engine_advice_compliance, decision_eval,
+    decision_outcome — these are generated at runtime and cannot be
+    reconstructed from log replay. They form the training contract for the
+    data flywheel.
     """
     conn = get_connection()
     PRESERVE_TYPES = (
         'advice_compliance',
+        'engine_advice_compliance',
         'decision_eval',
         'decision_outcome',
     )
@@ -1232,6 +1234,58 @@ def get_stats_compliance() -> dict:
         "decisions": result,
         "follow_rate": round(followed_count / total * 100, 1) if total else 0,
         "total": total,
+    }
+
+
+def get_engine_compliance_stats() -> dict:
+    """Engine-advisor scorecard: did the player follow the glass-engine
+    advice, and did following it correlate with winning? Plus a per-
+    recommendation breakdown so good vs bad engine advice is visible.
+
+    'followed' games winning MORE than 'ignored' = the engine advice is
+    good (worth trusting/keeping); the reverse flags advice to adjust.
+    """
+    conn = get_connection()
+    cur = conn.cursor()
+    # Overall: followed vs ignored x result.
+    cur.execute("""
+        SELECT json_extract(e.data,'$.followed') AS followed, m.result, COUNT(*)
+        FROM match_events e JOIN matches m ON e.match_id = m.match_id
+        WHERE e.event_type = 'engine_advice_compliance' AND m.result IN ('Win','Loss')
+        GROUP BY followed, m.result
+    """)
+    stats = {}
+    for followed, res, cnt in cur.fetchall():
+        key = "followed" if followed else "ignored"
+        s = stats.setdefault(key, {"total": 0, "wins": 0})
+        s["total"] += cnt
+        if res == "Win":
+            s["wins"] += cnt
+    overall = {
+        k: {"total": s["total"], "wins": s["wins"],
+            "win_rate": round(s["wins"] / s["total"] * 100, 1) if s["total"] else 0}
+        for k, s in stats.items()
+    }
+    # Per-recommendation: which engine picks get followed (proxy for trust /
+    # quality). With more games, join with result to score each.
+    cur.execute("""
+        SELECT json_extract(e.data,'$.played') AS played,
+               json_extract(e.data,'$.followed') AS followed, COUNT(*)
+        FROM match_events e
+        WHERE e.event_type = 'engine_advice_compliance'
+        GROUP BY played, followed
+    """)
+    by_card = {}
+    for played, followed, cnt in cur.fetchall():
+        c = by_card.setdefault(played, {"followed": 0, "ignored": 0})
+        c["followed" if followed else "ignored"] += cnt
+    conn.close()
+    total = sum(s["total"] for s in stats.values())
+    return {
+        "overall": overall,
+        "follow_rate": round(stats.get("followed", {}).get("total", 0) / total * 100, 1) if total else 0,
+        "total": total,
+        "by_recommendation": by_card,
     }
 
 

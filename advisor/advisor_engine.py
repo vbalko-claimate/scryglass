@@ -294,9 +294,15 @@ class AdvisorEngine:
         self._opp_seen_ids: set[int] = set()
         self._last_opp_deck: str | None = None
         self._matchup_wr: dict | None = None
-        # Advice compliance tracking
+        # Advice compliance tracking (base advisor)
         self._pending_recs: list[str] = []
         self._pending_turn: int = -1
+        # ENGINE-advice compliance: what the glass-engine advisor recommended
+        # this turn, so check_card_played can score whether the player
+        # followed the ENGINE specifically (separate from the base advisor).
+        self._pending_engine_recs: list[str] = []
+        self._pending_engine_turn: int = -1
+        self._pending_engine_win: float = 0.0
         # Advice deduplication: track all messages sent for the current spot
         self._advice_spot: tuple[int, str, str] | None = None
         self._advice_sent_this_spot: set[str] = set()
@@ -1224,6 +1230,15 @@ class AdvisorEngine:
                     "details": advice.details,
                     "game_state_summary": {"mode": mode},
                 })
+            # Arm engine-compliance for main-phase plays: remember the
+            # engine's recommended card(s) this turn so check_card_played can
+            # score whether the player followed the ENGINE (main mode only —
+            # recommended_cards is the play; combat/target compliance needs
+            # the attack/block/target hooks, a follow-up).
+            if mode == "main" and advice.recommended_cards:
+                self._pending_engine_recs = list(advice.recommended_cards)
+                self._pending_engine_turn = engine_state.turn_info.turn_number
+                self._pending_engine_win = float(advice.confidence or 0.0)
             if self.on_advice:
                 self.on_advice(self._last_advice)
         return advice
@@ -1689,6 +1704,24 @@ class AdvisorEngine:
         """Called when player plays a non-land card. Compare with recommendations."""
         if not match_id:
             return
+
+        # ENGINE-advice compliance (independent of the base advisor below):
+        # did the player play what the glass-engine advisor recommended this
+        # turn? Logged separately so engine advice can be scored — followed vs
+        # ignored, joinable with the match result to find good/bad advice.
+        if self._pending_engine_recs and turn == self._pending_engine_turn:
+            eng_followed = card_name in self._pending_engine_recs
+            save_match_event(
+                match_id, "engine_advice_compliance",
+                game_number=game_number,
+                turn_number=turn,
+                phase="play",
+                data={"played": card_name,
+                      "recommended": self._pending_engine_recs,
+                      "followed": eng_followed,
+                      "win_prob": self._pending_engine_win})
+            self._pending_engine_recs = []  # one score per turn
+
         # Only compare plays on the same turn as the advice
         if self._pending_recs and turn != self._pending_turn:
             return

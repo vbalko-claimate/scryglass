@@ -97,6 +97,17 @@ html, body {
 .key-play-action.act-block  { color: #3b82f6; }
 .key-play-action.act-hold   { color: #94a3b8; }
 .key-play-action.act-target { color: #d946ef; }
+.key-play-actionline { display: flex; align-items: center; gap: 6px; }
+.key-play-source {
+    font-size: 0.62em;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: #0b1e1a;
+    background: #2dd4bf;
+    text-transform: uppercase;
+}
 .key-play-card {
     font-size: 20px;
     font-weight: 700;
@@ -352,7 +363,10 @@ html, body {
     <div class="key-play" id="key-play" style="display:none">
         <div class="key-play-indicator medium" id="key-play-indicator"></div>
         <div class="key-play-content">
-            <div class="key-play-action" id="key-play-action"></div>
+            <div class="key-play-actionline">
+                <span class="key-play-action" id="key-play-action"></span>
+                <span class="key-play-source" id="key-play-source" style="display:none">ENGINE</span>
+            </div>
             <div class="key-play-card" id="key-play-card"></div>
             <div class="key-play-reason" id="key-play-reason"></div>
         </div>
@@ -516,6 +530,13 @@ function updateAdvice(data) {
 
         el.style.display = 'flex';
         indicator.className = 'key-play-indicator ' + (keyPlay.priority || 'medium');
+
+        // Source badge: mark when the spotlighted advice is from the
+        // glass-engine /advise advisor (vs the original heuristic/strategy).
+        const sourceEl = document.getElementById('key-play-source');
+        if (sourceEl) {
+            sourceEl.style.display = (keyPlay.source === 'engine') ? '' : 'none';
+        }
 
         // Extract card name and action from structured data
         const scores = keyPlay.action_scores || [];
