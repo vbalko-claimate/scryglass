@@ -241,6 +241,11 @@ class GameState:
     # Hand disruption counter — incremented when opponent exiles/discards from our hand
     hand_disrupted_count: int = 0
 
+    # Legal candidate target NAMES for MY current SelectTargetsReq (resolved
+    # from the GRE selectTargetsReq.targets[].targets[].targetInstanceId).
+    # Fed to the engine's /advise mode="target". Empty when not targeting.
+    pending_target_candidates: list[str] = field(default_factory=list)
+
     # Helpers
     def my_player(self) -> PlayerState | None:
         return self.players.get(self.my_seat_id)

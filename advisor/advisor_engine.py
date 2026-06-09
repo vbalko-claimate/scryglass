@@ -308,6 +308,9 @@ class AdvisorEngine:
         # from attack_state/block_state) once they commit. {kind, recommended,
         # turn}. (Target compliance waits on the target auto-trigger, gated.)
         self._pending_engine_combat: dict | None = None
+        # ENGINE target compliance: the engine's recommended target this turn,
+        # scored against the player's chosen target (a target_spec annotation).
+        self._pending_engine_target: dict | None = None
         # Advice deduplication: track all messages sent for the current spot
         self._advice_spot: tuple[int, str, str] | None = None
         self._advice_sent_this_spot: set[str] = set()
@@ -1119,6 +1122,15 @@ class AdvisorEngine:
         elif request_type == "GREMessageType_DeclareBlockersReq":
             # MTGA only sends us this when we're the defending player.
             mode = "blockers"
+        elif (
+            request_type == "GREMessageType_SelectTargetsReq"
+            and state.pending_target_candidates
+        ):
+            # My target choice — the engine ranks the legal candidates
+            # (parsed off the SelectTargetsReq). Un-gated now that A5 showed
+            # the target chooser (~69-71%) is on par with the live
+            # attackers/blockers; candidates non-empty ⇒ it's my decision.
+            mode = "target"
         if mode is not None:
             try:
                 await self.ask_engine(state, mode=mode)
@@ -1208,9 +1220,12 @@ class AdvisorEngine:
                 and "Attacking" in str(o.attack_state)
                 and o.name
             ]
+        # For target mode the legal candidates were parsed off the
+        # SelectTargetsReq (game_state._extract_target_candidates).
+        targets = list(engine_state.pending_target_candidates) if mode == "target" else []
         advice = await get_engine_advice(
             engine_state, ai=ai, opp_deck_names=opp_names,
-            mode=mode, attackers=attackers,
+            mode=mode, attackers=attackers, targets=targets,
         )
         if advice and advice.message:
             base = [a for a in self._last_advice if a.source.lower() != "engine"]
@@ -1256,6 +1271,11 @@ class AdvisorEngine:
                 self._pending_engine_combat = {
                     "kind": mode,
                     "recommended": set(advice.recommended_cards),
+                    "turn": engine_state.turn_info.turn_number,
+                }
+            if mode == "target" and advice.recommended_cards and engine_state.match_info.match_id:
+                self._pending_engine_target = {
+                    "recommended": list(advice.recommended_cards),
                     "turn": engine_state.turn_info.turn_number,
                 }
             if self.on_advice:
@@ -1812,6 +1832,31 @@ class AdvisorEngine:
                   "declared": sorted(declared),
                   "followed": declared == rec})
         self._pending_engine_combat = None
+
+    def check_target_submitted(self, target_names: list, match_id: str,
+                                turn: int, game_number: int):
+        """Score the engine's target advice against the player's chosen
+        target (a target_spec annotation). Gated to MY targeting via the
+        armed rec + turn: the rec is armed only on MY SelectTargetsReq, so
+        a target_spec on the same turn is mine. followed = the engine's
+        recommended target is among the chosen."""
+        pt = self._pending_engine_target
+        if not pt or not match_id or turn != pt["turn"]:
+            return
+        chosen = {n for n in target_names if n}
+        if not chosen:
+            return
+        rec = set(pt["recommended"])
+        save_match_event(
+            match_id, "engine_advice_compliance",
+            game_number=game_number,
+            turn_number=turn,
+            phase="target",
+            data={"kind": "target",
+                  "recommended": sorted(rec),
+                  "chosen": sorted(chosen),
+                  "followed": bool(rec & chosen)})
+        self._pending_engine_target = None
 
     def _check_decision_outcomes(self, state: GameState):
         """Check if any pending decision outcomes can be resolved (2 turns later)."""

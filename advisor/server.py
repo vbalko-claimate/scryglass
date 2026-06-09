@@ -550,6 +550,7 @@ async def startup():
     advisor.on_threat_update = on_threat_update
     advisor.on_llm_status = on_llm_status
     tracker.on_my_card_played = advisor.check_card_played
+    tracker.on_target_submitted = advisor.check_target_submitted
     tracker.on_stack_observed = advisor.on_stack_observed
 
     # Archive Player.log (and Player-prev.log) before processing

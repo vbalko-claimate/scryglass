@@ -24,6 +24,10 @@ class GameStateTracker:
         self.on_match_start: Callable[[], None] | None = None
         self.on_match_end: Callable[[bool], None] | None = None
         self.on_my_card_played: Callable[[str, str, int, int], None] | None = None
+        # Target-submission callback: (target_names, match_id, turn, game_num).
+        # Fired on a target_spec annotation (the chosen target); the advisor
+        # gates it to MY targeting via its armed engine-target rec + turn.
+        self.on_target_submitted: Callable[[list, str, int, int], None] | None = None
         # Spell/ability observation callback: (event_type, card_name, colors, card_types, oracle_text, source_card_name)
         self.on_stack_observed: Callable[[str, dict], None] | None = None
         self._match_active = False
@@ -175,11 +179,53 @@ class GameStateTracker:
             "GREMessageType_ChooseStartingPlayerReq",
         ):
             self.state.pending_request = msg_type
+            # Legal candidate targets for the engine's mode="target" advice.
+            if msg_type == "GREMessageType_SelectTargetsReq":
+                self.state.pending_target_candidates = self._extract_target_candidates(gm)
+            else:
+                self.state.pending_target_candidates = []
             self._save_decision_context(msg_type)
             if self.on_decision_point:
                 self.on_decision_point(self.state, msg_type)
         elif msg_type == "GREMessageType_IntermissionReq":
             self._handle_intermission(gm)
+
+    def _extract_target_candidates(self, gm: dict) -> list[str]:
+        """Legal candidate target NAMES for MY target slots in a
+        SelectTargetsReq — resolved from
+        selectTargetsReq.targets[].targets[].targetInstanceId via the object
+        map. Only MY slots (targetingPlayer == my_seat_id). De-duplicated."""
+        # selectTargetsReq is usually a direct field of gm; fall back to a
+        # shallow search to tolerate GRE wrapping variations.
+        req = gm.get("selectTargetsReq")
+        if req is None:
+            stack = [gm]
+            while stack and req is None:
+                cur = stack.pop()
+                if isinstance(cur, dict):
+                    if "selectTargetsReq" in cur:
+                        req = cur["selectTargetsReq"]
+                        break
+                    stack.extend(cur.values())
+                elif isinstance(cur, list):
+                    stack.extend(cur)
+        if not isinstance(req, dict):
+            return []
+        names: list[str] = []
+        seen: set[str] = set()
+        for slot in req.get("targets", []):
+            if not isinstance(slot, dict):
+                continue
+            tp = slot.get("targetingPlayer")
+            if tp is not None and tp != self.state.my_seat_id:
+                continue
+            for cand in slot.get("targets", []):
+                iid = cand.get("targetInstanceId") if isinstance(cand, dict) else None
+                obj = self.state.objects.get(iid) if iid is not None else None
+                if obj and obj.name and obj.name not in seen:
+                    seen.add(obj.name)
+                    names.append(obj.name)
+        return names
 
     def _handle_connect_resp(self, gm: dict):
         """Handle ConnectResp — our seat ID and deck."""
@@ -1407,6 +1453,15 @@ class GameStateTracker:
                     names.append(n)
             if names:
                 data["affected_names"] = names
+
+            # A target_spec annotation carries the chosen target(s); notify
+            # the advisor so it can score engine-target compliance (it gates
+            # to MY targeting via its armed rec + turn).
+            if kind == "target_spec" and names and self.on_target_submitted:
+                self.on_target_submitted(
+                    names, mid,
+                    self.state.turn_info.turn_number,
+                    self.state.match_info.game_number)
 
             save_match_event(
                 mid, "annotation",
