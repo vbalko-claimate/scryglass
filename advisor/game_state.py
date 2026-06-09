@@ -1147,6 +1147,24 @@ class GameStateTracker:
                     break
         return out
 
+    def _ann_details_full(self, ann: dict) -> dict:
+        """Like `_ann_details_map` but preserves the full value array
+        instead of squashing to the first scalar. Required for
+        annotations that carry parallel arrays — Shuffle's positional
+        `OldIds` / `NewIds`, multi-target affected lists, etc."""
+        out = {}
+        for d in ann.get("details") or []:
+            key = d.get("key")
+            if not key:
+                continue
+            for vk in ("valueInt32", "valueString", "valueDouble"):
+                if vk in d:
+                    arr = d[vk]
+                    if isinstance(arr, list):
+                        out[key] = list(arr)
+                    break
+        return out
+
     def _save_user_choice_annotations(self, annotations: list[dict]) -> None:
         """Persist annotations needed by the replay exporter to
         reconstruct per-action user choices: spell targets, X values,
@@ -1193,17 +1211,184 @@ class GameStateTracker:
                 # the annotation N times). Replay exporter sums
                 # these per ability source to reconstruct X.
                 kind = "counter_added"
+            elif "AnnotationType_ZoneTransfer" in ann_types:
+                # Cards moving between zones. affectorId, when set,
+                # is the source object that CAUSED the transfer
+                # (e.g. an ETB-fetch ability putting a basic land
+                # onto the battlefield, a Cascade exile from the
+                # cascading spell, Fabled Passage's sac trigger
+                # putting a land onto the battlefield). When the
+                # transfer is a manual hand-played land or a normal
+                # cast resolution, affectorId is typically 0/missing.
+                # affectedIds[0] is the iid of the card that moved.
+                # details contains zone_src / zone_dest enum codes
+                # the consumer can use to filter to specific moves.
+                # Replay exporter joins by affectedIds[0] to attach
+                # cause_object_id onto card_played / opp_card_played
+                # entries so the consumer can distinguish manual
+                # plays from effect-driven puts.
+                kind = "zone_transfer"
+            elif "AnnotationType_ObjectIdChanged" in ann_types:
+                # CR 400.7 — an object that moves between zones
+                # becomes a new object with a fresh instance id. MTGA
+                # emits ObjectIdChanged to bridge the old iid (often
+                # the affectorId carried on the triggering action,
+                # e.g. the SearchReq, the just-resolved cast, the
+                # bounce target) to the new iid that lives in the
+                # post-move zone. The exporter consumes these to
+                # build an iid_aliases map so cause_object_id and
+                # spell_targets references survive zone transitions
+                # without losing the chain.
+                # details.orig_id / details.new_id are scalars;
+                # affectorId/affectedIds are typically empty here.
+                kind = "object_id_changed"
+            elif "AnnotationType_Shuffle" in ann_types:
+                # Library shuffles emit positional remappings as
+                # parallel OldIds[] / NewIds[] arrays — entry i in
+                # OldIds is the iid before the shuffle that moved to
+                # the position occupied by entry i in NewIds. Search
+                # responses for fetch lands index into library
+                # positions BEFORE the shuffle; the exporter uses
+                # this remapping to keep the post-shuffle iid stable
+                # when the fetched land later enters the battlefield.
+                kind = "shuffle"
+            elif "AnnotationType_AbilityInstanceCreated" in ann_types:
+                # An ability went on the stack as a distinct stack
+                # object with its own iid. affectorId = the
+                # permanent/spell that owns the ability;
+                # affectedIds[0] (when present) = the freshly minted
+                # ability-instance iid. This is the canonical place
+                # the wire format associates a stack object back to
+                # its source object — required for cause_object_id
+                # when the triggering ability later moves cards
+                # around without a direct source iid on the
+                # ZoneTransfer.
+                kind = "ability_instance_created"
+            elif "AnnotationType_AbilityInstanceDeleted" in ann_types:
+                # Companion to AbilityInstanceCreated: the ability
+                # finished resolving (or fizzled / was countered) and
+                # its stack iid was freed. Recorded so the exporter
+                # can prune the ability→source mapping at the right
+                # turn boundary instead of leaking it forward.
+                kind = "ability_instance_deleted"
+            elif "AnnotationType_ResolutionComplete" in ann_types:
+                # Fired when a stack object finishes resolving (cast
+                # spell, activated/triggered ability). affectorId =
+                # the resolving stack object's iid. Combined with
+                # ZoneTransfer affectorId="0" on the SAME turn, this
+                # is how the exporter resolves "which resolving
+                # object caused this card to move" when the wire
+                # format omits the explicit attribution.
+                kind = "resolution_complete"
+            elif "AnnotationType_DamageDealt" in ann_types:
+                # CR 119.3 — server-authoritative damage event.
+                # affectorId = damage source (creature, spell,
+                # ability iid); affectedIds[0] = target (creature or
+                # player seat). details.damage = signed integer
+                # (positive for damage dealt). This is the ground
+                # truth for opp_life / creature damage drift in the
+                # replay-v2 driver: when the engine computes a
+                # damage value different from what MTGA logged,
+                # this annotation is how we know.
+                kind = "damage_dealt"
+            elif "AnnotationType_DamageSource" in ann_types:
+                # Companion to DamageDealt: records the linkage
+                # back to the originating spell / ability when the
+                # damage was dealt by an effect (vs creature combat
+                # damage). affectorId = damage source iid,
+                # affectedIds[0] = the originating effect's iid.
+                # Used together with DamageDealt to disambiguate
+                # combat damage from effect damage in a single
+                # turn.
+                kind = "damage_source"
+            elif "AnnotationType_TokenCreated" in ann_types:
+                # Token creation event. affectorId = the source
+                # spell / ability / permanent that minted the
+                # token; affectedIds[0] = the new token's iid;
+                # details often includes the token's grpId and
+                # type-line. Currently the replay driver
+                # reconstructs tokens from card_played events
+                # (is_token flag); TokenCreated is the
+                # authoritative wire-level signal for opp's token
+                # army when card_played coverage is sparse.
+                kind = "token_created"
+            elif "AnnotationType_TokenDeleted" in ann_types:
+                # Token cleanup at end of phase or when leaving
+                # the battlefield (CR 110.5e). affectorId =
+                # cleanup source (usually 0 / the cleanup step
+                # itself); affectedIds[0] = the deleted token's
+                # iid. Pairs with TokenCreated to bound token
+                # lifetime — necessary for opp battlefield
+                # reconciliation across turns.
+                kind = "token_deleted"
+            elif "AnnotationType_TappedUntappedPermanent" in ann_types:
+                # Tap-state mutation. affectorId = the cause (an
+                # activation, an ability, a creature declared as
+                # attacker — CR 508.1f); affectedIds = the
+                # permanents whose tap state changed;
+                # details.tapped is a boolean. Combat-tap ground
+                # truth: a creature declared as attacker taps,
+                # vigilance creatures don't. The replay driver
+                # consults this when reconciling tap state at
+                # turn boundaries.
+                kind = "tapped_untapped_permanent"
+            elif "AnnotationType_PhaseOrStepModified" in ann_types:
+                # Explicit phase / step transition (CR 500.1).
+                # details.phase + details.step encode the new
+                # game phase. Currently the exporter infers phase
+                # boundaries from turn_start events; this
+                # annotation is the authoritative wire-level
+                # signal for multi-step turns (extra combat
+                # phases, end-step triggers, cleanup-step
+                # mutations).
+                kind = "phase_or_step_modified"
+            elif "AnnotationType_ControllerChanged" in ann_types:
+                # Permanent control swap (CR 110.2). affectorId =
+                # the spell / ability that changed control;
+                # affectedIds[0] = the permanent whose control
+                # changed; details encodes the new controller's
+                # seat id. Rare but high-impact — Threaten,
+                # Mind Control, Act of Treason variants — engine
+                # state for the affected permanent is wrong
+                # whenever the annotation is missed.
+                kind = "controller_changed"
+            elif "AnnotationType_TriggeringObject" in ann_types:
+                # Records WHICH source fired a triggered ability.
+                # affectorId = the trigger's stack iid (matches an
+                # AbilityInstanceCreated for the same iid);
+                # affectedIds = the source objects that
+                # contributed to the trigger condition (e.g. the
+                # creature that died for a "whenever a creature
+                # dies" trigger). Used together with TargetSpec
+                # to disambiguate trigger targets when multiple
+                # candidates exist.
+                kind = "triggering_object"
+            elif "AnnotationType_ResolutionStart" in ann_types:
+                # Companion to ResolutionComplete: a stack object
+                # begins resolving. Pair lets the driver bracket
+                # the resolution window and attribute any
+                # ZoneTransfer / ModifiedLife / DamageDealt that
+                # happens between the two.
+                kind = "resolution_start"
             else:
                 continue
 
             affector_id = ann.get("affectorId")
             affected_ids = ann.get("affectedIds") or []
+            # Shuffle carries positional OldIds[] / NewIds[] arrays —
+            # the squash-to-first-scalar helper would lose the
+            # remapping. Use the array-preserving variant for it.
+            details_map = (
+                self._ann_details_full(ann)
+                if kind == "shuffle"
+                else self._ann_details_map(ann)
+            )
             data = {
                 "kind": kind,
                 "ann_id": ann.get("id"),
                 "affector_id": affector_id,
                 "affected_ids": list(affected_ids),
-                "details": self._ann_details_map(ann),
+                "details": details_map,
             }
             # Resolve names for downstream joining. Affector is
             # typically the spell/ability on stack; affected are

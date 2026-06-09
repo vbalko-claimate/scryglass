@@ -1069,6 +1069,46 @@ class AdvisorEngine:
 
     async def on_decision_point(self, state: GameState, request_type: str):
         await self.on_state_change(state, allow_auto_llm=True)
+        # Auto-trigger the glass-engine advice on the decision types the
+        # engine actually has a corpus-validated answer for:
+        #   • OUR main-phase action decisions → rank plays (~54% top-1)
+        #   • OUR declare-attackers step      → choose_attackers (~61%)
+        #   • being asked to declare blockers  → eval_choose_blockers (~65%)
+        # Originally main-phase-only: firing the play ranker on combat /
+        # mulligan / coin-flip showed irrelevant "play X" advice (the "very
+        # different" report). Now each combat req routes to its OWN engine
+        # mode, so the advice is on-point. Target selection stays gated
+        # until the clause-aware target chooser lands (roadmap A5).
+        # Manual `ask_engine` (WS) stays unrestricted.
+        # Default ON — SCRY_ENGINE_AUTO=0/false/off/no disables.
+        ti = state.turn_info
+        auto_on = os.environ.get("SCRY_ENGINE_AUTO", "1").lower() not in (
+            "0", "false", "off", "no"
+        )
+        if not auto_on:
+            return
+        is_my_main_action = (
+            request_type == "GREMessageType_ActionsAvailableReq"
+            and "main" in (ti.phase or "").lower()
+            and ti.active_player == state.my_seat_id
+            and not state.stack()
+        )
+        mode = None
+        if is_my_main_action:
+            mode = "main"
+        elif (
+            request_type == "GREMessageType_DeclareAttackersReq"
+            and ti.active_player == state.my_seat_id
+        ):
+            mode = "attackers"
+        elif request_type == "GREMessageType_DeclareBlockersReq":
+            # MTGA only sends us this when we're the defending player.
+            mode = "blockers"
+        if mode is not None:
+            try:
+                await self.ask_engine(state, mode=mode)
+            except Exception:
+                pass
 
     async def ask_llm(self, state: GameState) -> Advice | None:
         """Manually trigger LLM advice."""
@@ -1123,6 +1163,84 @@ class AdvisorEngine:
             )
 
         return advice
+
+    async def ask_engine(
+        self,
+        state: GameState,
+        mode: str = "main",
+    ) -> Advice | None:
+        """Manually trigger glass-engine advice (the `ask_engine` WS
+        action). Additive: merges an `engine`-sourced Advice into the
+        current advice list exactly like ask_llm does for `llm`, and
+        broadcasts. No-op (returns None) if the engine sidecar isn't
+        running, so existing behavior is never disrupted.
+
+        `mode` routes to the engine decision: "main" ranks plays;
+        "attackers"/"blockers" run the combat choosers. For "blockers" the
+        opponent's attacking creatures are read off the board here."""
+        from .engine_backend import get_engine_advice
+
+        engine_state = copy.deepcopy(state)
+        ai = os.environ.get("SCRY_ENGINE_AI", "heuristic")
+        opp_names = self._engine_opp_deck_names()
+        attackers: list[str] = []
+        if mode == "blockers":
+            attackers = [
+                o.name
+                for o in engine_state.opp_battlefield()
+                if o.is_creature
+                and o.attack_state
+                and "Attacking" in str(o.attack_state)
+                and o.name
+            ]
+        advice = await get_engine_advice(
+            engine_state, ai=ai, opp_deck_names=opp_names,
+            mode=mode, attackers=attackers,
+        )
+        if advice and advice.message:
+            base = [a for a in self._last_advice if a.source.lower() != "engine"]
+            if all(a.message.lower() != advice.message.lower() for a in base):
+                base.append(advice)
+            prio = {"critical": 0, "high": 1, "medium": 2, "low": 3}
+            base.sort(
+                key=lambda a: (
+                    prio.get(a.priority, 4),
+                    -(a.action_scores[0].score if a.action_scores else 0.0),
+                )
+            )
+            self._last_advice = base[:5]
+            if self.on_advice:
+                self.on_advice(self._last_advice)
+        return advice
+
+    def _engine_opp_deck_names(self) -> list[str]:
+        """Best-effort opponent decklist (card names, with repeats) for the
+        engine's MCTS determinization — built from observed cards + the
+        identified MetaDeck fingerprint. ~40-card pool; [] when nothing is
+        known (the engine then samples a blank opponent — fine for
+        main-phase board plays, which barely depend on the opp hand)."""
+        tracker = self._opp_tracker
+        names: list[str] = []
+        # Observed cards are the strongest signal (cap 4 copies each).
+        for card, n in tracker.seen_cards.items():
+            names.extend([card] * min(int(n), 4))
+        deck = tracker.identified_deck
+        if deck is not None:
+            for card in deck.signal_cards:
+                names.extend([card] * 3)
+            for threat in deck.key_threats:
+                c = threat.get("card") if isinstance(threat, dict) else None
+                if c:
+                    names.extend([c] * 2)
+            # Fill to ~40 with a color-appropriate basic-land base.
+            basics = {"W": "Plains", "U": "Island", "B": "Swamp",
+                      "R": "Mountain", "G": "Forest"}
+            colors = [basics[c] for c in (deck.colors or []) if c in basics]
+            i = 0
+            while len(names) < 40 and colors:
+                names.append(colors[i % len(colors)])
+                i += 1
+        return names[:40]
 
     def _update_threats(self, state: GameState):
         """Detect new opponent permanents and assess threats."""

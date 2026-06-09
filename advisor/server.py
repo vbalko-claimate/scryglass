@@ -662,6 +662,17 @@ async def websocket_endpoint(ws: WebSocket):
                         "data": advice_to_list(advisor.last_advice),
                     }, default=str))
 
+            elif msg.get("action") == "ask_engine":
+                # Glass-engine advice (Rust sidecar). Additive — broadcasts
+                # the merged advice list just like ask_llm; no-op if the
+                # engine sidecar isn't reachable.
+                advice = await advisor.ask_engine(tracker.state)
+                if advice:
+                    await ws.send_text(json.dumps({
+                        "type": "advice",
+                        "data": advice_to_list(advisor.last_advice),
+                    }, default=str))
+
             elif msg.get("action") == "match_summary":
                 summary = await advisor.match_summary(tracker.state)
                 if summary:
