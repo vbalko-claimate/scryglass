@@ -1277,14 +1277,30 @@ def get_engine_compliance_stats() -> dict:
     """)
     by_card = {}
     for played, followed, cnt in cur.fetchall():
+        if played is None:
+            continue  # combat events have no single 'played' card
         c = by_card.setdefault(played, {"followed": 0, "ignored": 0})
         c["followed" if followed else "ignored"] += cnt
+    # Per decision KIND (play / attackers / blockers) — combat events carry
+    # 'kind'; main-phase play events don't, so default to 'play'.
+    cur.execute("""
+        SELECT COALESCE(json_extract(e.data,'$.kind'),'play') AS kind,
+               json_extract(e.data,'$.followed') AS followed, COUNT(*)
+        FROM match_events e
+        WHERE e.event_type = 'engine_advice_compliance'
+        GROUP BY kind, followed
+    """)
+    by_kind = {}
+    for kind, followed, cnt in cur.fetchall():
+        k = by_kind.setdefault(kind, {"followed": 0, "ignored": 0})
+        k["followed" if followed else "ignored"] += cnt
     conn.close()
     total = sum(s["total"] for s in stats.values())
     return {
         "overall": overall,
         "follow_rate": round(stats.get("followed", {}).get("total", 0) / total * 100, 1) if total else 0,
         "total": total,
+        "by_kind": by_kind,
         "by_recommendation": by_card,
     }
 

@@ -303,6 +303,11 @@ class AdvisorEngine:
         self._pending_engine_recs: list[str] = []
         self._pending_engine_turn: int = -1
         self._pending_engine_win: float = 0.0
+        # ENGINE combat compliance: the engine's recommended attacker/blocker
+        # SET this turn, scored against the player's actual declaration (read
+        # from attack_state/block_state) once they commit. {kind, recommended,
+        # turn}. (Target compliance waits on the target auto-trigger, gated.)
+        self._pending_engine_combat: dict | None = None
         # Advice deduplication: track all messages sent for the current spot
         self._advice_spot: tuple[int, str, str] | None = None
         self._advice_sent_this_spot: set[str] = set()
@@ -790,6 +795,10 @@ class AdvisorEngine:
         """Called on every game state update. Runs heuristics + strategy rules."""
         global _last_advice_state_id
 
+        # Score the engine's combat advice as soon as the player's attacker/
+        # blocker declaration appears in the state.
+        self._score_engine_combat(state)
+
         # Dedup key: normalize repeated GRE request variants for the same real
         # combat spot so attack/block advice isn't published multiple times.
         spot = self._normalized_advice_spot(state)
@@ -1239,6 +1248,16 @@ class AdvisorEngine:
                 self._pending_engine_recs = list(advice.recommended_cards)
                 self._pending_engine_turn = engine_state.turn_info.turn_number
                 self._pending_engine_win = float(advice.confidence or 0.0)
+            # Arm combat compliance (attackers/blockers): the recommended SET,
+            # scored against the player's actual declaration in
+            # _score_engine_combat. Empty set = the engine advised no action
+            # ("Hold back" / "Take it").
+            if mode in ("attackers", "blockers") and engine_state.match_info.match_id:
+                self._pending_engine_combat = {
+                    "kind": mode,
+                    "recommended": set(advice.recommended_cards),
+                    "turn": engine_state.turn_info.turn_number,
+                }
             if self.on_advice:
                 self.on_advice(self._last_advice)
         return advice
@@ -1751,6 +1770,48 @@ class AdvisorEngine:
                   "rec_count": len(self._pending_recs)})
         if self._pending_recs:
             self._pending_recs = []  # Clear after first play on this turn
+
+    def _score_engine_combat(self, state: GameState):
+        """Score the engine's attacker/blocker advice against the player's
+        actual declaration (read from attack_state/block_state) once they
+        commit. Logged as engine_advice_compliance, like the play hook.
+        Followed = the declared SET exactly matches the engine's recommended
+        SET. 'Hold back / take it' (engine recommended nothing) followed by no
+        declaration is unobservable, so it's dropped when the turn advances."""
+        pc = self._pending_engine_combat
+        if not pc:
+            return
+        mid = state.match_info.match_id
+        if not mid:
+            return
+        if state.turn_info.turn_number != pc["turn"]:
+            self._pending_engine_combat = None  # combat passed; nothing caught
+            return
+        if pc["kind"] == "attackers":
+            declared = {
+                o.name for o in state.my_battlefield()
+                if o.is_creature and o.attack_state
+                and "Attacking" in str(o.attack_state)
+            }
+        else:
+            declared = {
+                o.name for o in state.my_battlefield()
+                if o.is_creature and o.block_state
+                and "Blocking" in str(o.block_state)
+            }
+        if not declared:
+            return  # not declared yet — wait for the commit
+        rec = pc["recommended"]
+        save_match_event(
+            mid, "engine_advice_compliance",
+            game_number=state.match_info.game_number,
+            turn_number=pc["turn"],
+            phase=pc["kind"],
+            data={"kind": pc["kind"],
+                  "recommended": sorted(rec),
+                  "declared": sorted(declared),
+                  "followed": declared == rec})
+        self._pending_engine_combat = None
 
     def _check_decision_outcomes(self, state: GameState):
         """Check if any pending decision outcomes can be resolved (2 turns later)."""
