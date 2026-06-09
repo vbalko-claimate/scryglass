@@ -1209,6 +1209,21 @@ class AdvisorEngine:
                 )
             )
             self._last_advice = base[:5]
+            # Persist the engine advisor's live recommendation (mirrors
+            # ask_llm). Without this the `engine` source was never written to
+            # advice_log — so games played WITH scryglass on captured the
+            # heuristic/intel/strategy advice but lost the engine's, leaving
+            # live engine-advisor agreement unmeasurable.
+            if engine_state.match_info.match_id:
+                save_advice(engine_state.match_info.match_id, {
+                    "game_number": engine_state.match_info.game_number,
+                    "turn_number": engine_state.turn_info.turn_number,
+                    "phase": engine_state.turn_info.phase,
+                    "source": advice.source, "priority": advice.priority,
+                    "message": advice.message,
+                    "details": advice.details,
+                    "game_state_summary": {"mode": mode},
+                })
             if self.on_advice:
                 self.on_advice(self._last_advice)
         return advice
