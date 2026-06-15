@@ -249,6 +249,32 @@ def _combat_advice(data: dict, mode: str) -> Advice | None:
     )
 
 
+async def optimize_deck(
+    deck_list: str,
+    *,
+    games: int = 12,
+    steps: int = 3,
+    timeout: float = 180.0,
+) -> dict | None:
+    """Ask the engine's `POST /optimize` endpoint to suggest cut→add swaps for
+    a deck, returning the raw OptimizeReport dict (base win-rate + CI, confirmed
+    suggestions with per-swap CIs, reactive/coverage flags, manabase analysis)
+    or None if the engine sidecar is unreachable.
+
+    `deck_list` is Arena-format text — the engine parses inline lists. This is
+    a SIM workload (seconds to ~a minute), so the timeout is generous and the
+    caller should show a progress state."""
+    req = {"deck": deck_list, "games": int(games), "steps": int(steps)}
+    try:
+        async with httpx.AsyncClient(timeout=timeout) as client:
+            resp = await client.post(f"{engine_url()}/optimize", json=req)
+            resp.raise_for_status()
+            return resp.json()
+    except Exception as e:  # connection refused, timeout, bad JSON — degrade
+        log.info("engine /optimize unavailable: %s", e)
+        return None
+
+
 def _mulligan_advice(data: dict) -> Advice | None:
     """Map a mode="mulligan" /advise response into a single high-priority
     `Advice`: keep/mull (the `recommended` line) plus, on a London keep, the

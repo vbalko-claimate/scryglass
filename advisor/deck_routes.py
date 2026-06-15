@@ -7,6 +7,7 @@ from __future__ import annotations
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
+from . import engine_backend
 from .deck_lifecycle import DeckService
 
 router = APIRouter(prefix="/api/decks", tags=["decks"])
@@ -23,6 +24,11 @@ class AddVersionRequest(BaseModel):
 
 class GenerateRulesRequest(BaseModel):
     mode: str = "mechanical"  # or "mechanical+llm"
+
+
+class OptimizeRequest(BaseModel):
+    games: int = 12
+    steps: int = 3
 
 
 @router.get("")
@@ -81,6 +87,35 @@ async def deploy_version(deck_id: str, v: int):
         return svc.deploy_version(deck_id, v)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
+
+
+@router.post("/{deck_id}/versions/{v}/optimize")
+async def optimize_version(deck_id: str, v: int, req: OptimizeRequest):
+    """Run the engine optimizer on a version's decklist → cut→add suggestions
+    + manabase analysis. Delegates the sim to the glass-server /optimize
+    sidecar; returns 503 if it isn't reachable."""
+    svc = DeckService()
+    detail = svc.get_deck(deck_id)
+    if not detail:
+        raise HTTPException(status_code=404, detail="Deck not found")
+    version = next(
+        (ver for ver in detail.get("versions", []) if ver.get("version_number") == v),
+        None,
+    )
+    if not version:
+        raise HTTPException(status_code=404, detail=f"Version {v} not found")
+    deck_list = (version.get("deck_list") or "").strip()
+    if not deck_list:
+        raise HTTPException(status_code=400, detail="Version has no decklist to optimize")
+    report = await engine_backend.optimize_deck(
+        deck_list, games=req.games, steps=req.steps
+    )
+    if report is None:
+        raise HTTPException(
+            status_code=503,
+            detail="Engine optimizer unavailable (is the glass-server sidecar running?)",
+        )
+    return report
 
 
 @router.post("/{deck_id}/undeploy")

@@ -379,7 +379,11 @@ function renderDeckDetail(d) {
         + '<button onclick="generateRules(\'' + d.deck_id + '\',' + (d.active_version || 1) + ',\'expert\')">Expert review</button>'
         + '</div></div>'
         + '<button class="btn btn-secondary btn-small" onclick="deployVersion(\'' + d.deck_id + '\',' + (d.active_version || 1) + ')">Deploy</button>'
+        + '<button class="btn btn-secondary btn-small" onclick="optimizeDeck(\'' + d.deck_id + '\',' + (d.active_version || 1) + ')">Optimize &#9881;</button>'
         + '</div>';
+
+    // Optimizer results (engine sidecar /optimize)
+    html += '<div id="optimize-result"></div>';
 
     // Missing cards
     if (missing.length) {
@@ -513,6 +517,73 @@ async function deployVersion(deckId, version) {
         await loadDecks();
         loadDeckDetail(deckId);
     } catch (e) { /* toast shown */ }
+}
+
+async function optimizeDeck(deckId, version) {
+    const panel = document.getElementById('optimize-result');
+    if (panel) panel.innerHTML = '<div class="detail-section"><h3>Optimizer</h3>'
+        + '<div style="color:#9fc">&#9881; Running simulations vs the proactive gauntlet — this takes ~30–60s…</div></div>';
+    try {
+        const r = await apiFetch('/api/decks/' + deckId + '/versions/' + version + '/optimize', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({games: 12, steps: 3}),
+        });
+        renderOptimize(r);
+    } catch (e) {
+        if (panel) panel.innerHTML = '<div class="detail-section"><h3>Optimizer</h3>'
+            + '<div class="warning-box">Optimizer unavailable — is the engine sidecar (glass-server /optimize) running?</div></div>';
+    }
+}
+
+function renderOptimize(r) {
+    const panel = document.getElementById('optimize-result');
+    if (!panel) return;
+    const pct = (x) => (x == null ? '?' : x.toFixed(1));
+    const sgn = (x) => (x >= 0 ? '+' : '') + x.toFixed(1);
+    let h = '<div class="detail-section"><h3>Optimizer</h3>';
+    h += '<div style="font-size:12px;color:#888;margin-bottom:6px">' + escHtml(r.colors || '')
+        + ' · coverage ' + r.coverage_resolved + '/' + r.coverage_total
+        + ' · trusted pool ' + r.pool_size + ' · ' + r.games + 'g search</div>';
+    if (r.reactive) {
+        h += '<div class="warning-box">Looks like a reactive/control deck ('
+            + Math.round((r.creature_share || 0) * 100) + '% creatures) — the pilot is tuned for PROACTIVE decks, '
+            + 'so treat the card swaps as low-confidence (the manabase below is pilot-independent).</div>';
+    }
+    if (r.coverage_resolved < r.coverage_total) {
+        h += '<div class="warning-box">' + (r.coverage_total - r.coverage_resolved)
+            + ' card(s) are off-catalog and were dropped from the simulation — suggestions are partial.</div>';
+    }
+    h += '<div style="margin-bottom:8px">Base win-rate vs gauntlet: <strong>' + pct(r.base_rate)
+        + '%</strong> <span style="color:#888">[' + pct(r.base_ci_lo) + '–' + pct(r.base_ci_hi) + ']</span></div>';
+    if (!r.suggestions || !r.suggestions.length) {
+        h += '<div style="color:#9fc">No confirmed card swap — the list is already well-tuned for this gauntlet.</div>';
+    } else {
+        h += '<table style="width:100%;border-collapse:collapse;font-size:13px">'
+            + '<thead><tr style="color:#888;text-align:left">'
+            + '<th style="padding:2px 6px">Cut</th><th style="padding:2px 6px">Add</th>'
+            + '<th style="padding:2px 6px">&Delta; win%</th></tr></thead><tbody>';
+        r.suggestions.forEach(s => {
+            h += '<tr style="border-top:1px solid rgba(255,255,255,0.08)">'
+                + '<td style="padding:3px 6px">' + escHtml(s.cut) + '</td>'
+                + '<td style="padding:3px 6px"><strong>' + escHtml(s.add) + '</strong></td>'
+                + '<td style="padding:3px 6px">' + sgn(s.after - s.before)
+                + ' <span style="color:#888">[' + sgn(s.ci_lo) + ',' + sgn(s.ci_hi) + ']</span></td></tr>';
+        });
+        h += '</tbody></table>';
+        h += '<div style="margin-top:6px">Net: ' + pct(r.suggestions[0].before) + '% → <strong>'
+            + pct(r.final_rate) + '%</strong> (' + sgn(r.net_gain) + ' pts)</div>';
+    }
+    const m = r.manabase || {};
+    h += '<div style="margin-top:10px"><strong>Manabase</strong> <span style="color:#888">('
+        + (m.total_lands || 0) + ' lands, closed-form)</span><ul style="margin:4px 0 0 16px;padding:0">';
+    (m.colors || []).forEach(c => {
+        h += '<li style="font-size:12px">' + escHtml(c.color) + ': ' + c.sources
+            + ' sources vs ~' + c.target + ' ideal — ' + escHtml(c.status) + '</li>';
+    });
+    h += '</ul><div style="font-size:12px;color:#888;margin-top:4px">' + escHtml(m.advice || '') + '</div></div>';
+    h += '</div>';
+    panel.innerHTML = h;
 }
 
 async function setDecklist(deckId, version) {
