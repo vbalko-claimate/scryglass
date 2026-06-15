@@ -74,6 +74,7 @@ def build_request(
     mode: str = "main",
     attackers: list[str] | None = None,
     targets: list[str] | None = None,
+    bottom_count: int = 0,
 ) -> dict | None:
     """Build the /advise payload from the live game state, or None if the
     state isn't ready (no players seated).
@@ -85,6 +86,8 @@ def build_request(
                     names in `attackers`
       "target"    → which target for a spell; pass candidate names in
                     `targets`
+      "mulligan"  → keep/mull the opening `hand`; with `bottom_count` > 0
+                    (the London rule), which cards to put on the bottom
     """
     me = state.my_player()
     opp = state.opp_player()
@@ -111,6 +114,7 @@ def build_request(
         "mode": mode,
         "attackers": attackers or [],
         "targets": targets or [],
+        "bottom_count": bottom_count,
     }
 
 
@@ -122,6 +126,7 @@ async def get_engine_advice(
     mode: str = "main",
     attackers: list[str] | None = None,
     targets: list[str] | None = None,
+    bottom_count: int = 0,
     timeout: float = 8.0,
 ) -> Advice | None:
     """Query the engine sidecar and return a single `Advice`, or None when
@@ -129,17 +134,17 @@ async def get_engine_advice(
 
     `mode` mirrors `build_request`: "main" ranks plays; "attackers" /
     "blockers" / "target" route to the engine's combat/targeting choosers
-    (corpus-validated ~61% / ~65% / ~72% human agreement) and surface the
-    one-line recommendation."""
+    (corpus-validated ~61% / ~65% / ~72% human agreement); "mulligan" gives
+    keep/mull advice and, with `bottom_count` > 0, which cards to bottom."""
     req = build_request(
         state, ai=ai, opp_deck_names=opp_deck_names,
-        mode=mode, attackers=attackers, targets=targets,
+        mode=mode, attackers=attackers, targets=targets, bottom_count=bottom_count,
     )
     if req is None:
         return None
-    # main mode needs hand cards to rank; combat/target modes work off the
+    # main + mulligan modes need the hand; combat/target modes work off the
     # board + the attacker/target names already in the request.
-    if mode == "main" and not req["hand"]:
+    if mode in ("main", "mulligan") and not req["hand"]:
         return None
     if mode == "blockers" and not req["attackers"]:
         return None
@@ -154,6 +159,8 @@ async def get_engine_advice(
         log.info("engine /advise unavailable: %s", e)
         return None
 
+    if mode == "mulligan":
+        return _mulligan_advice(data)
     if mode != "main":
         return _combat_advice(data, mode)
 
@@ -193,11 +200,16 @@ async def get_engine_advice(
         for a in ranked[:4]
     )
     msg = f"Engine: {rec_kind} {rec}" if rec else "Engine: pass / no play"
+    # The engine's teaching rationale (the WHY) leads the details so a learning
+    # player sees the reasoning; the diagnostic (pilot/win/coverage) follows.
+    rationale = (data.get("rationale") or "").strip()
+    diag = f"[engine {data.get('pilot', '')}] win {win:.0%} · coverage {coverage}{flag} · {top}"
+    details = f"{rationale} · {diag}" if rationale else diag
     return Advice(
         source="engine",
         priority=priority,
         message=msg,
-        details=f"[engine {data.get('pilot', '')}] win {win:.0%} · coverage {coverage}{flag} · {top}",
+        details=details,
         confidence=confidence,
         recommended_cards=[rec] if rec else [],
         action_scores=scores,
@@ -224,12 +236,35 @@ def _combat_advice(data: dict, mode: str) -> Advice | None:
         cards = [b.get("blocker", "") for b in (data.get("blocks") or []) if b.get("blocker")]
     if not rec:
         return None
+    rationale = (data.get("rationale") or "").strip()
+    diag = f"[engine {data.get('pilot', '')}] win {win:.0%}"
     return Advice(
         source="engine",
         priority="high",
         message=f"Engine: {rec}",
-        details=f"[engine {data.get('pilot', '')}] win {win:.0%}",
+        details=f"{rationale} · {diag}" if rationale else diag,
         confidence=win,
         recommended_cards=cards,
+        action_scores=[],
+    )
+
+
+def _mulligan_advice(data: dict) -> Advice | None:
+    """Map a mode="mulligan" /advise response into a single high-priority
+    `Advice`: keep/mull (the `recommended` line) plus, on a London keep, the
+    cards to put on the bottom (`bottom`). `recommended_cards` carries the
+    bottom list so the overlay can highlight which cards to take out."""
+    rec = data.get("recommended")
+    if not rec:
+        return None
+    rationale = (data.get("rationale") or "").strip()
+    bottom = [c for c in (data.get("bottom") or []) if c]
+    return Advice(
+        source="engine",
+        priority="high",
+        message=f"Engine: {rec}",
+        details=rationale,
+        confidence=0.0,
+        recommended_cards=bottom,
         action_scores=[],
     )

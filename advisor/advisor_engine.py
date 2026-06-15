@@ -1131,6 +1131,11 @@ class AdvisorEngine:
             # the target chooser (~69-71%) is on par with the live
             # attackers/blockers; candidates non-empty ⇒ it's my decision.
             mode = "target"
+        elif request_type == "GREMessageType_MulliganReq":
+            # Keep/mull the opening hand, and — on a London keep — which
+            # cards to put on the bottom (engine `mode="mulligan"`,
+            # bottom_count = mulligans taken so far).
+            mode = "mulligan"
         if mode is not None:
             try:
                 await self.ask_engine(state, mode=mode)
@@ -1223,9 +1228,15 @@ class AdvisorEngine:
         # For target mode the legal candidates were parsed off the
         # SelectTargetsReq (game_state._extract_target_candidates).
         targets = list(engine_state.pending_target_candidates) if mode == "target" else []
+        # London bottoming count = mulligans taken so far (0 = first hand,
+        # just keep/mull advice; N = also recommend which N cards to bottom).
+        bottom_count = 0
+        if mode == "mulligan":
+            me = engine_state.my_player()
+            bottom_count = int(me.mulligan_count) if me else 0
         advice = await get_engine_advice(
             engine_state, ai=ai, opp_deck_names=opp_names,
-            mode=mode, attackers=attackers, targets=targets,
+            mode=mode, attackers=attackers, targets=targets, bottom_count=bottom_count,
         )
         if advice and advice.message:
             base = [a for a in self._last_advice if a.source.lower() != "engine"]
