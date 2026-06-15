@@ -200,16 +200,16 @@ async def get_engine_advice(
         for a in ranked[:4]
     )
     msg = f"Engine: {rec_kind} {rec}" if rec else "Engine: pass / no play"
-    # The engine's teaching rationale (the WHY) leads the details so a learning
-    # player sees the reasoning; the diagnostic (pilot/win/coverage) follows.
+    # The engine's teaching rationale (the WHY) goes in its own field, rendered
+    # as a prominent overlay element; `details` keeps the diagnostic.
     rationale = (data.get("rationale") or "").strip()
     diag = f"[engine {data.get('pilot', '')}] win {win:.0%} · coverage {coverage}{flag} · {top}"
-    details = f"{rationale} · {diag}" if rationale else diag
     return Advice(
         source="engine",
         priority=priority,
         message=msg,
-        details=details,
+        details=diag,
+        rationale=rationale,
         confidence=confidence,
         recommended_cards=[rec] if rec else [],
         action_scores=scores,
@@ -237,12 +237,12 @@ def _combat_advice(data: dict, mode: str) -> Advice | None:
     if not rec:
         return None
     rationale = (data.get("rationale") or "").strip()
-    diag = f"[engine {data.get('pilot', '')}] win {win:.0%}"
     return Advice(
         source="engine",
         priority="high",
         message=f"Engine: {rec}",
-        details=f"{rationale} · {diag}" if rationale else diag,
+        details=f"[engine {data.get('pilot', '')}] win {win:.0%}",
+        rationale=rationale,
         confidence=win,
         recommended_cards=cards,
         action_scores=[],
@@ -263,7 +263,8 @@ def _mulligan_advice(data: dict) -> Advice | None:
         source="engine",
         priority="high",
         message=f"Engine: {rec}",
-        details=rationale,
+        details="",
+        rationale=rationale,
         confidence=0.0,
         recommended_cards=bottom,
         action_scores=[],

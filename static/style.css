@@ -670,6 +670,35 @@ header h1 {
     margin-top: 3px;
 }
 
+/* The teaching "why" — a prominent callout distinct from the muted diagnostic
+   details, so a learning player reads the reasoning, not just the play. */
+.advice-why {
+    font-size: 12px;
+    line-height: 1.45;
+    color: #cdd9ee;
+    margin-top: 5px;
+    padding: 5px 8px;
+    border-left: 3px solid var(--accent, #4ea1ff);
+    background: rgba(78, 161, 255, 0.08);
+    border-radius: 4px;
+}
+.advice-why::before {
+    content: "\1F4A1\00a0";
+}
+.advice-spotlight-why {
+    font-size: 13px;
+    line-height: 1.45;
+    color: #e6eefc;
+    margin-top: 6px;
+    padding: 6px 9px;
+    border-left: 3px solid var(--accent, #4ea1ff);
+    background: rgba(78, 161, 255, 0.10);
+    border-radius: 5px;
+}
+.advice-spotlight-why::before {
+    content: "\1F4A1\00a0";
+}
+
 /* Hand zone */
 #hand-zone {
     background: linear-gradient(180deg, rgba(25, 35, 59, 0.96), rgba(17, 26, 45, 0.94));

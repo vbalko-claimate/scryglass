@@ -678,6 +678,7 @@ function renderAdviceItems(items, emptyText) {
         return `
         <div class="advice-item ${a.priority}"${titleAttr}${targetAttr}>
             <div class="advice-message">${badgeHtml}${formatMessage(a.message)}</div>
+            ${a.rationale ? `<div class="advice-why">${a.rationale}</div>` : ''}
             <span class="advice-source">[${a.source}]</span>
             ${a.details ? `<div class="advice-details">${a.details}</div>` : ''}
         </div>
@@ -748,6 +749,7 @@ function renderSpotlightAdvice(item) {
         <div class="advice-spotlight-card ${item.priority}"${titleAttr}>
             <div class="advice-spotlight-label">${badgeHtml}Key Play</div>
             <div class="advice-spotlight-message">${formatMessage(item.message)}</div>
+            ${item.rationale ? `<div class="advice-spotlight-why">${item.rationale}</div>` : ''}
             <div class="advice-spotlight-meta">
                 <span class="advice-spotlight-source">${item.source}</span>
                 ${item.details ? `<span class="advice-spotlight-details">${item.details}</span>` : ''}

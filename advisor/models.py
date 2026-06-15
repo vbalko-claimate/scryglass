@@ -309,6 +309,10 @@ class Advice:
     priority: str  # "critical", "high", "medium", "low"
     message: str
     details: str = ""
+    # A short, plain-language WHY for the recommendation — the teaching layer,
+    # rendered as its own prominent element in the overlay (distinct from the
+    # diagnostic `details`). Currently populated for engine-sourced advice.
+    rationale: str = ""
     confidence: float = 0.0
     recommended_cards: list[str] = field(default_factory=list)
     action_scores: list[ActionScore] = field(default_factory=list)
