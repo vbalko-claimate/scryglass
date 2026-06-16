@@ -410,10 +410,12 @@ function renderDeckDetail(d) {
         + '</div></div>'
         + '<button class="btn btn-secondary btn-small" onclick="deployVersion(\'' + d.deck_id + '\',' + (d.active_version || 1) + ')">Deploy</button>'
         + '<button class="btn btn-secondary btn-small" onclick="optimizeDeck(\'' + d.deck_id + '\',' + (d.active_version || 1) + ')">Optimize &#9881;</button>'
+        + '<button class="btn btn-secondary btn-small" onclick="buildPortfolio(\'' + d.deck_id + '\',' + (d.active_version || 1) + ')">Build variants &#9906;</button>'
         + '</div>';
 
-    // Optimizer results (engine sidecar /optimize)
+    // Optimizer + portfolio results (engine sidecar)
     html += '<div id="optimize-result"></div>';
+    html += '<div id="portfolio-result"></div>';
 
     // Missing cards
     if (missing.length) {
@@ -569,6 +571,47 @@ async function optimizeDeck(deckId, version) {
         if (panel) panel.innerHTML = '<div class="detail-section"><h3>Optimizer</h3>'
             + '<div class="warning-box">Optimizer unavailable — is the engine sidecar (glass-server /optimize) running?</div></div>';
     }
+}
+
+async function buildPortfolio(deckId, version) {
+    const panel = document.getElementById('portfolio-result');
+    if (panel) panel.innerHTML = '<div class="detail-section"><h3>Build variants</h3>'
+        + '<div style="color:#9fc">&#9906; Exploring diverse builds (MAP-Elites) — ~30–60s…</div></div>';
+    try {
+        const r = await apiFetch('/api/decks/' + deckId + '/versions/' + version + '/portfolio', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({iters: 150, games: 12}),
+        });
+        renderPortfolio(r);
+    } catch (e) {
+        if (panel) panel.innerHTML = '<div class="detail-section"><h3>Build variants</h3>'
+            + '<div class="warning-box">Engine unavailable — is the glass-server sidecar running?</div></div>';
+    }
+}
+
+function renderPortfolio(r) {
+    const panel = document.getElementById('portfolio-result');
+    if (!panel) return;
+    const builds = r.builds || [];
+    let h = '<div class="detail-section"><h3>Build variants</h3>';
+    h += '<div style="font-size:12px;color:#888;margin-bottom:4px">'
+        + escHtml(r.colors || '') + ' · seed ' + (r.seed_win_rate || 0).toFixed(0) + '% · '
+        + builds.length + ' variants across ' + r.cells_filled + '/' + r.grid_cells + ' styles</div>';
+    h += '<div style="font-size:12px;color:#ffd24a;margin-bottom:8px">' + escHtml(r.confidence_basis || '') + '</div>';
+    builds.forEach(b => {
+        const diff = (b.added && b.added.length || b.removed && b.removed.length)
+            ? '<span style="color:#7fd88a">+' + (b.added || []).map(escHtml).join(', ') + '</span>'
+              + (b.removed && b.removed.length ? ' <span style="color:#ff9a9a">−' + (b.removed || []).map(escHtml).join(', ') + '</span>' : '')
+            : '<span style="color:#888">(your current list)</span>';
+        h += '<div style="border-top:1px solid rgba(255,255,255,0.08);padding:5px 2px">'
+            + '<div><strong>' + escHtml(b.label) + '</strong> — ' + b.win_rate.toFixed(0)
+            + '% <span style="color:#888">[' + b.ci_lo.toFixed(0) + '–' + b.ci_hi.toFixed(0) + '], cmc '
+            + b.avg_cmc.toFixed(1) + ', ' + b.creatures + ' creatures</span></div>'
+            + '<div style="font-size:12px">' + diff + '</div></div>';
+    });
+    h += '</div>';
+    panel.innerHTML = h;
 }
 
 // Apply an optimizer suggestion: edit the deck (new version) AND log the

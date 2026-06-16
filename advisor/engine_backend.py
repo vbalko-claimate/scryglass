@@ -279,6 +279,27 @@ async def optimize_deck(
         return None
 
 
+async def portfolio_deck(
+    deck_list: str,
+    *,
+    iters: int = 150,
+    games: int = 12,
+    timeout: float = 180.0,
+) -> dict | None:
+    """Ask the engine's `POST /portfolio` for a DIVERSE set of viable builds of
+    the deck (MAP-Elites quality-diversity), returning the PortfolioReport dict
+    or None if the sidecar is unreachable. Sim workload, generous timeout."""
+    req = {"deck": deck_list, "iters": int(iters), "games": int(games)}
+    try:
+        async with httpx.AsyncClient(timeout=timeout) as client:
+            resp = await client.post(f"{engine_url()}/portfolio", json=req)
+            resp.raise_for_status()
+            return resp.json()
+    except Exception as e:
+        log.info("engine /portfolio unavailable: %s", e)
+        return None
+
+
 def _mulligan_advice(data: dict) -> Advice | None:
     """Map a mode="mulligan" /advise response into a single high-priority
     `Advice`: keep/mull (the `recommended` line) plus, on a London keep, the

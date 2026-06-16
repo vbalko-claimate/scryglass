@@ -38,6 +38,11 @@ class ApplySuggestionRequest(BaseModel):
     basis: str = ""
 
 
+class PortfolioRequest(BaseModel):
+    iters: int = 150
+    games: int = 12
+
+
 @router.get("")
 async def list_decks():
     svc = DeckService()
@@ -115,6 +120,31 @@ async def list_recommendations(deck_id: str):
     from .deck_lifecycle import recommendation_outcomes
 
     return recommendation_outcomes(deck_id)
+
+
+@router.post("/{deck_id}/versions/{v}/portfolio")
+async def deck_portfolio(deck_id: str, v: int, req: PortfolioRequest):
+    """Diverse build variants for a version's decklist (MAP-Elites portfolio)."""
+    svc = DeckService()
+    detail = svc.get_deck(deck_id)
+    if not detail:
+        raise HTTPException(status_code=404, detail="Deck not found")
+    version = next(
+        (ver for ver in detail.get("versions", []) if ver.get("version_number") == v),
+        None,
+    )
+    if not version:
+        raise HTTPException(status_code=404, detail=f"Version {v} not found")
+    deck_list = (version.get("deck_list") or "").strip()
+    if not deck_list:
+        raise HTTPException(status_code=400, detail="Version has no decklist")
+    report = await engine_backend.portfolio_deck(deck_list, iters=req.iters, games=req.games)
+    if report is None:
+        raise HTTPException(
+            status_code=503,
+            detail="Engine optimizer unavailable (is the glass-server sidecar running?)",
+        )
+    return report
 
 
 @router.post("/{deck_id}/versions/{v}/optimize")
