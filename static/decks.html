@@ -542,6 +542,19 @@ function renderOptimize(r) {
     const pct = (x) => (x == null ? '?' : x.toFixed(1));
     const sgn = (x) => (x >= 0 ? '+' : '') + x.toFixed(1);
     let h = '<div class="detail-section"><h3>Optimizer</h3>';
+    // Trust contract: the cut/add SWAPS carry an evidence tier (the manabase below
+    // is closed-form / pilot-independent and reliable regardless). Render the tier
+    // as a distinct badge so measured and speculative advice don't look identical.
+    const conf = r.confidence || 'trusted';
+    const badge = conf === 'trusted'
+        ? { bg: 'rgba(76,175,80,0.18)', fg: '#7fd88a', label: 'MEASURED' }
+        : conf === 'directional'
+        ? { bg: 'rgba(255,193,7,0.18)', fg: '#ffd24a', label: 'DIRECTIONAL' }
+        : { bg: 'rgba(255,82,82,0.16)', fg: '#ff9a9a', label: 'LOW CONFIDENCE' };
+    h += '<div style="display:flex;align-items:baseline;gap:8px;margin:2px 0 8px;flex-wrap:wrap">'
+        + '<span style="font-size:11px;font-weight:700;letter-spacing:.5px;padding:2px 8px;border-radius:4px;background:'
+        + badge.bg + ';color:' + badge.fg + '">' + badge.label + ' SWAPS</span>'
+        + '<span style="font-size:12px;color:#aaa">' + escHtml(r.confidence_basis || '') + '</span></div>';
     h += '<div style="font-size:12px;color:#888;margin-bottom:6px">' + escHtml(r.colors || '')
         + ' · coverage ' + r.coverage_resolved + '/' + r.coverage_total
         + ' · trusted pool ' + r.pool_size + ' · ' + r.games + 'g search</div>';
