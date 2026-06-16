@@ -823,6 +823,15 @@ async def stats_page():
                         headers={"Cache-Control": "no-cache, no-store, must-revalidate"})
 
 
+@app.get("/api/recommendations/outcomes")
+async def recommendations_outcomes():
+    """External-validation readout: accepted optimizer suggestions' record since
+    applied, aggregated by confidence tier ('do MEASURED swaps hold up?')."""
+    from .deck_lifecycle import recommendation_outcomes
+
+    return recommendation_outcomes()
+
+
 @app.get("/api/stats/overview")
 async def stats_overview():
     return get_stats_overview()

@@ -273,6 +273,23 @@ def log_recommendation(
     return rid
 
 
+def get_matches_by_deck(name: str) -> list[dict]:
+    """Decisive matches played with a deck (by name, case-insensitive), oldest
+    first. Used to attribute outcomes to accepted recommendations by time window."""
+    if not name:
+        return []
+    conn = get_connection()
+    conn.row_factory = sqlite3.Row
+    rows = conn.execute(
+        "SELECT result, started_at FROM matches "
+        "WHERE lower(my_deck_name) = lower(?) AND result != '' "
+        "ORDER BY started_at",
+        (name,),
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
 def get_recommendations(deck_id: str | None = None) -> list[dict]:
     """List accepted recommendations (optionally for one deck), newest first."""
     conn = get_connection()

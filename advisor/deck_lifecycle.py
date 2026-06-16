@@ -12,7 +12,13 @@ import re
 import tempfile
 from pathlib import Path
 
-from .database import PERSISTENT_DIR, card_cache, log_recommendation
+from .database import (
+    PERSISTENT_DIR,
+    card_cache,
+    get_matches_by_deck,
+    get_recommendations,
+    log_recommendation,
+)
 from . import deck_storage as storage
 
 log = logging.getLogger(__name__)
@@ -48,6 +54,66 @@ def _parse_decklist_text(deck_list: str) -> list[tuple[str, int]]:
         name = re.sub(r"\s*\([A-Z0-9]+\)\s*\d*$", "", parts[1]).strip()
         cards.append((name, count))
     return cards
+
+
+def recommendation_outcomes(deck_id: str | None = None) -> dict:
+    """ATTRIBUTION READOUT — correlate accepted optimizer suggestions with the
+    matches played AFTER each was applied (by deck name + time window, up to the
+    next recommendation for that deck), and aggregate the record by confidence
+    tier. This is the external-validation signal the simulation lacks: "MEASURED
+    swaps held up X%". Linkage is by deck name + timestamp, so it's best-effort
+    and fills in as the user plays — coverage is reported honestly."""
+    recos = get_recommendations(deck_id)
+    by_deck: dict[str, list[dict]] = {}
+    for r in recos:
+        by_deck.setdefault(r["deck_id"], []).append(r)
+
+    enriched: list[dict] = []
+    by_tier: dict[str, dict] = {}
+    for did, rs in by_deck.items():
+        data = storage.read_deck(did)
+        name = data.get("name", "") if data else ""
+        matches = get_matches_by_deck(name)
+        rs_sorted = sorted(rs, key=lambda x: x.get("accepted_at") or "")
+        for i, r in enumerate(rs_sorted):
+            start = r.get("accepted_at") or ""
+            end = rs_sorted[i + 1].get("accepted_at") if i + 1 < len(rs_sorted) else None
+            wins = losses = 0
+            for m in matches:
+                t = m.get("started_at") or ""
+                if t >= start and (end is None or t < end):
+                    res = (m.get("result") or "").lower()
+                    if res.startswith("w"):
+                        wins += 1
+                    elif res.startswith("l"):
+                        losses += 1
+            n = wins + losses
+            enriched.append({
+                **r,
+                "deck_name": name,
+                "matches_after": n,
+                "wins": wins,
+                "losses": losses,
+                "win_rate": (100.0 * wins / n) if n else None,
+            })
+            tier = r.get("confidence") or "trusted"
+            b = by_tier.setdefault(tier, {"recos": 0, "matches": 0, "wins": 0, "losses": 0})
+            b["recos"] += 1
+            b["matches"] += n
+            b["wins"] += wins
+            b["losses"] += losses
+
+    for b in by_tier.values():
+        n = b["wins"] + b["losses"]
+        b["win_rate"] = (100.0 * b["wins"] / n) if n else None
+
+    enriched.sort(key=lambda e: e.get("accepted_at") or "", reverse=True)
+    return {
+        "by_tier": by_tier,
+        "recommendations": enriched,
+        "total": len(enriched),
+        "with_match_data": sum(1 for e in enriched if e["matches_after"] > 0),
+    }
 
 
 def apply_swap(deck_list: str, cut: str, add: str) -> str:

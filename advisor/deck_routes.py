@@ -110,10 +110,11 @@ async def apply_suggestion(deck_id: str, v: int, req: ApplySuggestionRequest):
 
 @router.get("/{deck_id}/recommendations")
 async def list_recommendations(deck_id: str):
-    """Accepted optimizer suggestions for this deck (the outcome-loop log)."""
-    from .database import get_recommendations
+    """Accepted optimizer suggestions for this deck, each enriched with the
+    record of matches played since it was applied (the outcome-loop readout)."""
+    from .deck_lifecycle import recommendation_outcomes
 
-    return get_recommendations(deck_id)
+    return recommendation_outcomes(deck_id)
 
 
 @router.post("/{deck_id}/versions/{v}/optimize")
