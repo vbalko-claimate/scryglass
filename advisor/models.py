@@ -314,6 +314,12 @@ class Advice:
     # diagnostic `details`). Currently populated for engine-sourced advice.
     rationale: str = ""
     confidence: float = 0.0
+    # Trust contract: evidence tier ("trusted"/"directional"/"low") + a one-line
+    # basis naming the evidence kind (heuristic-pilot advice). Distinct from
+    # `confidence` (a 0-1 float) — this is what the overlay renders as a badge so
+    # advice strength isn't collapsed into one confident style.
+    confidence_tier: str = ""
+    confidence_basis: str = ""
     recommended_cards: list[str] = field(default_factory=list)
     action_scores: list[ActionScore] = field(default_factory=list)
     decision_id: str | None = None

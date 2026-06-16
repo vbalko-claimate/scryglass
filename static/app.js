@@ -561,6 +561,20 @@ function formatMessage(text) {
         .replace(/\n/g, '<br>');
 }
 
+// Trust-contract chip: render an advice's evidence tier distinctly so a strong
+// read and a low-coverage guess don't look identical. `basis` is the tooltip.
+function trustChip(tier, basis) {
+    if (!tier) return '';
+    const c = tier === 'trusted'
+        ? { bg: 'rgba(76,175,80,0.18)', fg: '#7fd88a', label: 'ADVICE' }
+        : tier === 'directional'
+        ? { bg: 'rgba(255,193,7,0.18)', fg: '#ffd24a', label: 'PARTIAL VIEW' }
+        : { bg: 'rgba(255,82,82,0.16)', fg: '#ff9a9a', label: 'LOW CONFIDENCE' };
+    const t = (basis || '').replace(/"/g, '&quot;');
+    return `<span title="${t}" style="font-size:10px;font-weight:700;letter-spacing:.4px;`
+        + `padding:1px 6px;border-radius:3px;margin-right:6px;background:${c.bg};color:${c.fg}">${c.label}</span>`;
+}
+
 function resetAskButton() {
     const btn = document.getElementById('ask-ai-btn');
     if (btn) { btn.textContent = 'Ask AI'; btn.disabled = false; }
@@ -675,9 +689,12 @@ function renderAdviceItems(items, emptyText) {
         const cardTarget = scores.find(s => s.target)?.target || '';
         const targetAttr = cardTarget ? ` data-card-target="${cardTarget.replace(/"/g, '&quot;')}"` : '';
 
+        // Trust contract: evidence-tier chip (engine advice carries confidence_tier).
+        const tierHtml = trustChip(a.confidence_tier, a.confidence_basis);
+
         return `
         <div class="advice-item ${a.priority}"${titleAttr}${targetAttr}>
-            <div class="advice-message">${badgeHtml}${formatMessage(a.message)}</div>
+            <div class="advice-message">${tierHtml}${badgeHtml}${formatMessage(a.message)}</div>
             ${a.rationale ? `<div class="advice-why">${a.rationale}</div>` : ''}
             <span class="advice-source">[${a.source}]</span>
             ${a.details ? `<div class="advice-details">${a.details}</div>` : ''}
@@ -748,7 +765,7 @@ function renderSpotlightAdvice(item) {
     return `
         <div class="advice-spotlight-card ${item.priority}"${titleAttr}>
             <div class="advice-spotlight-label">${badgeHtml}Key Play</div>
-            <div class="advice-spotlight-message">${formatMessage(item.message)}</div>
+            <div class="advice-spotlight-message">${trustChip(item.confidence_tier, item.confidence_basis)}${formatMessage(item.message)}</div>
             ${item.rationale ? `<div class="advice-spotlight-why">${item.rationale}</div>` : ''}
             <div class="advice-spotlight-meta">
                 <span class="advice-spotlight-source">${item.source}</span>

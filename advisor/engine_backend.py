@@ -211,6 +211,8 @@ async def get_engine_advice(
         details=diag,
         rationale=rationale,
         confidence=confidence,
+        confidence_tier=(data.get("confidence") or ""),
+        confidence_basis=(data.get("confidence_basis") or ""),
         recommended_cards=[rec] if rec else [],
         action_scores=scores,
     )
@@ -244,6 +246,8 @@ def _combat_advice(data: dict, mode: str) -> Advice | None:
         details=f"[engine {data.get('pilot', '')}] win {win:.0%}",
         rationale=rationale,
         confidence=win,
+        confidence_tier=(data.get("confidence") or ""),
+        confidence_basis=(data.get("confidence_basis") or ""),
         recommended_cards=cards,
         action_scores=[],
     )
@@ -292,6 +296,8 @@ def _mulligan_advice(data: dict) -> Advice | None:
         details="",
         rationale=rationale,
         confidence=0.0,
+        confidence_tier=(data.get("confidence") or ""),
+        confidence_basis=(data.get("confidence_basis") or ""),
         recommended_cards=bottom,
         action_scores=[],
     )
