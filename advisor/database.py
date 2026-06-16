@@ -221,6 +221,22 @@ def init_db():
             UNIQUE(deck_id, version_number)
         );
         CREATE INDEX IF NOT EXISTS idx_versions_deck ON deck_versions(deck_id);
+
+        -- Accepted optimizer suggestions, for the outcome-collection loop:
+        -- correlate these with subsequent match results (by deck + time) to get
+        -- the external validation the simulation lacks.
+        CREATE TABLE IF NOT EXISTS recommendations (
+            id           INTEGER PRIMARY KEY AUTOINCREMENT,
+            deck_id      TEXT NOT NULL,
+            from_version INTEGER,
+            to_version   INTEGER,
+            cut          TEXT,
+            add_card     TEXT,
+            confidence   TEXT DEFAULT '',
+            basis        TEXT DEFAULT '',
+            accepted_at  TEXT DEFAULT CURRENT_TIMESTAMP
+        );
+        CREATE INDEX IF NOT EXISTS idx_reco_deck ON recommendations(deck_id);
     """)
     # Add deck name columns (migration for existing DBs)
     try:
@@ -233,6 +249,45 @@ def init_db():
         pass
     conn.commit()
     conn.close()
+
+
+def log_recommendation(
+    deck_id: str,
+    from_version: int,
+    to_version: int,
+    cut: str,
+    add: str,
+    confidence: str,
+    basis: str,
+) -> int:
+    """Record an accepted optimizer suggestion. Returns the row id."""
+    conn = get_connection()
+    cur = conn.execute(
+        "INSERT INTO recommendations (deck_id, from_version, to_version, cut, add_card, confidence, basis) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?)",
+        (deck_id, from_version, to_version, cut, add, confidence, basis),
+    )
+    conn.commit()
+    rid = cur.lastrowid
+    conn.close()
+    return rid
+
+
+def get_recommendations(deck_id: str | None = None) -> list[dict]:
+    """List accepted recommendations (optionally for one deck), newest first."""
+    conn = get_connection()
+    conn.row_factory = sqlite3.Row
+    if deck_id:
+        rows = conn.execute(
+            "SELECT * FROM recommendations WHERE deck_id = ? ORDER BY accepted_at DESC",
+            (deck_id,),
+        ).fetchall()
+    else:
+        rows = conn.execute(
+            "SELECT * FROM recommendations ORDER BY accepted_at DESC"
+        ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
 
 
 def _find_mtga_db() -> str | None:

@@ -31,6 +31,13 @@ class OptimizeRequest(BaseModel):
     steps: int = 3
 
 
+class ApplySuggestionRequest(BaseModel):
+    cut: str
+    add: str
+    confidence: str = ""
+    basis: str = ""
+
+
 @router.get("")
 async def list_decks():
     svc = DeckService()
@@ -87,6 +94,26 @@ async def deploy_version(deck_id: str, v: int):
         return svc.deploy_version(deck_id, v)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
+
+
+@router.post("/{deck_id}/versions/{v}/apply-suggestion")
+async def apply_suggestion(deck_id: str, v: int, req: ApplySuggestionRequest):
+    """Apply an optimizer swap as a new version AND log it for outcome tracking."""
+    svc = DeckService()
+    try:
+        return svc.apply_suggestion(
+            deck_id, v, req.cut, req.add, req.confidence, req.basis
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@router.get("/{deck_id}/recommendations")
+async def list_recommendations(deck_id: str):
+    """Accepted optimizer suggestions for this deck (the outcome-loop log)."""
+    from .database import get_recommendations
+
+    return get_recommendations(deck_id)
 
 
 @router.post("/{deck_id}/versions/{v}/optimize")

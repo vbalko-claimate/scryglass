@@ -12,7 +12,7 @@ import re
 import tempfile
 from pathlib import Path
 
-from .database import PERSISTENT_DIR, card_cache
+from .database import PERSISTENT_DIR, card_cache, log_recommendation
 from . import deck_storage as storage
 
 log = logging.getLogger(__name__)
@@ -48,6 +48,31 @@ def _parse_decklist_text(deck_list: str) -> list[tuple[str, int]]:
         name = re.sub(r"\s*\([A-Z0-9]+\)\s*\d*$", "", parts[1]).strip()
         cards.append((name, count))
     return cards
+
+
+def apply_swap(deck_list: str, cut: str, add: str) -> str:
+    """Apply a single optimizer swap to a decklist: -1 `cut`, +1 `add`.
+    Returns a normalized "N Name" decklist (set/collector codes are dropped —
+    Arena re-imports fine by name)."""
+    cards = _parse_decklist_text(deck_list)
+    out: list[tuple[str, int]] = []
+    cut_done = False
+    for name, count in cards:
+        if not cut_done and name.lower() == cut.lower():
+            cut_done = True
+            count -= 1
+            if count <= 0:
+                continue
+        out.append((name, count))
+    added = False
+    for i, (name, count) in enumerate(out):
+        if name.lower() == add.lower():
+            out[i] = (name, count + 1)
+            added = True
+            break
+    if not added:
+        out.append((add, 1))
+    return "\n".join(f"{c} {n}" for n, c in out)
 
 
 def _detect_colors(cards: list[tuple[str, int]]) -> list[str]:
@@ -423,6 +448,37 @@ class DeckService:
             "change_summary": change_summary,
             "inherited_rules_count": inherited_rules_count,
         }
+
+    # ─── apply_suggestion (outcome-collection loop) ─────────────
+
+    def apply_suggestion(
+        self,
+        deck_id: str,
+        version: int,
+        cut: str,
+        add: str,
+        confidence: str = "",
+        basis: str = "",
+    ) -> dict:
+        """Apply an optimizer swap (-1 cut, +1 add) as a NEW deck version, and
+        LOG the accepted recommendation so its outcome can later be attributed
+        to subsequent matches (the external-validation loop). Returns the new
+        version plus the recommendation id."""
+        data = storage.read_deck(deck_id)
+        if not data or not data.get("versions"):
+            raise ValueError(f"Deck '{deck_id}' not found or has no versions")
+        src = next((v for v in data["versions"] if v["version"] == version), None)
+        if src is None:
+            raise ValueError(f"Version {version} not found for deck '{deck_id}'")
+        new_list = apply_swap(src.get("cards", ""), cut, add)
+        result = self.add_version(deck_id, new_list)
+        reco_id = log_recommendation(
+            deck_id, version, result["version_number"], cut, add, confidence, basis
+        )
+        result["recommendation_id"] = reco_id
+        result["cut"] = cut
+        result["add"] = add
+        return result
 
     # ─── generate_rules ─────────────────────────────────────────
 
