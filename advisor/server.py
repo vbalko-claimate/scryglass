@@ -823,6 +823,15 @@ async def stats_page():
                         headers={"Cache-Control": "no-cache, no-store, must-revalidate"})
 
 
+@app.get("/api/advice/validation")
+async def advice_validation_route():
+    """Real-game advisor validation: did following the advisor correlate with
+    better outcomes? (External check from logged compliance + decision outcomes.)"""
+    from .advice_validation import advice_validation
+
+    return advice_validation()
+
+
 @app.get("/api/recommendations/outcomes")
 async def recommendations_outcomes():
     """External-validation readout: accepted optimizer suggestions' record since
