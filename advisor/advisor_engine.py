@@ -1234,9 +1234,25 @@ class AdvisorEngine:
         if mode == "mulligan":
             me = engine_state.my_player()
             bottom_count = int(me.mulligan_count) if me else 0
+        # Send the player's deck strategy so the engine runs the FULL deck-specific
+        # rule stack (general + per-deck merge), not just general.json. The on-disk
+        # strategy.json IS the rule-contract shape the engine parses. Graceful: any
+        # failure -> None -> engine uses general-only (prior behavior). This is the
+        # harmonization switchover — the one Rust core now drives deck-aware advice.
+        deck_strategy = None
+        if mode == "main" and self._strategy is not None:
+            try:
+                from .strategy import _strategy_path
+
+                _sp = _strategy_path(self._strategy.name)
+                if _sp.exists():
+                    deck_strategy = _sp.read_text()
+            except Exception:
+                deck_strategy = None
         advice = await get_engine_advice(
             engine_state, ai=ai, opp_deck_names=opp_names,
-            mode=mode, attackers=attackers, targets=targets, bottom_count=bottom_count,
+            mode=mode, attackers=attackers, targets=targets,
+            bottom_count=bottom_count, deck_strategy=deck_strategy,
         )
         if advice and advice.message:
             base = [a for a in self._last_advice if a.source.lower() != "engine"]

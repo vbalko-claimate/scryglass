@@ -75,6 +75,7 @@ def build_request(
     attackers: list[str] | None = None,
     targets: list[str] | None = None,
     bottom_count: int = 0,
+    deck_strategy: str | None = None,
 ) -> dict | None:
     """Build the /advise payload from the live game state, or None if the
     state isn't ready (no players seated).
@@ -115,6 +116,10 @@ def build_request(
         "attackers": attackers or [],
         "targets": targets or [],
         "bottom_count": bottom_count,
+        # Per-deck strategy JSON so the engine runs the FULL deck-specific rule
+        # stack (general + per-deck merge), not just general.json. None/absent =
+        # general-only (the engine treats it as a serde-default Option).
+        "deck_strategy": deck_strategy,
     }
 
 
@@ -127,6 +132,7 @@ async def get_engine_advice(
     attackers: list[str] | None = None,
     targets: list[str] | None = None,
     bottom_count: int = 0,
+    deck_strategy: str | None = None,
     timeout: float = 8.0,
 ) -> Advice | None:
     """Query the engine sidecar and return a single `Advice`, or None when
@@ -139,6 +145,7 @@ async def get_engine_advice(
     req = build_request(
         state, ai=ai, opp_deck_names=opp_deck_names,
         mode=mode, attackers=attackers, targets=targets, bottom_count=bottom_count,
+        deck_strategy=deck_strategy,
     )
     if req is None:
         return None
