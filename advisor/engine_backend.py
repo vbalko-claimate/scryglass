@@ -211,6 +211,15 @@ async def get_engine_advice(
     # as a prominent overlay element; `details` keeps the diagnostic.
     rationale = (data.get("rationale") or "").strip()
     diag = f"[engine {data.get('pilot', '')}] win {win:.0%} · coverage {coverage}{flag} · {top}"
+    # Surface the harmonized rule engine's deck-specific advice (strategy_notes,
+    # best-first) alongside the heuristic WHY — prominently in the rationale, and
+    # in the diagnostic. This is the ported scryglass strategy layer, now served
+    # by the one Rust core.
+    notes = data.get("strategy_notes") or []
+    if notes:
+        note_str = "  •  ".join(notes)
+        rationale = f"{rationale}\nDeck rules: {note_str}" if rationale else f"Deck rules: {note_str}"
+        diag = f"{diag} · rules: {' | '.join(notes)}"
     return Advice(
         source="engine",
         priority=priority,
