@@ -423,6 +423,88 @@
         "Main"
       ],
       "step": "Phase_Main1"
+    },
+    {
+      "id": "synergy_goblin_tribe",
+      "layer": "card_synergy",
+      "tags": ["tribal", "go_wide"],
+      "my_turn": true,
+      "require": [
+        { "zone": "battlefield", "match": { "subtype": "Goblin" }, "min_count": 3 }
+      ],
+      "action": "You're going wide on Goblins — attack together and keep flooding the board (Krenko-style payoffs scale with count).",
+      "action_family": "attack",
+      "priority": "low",
+      "weight": 1.0,
+      "stats": { "fired": 0, "correct": 0 },
+      "conflicts_with": []
+    },
+    {
+      "id": "synergy_landfall_play_land",
+      "layer": "card_synergy",
+      "tags": ["landfall", "sequencing"],
+      "my_turn": true,
+      "phase": ["Main"],
+      "require": [
+        { "zone": "hand", "match": { "type": "Land" }, "min_count": 1 },
+        { "zone": "battlefield", "match": { "keyword": "landfall" }, "min_count": 1 }
+      ],
+      "action": "You control a landfall creature — play your land this turn to trigger it before you attack.",
+      "action_family": "play_land",
+      "priority": "medium",
+      "weight": 1.0,
+      "stats": { "fired": 0, "correct": 0 },
+      "conflicts_with": []
+    },
+    {
+      "id": "synergy_lifegain_payoff",
+      "layer": "card_synergy",
+      "tags": ["lifegain", "payoff"],
+      "my_turn": true,
+      "require": [
+        { "zone": "battlefield", "match": { "name": ["Ajani's Pridemate", "Essence Channeler", "Exemplar of Light"] }, "min_count": 1 },
+        { "zone": "battlefield", "match": { "keyword": "lifelink" }, "min_count": 1 }
+      ],
+      "action": "{card} grows whenever you gain life — attack with your lifelinkers to keep scaling it.",
+      "action_family": "attack",
+      "priority": "low",
+      "weight": 1.0,
+      "stats": { "fired": 0, "correct": 0 },
+      "conflicts_with": []
+    },
+    {
+      "id": "synergy_prowess_combat",
+      "layer": "card_synergy",
+      "tags": ["prowess", "sequencing"],
+      "my_turn": true,
+      "phase": ["Main1"],
+      "require": [
+        { "zone": "hand", "match": { "type": "Instant" }, "min_count": 1 },
+        { "zone": "battlefield", "match": { "keyword": "prowess|noncreature spell" }, "min_count": 1 }
+      ],
+      "action": "Hold {card} for combat — attack first, then cast it so your spells-matter creature's pump lands as damage.",
+      "action_family": "attack",
+      "priority": "medium",
+      "weight": 1.0,
+      "stats": { "fired": 0, "correct": 0 },
+      "conflicts_with": []
+    },
+    {
+      "id": "synergy_hold_counter",
+      "layer": "threat_response",
+      "tags": ["reactive", "counter"],
+      "my_turn": true,
+      "phase": ["Main2"],
+      "mana_min": 2,
+      "require": [
+        { "zone": "hand", "match": { "name": ["Negate", "Annul", "Essence Scatter", "Spell Pierce", "Three Steps Ahead", "No More Lies", "Reasonable Doubt"] }, "min_count": 1 }
+      ],
+      "action": "Pass with mana open — you're holding {card} to answer their next threat instead of tapping out.",
+      "action_family": "pass",
+      "priority": "medium",
+      "weight": 1.0,
+      "stats": { "fired": 0, "correct": 0 },
+      "conflicts_with": []
     }
   ],
   "stats": {
