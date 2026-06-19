@@ -437,6 +437,7 @@ tr:hover { background: rgba(255,255,255,0.03); }
             <button class="tab" onclick="switchTab('decks')">Decks</button>
             <button class="tab" onclick="switchTab('guides')">Guides</button>
             <button class="tab" onclick="switchTab('ga')">GA Runs</button>
+            <button class="tab" onclick="switchTab('cloud')">Cloud Sync</button>
         </div>
 
         <!-- Strategies -->
@@ -558,6 +559,40 @@ tr:hover { background: rgba(255,255,255,0.03); }
             </table>
             <div id="ga-detail" class="detail-panel"></div>
         </div>
+
+        <!-- Cloud Sync -->
+        <div id="tab-cloud" class="section">
+            <h2>Cloud Sync</h2>
+            <p style="color:#888;font-size:13px;max-width:680px">
+                Opt-in: upload finished-match telemetry to the cloud and pull fresh
+                meta decks + interaction profiles back. Off by default. The token is
+                stored locally and never shown again after saving.
+            </p>
+            <div id="cloud-env-note" style="display:none;margin:8px 0;padding:8px 12px;
+                 background:#33240a;border:1px solid #6b5418;border-radius:6px;color:#e0c068;font-size:12px">
+                Configured via environment variables (SCRY_CLOUD_*) — those override these settings.
+            </div>
+            <div style="display:grid;grid-template-columns:140px 1fr;gap:10px 12px;max-width:640px;align-items:center">
+                <label for="cloud-enabled">Enabled</label>
+                <input type="checkbox" id="cloud-enabled" style="justify-self:start;width:18px;height:18px">
+
+                <label for="cloud-url">Cloud URL</label>
+                <input type="text" id="cloud-url" class="search-bar" style="margin:0"
+                       placeholder="https://scryglass.app.claimate.tech">
+
+                <label for="cloud-token">Token</label>
+                <input type="password" id="cloud-token" class="search-bar" style="margin:0"
+                       placeholder="(none)" autocomplete="off">
+
+                <label for="cloud-interval">Interval (sec)</label>
+                <input type="number" id="cloud-interval" class="search-bar" style="margin:0" min="30" value="900">
+            </div>
+            <div class="btn-row" style="margin-top:14px">
+                <button id="cloud-save-btn" class="btn btn-primary" onclick="saveCloudConfig()">Save</button>
+                <button id="cloud-sync-btn" class="btn btn-secondary" onclick="cloudSyncNow()">Sync now</button>
+                <span id="cloud-status" style="font-size:12px;color:#888;align-self:center"></span>
+            </div>
+        </div>
     </div>
 
     <div id="toast" class="toast"></div>
@@ -586,6 +621,7 @@ function switchTab(name) {
     if (name === 'decks') loadDecks();
     if (name === 'guides') loadGuides();
     if (name === 'ga') loadGARuns();
+    if (name === 'cloud') loadCloudConfig();
 }
 
 // ── Toast ──
@@ -818,8 +854,7 @@ async function loadMetaDecks() {
                 <div class="icon">&#9888;</div>
                 <div class="text">
                     <strong>${needsReview.length} deck(s) need review</strong> — missing key_threats or description.<br>
-                    Run <code>uv run python tools/update_meta.py</code> with LLM configured to auto-generate,
-                    or edit manually below / via JSON editor.
+                    Edit them manually below or via the JSON editor.
                 </div>
             </div>`;
     } else {
@@ -892,6 +927,93 @@ async function saveMetaJSON() {
         }
     } catch (e) {
         showToast('Invalid JSON: ' + e.message, true);
+    }
+}
+
+// ── Cloud Sync ──
+async function loadCloudConfig() {
+    const status = document.getElementById('cloud-status');
+    try {
+        const res = await fetch('/api/manage/cloud-config');
+        const c = await res.json();
+        document.getElementById('cloud-enabled').checked = !!c.enabled;
+        document.getElementById('cloud-url').value = c.url || '';
+        document.getElementById('cloud-interval').value = c.interval_secs || 900;
+        document.getElementById('cloud-token').placeholder =
+            c.token_set ? '•••••••• (set — leave blank to keep)' : '(none)';
+        document.getElementById('cloud-env-note').style.display = c.env_override ? 'block' : 'none';
+        status.textContent = '';
+    } catch (e) {
+        status.textContent = `Error: ${e.message}`;
+        status.style.color = '#f44336';
+    }
+}
+
+async function saveCloudConfig() {
+    const btn = document.getElementById('cloud-save-btn');
+    const status = document.getElementById('cloud-status');
+    const body = {
+        enabled: document.getElementById('cloud-enabled').checked,
+        url: document.getElementById('cloud-url').value.trim(),
+        interval_secs: parseInt(document.getElementById('cloud-interval').value, 10) || 900,
+    };
+    const token = document.getElementById('cloud-token').value;
+    if (token) body.token = token;
+    btn.disabled = true;
+    try {
+        const res = await fetch('/api/manage/cloud-config', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+        });
+        const data = await res.json();
+        if (data.status === 'ok') {
+            document.getElementById('cloud-token').value = '';
+            showToast('Cloud config saved');
+            loadCloudConfig();
+        } else {
+            status.textContent = data.error || 'Save failed';
+            status.style.color = '#f44336';
+            showToast('Save failed', true);
+        }
+    } catch (e) {
+        status.textContent = `Error: ${e.message}`;
+        status.style.color = '#f44336';
+    } finally {
+        btn.disabled = false;
+    }
+}
+
+async function cloudSyncNow() {
+    const btn = document.getElementById('cloud-sync-btn');
+    const status = document.getElementById('cloud-status');
+    btn.disabled = true;
+    btn.textContent = 'Syncing...';
+    status.textContent = 'Uploading telemetry + pulling bundle...';
+    status.style.color = '#90caf9';
+    try {
+        const res = await fetch('/api/manage/cloud-sync', { method: 'POST' });
+        const data = await res.json();
+        if (data.status === 'ok') {
+            const r = data.report || {};
+            const bits = [`uploaded ${r.uploaded || 0}`, `bundle v${r.bundle_version || 0}`];
+            if (r.meta_decks_written) bits.push('meta_decks updated');
+            if (r.profiles_merged) bits.push('profiles merged');
+            status.textContent = bits.join(' · ');
+            status.style.color = '#4caf50';
+            showToast('Cloud sync complete');
+        } else {
+            status.textContent = data.error || (data.report && data.report.error) || 'Sync failed';
+            status.style.color = '#f44336';
+            showToast('Sync failed', true);
+        }
+    } catch (e) {
+        status.textContent = `Error: ${e.message}`;
+        status.style.color = '#f44336';
+        showToast('Sync error', true);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Sync now';
     }
 }
 
