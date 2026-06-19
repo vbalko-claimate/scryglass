@@ -9,6 +9,7 @@
 set -euo pipefail
 
 cd "$(git rev-parse --show-toplevel)"
+SCRY_ROOT="$(pwd)"
 
 GLASS_SHARD="${GLASS_SHARD_DIR:-$(cd .. 2>/dev/null && pwd)/glass-shard}"
 TARGET="${TARGET:-aarch64-apple-darwin}"
@@ -39,7 +40,7 @@ DB_SRC="$GLASS_SHARD/data/cards/standard_oracle_plus.json"
 [ -f "$DB_SRC" ] || DB_SRC="$GLASS_SHARD/data/cards/standard_oracle.json"
 mkdir -p src-tauri/resources
 (cd "$GLASS_SHARD" && cargo run -q -p glass-cli --release -- \
-    compile-cards --input "$DB_SRC" --output ../src-tauri/resources/glass_advise_db.json) \
+    compile-cards --input "$DB_SRC" --output "$SCRY_ROOT/src-tauri/resources/glass_advise_db.json") \
     && echo "  card DB compiled + staged"
 
 echo ""
@@ -65,6 +66,8 @@ if [[ "${1:-}" == "--install" ]]; then
     echo ""
     echo "=== Step 4: Install ==="
     pkill -x Scryglass 2>/dev/null || true
+    pkill -x scryglass 2>/dev/null || true  # the macOS binary is lowercase
+    pkill -x overlay-helper 2>/dev/null || true
     pkill -f "/Applications/Scryglass.app/Contents/MacOS/glass-host" 2>/dev/null || true
     for i in $(seq 1 20); do
         if ! lsof -nP -iTCP:8765 -sTCP:LISTEN >/dev/null 2>&1; then
