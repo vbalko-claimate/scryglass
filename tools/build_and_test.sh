@@ -44,6 +44,19 @@ mkdir -p src-tauri/resources
     && echo "  card DB compiled + staged"
 
 echo ""
+echo "=== Step 2a: Build recognition meta_decks (discriminative TF-IDF) ==="
+DECKLISTS=$(ls -t "$GLASS_SHARD"/data/meta/decklists/standard_arena_*.txt 2>/dev/null | head -1)
+if [ -n "$DECKLISTS" ]; then
+    mkdir -p data/meta
+    (cd "$GLASS_SHARD" && cargo run -q -p glass-cli --release -- build-meta-decks \
+        --decklists "$DECKLISTS" --catalog "$DB_SRC" \
+        --out "$SCRY_ROOT/data/meta/meta_decks.json") \
+        && echo "  meta_decks built + staged from $(basename "$DECKLISTS")"
+else
+    echo "  (no decklists found — keeping existing meta_decks.json)"
+fi
+
+echo ""
 echo "=== Step 2b: overlay-helper ==="
 if [ -f "$GLASS_SHARD/scripts/build-overlay-helper.sh" ]; then
     bash "$GLASS_SHARD/scripts/build-overlay-helper.sh" \
