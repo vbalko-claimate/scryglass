@@ -1,8 +1,11 @@
 #!/bin/bash
-# Smoke test for PyInstaller binary — run after `pyinstaller scry-server.spec`
-# Verifies the binary starts, serves health endpoint, and static files exist.
+# Smoke test for the built host binary (glass-host, all-Rust) — verifies it
+# starts, serves the health endpoint, and serves static files + pages.
+# Default points at the glass-shard release output; pass any host binary path.
+# (python3 is used only for inline JSON parsing in this dev tool — it is not
+# part of the shipped product, which is all-Rust.)
 
-BINARY="${1:-dist/scry-server}"
+BINARY="${1:-../glass-shard/target/release/glass-host}"
 PORT=18765  # Use non-default port to avoid conflicts
 
 if [ ! -f "$BINARY" ]; then

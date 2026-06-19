@@ -7,72 +7,19 @@ on:
 permissions:
   contents: write
 
+# All-Rust product: the backend is `glass-host` (crate glass-mtga) and the
+# advice engine is `glass-server` (crate glass-server), both built from the
+# sibling repo glass-shard. There is no Python sidecar anymore — the former
+# `build-sidecar` (PyInstaller) and `ci-check` (advisor.ci_check) jobs were
+# removed when the Python host was parked under legacy-python/.
+#
+# NOTE: Windows is intentionally absent from the build matrix. The previous
+# Windows release shipped a Python scry-server; with Python retired, Windows
+# needs glass-shard to build glass-host on x86_64-pc-windows-msvc (log paths,
+# sidecar features) — re-enable the Windows matrix entry only after verifying
+# `cargo build -p glass-mtga --features server` succeeds on Windows.
 jobs:
-  build-sidecar:
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: macos-latest
-            target: aarch64-apple-darwin
-            sidecar-name: scry-server-aarch64-apple-darwin
-          - os: windows-latest
-            target: x86_64-pc-windows-msvc
-            sidecar-name: scry-server-x86_64-pc-windows-msvc.exe
-          # macOS Intel disabled — GitHub runner issues
-          # - os: macos-13
-          #   target: x86_64-apple-darwin
-          #   sidecar-name: scry-server-x86_64-apple-darwin
-    runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-          cache: 'pip'
-
-      - name: Install Python deps
-        run: |
-          pip install pyinstaller
-          pip install .
-
-      - name: Build sidecar
-        run: |
-          SEP=":"
-          if [ "$RUNNER_OS" = "Windows" ]; then SEP=";"; fi
-          pyinstaller --name scry-server --onefile --noconfirm \
-            --add-data "data/strategies${SEP}data/strategies" \
-            --add-data "data/meta${SEP}data/meta" \
-            --add-data "data/cards_cache.json${SEP}data/" \
-            --add-data "static${SEP}static" \
-            --hidden-import uvicorn.logging \
-            --hidden-import uvicorn.loops.auto \
-            --hidden-import uvicorn.protocols.http.auto \
-            --hidden-import uvicorn.protocols.websockets.auto \
-            --hidden-import uvicorn.lifespan.on \
-            --collect-submodules advisor \
-            --collect-submodules uvicorn \
-            run.py
-        shell: bash
-
-      - name: Smoke test sidecar (macOS only)
-        if: runner.os == 'macOS'
-        run: bash tools/smoke_test_binary.sh dist/scry-server
-        shell: bash
-
-      - name: Rename sidecar with target triple
-        run: |
-          mv dist/scry-server${{ runner.os == 'Windows' && '.exe' || '' }} dist/${{ matrix.sidecar-name }}
-        shell: bash
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: sidecar-${{ matrix.target }}
-          path: dist/${{ matrix.sidecar-name }}
-
   build-tauri:
-    needs: build-sidecar
     strategy:
       fail-fast: false
       matrix:
@@ -80,9 +27,6 @@ jobs:
           - os: macos-latest
             target: aarch64-apple-darwin
             args: --target aarch64-apple-darwin
-          - os: windows-latest
-            target: x86_64-pc-windows-msvc
-            args: --target x86_64-pc-windows-msvc
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -97,22 +41,43 @@ jobs:
 
       - uses: swatinem/rust-cache@v2
         with:
-          workspaces: src-tauri
+          workspaces: |
+            src-tauri
+            ../glass-shard
 
-      - name: Download sidecar
-        uses: actions/download-artifact@v4
+      # Check out the sibling Rust repo that owns the backend + advice engine.
+      - name: Checkout glass-shard (sidecar source)
+        uses: actions/checkout@v4
         with:
-          name: sidecar-${{ matrix.target }}
-          path: src-tauri/binaries/
+          repository: vbalko-claimate/glass-shard
+          path: glass-shard
 
-      - name: Make sidecar executable
-        if: runner.os != 'Windows'
-        run: chmod +x src-tauri/binaries/*
+      - name: Build Rust sidecars (glass-host + glass-server)
+        run: |
+          cd glass-shard
+          cargo build -p glass-mtga --features server --release --bin glass-host
+          cargo build -p glass-server --release
+          cd ..
+          mkdir -p src-tauri/binaries
+          cp glass-shard/target/release/glass-host src-tauri/binaries/glass-host-${{ matrix.target }}
+          cp glass-shard/target/release/glass-server src-tauri/binaries/glass-server-${{ matrix.target }}
+          chmod +x src-tauri/binaries/*
 
-      - name: Create overlay-helper placeholder (Windows)
-        if: runner.os == 'Windows'
-        run: echo "overlay not supported on Windows" > src-tauri/binaries/overlay-helper-x86_64-pc-windows-msvc.exe
-        shell: bash
+      - name: Compile card DB (glass_advise_db.json)
+        run: |
+          DB_SRC="glass-shard/data/cards/standard_oracle_plus.json"
+          [ -f "$DB_SRC" ] || DB_SRC="glass-shard/data/cards/standard_oracle.json"
+          mkdir -p src-tauri/resources
+          (cd glass-shard && cargo run -q -p glass-cli --release -- \
+            compile-cards --input "$DB_SRC" --output ../src-tauri/resources/glass_advise_db.json)
+
+      # overlay-helper placeholder per-platform (macOS builds it separately; CI
+      # stub for now to satisfy externalBin — replace with a real build if needed).
+      - name: Stage overlay-helper
+        run: |
+          if [ ! -f src-tauri/binaries/overlay-helper-${{ matrix.target }} ]; then
+            echo "overlay-helper not staged — creating placeholder" > src-tauri/binaries/overlay-helper-${{ matrix.target }}
+          fi
 
       - name: Build Tauri
         uses: tauri-apps/tauri-action@v0
@@ -131,21 +96,3 @@ jobs:
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
-
-  # Quick CI check (runs on every push, not just tags)
-  ci-check:
-    if: github.ref_type != 'tag'
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-          cache: 'pip'
-
-      - name: Install deps
-        run: pip install .
-
-      - name: Run CI gate check
-        run: python -m advisor.ci_check

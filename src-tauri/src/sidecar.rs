@@ -6,17 +6,18 @@ const SIDECAR_URL: &str = "http://localhost:8765";
 const HEALTH_ENDPOINT: &str = "/health";
 const MAX_WAIT_SECS: u64 = 45;
 
-/// Start the Python sidecar and wait until it responds to health checks.
-/// Returns Ok(()) on success, Err(message) on failure.
+/// Start the all-Rust host (`glass-host`, crate glass-mtga) and wait until it
+/// responds to health checks. This is the sole backend — there is no Python
+/// fallback. Returns Ok(()) on success, Err(message) on failure.
 pub async fn start_and_wait(app: &AppHandle) -> Result<(), String> {
-    // Check if server is already running
+    // Check if server is already running (e.g. a glass-host launched out-of-band)
     println!("[sidecar] Checking if server is already running...");
     if check_health().await {
         println!("[sidecar] Server already running at {}", SIDECAR_URL);
         return Ok(());
     }
 
-    // Dev mode: don't try sidecar, just wait for manual server
+    // Dev mode: don't try the sidecar, just wait for a manually started server.
     if cfg!(debug_assertions) {
         println!("[sidecar] Dev mode — waiting for manual server start...");
         for i in 0..MAX_WAIT_SECS {
@@ -26,35 +27,84 @@ pub async fn start_and_wait(app: &AppHandle) -> Result<(), String> {
                 return Ok(());
             }
         }
-        return Err("Dev mode: Python server not running. Start with: uv run python run.py".into());
+        return Err("Dev mode: glass-host not running. Build + start it from glass-shard: \
+                    cargo run -p glass-mtga --features server --bin glass-host".into());
     }
 
-    // Production: spawn sidecar
-    let shell = app.shell();
-    let spawn_result = shell
-        .sidecar("scry-server")
-        .map_err(|e| format!("Failed to create sidecar command: {}", e))?
-        .spawn();
-
-    match spawn_result {
-        Ok((mut _rx, _child)) => {
-            println!("[sidecar] Spawned scry-server, waiting for health...");
-        }
-        Err(e) => {
-            return Err(format!("Failed to spawn sidecar: {}. Is scry-server bundled?", e));
-        }
+    // Production: spawn the bundled all-Rust host (the only backend).
+    if !spawn_glass_host(app) {
+        return Err("Failed to spawn glass-host. Is the Rust binary bundled in externalBin? \
+                    (no Python fallback exists anymore)".into());
     }
-
-    // Poll health endpoint
     for i in 0..MAX_WAIT_SECS {
         tokio::time::sleep(Duration::from_secs(1)).await;
         if check_health().await {
-            println!("[sidecar] Server ready after {}s", i + 1);
+            println!("[sidecar] glass-host (Rust) ready after {}s", i + 1);
             return Ok(());
         }
     }
 
-    Err(format!("Server did not respond within {}s. Check logs for errors.", MAX_WAIT_SECS))
+    Err(format!("glass-host did not respond within {}s. Check logs for errors.", MAX_WAIT_SECS))
+}
+
+/// Spawn the bundled glass-host (Rust) sidecar on :8765, pointing it at the
+/// bundled UI/catalog/strategies (resources) and the user's persistent data
+/// dir (the same `~/MTG/mtg-data` the Python host uses, override via
+/// SCRY_USER_DATA — so advisor.db history is shared). Returns false on failure.
+fn spawn_glass_host(app: &AppHandle) -> bool {
+    use tauri::Manager;
+
+    let res = |rel: &str| {
+        app.path()
+            .resolve(rel, tauri::path::BaseDirectory::Resource)
+            .map(|p| p.to_string_lossy().into_owned())
+    };
+    let (Ok(static_dir), Ok(catalog), Ok(strategy_dir), Ok(advise_db)) = (
+        res("scry/static"),
+        res("scry/data/cards_cache.json"),
+        res("scry/data"),
+        res("resources/glass_advise_db.json"),
+    ) else {
+        eprintln!("[sidecar] cannot resolve bundled glass-host resources");
+        return false;
+    };
+
+    // Persistent user data — match the Python host (USER_DATA_DIR =
+    // $SCRY_USER_DATA or ~/MTG/mtg-data; db + decks + collection underneath).
+    let user_root = std::env::var("SCRY_USER_DATA").unwrap_or_else(|_| {
+        app.path()
+            .home_dir()
+            .map(|h| h.join("MTG").join("mtg-data").to_string_lossy().into_owned())
+            .unwrap_or_else(|_| "mtg-data".into())
+    });
+    let app_data = format!("{user_root}/app_data");
+
+    let shell = app.shell();
+    let cmd = match shell.sidecar("glass-host") {
+        Ok(c) => c
+            .env("SCRY_PORT", "8765")
+            .env("SCRY_ADVISE_DB", advise_db)
+            .env("SCRY_STATIC_DIR", static_dir)
+            .env("SCRY_CATALOG_PATH", catalog)
+            .env("SCRY_STRATEGY_DIR", strategy_dir)
+            .env("SCRY_DB_PATH", format!("{app_data}/advisor.db"))
+            .env("SCRY_DECKS_ROOT", format!("{user_root}/decks"))
+            .env("SCRY_USER_DATA", app_data),
+        Err(e) => {
+            eprintln!("[sidecar] glass-host sidecar command failed: {}", e);
+            return false;
+        }
+    };
+    match cmd.spawn() {
+        Ok((_rx, _child)) => {
+            println!("[sidecar] Spawned glass-host (Rust), waiting for health...");
+            true
+        }
+        Err(e) => {
+            eprintln!("[sidecar] glass-host spawn failed: {} (is it bundled?)", e);
+            false
+        }
+    }
 }
 
 pub async fn check_health() -> bool {
@@ -65,65 +115,5 @@ pub async fn check_health() -> bool {
     }
 }
 
-const ENGINE_URL: &str = "http://localhost:3000";
-
-/// Start the bundled glass-engine advice sidecar (glass-server) on :3000,
-/// pointing it at the bundled compiled card DB. BEST-EFFORT and
-/// NON-FATAL: the Python advisor's `engine` advice source degrades to
-/// nothing when this isn't reachable, so any failure here is logged, not
-/// propagated. Runs in parallel with the Python sidecar at startup.
-pub async fn start_glass_engine(app: &AppHandle) {
-    use tauri::Manager;
-
-    if engine_health().await {
-        println!("[glass-engine] already running at {}", ENGINE_URL);
-        return;
-    }
-    if cfg!(debug_assertions) {
-        println!("[glass-engine] dev mode — not spawning bundled glass-server");
-        return;
-    }
-
-    let db_path = match app.path().resolve(
-        "resources/glass_advise_db.json",
-        tauri::path::BaseDirectory::Resource,
-    ) {
-        Ok(p) => p.to_string_lossy().into_owned(),
-        Err(e) => {
-            eprintln!("[glass-engine] cannot resolve bundled card DB: {}", e);
-            return;
-        }
-    };
-
-    let shell = app.shell();
-    let cmd = match shell.sidecar("glass-server") {
-        Ok(c) => c.env("GLASS_DB", db_path).env("PORT", "3000"),
-        Err(e) => {
-            eprintln!("[glass-engine] sidecar command failed: {}", e);
-            return;
-        }
-    };
-    match cmd.spawn() {
-        Ok((_rx, _child)) => println!("[glass-engine] spawned glass-server"),
-        Err(e) => {
-            eprintln!("[glass-engine] spawn failed: {} (is glass-server bundled?)", e);
-            return;
-        }
-    }
-
-    for i in 0..25 {
-        tokio::time::sleep(Duration::from_secs(1)).await;
-        if engine_health().await {
-            println!("[glass-engine] ready after {}s", i + 1);
-            return;
-        }
-    }
-    eprintln!("[glass-engine] not healthy within 25s — engine advice disabled this session");
-}
-
-async fn engine_health() -> bool {
-    match reqwest::get(format!("{}/health", ENGINE_URL)).await {
-        Ok(resp) => resp.status().is_success(),
-        Err(_) => false,
-    }
-}
+// (glass-host advises in-process via the bundled glass_advise_db.json — set as
+// SCRY_ADVISE_DB above. No separate glass-server engine sidecar.)

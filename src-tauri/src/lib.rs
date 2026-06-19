@@ -175,12 +175,7 @@ pub fn run() {
             #[cfg(target_os = "macos")]
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);
 
-            // Start the glass-engine advice sidecar in parallel (best-
-            // effort; the advisor degrades gracefully if it's absent).
-            let engine_handle = app.handle().clone();
-            tauri::async_runtime::spawn(async move {
-                sidecar::start_glass_engine(&engine_handle).await;
-            });
+            // (glass-host advises IN-PROCESS now — no separate engine sidecar.)
 
             // Start Python sidecar, then show main window
             let handle = app.handle().clone();
@@ -203,8 +198,8 @@ pub fn run() {
                                 min-height:100vh;flex-direction:column'>\
                                 <h2 style='color:%23ef5350'>Scryglass failed to start</h2>\
                                 <p style='color:%23888;max-width:400px;text-align:center;margin:12px'>{}</p>\
-                                <p style='color:%23555;font-size:12px'>Try: uv run python run.py</p>\
-                                </body></html>",
+                                <p style='color:%23555;font-size:12px'>Try: start glass-host (cargo run -p glass-mtga --features server --bin glass-host)</p>\
+                                 </body></html>",
                                 e.replace("'", "\\'")
                             );
                             let _ = win.navigate(error_html.parse().unwrap());
