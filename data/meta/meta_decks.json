@@ -2,8 +2,7 @@
   "meta_decks": [
     {
       "colors": [
-        "W",
-        "U"
+        "W"
       ],
       "name": "Mono-White Auras",
       "signal_cards": {
@@ -24,7 +23,6 @@
       "colors": [
         "U",
         "B",
-        "R",
         "G"
       ],
       "name": "4-Color Reanimator",
@@ -46,9 +44,7 @@
     {
       "colors": [
         "U",
-        "B",
-        "R",
-        "G"
+        "R"
       ],
       "name": "Grixis Prowess",
       "signal_cards": {
@@ -90,9 +86,7 @@
     },
     {
       "colors": [
-        "U",
-        "R",
-        "G"
+        "U"
       ],
       "name": "Temur Kona",
       "signal_cards": {
@@ -134,7 +128,6 @@
     },
     {
       "colors": [
-        "W",
         "B",
         "R",
         "G"
@@ -180,7 +173,6 @@
       "colors": [
         "W",
         "U",
-        "B",
         "R"
       ],
       "name": "4-Color Control",
@@ -201,7 +193,6 @@
     },
     {
       "colors": [
-        "W",
         "G"
       ],
       "name": "Mono-Green Landfall",
@@ -264,8 +255,7 @@
     {
       "colors": [
         "U",
-        "B",
-        "G"
+        "B"
       ],
       "name": "Dimir",
       "signal_cards": {
@@ -285,8 +275,7 @@
     },
     {
       "colors": [
-        "W",
-        "U"
+        "W"
       ],
       "name": "Azorius Momo",
       "signal_cards": {
@@ -306,7 +295,6 @@
     },
     {
       "colors": [
-        "W",
         "U",
         "R"
       ],
@@ -371,8 +359,7 @@
     {
       "colors": [
         "W",
-        "U",
-        "R"
+        "U"
       ],
       "name": "Azorius Tempo",
       "signal_cards": {
@@ -393,8 +380,7 @@
     {
       "colors": [
         "W",
-        "U",
-        "R"
+        "U"
       ],
       "name": "Jeskai Control",
       "signal_cards": {
@@ -414,10 +400,7 @@
     },
     {
       "colors": [
-        "W",
-        "U",
         "B",
-        "R",
         "G"
       ],
       "name": "Golgari Midrange",
@@ -438,7 +421,6 @@
     },
     {
       "colors": [
-        "W",
         "U",
         "B"
       ],
@@ -460,11 +442,8 @@
     },
     {
       "colors": [
-        "W",
         "U",
-        "B",
-        "R",
-        "G"
+        "R"
       ],
       "name": "5c Elementals",
       "signal_cards": {
@@ -506,8 +485,7 @@
     {
       "colors": [
         "U",
-        "B",
-        "G"
+        "B"
       ],
       "name": "Sultai Control",
       "signal_cards": {
@@ -528,9 +506,6 @@
     {
       "colors": [
         "W",
-        "U",
-        "B",
-        "R",
         "G"
       ],
       "name": "Allies",
@@ -551,7 +526,6 @@
     },
     {
       "colors": [
-        "U",
         "R"
       ],
       "name": "Izzet Aggro",
@@ -573,8 +547,6 @@
     {
       "colors": [
         "W",
-        "U",
-        "R",
         "G"
       ],
       "name": "Bant Ouroboroid",
