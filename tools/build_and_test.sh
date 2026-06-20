@@ -44,17 +44,23 @@ mkdir -p src-tauri/resources
     && echo "  card DB compiled + staged"
 
 echo ""
-echo "=== Step 2a: Build recognition meta_decks (discriminative TF-IDF) ==="
-DECKLISTS=$(ls -t "$GLASS_SHARD"/data/meta/decklists/standard_arena_*.txt 2>/dev/null | head -1)
-if [ -n "$DECKLISTS" ]; then
+echo "=== Step 2a: Build recognition meta_decks (discriminative TF-IDF + variant merge) ==="
+# Combine ALL Standard decklist sources (arena tier-list + goldfish metagame +
+# any future sources), then the builder merges near-duplicate variants
+# (Jaccard ≥ 0.45) into broader buckets. More sources = more coverage.
+DECK_DIR="$GLASS_SHARD/data/meta/decklists"
+COMBINED=$(mktemp -t scry_decklists.XXXXXX)
+cat "$DECK_DIR"/standard_*.txt > "$COMBINED" 2>/dev/null
+if [ -s "$COMBINED" ]; then
     mkdir -p data/meta
     (cd "$GLASS_SHARD" && cargo run -q -p glass-cli --release -- build-meta-decks \
-        --decklists "$DECKLISTS" --catalog "$DB_SRC" \
+        --decklists "$COMBINED" --catalog "$DB_SRC" --merge 0.45 \
         --out "$SCRY_ROOT/data/meta/meta_decks.json") \
-        && echo "  meta_decks built + staged from $(basename "$DECKLISTS")"
+        && echo "  meta_decks built + staged from $(ls "$DECK_DIR"/standard_*.txt 2>/dev/null | wc -l | tr -d ' ') source file(s)"
 else
     echo "  (no decklists found — keeping existing meta_decks.json)"
 fi
+rm -f "$COMBINED"
 
 echo ""
 echo "=== Step 2b: overlay-helper ==="
