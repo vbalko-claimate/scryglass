@@ -57,6 +57,9 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: vbalko-claimate/glass-shard
+          # glass-shard is private; the default GITHUB_TOKEN is scoped to
+          # scryglass only. GLASS_SHARD_PAT is a token with read access to it.
+          token: ${{ secrets.GLASS_SHARD_PAT }}
           path: glass-shard
 
       - name: Build Rust sidecars (glass-host + glass-server)
