@@ -125,7 +125,7 @@ html, body {
 
 /* Honest degradation: advisor can't see part of the hand (off-catalog cards) */
 .advice-confidence {
-    margin: 4px 0 0 20px;
+    margin: 4px 0 0 11px; /* align under the key-play content (indicator 3px + gap 8px) */
     font-size: 11px;
     line-height: 1.3;
     color: #f4a261;
@@ -362,6 +362,29 @@ html, body {
     color: #fff;
     box-shadow: 0 0 8px rgba(233, 57, 70, 0.3);
 }
+
+/* Loud lethal warning — the "you're about to die" banner. */
+.lethal-banner {
+    display: none;
+    margin: 0 0 6px 0;
+    padding: 7px 12px;
+    border-radius: 6px;
+    background: linear-gradient(90deg, rgba(200, 20, 30, 0.96), rgba(150, 10, 20, 0.96));
+    border: 1px solid #ff5a66;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+    box-shadow: 0 0 14px rgba(233, 57, 70, 0.55);
+    animation: lethal-pulse 1.1s ease-in-out infinite;
+}
+.lethal-banner.visible { display: block; }
+.lethal-banner .lethal-tag { font-size: 12px; opacity: 0.95; margin-right: 6px; }
+@keyframes lethal-pulse {
+    0%, 100% { box-shadow: 0 0 10px rgba(233, 57, 70, 0.45); }
+    50%      { box-shadow: 0 0 20px rgba(255, 90, 102, 0.85); }
+}
 </style>
 </head>
 <body>
@@ -369,6 +392,7 @@ html, body {
     <div class="opp-line" id="opp-line">
         <span class="waiting" id="waiting-msg">Waiting for match...</span>
     </div>
+    <div class="lethal-banner" id="lethal-banner"></div>
     <div class="key-play" id="key-play" style="display:none">
         <div class="key-play-indicator medium" id="key-play-indicator"></div>
         <div class="key-play-content">
@@ -435,6 +459,7 @@ async function tick() {
     // Between matches: hide the advisor panels, show the session record.
     document.getElementById('key-play').style.display = 'none';
     document.getElementById('advice-confidence').style.display = 'none';
+    document.getElementById('lethal-banner').classList.remove('visible');
     document.getElementById('do-now').classList.remove('visible');
     document.getElementById('threat-line').classList.remove('visible');
     document.getElementById('hand-badges').classList.remove('visible');
@@ -665,6 +690,16 @@ function updateAdvice(data) {
         confEl.style.display = '';
     } else {
         confEl.style.display = 'none';
+    }
+
+    // Loud lethal banner — set by the blocker advisor when incoming ≥ life.
+    const lethalEl = document.getElementById('lethal-banner');
+    const alertMsg = (nowItems.find(a => typeof a.alert === 'string' && a.alert) || {}).alert;
+    if (alertMsg) {
+        lethalEl.innerHTML = '<span class="lethal-tag">☠</span>' + alertMsg;
+        lethalEl.classList.add('visible');
+    } else {
+        lethalEl.classList.remove('visible');
     }
 }
 
