@@ -123,6 +123,15 @@ html, body {
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
 }
 
+/* Honest degradation: advisor can't see part of the hand (off-catalog cards) */
+.advice-confidence {
+    margin: 4px 0 0 20px;
+    font-size: 11px;
+    line-height: 1.3;
+    color: #f4a261;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
 /* Threat warning */
 .threat-line {
     font-size: 13px;
@@ -371,6 +380,7 @@ html, body {
             <div class="key-play-reason" id="key-play-reason"></div>
         </div>
     </div>
+    <div class="advice-confidence" id="advice-confidence" style="display:none"></div>
     <div class="threat-line" id="threat-line"></div>
     <div class="do-now" id="do-now"></div>
     <div class="phase-line" id="phase-line"></div>
@@ -402,11 +412,55 @@ const FAMILY_LABEL = {
     attack: 'ATTACK', block: 'BLOCK', pass: 'HOLD',
 };
 
+// Match-state driver. `/match-status` is the AUTHORITATIVE in-match signal
+// (server-side, correct: true only while a match is in progress). Drive `inMatch`
+// from it every 2s rather than from fragile WS events (which could leave the
+// overlay stuck showing the session record IN a match, or blank). Manage the two
+// views EXPLICITLY here instead of the `.no-match` "visibility:hidden *" hack —
+// that also hid the between-match session record.
+async function tick() {
+    let active = inMatch;
+    try {
+        active = ((await (await fetch('/match-status')).json()).active === true);
+    } catch (e) { return; /* engine not reachable — keep last state */ }
+    inMatch = active;
+    const overlay = document.getElementById('overlay');
+    overlay.classList.remove('no-match'); // never force-hide all; managed below
+    const wm = document.getElementById('waiting-msg');
+    if (active) {
+        // In a match: the advisor panels render from WS (updateState/updateAdvice).
+        if (wm) wm.style.display = 'none';
+        return;
+    }
+    // Between matches: hide the advisor panels, show the session record.
+    document.getElementById('key-play').style.display = 'none';
+    document.getElementById('advice-confidence').style.display = 'none';
+    document.getElementById('do-now').classList.remove('visible');
+    document.getElementById('threat-line').classList.remove('visible');
+    document.getElementById('hand-badges').classList.remove('visible');
+    document.getElementById('threat-badges').classList.remove('visible');
+    document.getElementById('debrief').style.display = 'none';
+    if (!wm) return;
+    try {
+        const s = await (await fetch('/api/session-stats')).json();
+        const rec = s.record || {}, recent = s.recent || {}, last = s.last;
+        let t = `Record ${rec.wins||0}-${rec.losses||0} (${rec.pct||0}%)`;
+        if (((recent.wins||0)+(recent.losses||0)) > 0)
+            t += ` | last 20: ${recent.wins||0}-${recent.losses||0}`;
+        if (last && last.result)
+            t += ` | last: ${last.result === 'Win' ? 'WIN' : 'LOSS'} vs ${last.opponent || '?'}`;
+        wm.textContent = t;
+        wm.style.display = '';
+    } catch (e) { /* stats unavailable — leave text as-is */ }
+}
+setInterval(tick, 2000);
+
 function connect() {
     ws = new WebSocket(`ws://${location.hostname}:8765/ws`);
     ws.onopen = () => {
         // Request current state (we might have missed earlier messages)
         ws.send(JSON.stringify({type: 'request_state'}));
+        tick();
     };
     ws.onclose = () => setTimeout(connect, 2000);
     ws.onerror = () => {};
@@ -598,6 +652,20 @@ function updateAdvice(data) {
     } else {
         threatEl.classList.remove('visible');
     }
+
+    // Honest degradation: surface when the engine can't see part of the hand
+    // (off-catalog cards drop confidence) so a blank/pass isn't mistaken for a
+    // real recommendation. See the 2026-07-06 Marvel-blindness incident.
+    const confEl = document.getElementById('advice-confidence');
+    const engineItem = nowItems.find(a => a.source === 'engine') || nowItems[0];
+    const conf = engineItem && engineItem.confidence;
+    if (conf === 'low' || conf === 'directional') {
+        confEl.textContent = '⚠ ' + (engineItem.confidence_basis
+            || 'Some cards not recognized — advice may be incomplete');
+        confEl.style.display = '';
+    } else {
+        confEl.style.display = 'none';
+    }
 }
 
 function updateHandBadges(state) {
@@ -744,10 +812,11 @@ function showDebrief(data) {
     `;
     debrief.style.display = 'block';
 
-    // Auto-hide after 15 seconds
+    // Auto-hide after 15 seconds → the 2s tick then shows the session record
+    // (it no longer re-adds `no-match`, which used to hide the record too and
+    // could blank the NEXT match if it started within 15s).
     setTimeout(() => {
         debrief.style.display = 'none';
-        overlay.classList.add('no-match');
         document.getElementById('opp-line').style.display = '';
     }, 15000);
 }

@@ -4,6 +4,32 @@
 import Cocoa
 import WebKit
 
+/// Find the NSScreen that MTGA's main window is on (multi-monitor aware).
+/// CoreGraphics window bounds use a top-left origin; convert the window center
+/// to AppKit global coords (bottom-left origin) to locate the containing screen.
+func mtgaScreen() -> NSScreen? {
+    let options: CGWindowListOption = [.optionAll, .excludeDesktopElements]
+    guard let windowList = CGWindowListCopyWindowInfo(options, kCGNullWindowID) as? [[String: Any]] else { return nil }
+    let primaryHeight = CGDisplayBounds(CGMainDisplayID()).height
+    for win in windowList {
+        let owner = win["kCGWindowOwnerName"] as? String ?? ""
+        guard owner.contains("MTGA") else { continue }
+        guard let bounds = win["kCGWindowBounds"] as? [String: Any],
+              let x = (bounds["X"] as? NSNumber)?.doubleValue,
+              let y = (bounds["Y"] as? NSNumber)?.doubleValue,
+              let w = (bounds["Width"] as? NSNumber)?.doubleValue,
+              let h = (bounds["Height"] as? NSNumber)?.doubleValue,
+              w > 100, h > 100 else { continue }
+        // window center in CoreGraphics coords → AppKit global coords
+        let cgCenter = NSPoint(x: x + w / 2.0, y: y + h / 2.0)
+        let akPoint = NSPoint(x: cgCenter.x, y: primaryHeight - cgCenter.y)
+        if let screen = NSScreen.screens.first(where: { $0.frame.contains(akPoint) }) {
+            return screen
+        }
+    }
+    return nil
+}
+
 // Custom window — canBecomeKey toggles for feedback mode
 class OverlayWindow: NSWindow {
     var interactiveMode = false
@@ -19,7 +45,7 @@ class OverlayDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Create borderless transparent window
         // Full screen transparent window — overlay elements position themselves via CSS
-        let screenFrame = NSScreen.main?.frame ?? NSRect(x: 0, y: 0, width: 1920, height: 1080)
+        let screenFrame = mtgaScreen()?.frame ?? NSScreen.main?.frame ?? NSRect(x: 0, y: 0, width: 1920, height: 1080)
         window = OverlayWindow(
             contentRect: screenFrame,
             styleMask: [.borderless],
@@ -151,12 +177,18 @@ class OverlayDelegate: NSObject, NSApplicationDelegate {
         let frontApp = NSWorkspace.shared.frontmostApplication?.localizedName ?? ""
         let mtgaFront = frontApp.contains("MTGA")
 
-        // Check if match is active via server
-        let matchActive = checkMatchActive()
+        // Keep the overlay on MTGA's display (multi-monitor): reposition when
+        // the detected MTGA screen differs from the window's current frame.
+        if let s = mtgaScreen(), window.frame != s.frame {
+            window.setFrame(s.frame, display: true)
+        }
 
-        if mtgaFront && matchActive && !window.isVisible {
+        // Show whenever MTGA is frontmost: in a match the advisor renders;
+        // between matches the overlay shows the session record (the web view
+        // decides which, based on match state). Hide only when MTGA isn't front.
+        if mtgaFront && !window.isVisible {
             window.orderFrontRegardless()
-        } else if (!mtgaFront || !matchActive) && window.isVisible {
+        } else if !mtgaFront && window.isVisible {
             window.orderOut(nil)
         }
     }

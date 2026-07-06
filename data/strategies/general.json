@@ -505,6 +505,22 @@
       "weight": 1.0,
       "stats": { "fired": 0, "correct": 0 },
       "conflicts_with": []
+    },
+    {
+      "id": "synergy_sweep_wide_board",
+      "layer": "threat_response",
+      "tags": ["sweep", "reactive"],
+      "my_turn": true,
+      "opp_creatures_min": 3,
+      "require": [
+        { "zone": "hand", "match": { "name": ["Sunfall", "Day of Judgment", "Pyroclasm", "Deadly Cover-Up", "Brotherhood's End", "Temporary Lockdown", "Vanquish the Horde", "Depopulate"] }, "min_count": 1 }
+      ],
+      "action": "Opponent is going wide — cast {card} now; a board wipe is at its best into 3+ creatures and trades up.",
+      "action_family": "cast_spell",
+      "priority": "high",
+      "weight": 1.0,
+      "stats": { "fired": 0, "correct": 0 },
+      "conflicts_with": []
     }
   ],
   "stats": {
