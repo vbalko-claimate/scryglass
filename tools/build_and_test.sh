@@ -43,6 +43,13 @@ mkdir -p src-tauri/resources
     compile-cards --input "$DB_SRC" --output "$SCRY_ROOT/src-tauri/resources/glass_advise_db.json") \
     && echo "  card DB compiled + staged"
 
+# Guard: fail the build if the staged advise DB is blind to any card in the
+# oracle (the 2026-07-06 Marvel-blindness incident: 255 cards silently dropped,
+# advisor recommended "pass" for 14 turns). Non-negotiable gate before bundling.
+echo "  verifying advise DB coverage ..."
+"$GLASS_SHARD/scripts/check_advise_db.sh" "$SCRY_ROOT/src-tauri/resources/glass_advise_db.json" \
+    || { echo "BUILD ABORTED: advise DB failed coverage guard"; exit 1; }
+
 echo ""
 echo "=== Step 2a: Build recognition meta_decks (discriminative TF-IDF + variant merge) ==="
 # Combine ALL Standard decklist sources (arena tier-list + goldfish metagame +

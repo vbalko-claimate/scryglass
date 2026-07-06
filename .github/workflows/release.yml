@@ -13,11 +13,12 @@ permissions:
 # `build-sidecar` (PyInstaller) and `ci-check` (advisor.ci_check) jobs were
 # removed when the Python host was parked under legacy-python/.
 #
-# NOTE: Windows is intentionally absent from the build matrix. The previous
-# Windows release shipped a Python scry-server; with Python retired, Windows
-# needs glass-shard to build glass-host on x86_64-pc-windows-msvc (log paths,
-# sidecar features) — re-enable the Windows matrix entry only after verifying
-# `cargo build -p glass-mtga --features server` succeeds on Windows.
+# Windows re-enabled 2026-07-06 for the beta: glass-host's MTGA log path now has
+# a Windows branch (default_log_path) and rusqlite uses the `bundled` SQLite, so
+# `cargo build -p glass-mtga --features server` builds on x86_64-pc-windows-msvc.
+# Windows uses a Tauri overlay window (no Swift overlay-helper — a placeholder
+# satisfies externalBin). The run steps below are bash (see defaults.run.shell)
+# so they work on both GitHub-hosted macOS and Windows runners.
 jobs:
   build-tauri:
     strategy:
@@ -27,7 +28,13 @@ jobs:
           - os: macos-latest
             target: aarch64-apple-darwin
             args: --target aarch64-apple-darwin
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            args: --target x86_64-pc-windows-msvc
     runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@v4
 
@@ -91,8 +98,8 @@ jobs:
           # APPLE_SIGNING_IDENTITY, APPLE_ID, APPLE_PASSWORD, APPLE_TEAM_ID
         with:
           tagName: ${{ github.ref_name }}
-          releaseName: 'Scryglass ${{ github.ref_name }}'
-          releaseBody: 'See [CHANGELOG](https://github.com/vbalko-claimate/scryglass/commits/${{ github.ref_name }}) for details.'
+          releaseName: 'Scryglass ${{ github.ref_name }} (pre-alpha)'
+          releaseBody: 'Pre-alpha build — early and rough; expect bugs. See [CHANGELOG](https://github.com/vbalko-claimate/scryglass/commits/${{ github.ref_name }}) for details.'
           releaseDraft: true
-          prerelease: false
+          prerelease: true
           args: ${{ matrix.args }}
