@@ -97,9 +97,11 @@ jobs:
       # stub for now to satisfy externalBin — replace with a real build if needed).
       - name: Stage overlay-helper
         run: |
-          if [ ! -f src-tauri/binaries/overlay-helper-${{ matrix.target }} ]; then
-            echo "overlay-helper not staged — creating placeholder" > src-tauri/binaries/overlay-helper-${{ matrix.target }}
-          fi
+          # Windows uses a Tauri overlay window (no Swift helper), but Tauri's
+          # externalBin still requires a file per target — and .exe on Windows.
+          EXT=""; [ "${{ runner.os }}" = "Windows" ] && EXT=".exe"
+          DEST="src-tauri/binaries/overlay-helper-${{ matrix.target }}${EXT}"
+          [ -f "$DEST" ] || echo "placeholder — Windows overlay uses a Tauri window" > "$DEST"
 
       - name: Build Tauri
         uses: tauri-apps/tauri-action@v0
