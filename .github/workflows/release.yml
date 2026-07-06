@@ -75,11 +75,23 @@ jobs:
 
       - name: Compile card DB (glass_advise_db.json)
         run: |
+          # The compiled advise DB is committed (src-tauri/resources/). The oracle
+          # source is a gitignored 23MB Scryfall artifact, so it's normally absent
+          # in CI → ship the committed DB. If the oracle IS present (local/future
+          # fetch), recompile it fresh so it can't drift.
+          mkdir -p src-tauri/resources
           DB_SRC="glass-shard/data/cards/standard_oracle_plus.json"
           [ -f "$DB_SRC" ] || DB_SRC="glass-shard/data/cards/standard_oracle.json"
-          mkdir -p src-tauri/resources
-          (cd glass-shard && cargo run -q -p glass-cli --release -- \
-            compile-cards --input "$DB_SRC" --output ../src-tauri/resources/glass_advise_db.json)
+          if [ -f "$DB_SRC" ]; then
+            echo "oracle present → recompiling advise DB from $DB_SRC"
+            (cd glass-shard && cargo run -q -p glass-cli --release -- \
+              compile-cards --input "$DB_SRC" --output ../src-tauri/resources/glass_advise_db.json)
+          elif [ -f src-tauri/resources/glass_advise_db.json ]; then
+            echo "oracle absent → using committed src-tauri/resources/glass_advise_db.json"
+          else
+            echo "::error::no oracle source AND no committed advise DB — cannot produce glass_advise_db.json"
+            exit 1
+          fi
 
       # overlay-helper placeholder per-platform (macOS builds it separately; CI
       # stub for now to satisfy externalBin — replace with a real build if needed).
