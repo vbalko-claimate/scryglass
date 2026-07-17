@@ -108,6 +108,17 @@ html, body {
     background: #2dd4bf;
     text-transform: uppercase;
 }
+/* Async rollout-refinement badge: search confirmed vs changed the instant pick */
+.key-play-refined {
+    font-size: 0.62em;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    padding: 1px 5px;
+    border-radius: 3px;
+    text-transform: uppercase;
+}
+.key-play-refined.confirmed { color: #0b1e1a; background: #81c784; }
+.key-play-refined.changed   { color: #1a1a2e; background: #f4a261; }
 .key-play-card {
     font-size: 20px;
     font-weight: 700;
@@ -385,6 +396,28 @@ html, body {
     0%, 100% { box-shadow: 0 0 10px rgba(233, 57, 70, 0.45); }
     50%      { box-shadow: 0 0 20px rgba(255, 90, 102, 0.85); }
 }
+/* Combo / big-swing banner — "you're building a combo" (main-phase payoff). */
+.combo-banner {
+    display: none;
+    margin: 0 0 6px 0;
+    padding: 7px 12px;
+    border-radius: 6px;
+    background: linear-gradient(90deg, rgba(30, 140, 90, 0.96), rgba(20, 110, 70, 0.96));
+    border: 1px solid #4fd18a;
+    color: #eafff3;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 0 14px rgba(79, 209, 138, 0.5);
+    animation: combo-pulse 1.3s ease-in-out infinite;
+}
+.combo-banner.visible { display: block; }
+.combo-banner .combo-tag { font-size: 12px; opacity: 0.95; margin-right: 6px; }
+@keyframes combo-pulse {
+    0%, 100% { box-shadow: 0 0 10px rgba(79, 209, 138, 0.4); }
+    50%      { box-shadow: 0 0 20px rgba(129, 199, 132, 0.8); }
+}
 </style>
 </head>
 <body>
@@ -393,12 +426,14 @@ html, body {
         <span class="waiting" id="waiting-msg">Waiting for match...</span>
     </div>
     <div class="lethal-banner" id="lethal-banner"></div>
+    <div class="combo-banner" id="combo-banner"></div>
     <div class="key-play" id="key-play" style="display:none">
         <div class="key-play-indicator medium" id="key-play-indicator"></div>
         <div class="key-play-content">
             <div class="key-play-actionline">
                 <span class="key-play-action" id="key-play-action"></span>
                 <span class="key-play-source" id="key-play-source" style="display:none">ENGINE</span>
+                <span class="key-play-refined" id="key-play-refined" style="display:none"></span>
             </div>
             <div class="key-play-card" id="key-play-card"></div>
             <div class="key-play-reason" id="key-play-reason"></div>
@@ -460,6 +495,7 @@ async function tick() {
     document.getElementById('key-play').style.display = 'none';
     document.getElementById('advice-confidence').style.display = 'none';
     document.getElementById('lethal-banner').classList.remove('visible');
+    document.getElementById('combo-banner').classList.remove('visible');
     document.getElementById('do-now').classList.remove('visible');
     document.getElementById('threat-line').classList.remove('visible');
     document.getElementById('hand-badges').classList.remove('visible');
@@ -625,6 +661,22 @@ function updateAdvice(data) {
         const actionLabel = FAMILY_LABEL[family] || '';
         const actionCss = FAMILY_TYPE[family] || '';
 
+        // Async-refinement badge: the rollout search either CONFIRMED the
+        // instant heuristic pick or CHANGED it (server pushes a second advice
+        // tagged refined:true + replaces=<the instant pick it supersedes>).
+        // Instant (untagged) advice shows no badge.
+        const refinedEl = document.getElementById('key-play-refined');
+        if (refinedEl) {
+            if (keyPlay.refined) {
+                const changed = keyPlay.replaces && keyPlay.replaces !== cardName;
+                refinedEl.textContent = changed ? '↻ refined' : '✓ verified';
+                refinedEl.className = 'key-play-refined ' + (changed ? 'changed' : 'confirmed');
+                refinedEl.style.display = '';
+            } else {
+                refinedEl.style.display = 'none';
+            }
+        }
+
         if (cardName) {
             // Structured: action label + big card name + reason
             actionEl.textContent = actionLabel;
@@ -700,6 +752,17 @@ function updateAdvice(data) {
         lethalEl.classList.add('visible');
     } else {
         lethalEl.classList.remove('visible');
+    }
+
+    // Combo / big-swing banner — "you're building a combo" (set by the advisor
+    // when the recommended main-phase play makes a huge board swing / lethal).
+    const comboEl = document.getElementById('combo-banner');
+    const comboMsg = (nowItems.find(a => typeof a.combo === 'string' && a.combo) || {}).combo;
+    if (comboMsg && isMyTurn) {
+        comboEl.innerHTML = '<span class="combo-tag">⚡</span>' + comboMsg;
+        comboEl.classList.add('visible');
+    } else {
+        comboEl.classList.remove('visible');
     }
 }
 
