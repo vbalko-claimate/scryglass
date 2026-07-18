@@ -418,6 +418,22 @@ html, body {
     0%, 100% { box-shadow: 0 0 10px rgba(79, 209, 138, 0.4); }
     50%      { box-shadow: 0 0 20px rgba(129, 199, 132, 0.8); }
 }
+/* Synergy / "part of a combo" teaching hint — quiet, for players learning a deck
+   (overlay v2 WEAK tier). Deliberately understated vs the loud combo-banner so it
+   never crowds the lethal/combo signals. */
+.synergy-hint {
+    display: none;
+    margin: 0 0 6px 0;
+    padding: 5px 10px;
+    border-radius: 5px;
+    background: rgba(30, 90, 70, 0.55);
+    border: 1px solid rgba(90, 170, 140, 0.5);
+    color: #cdeee0;
+    font-size: 12px;
+    font-weight: 500;
+}
+.synergy-hint.visible { display: block; }
+.synergy-hint .synergy-tag { opacity: 0.9; margin-right: 5px; }
 </style>
 </head>
 <body>
@@ -427,6 +443,7 @@ html, body {
     </div>
     <div class="lethal-banner" id="lethal-banner"></div>
     <div class="combo-banner" id="combo-banner"></div>
+    <div class="synergy-hint" id="synergy-hint"></div>
     <div class="key-play" id="key-play" style="display:none">
         <div class="key-play-indicator medium" id="key-play-indicator"></div>
         <div class="key-play-content">
@@ -754,15 +771,30 @@ function updateAdvice(data) {
         lethalEl.classList.remove('visible');
     }
 
-    // Combo / big-swing banner — "you're building a combo" (set by the advisor
-    // when the recommended main-phase play makes a huge board swing / lethal).
+    // Combo / synergy — overlay v2 board-state detector. STRONG "combo" tier →
+    // the loud pulsing banner (a sim-confirmed big swing you can execute); WEAK
+    // "synergy" tier → a quiet teaching hint (a payoff/engine piece is present),
+    // valuable for players learning a deck. Falls back to the legacy
+    // per-recommendation `combo` string when the detector is silent.
     const comboEl = document.getElementById('combo-banner');
-    const comboMsg = (nowItems.find(a => typeof a.combo === 'string' && a.combo) || {}).combo;
+    const synEl = document.getElementById('synergy-hint');
+    const synergies = nowItems.flatMap(a => Array.isArray(a.synergies) ? a.synergies : []);
+    const strong = synergies.find(s => s && s.tier === 'combo');
+    const weak = synergies.find(s => s && s.tier === 'synergy');
+    const comboMsg = (strong && strong.message)
+        || (nowItems.find(a => typeof a.combo === 'string' && a.combo) || {}).combo;
     if (comboMsg && isMyTurn) {
         comboEl.innerHTML = '<span class="combo-tag">⚡</span>' + comboMsg;
         comboEl.classList.add('visible');
     } else {
         comboEl.classList.remove('visible');
+    }
+    // Quiet WEAK hint only when there's no loud combo to avoid stacking banners.
+    if (weak && weak.message && isMyTurn && !comboMsg) {
+        synEl.innerHTML = '<span class="synergy-tag">🔧</span>' + weak.message;
+        synEl.classList.add('visible');
+    } else {
+        synEl.classList.remove('visible');
     }
 }
 
