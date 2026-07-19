@@ -89,7 +89,11 @@ fn spawn_glass_host(app: &AppHandle) -> bool {
             .env("SCRY_STRATEGY_DIR", strategy_dir)
             .env("SCRY_DB_PATH", format!("{app_data}/advisor.db"))
             .env("SCRY_DECKS_ROOT", format!("{user_root}/decks"))
-            .env("SCRY_USER_DATA", app_data),
+            .env("SCRY_USER_DATA", app_data)
+            // Bundled cloud URL (NOT a secret) — the host auto-provisions an
+            // anonymous account on first launch so cloud sync just works. No
+            // token is baked; `SCRY_CLOUD_SYNC=0` still disables it.
+            .env("SCRY_CLOUD_URL", "https://scryglass.app.claimate.tech"),
         Err(e) => {
             eprintln!("[sidecar] glass-host sidecar command failed: {}", e);
             return false;
