@@ -5,6 +5,8 @@ use tauri::{
 };
 use tauri_plugin_shell::ShellExt;
 use tauri_plugin_shell::process::CommandEvent;
+#[cfg(not(debug_assertions))]
+use tauri_plugin_updater::UpdaterExt;
 
 mod mtga_detect;
 mod sidecar;
@@ -174,6 +176,35 @@ pub fn run() {
             // macOS: accessory app — no dock icon, lives in menu bar
             #[cfg(target_os = "macos")]
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);
+
+            // OTA self-update (RELEASE builds only): on launch, check GitHub
+            // Releases for a newer minisign-signed version, download + install it,
+            // then restart. A local debug build never self-updates, so the dev
+            // inner-loop stays local (see the delivery model: dev = release via
+            // OTA, local build only for occasional app-level testing).
+            #[cfg(not(debug_assertions))]
+            {
+                let update_handle = app.handle().clone();
+                tauri::async_runtime::spawn(async move {
+                    match update_handle.updater() {
+                        Ok(updater) => match updater.check().await {
+                            Ok(Some(update)) => {
+                                println!("[updater] v{} available — downloading", update.version);
+                                match update.download_and_install(|_, _| {}, || {}).await {
+                                    Ok(()) => {
+                                        println!("[updater] installed — restarting");
+                                        update_handle.restart();
+                                    }
+                                    Err(e) => eprintln!("[updater] install failed: {e}"),
+                                }
+                            }
+                            Ok(None) => println!("[updater] up to date"),
+                            Err(e) => eprintln!("[updater] check failed: {e}"),
+                        },
+                        Err(e) => eprintln!("[updater] unavailable: {e}"),
+                    }
+                });
+            }
 
             // (glass-host advises IN-PROCESS now — no separate engine sidecar.)
 

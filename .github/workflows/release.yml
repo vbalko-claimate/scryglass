@@ -117,6 +117,10 @@ jobs:
           tagName: ${{ github.ref_name }}
           releaseName: 'Scryglass ${{ github.ref_name }} (pre-alpha)'
           releaseBody: 'Pre-alpha build — early and rough; expect bugs. See [CHANGELOG](https://github.com/vbalko-claimate/scryglass/commits/${{ github.ref_name }}) for details.'
+          # Draft = a review gate (CI builds it; you click Publish). NOT a
+          # prerelease: the OTA updater points at /releases/latest/, and GitHub's
+          # "latest" EXCLUDES prereleases — so a prerelease would be invisible to
+          # the updater. Publish the draft to make it live for OTA.
           releaseDraft: true
-          prerelease: true
+          prerelease: false
           args: ${{ matrix.args }}
