@@ -7,6 +7,8 @@ use tauri_plugin_shell::ShellExt;
 use tauri_plugin_shell::process::CommandEvent;
 #[cfg(not(debug_assertions))]
 use tauri_plugin_updater::UpdaterExt;
+#[cfg(not(debug_assertions))]
+use tauri_plugin_dialog::{DialogExt, MessageDialogButtons};
 
 mod mtga_detect;
 mod sidecar;
@@ -161,6 +163,7 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
+        .plugin(tauri_plugin_dialog::init())
         // Keep running in menu bar when window is closed
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {
@@ -176,35 +179,6 @@ pub fn run() {
             // macOS: accessory app — no dock icon, lives in menu bar
             #[cfg(target_os = "macos")]
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);
-
-            // OTA self-update (RELEASE builds only): on launch, check GitHub
-            // Releases for a newer minisign-signed version, download + install it,
-            // then restart. A local debug build never self-updates, so the dev
-            // inner-loop stays local (see the delivery model: dev = release via
-            // OTA, local build only for occasional app-level testing).
-            #[cfg(not(debug_assertions))]
-            {
-                let update_handle = app.handle().clone();
-                tauri::async_runtime::spawn(async move {
-                    match update_handle.updater() {
-                        Ok(updater) => match updater.check().await {
-                            Ok(Some(update)) => {
-                                println!("[updater] v{} available — downloading", update.version);
-                                match update.download_and_install(|_, _| {}, || {}).await {
-                                    Ok(()) => {
-                                        println!("[updater] installed — restarting");
-                                        update_handle.restart();
-                                    }
-                                    Err(e) => eprintln!("[updater] install failed: {e}"),
-                                }
-                            }
-                            Ok(None) => println!("[updater] up to date"),
-                            Err(e) => eprintln!("[updater] check failed: {e}"),
-                        },
-                        Err(e) => eprintln!("[updater] unavailable: {e}"),
-                    }
-                });
-            }
 
             // (glass-host advises IN-PROCESS now — no separate engine sidecar.)
 
@@ -272,6 +246,7 @@ pub fn run() {
             let show_item = MenuItemBuilder::with_id("show", "Show Advisor").build(app)?;
             let review_item = MenuItemBuilder::with_id("review", "Post-Game Review").build(app)?;
             let setup_item = MenuItemBuilder::with_id("setup", "Setup").build(app)?;
+            let update_item = MenuItemBuilder::with_id("update", "Check for Updates…").build(app)?;
             let quit_item = MenuItemBuilder::with_id("quit", "Quit Scryglass").build(app)?;
 
             let menu = MenuBuilder::new(app)
@@ -279,9 +254,27 @@ pub fn run() {
                 .item(&review_item)
                 .separator()
                 .item(&setup_item)
+                .item(&update_item)
                 .separator()
                 .item(&quit_item)
                 .build()?;
+
+            // On launch (release only): a background check that ADVERTISES an
+            // available update on the tray (retitles the item) — no dialog, no
+            // auto-install, so it never interrupts a game (Sparkle-style gentle
+            // reminder). The user installs on their terms from the menu.
+            #[cfg(not(debug_assertions))]
+            {
+                let handle = app.handle().clone();
+                let item = update_item.clone();
+                tauri::async_runtime::spawn(async move {
+                    if let Ok(updater) = handle.updater() {
+                        if let Ok(Some(update)) = updater.check().await {
+                            let _ = item.set_text(format!("Install Update v{}…", update.version));
+                        }
+                    }
+                });
+            }
 
             let tray_icon_path = app.path()
                 .resolve("icons/tray-icon.png", tauri::path::BaseDirectory::Resource)
@@ -309,8 +302,15 @@ pub fn run() {
                         "setup" => {
                             let _ = open::that("http://localhost:8765/setup");
                         }
-                        "quit" => {
-                            app.exit(0);
+                        "update" => {
+                            // Manual check → game-aware, consent-gated install.
+                            #[cfg(not(debug_assertions))]
+                            {
+                                let h = app.clone();
+                                tauri::async_runtime::spawn(async move {
+                                    run_update_check(h).await;
+                                });
+                            }
                         }
                         _ => {}
                     }
@@ -321,4 +321,93 @@ pub fn run() {
         })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+
+/// Query glass-host whether an MTGA match is active — game-aware update deferral
+/// (Scryglass must never restart mid-game). Fails safe to `false` (host
+/// unreachable ⇒ treat as not-in-a-match).
+#[cfg(not(debug_assertions))]
+async fn is_match_active() -> bool {
+    match reqwest::get("http://localhost:8765/active").await {
+        Ok(resp) => resp
+            .json::<serde_json::Value>()
+            .await
+            .ok()
+            .and_then(|v| v.get("active").and_then(serde_json::Value::as_bool))
+            .unwrap_or(false),
+        Err(_) => false,
+    }
+}
+
+/// The tray "Check for Updates…" flow: check → up-to-date message, or an
+/// available-update path that NEVER restarts mid-game and installs only on the
+/// user's explicit consent (the Sparkle menu-bar pattern).
+#[cfg(not(debug_assertions))]
+async fn run_update_check(app: tauri::AppHandle) {
+    let current = app.package_info().version.to_string();
+    let updater = match app.updater() {
+        Ok(u) => u,
+        Err(e) => {
+            let _ = app
+                .dialog()
+                .message(format!("Updater unavailable: {e}"))
+                .title("Scryglass")
+                .blocking_show();
+            return;
+        }
+    };
+    let update = match updater.check().await {
+        Ok(Some(u)) => u,
+        Ok(None) => {
+            let _ = app
+                .dialog()
+                .message(format!("You're up to date (v{current})."))
+                .title("Scryglass")
+                .blocking_show();
+            return;
+        }
+        Err(e) => {
+            let _ = app
+                .dialog()
+                .message(format!("Update check failed: {e}"))
+                .title("Scryglass")
+                .blocking_show();
+            return;
+        }
+    };
+    let new_v = update.version.clone();
+    // Never restart mid-game — defer with a message, leave it installable later.
+    if is_match_active().await {
+        let _ = app
+            .dialog()
+            .message(format!(
+                "Scryglass v{new_v} is ready. You're in a match — install it from the menu when you finish."
+            ))
+            .title("Update available")
+            .blocking_show();
+        return;
+    }
+    let install = app
+        .dialog()
+        .message(format!(
+            "Scryglass v{new_v} is available (you have v{current}).\n\nInstall now and restart?"
+        ))
+        .title("Update available")
+        .buttons(MessageDialogButtons::OkCancelCustom(
+            "Install & Restart".into(),
+            "Later".into(),
+        ))
+        .blocking_show();
+    if install {
+        match update.download_and_install(|_, _| {}, || {}).await {
+            Ok(()) => app.restart(),
+            Err(e) => {
+                let _ = app
+                    .dialog()
+                    .message(format!("Install failed: {e}"))
+                    .title("Scryglass")
+                    .blocking_show();
+            }
+        }
+    }
 }
