@@ -1138,11 +1138,12 @@ async function loadVersion() {
     try {
         const res = await fetch('/health');
         const data = await res.json();
-        _appVersion = data.app_version;
         _engineVersion = data.engine_version;
         _cardCount = data.card_count;
+        // App version comes from Tauri — glass-host doesn't know it (Phase 5a).
+        try { _appVersion = await window.__TAURI__.app.getVersion(); } catch { _appVersion = null; }
         const el = document.getElementById('footer-version');
-        if (el) el.textContent = `v${_appVersion}`;
+        if (el) el.textContent = _appVersion ? `v${_appVersion}` : '';
     } catch {}
 }
 

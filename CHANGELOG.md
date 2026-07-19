@@ -4,6 +4,19 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.4] — 2026-07-19
+
+### Added — cloud training corpus + version stamp
+
+- **Your games now feed the training corpus.** The app uploads the rich
+  per-decision telemetry from your games (the board state, the recommendation,
+  and the outcome at each decision) to the cloud — the raw signal that will drive
+  future advisor improvements. This is strictly **read-only + non-destructive**:
+  your irreplaceable local `advisor.db` is only ever read, never modified, and the
+  upload watermark advances only after a confirmed successful upload.
+- **Version stamp.** The About panel now shows the running engine build (git
+  commit) and card-catalog size, so it's clear which build you're on.
+
 ## [0.8.3] — 2026-07-19
 
 ### Fixed — advisor recommendation quality (the "much worse than yesterday" regression)

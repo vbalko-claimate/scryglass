@@ -997,6 +997,7 @@ async function cloudSyncNow() {
         if (data.status === 'ok') {
             const r = data.report || {};
             const bits = [`uploaded ${r.uploaded || 0}`, `bundle v${r.bundle_version || 0}`];
+            if (r.training_uploaded) bits.push(`training ${r.training_uploaded}`);
             if (r.meta_decks_written) bits.push('meta_decks updated');
             if (r.profiles_merged) bits.push('profiles merged');
             status.textContent = bits.join(' · ');
