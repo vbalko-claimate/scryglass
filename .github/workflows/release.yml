@@ -103,6 +103,30 @@ jobs:
           DEST="src-tauri/binaries/overlay-helper-${{ matrix.target }}${EXT}"
           [ -f "$DEST" ] || echo "placeholder — Windows overlay uses a Tauri window" > "$DEST"
 
+      - name: Extract release notes from CHANGELOG
+        id: changelog
+        shell: bash
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          # Pull the "## [VERSION] …" section out of CHANGELOG.md (up to the next
+          # "## [" heading). This becomes the GitHub release body AND the OTA
+          # latest.json `notes`, which the app shows as "What's new" on update.
+          NOTES="$(awk -v v="$VERSION" '
+            $0 ~ ("^## \\[" v "\\]") {f=1; next}
+            f && /^## \[/ {exit}
+            f {print}
+          ' CHANGELOG.md)"
+          if [ -z "$NOTES" ]; then
+            NOTES="Pre-alpha build — see CHANGELOG.md for details."
+          fi
+          {
+            echo "notes<<__EOF_NOTES__"
+            echo "$NOTES"
+            echo ""
+            echo "— Full changelog: https://github.com/vbalko-claimate/scryglass/blob/${GITHUB_REF_NAME}/CHANGELOG.md"
+            echo "__EOF_NOTES__"
+          } >> "$GITHUB_OUTPUT"
+
       - name: Build Tauri
         uses: tauri-apps/tauri-action@v0
         env:
@@ -116,7 +140,7 @@ jobs:
         with:
           tagName: ${{ github.ref_name }}
           releaseName: 'Scryglass ${{ github.ref_name }} (pre-alpha)'
-          releaseBody: 'Pre-alpha build — early and rough; expect bugs. See [CHANGELOG](https://github.com/vbalko-claimate/scryglass/commits/${{ github.ref_name }}) for details.'
+          releaseBody: ${{ steps.changelog.outputs.notes }}
           # Draft = a review gate (CI builds it; you click Publish). NOT a
           # prerelease: the OTA updater points at /releases/latest/, and GitHub's
           # "latest" EXCLUDES prereleases — so a prerelease would be invisible to

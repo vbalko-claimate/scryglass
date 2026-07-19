@@ -387,10 +387,23 @@ async fn run_update_check(app: tauri::AppHandle) {
             .blocking_show();
         return;
     }
+    // "What's new" — show the release notes (latest.json `notes`, sourced from
+    // the CHANGELOG entry by the release CI) so the user sees what changed before
+    // installing, like CodexBar/Sparkle. Truncated so the dialog stays readable.
+    let whats_new = update
+        .body
+        .as_deref()
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+        .map(|n| {
+            let n: String = n.chars().take(700).collect();
+            format!("\n\nWhat's new:\n{n}")
+        })
+        .unwrap_or_default();
     let install = app
         .dialog()
         .message(format!(
-            "Scryglass v{new_v} is available (you have v{current}).\n\nInstall now and restart?"
+            "Scryglass v{new_v} is available (you have v{current}).{whats_new}\n\nInstall now and restart?"
         ))
         .title("Update available")
         .buttons(MessageDialogButtons::OkCancelCustom(
