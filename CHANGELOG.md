@@ -4,6 +4,22 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.5] — 2026-07-20
+
+### Added — link your email (web dashboard sign-in)
+
+- **Link an email to your account.** Manage → Cloud Sync → *Link your email*:
+  enter an email, confirm the 6-digit code we send you, and your account is
+  reachable from the web dashboard at **scryglass.win/app** — the same stats and
+  match history, from any browser. The confirmation code is emailed by the cloud;
+  your per-user token never leaves the app (the host proxies the request).
+
+### Fixed
+
+- **About panel card count.** The `/health` engine card-count stamp read a field
+  that no longer existed, which prevented the host from building with the server
+  feature; it now reports the loaded catalog size correctly.
+
 ## [0.8.4] — 2026-07-19
 
 ### Added — cloud training corpus + version stamp
