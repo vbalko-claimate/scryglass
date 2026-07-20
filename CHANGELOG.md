@@ -4,6 +4,18 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.6] — 2026-07-20
+
+### Fixed — sharper advice on Auras & conditional removal
+
+- **No more "cast this Aura" with nothing to enchant.** An "enchant creature you
+  control" Aura (e.g. Sheltered by Ghosts) is no longer suggested — or considered
+  castable — when you control no creature (it would just hit the graveyard).
+- **Conditional removal respects its restriction.** "Exile target … with mana
+  value 2 or less" (Seam Rip) now keeps that limit: it's no longer recommended
+  into a board whose only permanent is too expensive for it to hit, and the engine
+  won't let it exile an over-cost permanent.
+
 ## [0.8.5] — 2026-07-20
 
 ### Added — link your email (web dashboard sign-in)
