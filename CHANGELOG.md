@@ -4,6 +4,15 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.7] — 2026-07-20
+
+### Fixed — smarter advice on legendary duplicates
+
+- **No more "cast a second copy of a legend you already have out".** The advisor
+  no longer suggests casting a duplicate legendary creature that would just die to
+  the legend rule — unless it actually gains value from entering (an enter/dies/
+  leaves trigger, or an enters-as-a-copy legend like Superior Spider-Man).
+
 ## [0.8.6] — 2026-07-20
 
 ### Fixed — sharper advice on Auras & conditional removal
