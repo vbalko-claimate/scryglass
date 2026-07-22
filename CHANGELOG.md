@@ -4,7 +4,7 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
-## [0.8.8] — 2026-07-22
+## [0.8.9] — 2026-07-22
 
 ### Fixed — engine fidelity: several cards now simulate faithfully
 
