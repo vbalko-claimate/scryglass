@@ -4,6 +4,27 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.8] — 2026-07-22
+
+### Fixed — engine fidelity: several cards now simulate faithfully
+
+The bundled engine (`glass-shard@main`) got a batch of compile-fidelity fixes, so
+the advisor now reasons about these cards correctly instead of on a wrong model:
+
+- **No more phantom card draws.** A combat-damage trigger the engine couldn't model
+  (Drake Hatcher's incubation counters, Fynn the Fangbearer's poison, Tinybones,
+  Dragon Mage, …) used to be silently compiled as "draw a card" — inventing card
+  advantage that skewed the advice. It's now honestly unmodeled instead of faked.
+- **"At the beginning of …, if <condition>, …" abilities now check the condition.**
+  Triggers gated by an intervening "if" (CR 603.4) used to fire unconditionally —
+  e.g. Emet-Selch transforming every upkeep from turn 1, Leonin Vanguard / the
+  tapped-creature end-step cycle (Flight-Deck Coordinator, Frontline War-Rager, …),
+  Resplendent Angel, and "if you gained life this turn" / "if you control a creature
+  with power N" cards. They now only happen when the condition actually holds, at
+  both trigger time and resolution.
+- **"A creature with power N" no longer counts an uncrewed Vehicle** (it isn't a
+  creature until crewed), fixing over-eager Ferocious-style triggers.
+
 ## [0.8.7] — 2026-07-20
 
 ### Fixed — smarter advice on legendary duplicates
