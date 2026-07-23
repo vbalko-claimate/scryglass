@@ -4,6 +4,21 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.11] — 2026-07-23
+
+### Fixed — more cards' abilities now actually work
+
+- **"Leaves the battlefield" triggers now fire.** Abilities that trigger when a
+  permanent leaves play — e.g. Aurelia's Vindicator, City Pigeon, Greed's Gambit,
+  Ninja Teen ("whenever a creature you control leaves, each opponent loses 1
+  life"), Super Shredder — were being ignored by the engine, so the advisor
+  under-valued these cards. They now fire on death, sacrifice, destruction, exile,
+  and bounce. (A few complex bodies — e.g. Momo's modal choice, "return the exiled
+  card" — are recognized but not yet fully modeled; they no longer misfire.)
+- **Planeswalker loyalty abilities are understood.** 20 planeswalkers whose
+  loyalty abilities (+N / −N / 0, and emblem ultimates) were treated as inert are
+  now compiled correctly, so the advisor reasons about activating them.
+
 ## [0.8.10] — 2026-07-23
 
 ### Fixed — the advisor no longer recommends spells you can't actually pay for
