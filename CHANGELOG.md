@@ -4,6 +4,21 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.13] — 2026-07-23
+
+### Fixed — smarter burn/removal targeting + more "leaves" triggers
+
+- **Burn and removal are no longer aimed at creatures they can't kill.** The
+  advisor's lethality check was inactive in the live app, so it would recommend a
+  2-damage Burst Lightning at a 3-toughness creature, or a kicked 4 at a 5/5 —
+  labeling the un-killable body "the most dangerous creature." The check is now
+  active: when a creature it CAN kill is available it targets that one, and on a
+  body it can't kill the advice is honest ("won't kill it — only chip"). (Modal
+  and variable-damage spells stay un-gated to avoid mis-narrowing.)
+- **"Put its counters on target" leave-triggers now move the real count.** Hei
+  Bai, Broodguard Elite, and Selfless Police Captain transfer the actual number of
+  counters they had when they left, instead of dropping it or moving just one.
+
 ## [0.8.12] — 2026-07-23
 
 ### Fixed — the bundled card database now includes the v0.8.11 compiler fixes
