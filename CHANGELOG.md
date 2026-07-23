@@ -4,6 +4,18 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.12] — 2026-07-23
+
+### Fixed — the bundled card database now includes the v0.8.11 compiler fixes
+
+- v0.8.11 shipped the updated engine but the **committed card database was stale**
+  (CI has no Scryfall oracle, so it reuses the committed DB). This release
+  regenerates `glass_advise_db.json` from `glass-shard@main`, so the advisor
+  actually receives the compiler-side work from the last releases:
+  **"leaves the battlefield" triggers** (Ninja Teen, Super Shredder, and the
+  self-leave cards) and **planeswalker loyalty / emblem-ultimate abilities** (20
+  planeswalkers). No engine change from 0.8.11 — this is the card data catching up.
+
 ## [0.8.11] — 2026-07-23
 
 ### Fixed — more cards' abilities now actually work
