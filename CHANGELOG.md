@@ -4,6 +4,22 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.10] — 2026-07-23
+
+### Fixed — the advisor no longer recommends spells you can't actually pay for
+
+- **Hybrid mana costs are now understood correctly.** A hybrid pip like `{R/W}`
+  (pay red OR white) used to be treated as generic — payable by *any* mana — so the
+  advisor would recommend casting e.g. Mechanized Ninja Cavalry `{1}{R/W}` with only
+  blue mana untapped, then tag it "ENGINE ✓VERIFIED". The engine now models the two
+  colors a hybrid pip actually accepts, so uncastable hybrid spells are no longer
+  offered. 134 cards had their cost corrected in the bundled card database.
+- **Alternative mana sources (convoke, Treasure, improvise) are now planned as one
+  transaction.** A single mana planner drives both "is this castable?" and the
+  payment itself, so a cast is never recommended and then found unpayable mid-way —
+  and it prefers your mana pool / tapping over destructively cracking a Treasure it
+  doesn't need.
+
 ## [0.8.9] — 2026-07-22
 
 ### Fixed — engine fidelity: several cards now simulate faithfully
