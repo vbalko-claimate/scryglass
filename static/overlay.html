@@ -26,17 +26,34 @@ html, body {
     border: 1px solid rgba(255, 255, 255, 0.06);
     border-radius: 8px;
     color: rgba(240, 238, 230, 0.95);
-    transform-origin: top left;
-    transition: opacity 0.15s ease-out, transform 0.22s cubic-bezier(0.34, 1.15, 0.4, 1);
+    transition: opacity 0.15s ease-out;
 }
 
 #overlay.hidden { opacity: 0; pointer-events: none; }
 #overlay.compact { padding: 6px 10px; }
-/* Peek: hover over the panel (or key shortcut) shrinks it to a tiny corner badge
-   so it stops covering the board (e.g. the opponent name), then springs back when
-   the cursor leaves. Scale keeps the layout box intact, so the hit-test (offset*
-   metrics in JS) stays stable and doesn't flicker. */
-#overlay.peek { transform: scale(0.14); opacity: 0.55; }
+#overlay.dragging { cursor: grabbing; }
+
+/* Peek: hover over the panel (or a key shortcut / native cursor-forward) collapses
+   it to a small legible pill so it stops covering the board (e.g. the opponent
+   name), then springs back when the cursor leaves. The JS hit-test caches the
+   full-size box (see overlayCursor), so shrinking the layout here can't flicker. */
+#peek-pill { display: none; }
+#overlay.peek { width: auto; padding: 5px 10px; }
+/* !important: some children (#key-play, #debrief) carry an inline display set by
+   JS, which would otherwise win over this rule and stop the panel collapsing. */
+#overlay.peek > :not(#peek-pill) { display: none !important; }
+#overlay.peek > #peek-pill {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    font-weight: 700;
+    color: rgba(240, 238, 230, 0.92);
+    white-space: nowrap;
+    animation: peek-pop 0.2s cubic-bezier(0.34, 1.4, 0.5, 1);
+}
+#peek-pill .peek-pill-label { font-weight: 500; opacity: 0.7; letter-spacing: 0.02em; }
+@keyframes peek-pop { from { transform: scale(0.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
 /* Opponent line */
 .opp-line {
@@ -339,6 +356,7 @@ html, body {
 </head>
 <body>
 <div id="overlay" class="no-match">
+    <div id="peek-pill">◈ <span class="peek-pill-label">Scryglass</span></div>
     <div class="opp-line" id="opp-line">
         <span class="waiting" id="waiting-msg">Waiting for match...</span>
     </div>
@@ -361,13 +379,13 @@ html, body {
     <div class="threat-line" id="threat-line"></div>
     <div class="do-now" id="do-now"></div>
     <div class="phase-line" id="phase-line"></div>
-    <div class="hint-line" id="hint-line">Right ⌘ for feedback</div>
+    <div class="hint-line" id="hint-line">Left ⌘: feedback + drag to move · hover to hide</div>
     <div class="feedback-btns" id="feedback-btns">
         <div class="fb-btn good" onclick="sendFeedback('up')" title="Good advice">✓</div>
         <div class="fb-btn bad" onclick="sendFeedback('down')" title="Bad advice">✗</div>
         <div class="fb-btn flag" onclick="flagDecision(this)" title="Flag this decision — save the full game state to reproduce later">⚑</div>
     </div>
-    <div id="interactive-indicator">⌘R FEEDBACK</div>
+    <div id="interactive-indicator">FEEDBACK</div>
     <div id="debrief" style="display:none;text-align:center;padding:8px 0"></div>
 </div>
 
@@ -699,6 +717,7 @@ let feedbackAdviceSnapshot = null;
 // Called by native overlay (Swift/Rust) when modifier key is pressed/released
 function setInteractiveMode(active) {
     feedbackMode = active;
+    cancelOverlayDrag();   // a drag can't survive a feedback-mode transition
     // Entering feedback mode: cancel any active peek so the ✓/✗/⚑ buttons aren't
     // stuck shrunk (the native cursor-forwarder is gated off while interactive, so
     // nothing else would clear it).
@@ -837,20 +856,72 @@ function setPeek(on) {
     peekActive = on;
     document.getElementById('overlay').classList.toggle('peek', on);
 }
-function togglePeek() { setPeek(!peekActive); }
+// Cache the full (un-peeked) layout box and keep using it while peeked: the pill
+// collapses the layout, so re-measuring live would shrink the trigger region and
+// oscillate. offset* is viewport-relative (#overlay has no positioned ancestor),
+// matching the CSS-px coords the native layer forwards.
+let peekRect = null;
+function measurePeekRect() {
+    const el = document.getElementById('overlay');
+    if (el) peekRect = { l: el.offsetLeft, t: el.offsetTop, w: el.offsetWidth, h: el.offsetHeight };
+}
+function togglePeek() {
+    if (!peekActive) measurePeekRect();   // capture the box BEFORE the pill collapses it
+    setPeek(!peekActive);
+}
 function overlayCursor(x, y) {
     const el = document.getElementById('overlay');
     if (!el || el.classList.contains('hidden') || el.classList.contains('no-match')) {
         setPeek(false);
         return;
     }
-    // Use offset* (layout box) not getBoundingClientRect: layout is unaffected by
-    // the peek transform, so the trigger region stays fixed → no shrink/expand flicker.
+    if (!peekActive) measurePeekRect();
+    const r = peekRect;
+    if (!r) return;                        // never measured yet — nothing to hit-test
     const M = 6;
-    const x0 = el.offsetLeft, y0 = el.offsetTop;
-    const w = el.offsetWidth, h = el.offsetHeight;
-    setPeek(x >= x0 - M && x <= x0 + w + M && y >= y0 - M && y <= y0 + h + M);
+    setPeek(x >= r.l - M && x <= r.l + r.w + M && y >= r.t - M && y <= r.t + r.h + M);
 }
+
+// ─── Drag to move (in feedback mode) ───────────────────────────────────
+// The overlay is click-through, so it only receives real mouse events while
+// feedback mode is active (Right ⌘ / Right Win makes the window interactive).
+// There you can drag the panel to reposition it; the position persists just like
+// the Option+arrow nudge. Clicks on the ✓/✗/⚑ buttons are left alone.
+// Module-scoped so a feedback-mode transition can cancel a drag that never saw its
+// mouseup (e.g. the modifier key released before the mouse button) — otherwise the
+// stale drag would jump the panel on the next feedback re-entry.
+let overlayDragging = false;
+function cancelOverlayDrag() {
+    overlayDragging = false;
+    document.getElementById('overlay').classList.remove('dragging');
+}
+(function setupDrag() {
+    const el = document.getElementById('overlay');
+    let startX = 0, startY = 0, startL = 0, startT = 0;
+    el.addEventListener('mousedown', (e) => {
+        if (!feedbackMode || e.button !== 0) return;
+        if (e.target.closest('.fb-btn')) return;   // let button clicks through
+        overlayDragging = true;
+        startX = e.clientX; startY = e.clientY;
+        startL = el.offsetLeft; startT = el.offsetTop;
+        el.classList.add('dragging');
+        e.preventDefault();
+    });
+    window.addEventListener('mousemove', (e) => {
+        if (!overlayDragging) return;
+        // Clamp so a corner always stays on-screen (don't lose the panel off-edge).
+        const maxL = window.innerWidth - 40, maxT = window.innerHeight - 24;
+        el.style.left = Math.max(0, Math.min(maxL, startL + e.clientX - startX)) + 'px';
+        el.style.top = Math.max(0, Math.min(maxT, startT + e.clientY - startY)) + 'px';
+    });
+    window.addEventListener('mouseup', () => {
+        if (!overlayDragging) return;
+        overlayDragging = false;
+        el.classList.remove('dragging');
+        localStorage.setItem('overlay-x', el.style.left);
+        localStorage.setItem('overlay-y', el.style.top);
+    });
+})();
 
 // Restore saved position
 (function() {
@@ -859,6 +930,13 @@ function overlayCursor(x, y) {
     const savedY = localStorage.getItem('overlay-y');
     if (savedX) el.style.left = savedX;
     if (savedY) el.style.top = savedY;
+})();
+
+// Platform-aware control hint — feedback key is Left ⌘ on macOS, Left Ctrl on Windows.
+(function() {
+    const key = /Mac/i.test(navigator.userAgent) ? 'Left ⌘' : 'Left Ctrl';
+    const h = document.getElementById('hint-line');
+    if (h) h.textContent = `${key}: feedback + drag to move · hover to hide`;
 })();
 </script>
 </body>

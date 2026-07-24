@@ -118,38 +118,50 @@ fn launch_overlay_windows(handle: &tauri::AppHandle) {
         }
     });
 
-    // Alt key + cursor polling thread (50ms poll):
-    //  - Right-Win toggles feedback mode (click-through off + interactive buttons).
+    // Key + cursor polling thread (50ms poll):
+    //  - Left Ctrl toggles feedback mode (click-through off + interactive buttons).
+    //    Left-hand key so it can be held while the mouse stays in the right hand.
     //  - Otherwise forward the cursor position so the overlay can peek (shrink) when
     //    the cursor is over it. GetCursorPos is a passive read → click-through stays
     //    intact; JS owns the geometry (see overlayCursor in overlay.html).
     let h2 = handle.clone();
     std::thread::spawn(move || {
         use windows::Win32::Foundation::POINT;
-        use windows::Win32::UI::Input::KeyboardAndMouse::{GetAsyncKeyState, VK_RWIN};
+        use windows::Win32::UI::Input::KeyboardAndMouse::{GetAsyncKeyState, VK_LCONTROL, VK_MENU};
         use windows::Win32::UI::WindowsAndMessaging::GetCursorPos;
 
-        let mut was_alt = false;
+        let mut was_ctrl = false;
+        let mut was_peek_key = false;
         let mut last_pt = (i32::MIN, i32::MIN);
 
         loop {
             std::thread::sleep(std::time::Duration::from_millis(50));
 
-            // Right Windows key (≈ Right Command on Mac keyboards)
-            let alt_down = unsafe { GetAsyncKeyState(VK_RWIN.0 as i32) } & (1i16 << 15) != 0;
+            // Left Ctrl (≈ Left Command on Mac keyboards) toggles feedback mode.
+            let ctrl_down = unsafe { GetAsyncKeyState(VK_LCONTROL.0 as i32) } & (1i16 << 15) != 0;
 
-            if alt_down != was_alt {
+            if ctrl_down != was_ctrl {
                 if let Some(overlay) = h2.get_webview_window("overlay") {
-                    let _ = overlay.set_ignore_cursor_events(!alt_down);
-                    let js = format!("setInteractiveMode({})", alt_down);
+                    let _ = overlay.set_ignore_cursor_events(!ctrl_down);
+                    let js = format!("setInteractiveMode({})", ctrl_down);
                     let _ = overlay.eval(&js);
                 }
-                was_alt = alt_down;
+                was_ctrl = ctrl_down;
             }
+
+            // Alt+H toggles the peek (shrink-to-pill) state (mirrors macOS Option+H).
+            let peek_key = (unsafe { GetAsyncKeyState(VK_MENU.0 as i32) } & (1i16 << 15) != 0)
+                && (unsafe { GetAsyncKeyState(0x48) } & (1i16 << 15) != 0); // 0x48 = 'H'
+            if peek_key && !was_peek_key {
+                if let Some(overlay) = h2.get_webview_window("overlay") {
+                    let _ = overlay.eval("togglePeek()");
+                }
+            }
+            was_peek_key = peek_key;
 
             // Peek: forward cursor pos (skip while in feedback mode, if unmoved, or
             // while the overlay is hidden — mirrors the Swift window.isVisible guard).
-            if !alt_down {
+            if !ctrl_down {
                 let mut pt = POINT::default();
                 if unsafe { GetCursorPos(&mut pt) }.is_ok() && (pt.x, pt.y) != last_pt {
                     last_pt = (pt.x, pt.y);

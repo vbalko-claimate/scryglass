@@ -63,6 +63,11 @@ class OverlayDelegate: NSObject, NSApplicationDelegate {
         // Sends position offset to WKWebView via JavaScript
         NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
             guard let self = self, event.modifierFlags.contains(.option) else { return }
+            // Option+H toggles the peek (shrink-to-pill) state.
+            if event.keyCode == 4 {
+                self.webView.evaluateJavaScript("togglePeek()", completionHandler: nil)
+                return
+            }
             let step: CGFloat = event.modifierFlags.contains(.shift) ? 50 : 10
             var dx: CGFloat = 0, dy: CGFloat = 0
             switch event.keyCode {
@@ -141,16 +146,15 @@ class OverlayDelegate: NSObject, NSApplicationDelegate {
             self?.checkServerAlive()
         }
 
-        // Right Command key monitor — toggle feedback mode
+        // Left Command key monitor — toggle feedback mode. Left (keyCode 55) so it
+        // can be held with the left hand while the mouse stays in the right.
         NSEvent.addGlobalMonitorForEvents(matching: .flagsChanged) { [weak self] event in
             guard let self = self else { return }
-            // Right Command = .command present AND keyCode 54 (right cmd)
-            // We detect via rawValue: right command sets bit 0x10 in device-dependent flags
             let flags = event.modifierFlags
-            let rightCmd = flags.contains(.command) && event.keyCode == 54
+            let leftCmd = flags.contains(.command) && event.keyCode == 55
             let cmdReleased = !flags.contains(.command)
             DispatchQueue.main.async {
-                if rightCmd && !self.isInteractive && self.window.isVisible {
+                if leftCmd && !self.isInteractive && self.window.isVisible {
                     self.enterFeedbackMode()
                 } else if cmdReleased && self.isInteractive {
                     self.exitFeedbackMode()
@@ -158,10 +162,11 @@ class OverlayDelegate: NSObject, NSApplicationDelegate {
             }
         }
 
-        // Local mouse monitor — exit feedback mode after any click
-        NSEvent.addLocalMonitorForEvents(matching: .leftMouseDown) { [weak self] event in
+        // Local mouse monitor — exit feedback mode shortly after a click/drag ends.
+        // Keyed on mouse-UP (not down) so a drag-to-move (down → move → up) isn't
+        // torn down mid-drag by the auto-exit flipping the window click-through.
+        NSEvent.addLocalMonitorForEvents(matching: .leftMouseUp) { [weak self] event in
             guard let self = self, self.isInteractive else { return event }
-            // Let WKWebView handle the click, then exit after short delay
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
                 self?.exitFeedbackMode()
             }

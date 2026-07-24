@@ -6,16 +6,24 @@ version used for OTA updates.
 
 ## [0.8.14] — 2026-07-24
 
-### Added — flag a bad decision + hover to shrink the overlay
+### Added
 
 - **Flag a decision (⚑).** When the overlay gives advice you think is wrong,
-  hold Right ⌘ (feedback mode) and click ⚑ to save that decision — the exact
-  engine input plus the advice shown — to the local database, so it can be
-  reproduced and debugged later without a screenshot.
-- **Hover-shrink (peek).** Move the cursor over the overlay panel and it
-  smoothly shrinks to a tiny corner badge so it stops covering the board (e.g.
-  the opponent's name), then springs back when the cursor leaves. Works over
-  fullscreen MTGA without breaking click-through.
+  hold the feedback key (Left ⌘ / Left Ctrl) and click ⚑ to save that decision —
+  the exact engine input plus the advice shown — to the local database, so it can
+  be reproduced and debugged later without a screenshot.
+- **Hover-shrink (peek).** Move the cursor over the overlay panel and it collapses
+  to a small legible pill (◈ Scryglass) so it stops covering the board (e.g. the
+  opponent's name), then springs back when the cursor leaves. Also toggleable with
+  Option/Alt+H. Works over fullscreen MTGA without breaking click-through.
+- **Drag to move the overlay.** In feedback mode you can drag the panel with the
+  mouse to reposition it (the position persists), in addition to Option/Alt+arrows.
+
+### Changed
+
+- **Feedback key moved to the left hand.** Feedback mode is now Left ⌘ (macOS) /
+  Left Ctrl (Windows) instead of a right-hand key, so it can be held while the
+  mouse stays in the right hand. The in-panel hint shows the platform's key.
 
 ### Removed
 
