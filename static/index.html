@@ -3,155 +3,216 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MTGA Play Advisor</title>
-    <link rel="stylesheet" href="/static/style.css?v=15">
+    <title>Scryglass — Live MTGA Advisor</title>
+    <link rel="stylesheet" href="/static/style.css?v=16">
+    <link rel="stylesheet" href="/static/live.css?v=16">
     <script>document.documentElement.className='profile-'+(localStorage.getItem('scry-profile')||'full');</script>
 </head>
 <body>
-    <div id="app">
-        <header>
-            <div class="brand-block">
-                <h1>MTGA Advisor</h1>
-                <div class="header-links">
-                    <a href="/stats">Stats</a>
-                    <a href="/review">Review</a>
-                    <a href="/manage">Manage</a>
-                    <a href="/decks">Decks</a>
+    <div class="app-container">
+        <!-- Shared shell top bar (nav + first-class account control) -->
+        <header class="app-header">
+            <div class="brand">
+                <div class="brand-icon"><span class="brand-mark">◈</span></div>
+                <span>Scryglass</span>
+            </div>
+            <nav class="main-nav">
+                <a href="/" class="nav-link active">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m10 15 5-3-5-3v6z"/></svg>
+                    Advisor
+                </a>
+                <a href="/stats" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+                    Stats
+                </a>
+                <a href="/review" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>
+                    Review
+                </a>
+                <a href="/manage" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
+                    Manage
+                </a>
+            </nav>
+            <div class="account-control">
+                <div id="account-pill" class="account-pill">
+                    <span class="user-avatar">?</span>
+                    <div style="display:flex; flex-direction:column;">
+                        <span class="account-email">Checking status...</span>
+                        <span class="account-anon-hint">syncing anonymously</span>
+                    </div>
+                </div>
+                <div id="account-dropdown" class="account-dropdown">
+                    <div class="dropdown-user-info">
+                        <span id="dropdown-email-display" class="dropdown-email">Anonymous Device Account</span>
+                        <div class="dropdown-badges">
+                            <span id="dropdown-alpha-badge" class="badge-alpha" style="display:none;">ALPHA</span>
+                            <span class="badge badge-success">ACTIVE</span>
+                        </div>
+                    </div>
+                    <div class="sync-status-row">
+                        <span><span class="sync-dot"></span>Cloud Sync</span>
+                        <span id="sync-time-text">—</span>
+                    </div>
+                    <div class="dropdown-actions">
+                        <button id="btn-cloud-sync" class="btn btn-secondary btn-sm">⚡ Sync now</button>
+                        <button id="btn-cloud-signout" class="btn btn-ghost btn-sm" style="color:var(--error);">Sign out</button>
+                    </div>
                 </div>
             </div>
-            <div class="header-status">
-                <div id="profile-switcher">
-                    <button class="profile-btn" data-profile="focus" title="Focus — just the play (Ctrl+1)">F</button>
-                    <button class="profile-btn" data-profile="full" title="Full — everything (Ctrl+2)">A</button>
-                    <button class="profile-btn" data-profile="tactical" title="Tactical — advice + threats (Ctrl+3)">T</button>
-                </div>
-                <div id="status">
-                    <span id="connection-status" class="status-dot disconnected"></span>
-                    <span id="match-status">Waiting for match...</span>
-                </div>
-                <div id="turn-info"></div>
-            </div>
-            <div id="strategy-info" class="strategy-info" style="display:none"></div>
         </header>
 
-        <main id="main-layout">
-            <div id="vital-bar">
-                <span class="vb-label">You:</span> <span id="vb-my-life" class="vb-life">20</span>
-                <span id="vb-mana" class="vb-mana"></span>
-                <span class="vb-sep">|</span>
-                <span class="vb-label">Opp:</span> <span id="vb-opp-life" class="vb-life vb-opp">20</span>
-                <span id="vb-opp-meta" class="vb-meta"></span>
-            </div>
-            <div id="board-column">
-                <section id="opponent-zone" class="zone">
-                    <div class="zone-header">
-                        <span id="opp-name">Opponent</span>
-                        <span id="opp-life" class="life">20</span>
-                        <span id="opp-meta" class="opp-meta"></span>
-                    </div>
-                    <div id="opp-meta-details" class="opp-meta-details" style="display:none"></div>
-                    <div id="opp-battlefield" class="card-row"></div>
-                </section>
-
-                <section id="my-zone" class="zone">
-                    <div id="my-battlefield" class="card-row"></div>
-                    <div class="zone-header">
-                        <span id="my-name">You</span>
-                        <span id="my-life" class="life">20</span>
-                        <span id="mana-info" class="mana-info"></span>
-                    </div>
-                </section>
-
-                <section id="hand-zone">
-                    <div class="hand-header">
-                        <h3>Hand</h3>
-                        <span class="hand-note">Live view of castable pressure and interaction</span>
-                    </div>
-                    <div id="hand-cards" class="card-row"></div>
-                </section>
+        <div id="app">
+            <!-- Live connection / strategy band -->
+            <div id="live-band">
+                <div class="live-band-left">
+                    <span id="connection-status" class="status-dot disconnected"></span>
+                    <span id="match-status">Waiting for match...</span>
+                    <span id="turn-info"></span>
+                </div>
+                <div id="strategy-info" class="strategy-info" style="display:none"></div>
+                <div class="live-band-right">
+                    <button id="summary-btn" class="btn btn-secondary btn-sm" onclick="matchSummary()">📊 Match Summary</button>
+                </div>
             </div>
 
-            <aside id="decision-column">
-                <section id="advice-panel">
-                    <div class="advice-headline">
-                        <div>
-                            <h2>Decision HUD</h2>
-                            <p id="advice-subtitle">Heuristics pilot the turn. LLM supplements when needed.</p>
+            <main id="main-layout">
+                <div id="vital-bar">
+                    <span class="vb-label">You:</span> <span id="vb-my-life" class="vb-life">20</span>
+                    <span id="vb-mana" class="vb-mana"></span>
+                    <span class="vb-sep">|</span>
+                    <span class="vb-label">Opp:</span> <span id="vb-opp-life" class="vb-life vb-opp">20</span>
+                    <span id="vb-opp-meta" class="vb-meta"></span>
+                </div>
+                <div id="board-column">
+                    <section id="opponent-zone" class="zone">
+                        <div class="zone-header">
+                            <span id="opp-name">Opponent</span>
+                            <span id="opp-life" class="life">20</span>
+                            <span id="opp-meta" class="opp-meta"></span>
                         </div>
-                        <span id="llm-status-pill" class="llm-status-pill idle">LLM idle</span>
-                    </div>
+                        <div id="opp-meta-details" class="opp-meta-details" style="display:none"></div>
+                        <div id="opp-battlefield" class="card-row"></div>
+                    </section>
 
-                    <div class="advice-toolbar primary">
-                        <button id="ask-ai-btn" onclick="askLLM()">Ask AI</button>
-                        <label class="toggle" title="Run LLM automatically on live decision points">
-                            <input id="auto-llm-toggle" type="checkbox" onchange="toggleLLM(this.checked)">
-                            <span>Auto LLM</span>
-                            <span id="llm-mode-label"></span>
-                        </label>
-                    </div>
+                    <section id="my-zone" class="zone">
+                        <div id="my-battlefield" class="card-row"></div>
+                        <div class="zone-header">
+                            <span id="my-name">You</span>
+                            <span id="my-life" class="life">20</span>
+                            <span id="mana-info" class="mana-info"></span>
+                        </div>
+                    </section>
 
-                    <div class="advice-toolbar secondary">
-                        <label class="backend-select-wrap">
-                            <span>Backend</span>
-                            <select id="backend-select" onchange="setBackend(this.value)">
-                                <option value="claude_cli">Claude CLI</option>
-                                <option value="ollama">Ollama</option>
-                                <option value="anthropic_api">API</option>
-                            </select>
-                        </label>
-                        <button id="summary-btn" onclick="matchSummary()">Match Summary</button>
-                        <button id="report-btn" onclick="exportLastGame()">Export Last Game</button>
-                    </div>
+                    <section id="hand-zone">
+                        <div class="hand-header">
+                            <h3>Hand</h3>
+                            <span class="hand-note">Live view of castable pressure and interaction</span>
+                        </div>
+                        <div id="hand-cards" class="card-row"></div>
+                    </section>
+                </div>
 
-                    <div class="advice-groups">
-                        <section class="advice-section now">
-                            <div class="advice-section-header">
-                                <h3>Do Now</h3>
-                                <span class="advice-section-note">Immediate play guidance</span>
+                <aside id="decision-column">
+                    <section id="advice-panel">
+                        <div class="advice-headline">
+                            <div>
+                                <h2>Decision HUD</h2>
+                                <p id="advice-subtitle">Engine heuristics pilot the turn.</p>
                             </div>
-                            <div id="decision-actions-summary"></div>
-                            <div id="advice-key-play" class="advice-spotlight" style="display:none"></div>
-                            <div id="advice-now-list" class="advice-list"></div>
-                        </section>
+                        </div>
 
-                        <section class="advice-section context">
-                            <div class="advice-section-header">
-                                <h3>Context</h3>
-                                <span class="advice-section-note">Threat model, matchup reads, AI supplement</span>
-                            </div>
-                            <div id="advice-context-list" class="advice-list"></div>
-                        </section>
-                    </div>
-                </section>
+                        <div class="advice-groups">
+                            <section class="advice-section now">
+                                <div class="advice-section-header">
+                                    <h3>Do Now</h3>
+                                    <span class="advice-section-note">Immediate play guidance</span>
+                                </div>
+                                <div id="decision-actions-summary"></div>
+                                <div id="advice-key-play" class="advice-spotlight" style="display:none"></div>
+                                <div id="advice-now-list" class="advice-list"></div>
+                            </section>
 
-                <section id="threat-radar-panel" style="display:none">
-                    <div class="threat-radar-header">
-                        <h3>Opponent Radar</h3>
-                        <span id="threat-radar-count"></span>
-                    </div>
-                    <div id="threat-radar-summary" class="threat-radar-summary"></div>
-                    <div id="threat-radar-list"></div>
-                </section>
-            </aside>
-        </main>
+                            <section class="advice-section context">
+                                <div class="advice-section-header">
+                                    <h3>Context</h3>
+                                    <span class="advice-section-note">Threat model &amp; matchup reads</span>
+                                </div>
+                                <div id="advice-context-list" class="advice-list"></div>
+                            </section>
+                        </div>
+                    </section>
 
-        <footer>
-            <span id="library-count">Library: 0</span>
-            <span id="graveyard-count">Graveyard: 0</span>
-            <span id="stack-count"></span>
-            <span id="game-state-id"></span>
-            <span id="footer-version" class="footer-version" onclick="showAbout()" title="About Scryglass"></span>
-            <button id="debug-toggle" class="debug-toggle" onclick="toggleDebugPanel()">Debug</button>
-        </footer>
-        <div id="about-overlay" class="about-overlay" style="display:none" onclick="if(event.target===this)hideAbout()">
-            <div class="about-dialog">
-                <h2>Scryglass</h2>
-                <p class="about-subtitle">MTGA Play Advisor</p>
-                <table class="about-table" id="about-details"></table>
-                <button class="about-close" onclick="hideAbout()">Close</button>
+                    <section id="threat-radar-panel" style="display:none">
+                        <div class="threat-radar-header">
+                            <h3>Opponent Radar</h3>
+                            <span id="threat-radar-count"></span>
+                        </div>
+                        <div id="threat-radar-summary" class="threat-radar-summary"></div>
+                        <div id="threat-radar-list"></div>
+                    </section>
+                </aside>
+            </main>
+
+            <footer>
+                <span id="library-count">Library: 0</span>
+                <span id="graveyard-count">Graveyard: 0</span>
+                <span id="stack-count"></span>
+                <span id="game-state-id"></span>
+                <span id="footer-version" class="footer-version" onclick="showAbout()" title="About Scryglass"></span>
+                <button id="debug-toggle" class="debug-toggle" onclick="toggleDebugPanel()">Debug</button>
+            </footer>
+
+            <div id="about-overlay" class="about-overlay" style="display:none" onclick="if(event.target===this)hideAbout()">
+                <div class="about-dialog">
+                    <h2>Scryglass</h2>
+                    <p class="about-subtitle">Live MTGA Advisor</p>
+                    <table class="about-table" id="about-details"></table>
+                    <button class="about-close" onclick="hideAbout()">Close</button>
+                </div>
+            </div>
+            <div id="debug-panel" class="debug-panel" style="display:none"></div>
+
+            <!-- Retired controls: kept present (hidden) so the live engine (app.js)
+                 that reads/writes these elements never hits a null. The profile
+                 switcher, Ask-AI, Auto-LLM, backend selector and Export are cut
+                 from the UI; advice is engine-driven. -->
+            <div id="retired-controls" hidden aria-hidden="true">
+                <div id="profile-switcher">
+                    <button class="profile-btn" data-profile="focus">F</button>
+                    <button class="profile-btn" data-profile="full">A</button>
+                    <button class="profile-btn" data-profile="tactical">T</button>
+                </div>
+                <span id="llm-status-pill" class="llm-status-pill idle">LLM idle</span>
+                <button id="ask-ai-btn" onclick="askLLM()">Ask AI</button>
+                <input id="auto-llm-toggle" type="checkbox" onchange="toggleLLM(this.checked)">
+                <span id="llm-mode-label"></span>
+                <select id="backend-select" onchange="setBackend(this.value)">
+                    <option value="claude_cli">Claude CLI</option>
+                    <option value="ollama">Ollama</option>
+                    <option value="anthropic_api">API</option>
+                </select>
+                <button id="report-btn" onclick="exportLastGame()">Export Last Game</button>
             </div>
         </div>
-        <div id="debug-panel" class="debug-panel" style="display:none"></div>
+    </div>
+
+    <!-- Sign-in modal (driven by shell.js) -->
+    <div id="signin-modal" class="modal-backdrop">
+        <div class="modal-container">
+            <div class="modal-header">
+                <span class="modal-title">Sign in to Scryglass Cloud</span>
+                <button onclick="document.getElementById('signin-modal').classList.remove('open')" class="btn btn-ghost btn-sm">✕</button>
+            </div>
+            <div class="modal-body" style="text-align:center; padding:24px;">
+                <div style="font-size:28px; margin-bottom:12px;">☁️</div>
+                <h3 style="margin-bottom:8px;">Completing sign-in in your browser…</h3>
+                <p style="font-size:12px; color:var(--muted); margin-bottom:16px;" id="signin-status-msg">
+                    A browser window opened. Scryglass will link this device to your account once you approve.
+                </p>
+                <div class="progress-bar"><div class="progress-fill" style="width:60%;"></div></div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -161,6 +222,7 @@
         window.location.href = '/setup';
     }
     </script>
-    <script src="/static/app.js?v=14"></script>
+    <script src="/static/shell.js?v=16"></script>
+    <script src="/static/app.js?v=16"></script>
 </body>
 </html>

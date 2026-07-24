@@ -1,1603 +1,613 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MTGA Advisor — Manage</title>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body { background: #0f1117; color: #e6e8ee; font-family: 'Segoe UI', system-ui, sans-serif; }
-
-#app {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
-header {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    padding: 12px 20px;
-    background: #171a23;
-    border-radius: 8px;
-    border: 1px solid #1e2230;
-}
-header h1 { font-size: 20px; color: #5b6ccf; }
-header a {
-    color: #7f8de0;
-    text-decoration: none;
-    font-size: 13px;
-}
-header a:hover { color: #fff; }
-.nav-links { margin-left: auto; display: flex; gap: 16px; }
-
-.utility-bar {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 16px;
-    background: #171a23;
-    border-radius: 8px;
-    border: 1px solid #1e2230;
-}
-.utility-bar .label {
-    font-size: 13px;
-    color: #e6e8ee;
-    font-weight: 600;
-}
-.utility-bar .hint {
-    font-size: 12px;
-    color: #888;
-}
-.utility-bar .status {
-    font-size: 12px;
-    color: #7f8de0;
-    margin-left: auto;
-    text-align: right;
-}
-
-/* Tabs */
-.tabs {
-    display: flex;
-    gap: 4px;
-    background: #171a23;
-    border-radius: 8px;
-    padding: 4px;
-    border: 1px solid #1e2230;
-}
-.tab {
-    padding: 8px 20px;
-    border-radius: 6px;
-    border: none;
-    background: transparent;
-    color: #888;
-    font-size: 13px;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-.tab:hover { color: #e6e8ee; background: rgba(255,255,255,0.05); }
-.tab.active { background: #1e2230; color: #5b6ccf; font-weight: 600; }
-
-/* Section */
-.section {
-    background: #171a23;
-    border: 1px solid #1e2230;
-    border-radius: 8px;
-    padding: 16px;
-    display: none;
-}
-.section.active { display: block; }
-.section h2 {
-    font-size: 16px;
-    color: #5b6ccf;
-    margin-bottom: 12px;
-}
-
-/* Tables */
-table { width: 100%; border-collapse: collapse; }
-th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid #1e2230; font-size: 13px; }
-th { color: #888; font-weight: 600; font-size: 12px; text-transform: uppercase; }
-tr:hover { background: rgba(255,255,255,0.03); }
-.badge {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 11px;
-    font-weight: 600;
-}
-.badge-user { background: rgba(91, 108, 207,0.2); color: #5b6ccf; border: 1px solid rgba(91, 108, 207,0.3); }
-.badge-builtin { background: rgba(91, 108, 207,0.15); color: #7f8de0; border: 1px solid rgba(91, 108, 207,0.2); }
-.badge-managed { background: rgba(76,175,80,0.2); color: #81c784; border: 1px solid rgba(76,175,80,0.3); }
-.badge-stub { background: rgba(255,193,7,0.15); color: #ffc107; border: 1px solid rgba(255,193,7,0.2); }
-.color-dot {
-    display: inline-block;
-    width: 14px; height: 14px;
-    border-radius: 50%;
-    margin-right: 2px;
-    vertical-align: middle;
-    border: 1px solid rgba(255,255,255,0.2);
-}
-.color-W { background: #f5f0d0; }
-.color-U { background: #5b6ccf; }
-.color-B { background: #3d3040; }
-.color-R { background: #c03030; }
-.color-G { background: #2d7a1e; }
-
-/* Buttons */
-.btn {
-    padding: 6px 14px;
-    border-radius: 4px;
-    border: none;
-    font-size: 12px;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-.btn-primary { background: #5b6ccf; color: #fff; }
-.btn-primary:hover { background: #4d5cba; }
-.btn-danger { background: rgba(244,67,54,0.15); color: #ef5350; border: 1px solid rgba(244,67,54,0.3); }
-.btn-danger:hover { background: rgba(244,67,54,0.3); }
-.btn-secondary { background: #1e2230; color: #7f8de0; border: 1px solid #5b6ccf; }
-.btn-secondary:hover { background: #262a36; }
-.btn-small { padding: 3px 10px; font-size: 11px; }
-.btn-row { display: flex; gap: 8px; align-items: center; }
-
-/* Detail panel / Editor */
-.detail-panel {
-    margin-top: 12px;
-    background: #0f1117;
-    border: 1px solid #1e2230;
-    border-radius: 8px;
-    padding: 16px;
-    display: none;
-}
-.detail-panel.open { display: block; }
-.detail-panel h3 {
-    font-size: 14px;
-    color: #5b6ccf;
-    margin-bottom: 12px;
-}
-
-/* Rule cards */
-.rule-card {
-    background: #1e2230;
-    border: 1px solid #171a23;
-    border-radius: 6px;
-    padding: 10px 14px;
-    margin-bottom: 8px;
-    font-size: 12px;
-}
-.rule-card .rule-id {
-    font-weight: 600;
-    color: #5b6ccf;
-    font-size: 11px;
-    margin-bottom: 4px;
-}
-.rule-card .rule-action {
-    color: #e6e8ee;
-    font-size: 13px;
-    margin-bottom: 4px;
-}
-.rule-card .rule-meta {
-    color: #666;
-    font-size: 11px;
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-}
-.rule-card .rule-meta span { white-space: nowrap; }
-.priority-critical { border-left: 3px solid #f44336; }
-.priority-high { border-left: 3px solid #ff9800; }
-.priority-medium { border-left: 3px solid #5b6ccf; }
-.priority-low { border-left: 3px solid #4caf50; }
-
-/* Meta deck cards */
-.meta-card {
-    background: #1e2230;
-    border: 1px solid #171a23;
-    border-radius: 6px;
-    padding: 12px 14px;
-    margin-bottom: 8px;
-}
-.meta-card h4 {
-    font-size: 14px;
-    color: #fff;
-    margin-bottom: 6px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-.meta-card .meta-info {
-    font-size: 12px;
-    color: #888;
-    display: flex;
-    gap: 16px;
-    flex-wrap: wrap;
-    margin-bottom: 6px;
-}
-.meta-card .signal-cards {
-    font-size: 11px;
-    color: #7f8de0;
-}
-.meta-card .key-threats {
-    font-size: 11px;
-    color: #ff8a80;
-    margin-top: 4px;
-}
-
-/* JSON Editor */
-.json-editor {
-    width: 100%;
-    min-height: 400px;
-    background: #0f1117;
-    color: #7f8de0;
-    border: 1px solid #1e2230;
-    border-radius: 6px;
-    padding: 12px;
-    font-family: 'JetBrains Mono', 'Fira Code', monospace;
-    font-size: 12px;
-    line-height: 1.5;
-    resize: vertical;
-    tab-size: 2;
-}
-.json-editor:focus { outline: 1px solid #5b6ccf; }
-
-/* Deck content */
-.deck-content {
-    width: 100%;
-    min-height: 300px;
-    background: #0f1117;
-    color: #e6e8ee;
-    border: 1px solid #1e2230;
-    border-radius: 6px;
-    padding: 12px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
-    line-height: 1.5;
-    resize: vertical;
-    white-space: pre;
-}
-
-/* Guide content (rendered markdown) */
-.guide-content {
-    background: #0f1117;
-    border: 1px solid #1e2230;
-    border-radius: 6px;
-    padding: 16px;
-    font-size: 13px;
-    line-height: 1.6;
-    max-height: 600px;
-    overflow-y: auto;
-}
-.guide-content h1, .guide-content h2, .guide-content h3 {
-    color: #5b6ccf;
-    margin: 16px 0 8px;
-}
-.guide-content h1 { font-size: 18px; }
-.guide-content h2 { font-size: 15px; }
-.guide-content h3 { font-size: 13px; }
-.guide-content p { margin: 6px 0; }
-.guide-content ul, .guide-content ol { margin: 6px 0 6px 20px; }
-.guide-content li { margin: 2px 0; }
-.guide-content code {
-    background: #171a23;
-    padding: 1px 5px;
-    border-radius: 3px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
-}
-.guide-content pre {
-    background: #171a23;
-    padding: 10px;
-    border-radius: 4px;
-    overflow-x: auto;
-    margin: 8px 0;
-}
-.guide-content pre code { background: none; padding: 0; }
-.guide-content strong { color: #ffb052; }
-.guide-content blockquote {
-    border-left: 3px solid #1e2230;
-    padding-left: 12px;
-    color: #97a9c4;
-    margin: 8px 0;
-}
-.guide-content table { border-collapse: collapse; margin: 8px 0; width: 100%; }
-.guide-content th, .guide-content td {
-    border: 1px solid #1e2230;
-    padding: 4px 8px;
-    font-size: 12px;
-}
-.guide-content th { background: #171a23; color: #5b6ccf; }
-
-/* Search */
-.search-bar {
-    padding: 8px 14px;
-    background: #0f1117;
-    border: 1px solid #1e2230;
-    border-radius: 6px;
-    color: #e6e8ee;
-    font-size: 13px;
-    width: 100%;
-    margin-bottom: 12px;
-}
-.search-bar:focus { outline: 1px solid #5b6ccf; }
-.search-bar::placeholder { color: #555; }
-
-/* Summary stats */
-.summary-row {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 12px;
-    margin-bottom: 16px;
-}
-.summary-card {
-    background: #1e2230;
-    border-radius: 6px;
-    padding: 12px;
-    text-align: center;
-}
-.summary-card .value { font-size: 28px; font-weight: 700; color: #5b6ccf; }
-.summary-card .label { font-size: 11px; color: #888; margin-top: 2px; }
-
-/* Toast */
-.toast {
-    position: fixed;
-    bottom: 24px;
-    right: 24px;
-    background: #4caf50;
-    color: #fff;
-    padding: 10px 20px;
-    border-radius: 6px;
-    font-size: 13px;
-    z-index: 1000;
-    opacity: 0;
-    transition: opacity 0.3s;
-    pointer-events: none;
-}
-.toast.show { opacity: 1; }
-.toast.error { background: #f44336; }
-
-/* Review banner */
-.review-banner {
-    background: rgba(255, 152, 0, 0.15);
-    border: 1px solid rgba(255, 152, 0, 0.4);
-    border-radius: 6px;
-    padding: 12px 16px;
-    margin-bottom: 16px;
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-}
-.review-banner .icon { font-size: 20px; flex-shrink: 0; line-height: 1; }
-.review-banner .text { font-size: 13px; color: #ffcc80; line-height: 1.5; }
-.review-banner .text strong { color: #ffa500; }
-.review-banner .text code {
-    background: rgba(0,0,0,0.3);
-    padding: 1px 6px;
-    border-radius: 3px;
-    font-size: 12px;
-}
-.badge-review {
-    background: rgba(255, 152, 0, 0.2);
-    color: #ffa500;
-    border: 1px solid rgba(255, 152, 0, 0.4);
-}
-.badge-observed {
-    background: rgba(156, 39, 176, 0.2);
-    color: #ce93d8;
-    border: 1px solid rgba(156, 39, 176, 0.3);
-}
-.meta-card.needs-review {
-    border-color: rgba(255, 152, 0, 0.4);
-}
-.meta-card .review-tag {
-    font-size: 10px;
-    color: #ffa500;
-    font-style: italic;
-}
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Scryglass — Manage Settings & Sync</title>
+  <link rel="stylesheet" href="/static/style.css" />
 </head>
 <body>
-    <div id="app">
-        <header>
-            <h1>Manage</h1>
-            <a href="/decks" class="btn btn-primary" style="margin-left: auto;">Manage Decks &rarr;</a>
-            <div class="nav-links">
-                <a href="/">Advisor</a>
-                <a href="/stats">Stats</a>
-            </div>
-        </header>
+  <div class="app-container">
+    <!-- Shell Header -->
+    <header class="app-header">
+      <div class="brand">
+        <div class="brand-icon"><span class="brand-mark">◈</span></div>
+        <span>Scryglass</span>
+      </div>
 
-        <div class="utility-bar" style="flex-wrap: wrap; gap: 8px;">
-            <div class="label">Collection</div>
-            <button id="refresh-collection-btn" class="btn btn-primary" onclick="refreshCollection()">Refresh from MTGA Memory</button>
-            <div class="hint">Requires the sudo wrapper setup from <code>docs/collection_refresh_setup.md</code>.</div>
-            <div id="refresh-collection-status" class="status">Idle</div>
-            <div id="collection-stats" style="width:100%; display:none; margin-top:4px;">
-                <div style="display:flex; gap:16px; flex-wrap:wrap; font-size:13px;">
-                    <div id="cs-total" style="color:#e6e8ee;"></div>
-                    <div id="cs-common" style="color:#b0b0b0;"></div>
-                    <div id="cs-uncommon" style="color:#b0c4de;"></div>
-                    <div id="cs-rare" style="color:#ffd700;"></div>
-                    <div id="cs-mythic" style="color:#5b6ccf;"></div>
-                    <div id="cs-wildcards" style="color:#7f8de0; margin-left:auto;"></div>
-                </div>
-                <div id="cs-date" style="font-size:11px; color:#555; margin-top:2px;"></div>
-            </div>
+      <nav class="main-nav">
+        <a href="/" class="nav-link">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m10 15 5-3-5-3v6z"/></svg>
+          Advisor
+        </a>
+        <a href="/stats" class="nav-link">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+          Stats
+        </a>
+        <a href="/review" class="nav-link">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>
+          Review
+        </a>
+        <a href="/manage" class="nav-link active">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
+          Manage
+        </a>
+      </nav>
+
+      <!-- Account / Identity Shell Control (wired by /static/shell.js — do not duplicate in body) -->
+      <div class="account-control">
+        <div id="account-pill" class="account-pill">
+          <span class="user-avatar">?</span>
+          <div style="display:flex; flex-direction:column;">
+            <span class="account-email">Checking status...</span>
+            <span class="account-anon-hint">syncing anonymously</span>
+          </div>
         </div>
 
-        <div class="tabs">
-            <button class="tab active" onclick="switchTab('strategies')">Strategies</button>
-            <button class="tab" onclick="switchTab('general')">General Rules</button>
-            <button class="tab" onclick="switchTab('meta')">Meta Decks</button>
-            <button class="tab" onclick="switchTab('decks')">Decks</button>
-            <button class="tab" onclick="switchTab('guides')">Guides</button>
-            <button class="tab" onclick="switchTab('ga')">GA Runs</button>
-            <button class="tab" onclick="switchTab('cloud')">Cloud Sync</button>
+        <div id="account-dropdown" class="account-dropdown">
+          <div class="dropdown-user-info">
+            <span id="dropdown-email-display" class="dropdown-email">planeswalker@scryglass.gg</span>
+            <div class="dropdown-badges">
+              <span id="dropdown-alpha-badge" class="badge-alpha">ALPHA</span>
+              <span class="badge badge-success">ACTIVE</span>
+            </div>
+          </div>
+          <div class="sync-status-row">
+            <span><span class="sync-dot"></span>Cloud Sync</span>
+            <span id="sync-time-text">Synced 2m ago</span>
+          </div>
+          <div class="dropdown-actions">
+            <button id="btn-cloud-sync" class="btn btn-secondary btn-sm">⚡ Sync now</button>
+            <button id="btn-cloud-signout" class="btn btn-ghost btn-sm" style="color:var(--error);">Sign out</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Page Body -->
+    <main class="page-body">
+      <div style="margin-bottom:20px;">
+        <h1 style="font-size:22px; font-weight:800; color:#fff;">Manage Scryglass Settings</h1>
+        <p style="font-size:12px; color:var(--muted);">Collection memory reader, Meta deck synchronization, and Cloud sync settings</p>
+      </div>
+
+      <div class="grid grid-1" style="gap:20px; max-width:960px;">
+        <!-- 1. Collection Section -->
+        <div class="glass-card">
+          <div class="card-header">
+            <div class="card-title">
+              <span>📚 MTGA Collection Reader</span>
+            </div>
+            <span id="coll-snapshot-date" style="font-size:11px; color:var(--muted);">No snapshot yet</span>
+          </div>
+
+          <div class="grid grid-4" style="margin-bottom:16px;">
+            <div class="stat-tile">
+              <span class="stat-label">Unique Cards</span>
+              <span class="stat-value" id="stat-unique-cards">—</span>
+            </div>
+            <div class="stat-tile">
+              <span class="stat-label">Total Copies</span>
+              <span class="stat-value" id="stat-total-copies">—</span>
+            </div>
+            <div class="stat-tile">
+              <span class="stat-label">Rare / Mythic</span>
+              <span class="stat-value" style="color:var(--accent);" id="stat-rare-mythic">—</span>
+            </div>
+            <div class="stat-tile">
+              <span class="stat-label">Wildcards</span>
+              <span class="stat-value" style="color:var(--warning);" id="stat-wildcards">—</span>
+            </div>
+          </div>
+
+          <div style="background:var(--bg); padding:12px; border-radius:var(--radius-md); border:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; gap:16px;">
+            <div>
+              <strong style="font-size:13px; color:#fff;">Refresh Collection from MTGA Memory</strong>
+              <p style="font-size:11px; color:var(--muted); margin-top:2px;">
+                Note: Requires a one-time setup — the sudo wrapper described in <code>docs/collection_refresh_setup.md</code> so the reader can access MTGA's memory.
+              </p>
+              <p id="refresh-collection-status" style="font-size:11px; color:var(--muted); margin-top:4px;">Idle</p>
+            </div>
+            <button id="btn-refresh-collection" class="btn btn-primary" onclick="refreshCollection()">
+              ⚡ Refresh Collection
+            </button>
+          </div>
         </div>
 
-        <!-- Strategies -->
-        <div id="tab-strategies" class="section active">
-            <h2>Deck Strategies</h2>
-            <div id="strategies-summary" class="summary-row"></div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Colors</th>
-                        <th>Archetype</th>
-                        <th>Rules</th>
-                        <th>Source</th>
-                        <th>Win Rate</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody id="strategies-body"></tbody>
+        <!-- 2. Meta Decks Section -->
+        <div class="glass-card">
+          <div class="card-header">
+            <div class="card-title">
+              <span>🎯 Meta Deck Threat Database</span>
+            </div>
+            <button id="btn-sync-meta" class="btn btn-secondary btn-sm" onclick="syncMeta()">
+              🔄 Sync from MTGGoldfish
+            </button>
+          </div>
+
+          <p style="font-size:12px; color:var(--muted); margin-bottom:8px;">
+            Active meta archetype definitions used by the Opponent Radar for deck recognition.
+            <span id="sync-meta-status" style="color:var(--accent); margin-left:6px;"></span>
+          </p>
+
+          <div id="meta-review-banner"></div>
+
+          <div class="data-table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Archetype</th>
+                  <th>Format</th>
+                  <th>Meta Share %</th>
+                  <th>Key Signature Cards</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="meta-decks-body">
+                <tr><td colspan="5" style="color:var(--muted); font-style:italic;">Loading meta decks…</td></tr>
+              </tbody>
             </table>
-            <div id="strategy-detail" class="detail-panel"></div>
+          </div>
         </div>
 
-        <!-- General Rules -->
-        <div id="tab-general" class="section">
-            <h2>General MTG Rules</h2>
-            <div id="general-summary" class="summary-row"></div>
-            <input type="text" class="search-bar" id="general-search"
-                   placeholder="Filter rules by id, action, layer..." oninput="filterGeneralRules()">
-            <div id="general-rules-list"></div>
-            <div style="margin-top:12px" class="btn-row">
-                <button class="btn btn-secondary" onclick="editGeneralJSON()">Edit JSON</button>
+        <!-- 3. Cloud Sync Settings Section (config only — account/sign-in lives in the header) -->
+        <div class="glass-card">
+          <div class="card-header">
+            <div class="card-title">
+              <span>☁️ Cloud Synchronization Config</span>
             </div>
-            <div id="general-editor" class="detail-panel">
-                <h3>Edit general.json</h3>
-                <textarea id="general-json" class="json-editor"></textarea>
-                <div class="btn-row" style="margin-top:8px">
-                    <button class="btn btn-primary" onclick="saveGeneralJSON()">Save</button>
-                    <button class="btn btn-secondary" onclick="closeGeneralEditor()">Cancel</button>
-                </div>
+            <span class="badge badge-indigo">CONFIG ONLY</span>
+          </div>
+
+          <div id="cloud-env-note" style="display:none; margin-bottom:12px; padding:8px 12px; background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.3); border-radius:var(--radius-md); color:var(--warning); font-size:12px;">
+            Configured via environment variables (SCRY_CLOUD_*) — those override these settings.
+          </div>
+
+          <div class="grid grid-2" style="margin-bottom:16px;">
+            <div class="form-group">
+              <label class="form-label">Background Auto-Sync</label>
+              <div style="display:flex; align-items:center; gap:12px; margin-top:4px;">
+                <label class="switch">
+                  <input type="checkbox" id="sync-enabled-toggle" />
+                  <span class="slider"></span>
+                </label>
+                <span style="font-size:13px; color:#fff;">Enable Cloud Backup</span>
+              </div>
             </div>
+
+            <div class="form-group">
+              <label class="form-label">Sync Interval</label>
+              <select class="select" id="sync-interval-select">
+                <option value="5">Every 5 minutes</option>
+                <option value="15" selected>Every 15 minutes</option>
+                <option value="30">Every 30 minutes</option>
+                <option value="60">Hourly</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Advanced / hidden: URL + token are managed elsewhere; URL kept so saving never wipes it -->
+          <input type="hidden" id="cloud-url" value="" />
+
+          <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--border); padding-top:12px; gap:12px;">
+            <span id="cloud-status" style="font-size:11px; color:var(--muted);">Identity and account login are managed in the header bar above.</span>
+            <div style="display:flex; gap:8px;">
+              <button id="btn-cloud-sync-now" class="btn btn-secondary" onclick="cloudSyncNow()">⚡ Sync now</button>
+              <button id="btn-save-cloud-config" class="btn btn-primary" onclick="saveCloudConfig()">Save Settings</button>
+            </div>
+          </div>
         </div>
+      </div>
+    </main>
+  </div>
 
-        <!-- Meta Decks -->
-        <div id="tab-meta" class="section">
-            <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-                <h2 style="margin-bottom:0">Meta Decks</h2>
-                <button id="sync-meta-btn" class="btn btn-primary" onclick="syncMeta()">Sync from MTGGoldfish</button>
-                <span id="sync-status" style="font-size:12px;color:#888"></span>
-            </div>
-            <div id="meta-review-banner"></div>
-            <div id="meta-summary" class="summary-row"></div>
-            <input type="text" class="search-bar" id="meta-search"
-                   placeholder="Filter by name, archetype, colors..." oninput="filterMetaDecks()">
-            <div id="meta-decks-list"></div>
-            <div style="margin-top:12px" class="btn-row">
-                <button class="btn btn-secondary" onclick="editMetaJSON()">Edit JSON</button>
-            </div>
-            <div id="meta-editor" class="detail-panel">
-                <h3>Edit meta_decks.json</h3>
-                <textarea id="meta-json" class="json-editor" style="min-height:500px"></textarea>
-                <div class="btn-row" style="margin-top:8px">
-                    <button class="btn btn-primary" onclick="saveMetaJSON()">Save</button>
-                    <button class="btn btn-secondary" onclick="closeMetaEditor()">Cancel</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Decks -->
-        <div id="tab-decks" class="section">
-            <h2>Deck Lists</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Cards</th>
-                        <th>Size</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody id="decks-body"></tbody>
-            </table>
-            <div id="deck-detail" class="detail-panel"></div>
-        </div>
-
-        <!-- Guides -->
-        <div id="tab-guides" class="section">
-            <h2>Strategy Guides</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Source</th>
-                        <th>Size</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody id="guides-body"></tbody>
-            </table>
-            <div id="guide-detail" class="detail-panel"></div>
-        </div>
-
-        <div id="tab-ga" class="section">
-            <h2>GA Optimization Runs</h2>
-            <div id="ga-summary" class="summary-grid"></div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Deck</th>
-                        <th>Run</th>
-                        <th>Gens</th>
-                        <th>Best Fitness</th>
-                        <th>Record</th>
-                        <th>Time</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody id="ga-body"></tbody>
-            </table>
-            <div id="ga-detail" class="detail-panel"></div>
-        </div>
-
-        <!-- Cloud Sync -->
-        <div id="tab-cloud" class="section">
-            <h2>Cloud Sync</h2>
-            <p style="color:#888;font-size:13px;max-width:680px">
-                Opt-in: upload finished-match telemetry to the cloud and pull fresh
-                meta decks + interaction profiles back. Off by default. The token is
-                stored locally and never shown again after saving.
-            </p>
-            <div id="cloud-account" style="margin:10px 0 4px;padding:11px 14px;border-radius:8px;
-                 font-size:13px;display:flex;align-items:center;gap:9px;
-                 background:#16211c;border:1px solid #2c3a34">
-                <span id="cloud-account-icon" style="font-size:15px">◐</span>
-                <span id="cloud-account-text">Checking account…</span>
-                <button id="cloud-signin-btn" class="btn btn-primary" onclick="cloudSignIn()"
-                        style="display:none;margin-left:auto;padding:5px 12px;font-size:12px">Sign in</button>
-            </div>
-            <div id="cloud-env-note" style="display:none;margin:8px 0;padding:8px 12px;
-                 background:#33240a;border:1px solid #6b5418;border-radius:6px;color:#e0c068;font-size:12px">
-                Configured via environment variables (SCRY_CLOUD_*) — those override these settings.
-            </div>
-            <div style="display:grid;grid-template-columns:140px 1fr;gap:10px 12px;max-width:640px;align-items:center">
-                <label for="cloud-enabled">Enabled</label>
-                <input type="checkbox" id="cloud-enabled" style="justify-self:start;width:18px;height:18px">
-
-                <label for="cloud-url">Cloud URL</label>
-                <input type="text" id="cloud-url" class="search-bar" style="margin:0"
-                       placeholder="https://scryglass.win">
-
-                <label for="cloud-token">Token</label>
-                <input type="password" id="cloud-token" class="search-bar" style="margin:0"
-                       placeholder="(none)" autocomplete="off">
-
-                <label for="cloud-interval">Interval (sec)</label>
-                <input type="number" id="cloud-interval" class="search-bar" style="margin:0" min="30" value="900">
-            </div>
-            <div class="btn-row" style="margin-top:14px">
-                <button id="cloud-save-btn" class="btn btn-primary" onclick="saveCloudConfig()">Save</button>
-                <button id="cloud-sync-btn" class="btn btn-secondary" onclick="cloudSyncNow()">Sync now</button>
-                <span id="cloud-status" style="font-size:12px;color:#888;align-self:center"></span>
-            </div>
-
-            <!-- Link email (magic-link claim → web dashboard login) -->
-            <div style="margin-top:28px;border-top:1px solid #2a2a2a;padding-top:18px">
-                <h3 style="margin:0 0 6px;font-size:15px">Link your email</h3>
-                <p style="color:#888;font-size:13px;max-width:680px;margin:0 0 12px">
-                    Bind an email to this account so you can sign in to the web dashboard
-                    (<a href="https://scryglass.win/app" target="_blank" style="color:#7f8de0">scryglass.win/app</a>)
-                    and see your stats from anywhere. We email you a 6-digit code to confirm.
-                </p>
-                <div style="display:grid;grid-template-columns:140px 1fr;gap:10px 12px;max-width:640px;align-items:center">
-                    <label for="claim-email">Email</label>
-                    <input type="email" id="claim-email" class="search-bar" style="margin:0"
-                           placeholder="you@example.com" autocomplete="email">
-
-                    <label for="claim-code" id="claim-code-label" style="display:none">Code</label>
-                    <input type="text" id="claim-code" class="search-bar" style="margin:0;display:none"
-                           placeholder="6-digit code" inputmode="numeric" maxlength="6" autocomplete="off">
-                </div>
-                <div class="btn-row" style="margin-top:14px">
-                    <button id="claim-send-btn" class="btn btn-primary" onclick="claimSendCode()">Email me a code</button>
-                    <button id="claim-verify-btn" class="btn btn-primary" onclick="claimVerifyCode()" style="display:none">Confirm code</button>
-                    <span id="claim-status" style="font-size:12px;color:#888;align-self:center"></span>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="toast" class="toast"></div>
-
-<script>
-// ── State ──
-let strategiesData = [];
-let generalData = null;
-let metaData = null;
-let allGeneralRules = [];
-let allMetaDecks = [];
-let collectionRefreshPollTimer = null;
-let lastCollectionRefreshState = null;
-
-// ── Tabs ──
-function switchTab(name) {
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-    document.querySelector(`.tab[onclick*="${name}"]`).classList.add('active');
-    document.getElementById(`tab-${name}`).classList.add('active');
-
-    // Lazy load
-    if (name === 'strategies') loadStrategies();
-    if (name === 'general') loadGeneralRules();
-    if (name === 'meta') loadMetaDecks();
-    if (name === 'decks') loadDecks();
-    if (name === 'guides') loadGuides();
-    if (name === 'ga') loadGARuns();
-    if (name === 'cloud') loadCloudConfig();
-}
-
-// ── Toast ──
-function showToast(msg, isError = false) {
-    const t = document.getElementById('toast');
+  <script src="/static/shell.js"></script>
+  <script>
+  // ── Helpers ──
+  function esc(text) {
+    const d = document.createElement('div');
+    d.textContent = text == null ? '' : String(text);
+    return d.innerHTML;
+  }
+  function fmtNum(n) {
+    return (typeof n === 'number' && isFinite(n)) ? n.toLocaleString() : '—';
+  }
+  // Lightweight, self-contained toast (no external CSS dependency).
+  function notify(msg, isError = false) {
+    const t = document.createElement('div');
     t.textContent = msg;
-    t.className = 'toast show' + (isError ? ' error' : '');
-    setTimeout(() => t.className = 'toast', 2500);
-}
+    t.style.cssText =
+      'position:fixed;bottom:24px;right:24px;z-index:1000;padding:10px 18px;' +
+      'border-radius:8px;font-size:13px;color:#fff;box-shadow:0 6px 24px rgba(0,0,0,.4);' +
+      'background:' + (isError ? 'var(--error, #ef4444)' : 'var(--success, #22c55e)') + ';';
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 2600);
+  }
 
-// ── Color dots ──
-function colorDots(colors) {
-    return (colors || []).map(c => `<span class="color-dot color-${c}"></span>`).join('');
-}
+  // ── State ──
+  let allMetaDecks = [];
+  let collectionRefreshPollTimer = null;
+  let lastCollectionRefreshState = null;
 
-// ── Strategies ──
-async function loadStrategies() {
-    const res = await fetch('/api/manage/strategies');
-    strategiesData = await res.json();
-
-    const totalRules = strategiesData.reduce((s, d) => s + d.rule_count, 0);
-    const managedCount = strategiesData.filter(d => d.has_deck).length;
-    const stubCount = strategiesData.filter(d => d.source === 'user' && !d.has_deck).length;
-    document.getElementById('strategies-summary').innerHTML = `
-        <div class="summary-card"><div class="value">${strategiesData.length}</div><div class="label">Strategies</div></div>
-        <div class="summary-card"><div class="value">${managedCount}</div><div class="label">Managed</div></div>
-        <div class="summary-card"><div class="value">${stubCount}</div><div class="label">Stubs</div></div>
-        <div class="summary-card"><div class="value">${totalRules}</div><div class="label">Total Rules</div></div>
-    `;
-
-    const tbody = document.getElementById('strategies-body');
-    tbody.innerHTML = strategiesData.map(s => {
-        const stats = s.stats || {};
-        const games = stats.games || 0;
-        const wr = games > 0 ? ((stats.wins / games) * 100).toFixed(0) + '%' : '—';
-        const key = s.deck_id || s.file.replace('.json','');
-        const status = s.has_deck ? 'managed' : s.source === 'builtin' ? 'builtin' : 'stub';
-        const actions = [`<button class="btn btn-secondary btn-small" onclick="viewStrategy('${key}')">View</button>`];
-        if (status === 'stub') {
-            actions.push(`<button class="btn btn-primary btn-small" onclick="promoteStub('${key}')">Import</button>`);
-            actions.push(`<button class="btn btn-danger btn-small" onclick="deleteStub('${key}','${s.name}')">Delete</button>`);
-        }
-        return `<tr>
-            <td><strong>${s.name}</strong></td>
-            <td>${colorDots(s.colors)}</td>
-            <td>${s.archetype}</td>
-            <td>${s.rule_count}</td>
-            <td><span class="badge badge-${status}">${status}</span></td>
-            <td>${wr}${games > 0 ? ` (${games}g)` : ''}</td>
-            <td>${actions.join(' ')}</td>
-        </tr>`;
-    }).join('');
-}
-
-async function viewStrategy(deckId) {
-    const res = await fetch(`/api/manage/strategy/${deckId}`);
-    const data = await res.json();
-    const panel = document.getElementById('strategy-detail');
-    const rules = data.rules || [];
-
-    panel.innerHTML = `
-        <h3>${data.name} <span style="color:#888;font-size:12px">(${deckId})</span></h3>
-        <div style="margin-bottom:8px;font-size:12px;color:#888">
-            ${colorDots(data.colors)} ${data.archetype}
-            · Signature: ${(data.deck_signature || []).join(', ') || '—'}
-        </div>
-        ${rules.length ? rules.map(r => ruleCard(r)).join('') : '<div style="color:#555;font-style:italic">No rules</div>'}
-        <div class="btn-row" style="margin-top:12px">
-            <button class="btn btn-secondary" onclick="editStrategyJSON('${deckId}')">Edit JSON</button>
-            <button class="btn btn-secondary" onclick="closeStrategyDetail()">Close</button>
-        </div>
-        <div id="strategy-editor-wrap"></div>
-    `;
-    panel.classList.add('open');
-    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-}
-
-async function editStrategyJSON(deckId) {
-    const res = await fetch(`/api/manage/strategy/${deckId}`);
-    const data = await res.json();
-    const wrap = document.getElementById('strategy-editor-wrap');
-    wrap.innerHTML = `
-        <div style="margin-top:12px">
-            <textarea id="strategy-json-edit" class="json-editor">${JSON.stringify(data, null, 2)}</textarea>
-            <div class="btn-row" style="margin-top:8px">
-                <button class="btn btn-primary" onclick="saveStrategyJSON('${deckId}')">Save</button>
-                <button class="btn btn-secondary" onclick="document.getElementById('strategy-editor-wrap').innerHTML=''">Cancel</button>
-            </div>
-        </div>
-    `;
-}
-
-async function saveStrategyJSON(deckId) {
-    const text = document.getElementById('strategy-json-edit').value;
+  // ─────────────────────────────────────────────────────────────
+  // 1. COLLECTION
+  //    GET  /api/manage/collection-stats
+  //    POST /api/manage/refresh-collection
+  //    GET  /api/manage/refresh-collection-status  (async polling)
+  // ─────────────────────────────────────────────────────────────
+  async function loadCollectionStats() {
     try {
-        const data = JSON.parse(text);
-        const res = await fetch(`/api/manage/strategy/${deckId}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data),
-        });
-        if (res.ok) {
-            showToast('Strategy saved');
-            loadStrategies();
-            closeStrategyDetail();
-        } else {
-            showToast('Save failed', true);
-        }
+      const res = await fetch('/api/manage/collection-stats');
+      const data = await res.json();
+      const uniqueEl = document.getElementById('stat-unique-cards');
+      const copiesEl = document.getElementById('stat-total-copies');
+      const rmEl = document.getElementById('stat-rare-mythic');
+      const wcEl = document.getElementById('stat-wildcards');
+      const dateEl = document.getElementById('coll-snapshot-date');
+
+      if (!data || data.status !== 'ok') {
+        uniqueEl.textContent = '—';
+        copiesEl.textContent = '—';
+        rmEl.textContent = '—';
+        wcEl.textContent = '—';
+        dateEl.textContent = 'No snapshot yet';
+        return;
+      }
+
+      const r = data.rarities || {};
+      const rare = r.Rare || r.rare || {};
+      const mythic = r.Mythic || r.mythic || {};
+
+      uniqueEl.textContent = fmtNum(data.total_unique);
+      copiesEl.textContent = fmtNum(data.total_copies);
+      rmEl.textContent = `${fmtNum(rare.unique || 0)} / ${fmtNum(mythic.unique || 0)}`;
+
+      const wc = data.wildcards || {};
+      if (Object.keys(wc).length) {
+        wcEl.textContent = `${wc.rare || 0} R / ${wc.mythic || 0} M`;
+      } else {
+        wcEl.textContent = '—';
+      }
+
+      if (data.snapshot_date) {
+        const d = new Date(data.snapshot_date * 1000);
+        dateEl.textContent = `Snapshot: ${d.toLocaleDateString()} ${d.toLocaleTimeString()}`;
+      } else {
+        dateEl.textContent = 'No snapshot yet';
+      }
     } catch (e) {
-        showToast('Invalid JSON: ' + e.message, true);
+      console.error('Failed to load collection stats:', e);
     }
-}
+  }
 
-function closeStrategyDetail() {
-    document.getElementById('strategy-detail').classList.remove('open');
-}
-
-async function promoteStub(deckId) {
-    const res = await fetch(`/api/decks/${deckId}/promote`, { method: 'POST' });
-    const data = await res.json();
-    if (res.ok) {
-        showToast(`Imported "${data.name}" — ${data.rules_count} rules`);
-        loadStrategies();
-    } else {
-        showToast(data.detail || 'Import failed', true);
-    }
-}
-
-async function deleteStub(deckId, name) {
-    if (!confirm(`Delete stub strategy "${name}"? This cannot be undone.`)) return;
-    const res = await fetch(`/api/manage/strategy/${deckId}`, { method: 'DELETE' });
-    if (res.ok) {
-        showToast(`Deleted "${name}"`);
-        loadStrategies();
-    } else {
-        const data = await res.json();
-        showToast(data.error || 'Delete failed', true);
-    }
-}
-
-// ── General Rules ──
-async function loadGeneralRules() {
-    const res = await fetch('/api/manage/general-rules');
-    generalData = await res.json();
-    allGeneralRules = generalData.rules || [];
-
-    const byLayer = {};
-    allGeneralRules.forEach(r => {
-        byLayer[r.layer] = (byLayer[r.layer] || 0) + 1;
-    });
-    const layerCounts = Object.entries(byLayer).map(([k, v]) => `${k}: ${v}`).join(', ');
-    document.getElementById('general-summary').innerHTML = `
-        <div class="summary-card"><div class="value">${allGeneralRules.length}</div><div class="label">Rules</div></div>
-        <div class="summary-card" style="grid-column:span 2"><div class="value" style="font-size:14px;color:#7f8de0">${layerCounts}</div><div class="label">By Layer</div></div>
-    `;
-
-    renderGeneralRules(allGeneralRules);
-}
-
-function renderGeneralRules(rules) {
-    document.getElementById('general-rules-list').innerHTML =
-        rules.map(r => ruleCard(r)).join('') ||
-        '<div style="color:#555;font-style:italic">No matching rules</div>';
-}
-
-function filterGeneralRules() {
-    const q = document.getElementById('general-search').value.toLowerCase();
-    if (!q) return renderGeneralRules(allGeneralRules);
-    const filtered = allGeneralRules.filter(r =>
-        (r.id || '').toLowerCase().includes(q) ||
-        (r.action || '').toLowerCase().includes(q) ||
-        (r.layer || '').toLowerCase().includes(q) ||
-        (r.tags || []).join(' ').toLowerCase().includes(q)
-    );
-    renderGeneralRules(filtered);
-}
-
-function editGeneralJSON() {
-    document.getElementById('general-json').value = JSON.stringify(generalData, null, 2);
-    document.getElementById('general-editor').classList.add('open');
-}
-
-function closeGeneralEditor() {
-    document.getElementById('general-editor').classList.remove('open');
-}
-
-async function saveGeneralJSON() {
-    const text = document.getElementById('general-json').value;
-    try {
-        const data = JSON.parse(text);
-        const res = await fetch('/api/manage/general-rules', {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data),
-        });
-        if (res.ok) {
-            showToast('General rules saved');
-            closeGeneralEditor();
-            loadGeneralRules();
-        } else {
-            showToast('Save failed', true);
-        }
-    } catch (e) {
-        showToast('Invalid JSON: ' + e.message, true);
-    }
-}
-
-// ── Meta Decks ──
-async function loadMetaDecks() {
-    const res = await fetch('/api/manage/meta-decks');
-    metaData = await res.json();
-    allMetaDecks = metaData.meta_decks || [];
-
-    const archetypes = {};
-    allMetaDecks.forEach(d => { archetypes[d.archetype] = (archetypes[d.archetype] || 0) + 1; });
-    const archStr = Object.entries(archetypes).map(([k, v]) => `${k}: ${v}`).join(', ');
-    const needsReview = allMetaDecks.filter(d => d.needs_review);
-    const observed = allMetaDecks.filter(d => d.source === 'observed');
-    document.getElementById('meta-summary').innerHTML = `
-        <div class="summary-card"><div class="value">${allMetaDecks.length}</div><div class="label">Meta Decks</div></div>
-        <div class="summary-card"><div class="value">${observed.length}</div><div class="label">Observed</div></div>
-        <div class="summary-card" style="grid-column:span 2"><div class="value" style="font-size:14px;color:#7f8de0">${archStr}</div><div class="label">By Archetype</div></div>
-    `;
-
-    // Review banner
-    const bannerEl = document.getElementById('meta-review-banner');
-    if (needsReview.length > 0) {
-        bannerEl.innerHTML = `
-            <div class="review-banner">
-                <div class="icon">&#9888;</div>
-                <div class="text">
-                    <strong>${needsReview.length} deck(s) need review</strong> — missing key_threats or description.<br>
-                    Edit them manually below or via the JSON editor.
-                </div>
-            </div>`;
-    } else {
-        bannerEl.innerHTML = '';
-    }
-
-    renderMetaDecks(allMetaDecks);
-}
-
-function renderMetaDecks(decks) {
-    document.getElementById('meta-decks-list').innerHTML = decks.map(d => {
-        const signals = Object.keys(d.signal_cards || {}).slice(0, 6).join(', ');
-        const threats = (d.key_threats || []).map(t => t.card).join(', ');
-        const reviewClass = d.needs_review ? ' needs-review' : '';
-        const badges = [];
-        badges.push(`<span class="badge badge-builtin" style="font-size:10px">${d.archetype}</span>`);
-        if (d.source === 'observed') badges.push('<span class="badge badge-observed" style="font-size:10px">observed</span>');
-        if (d.needs_review) badges.push('<span class="badge badge-review" style="font-size:10px">needs review</span>');
-        const metaPct = d.meta_pct ? `${d.meta_pct}% meta · ` : '';
-        return `<div class="meta-card${reviewClass}">
-            <h4>${colorDots(d.colors)} ${d.name}
-                ${badges.join(' ')}
-                <span style="font-size:11px;color:#888;margin-left:auto">${metaPct}${d.speed || 'medium'} · kill T${d.typical_kill_turn || '?'}</span>
-            </h4>
-            <div class="meta-info">
-                ${d.description && !d.description.includes('Auto-generated') ? `<span>${d.description}</span>` : ''}
-            </div>
-            ${signals ? `<div class="signal-cards">Signals: ${signals}</div>` : ''}
-            ${threats ? `<div class="key-threats">Threats: ${threats}</div>` : '<div class="review-tag">No key threats defined</div>'}
-        </div>`;
-    }).join('') || '<div style="color:#555;font-style:italic">No meta decks</div>';
-}
-
-function filterMetaDecks() {
-    const q = document.getElementById('meta-search').value.toLowerCase();
-    if (!q) return renderMetaDecks(allMetaDecks);
-    const filtered = allMetaDecks.filter(d =>
-        d.name.toLowerCase().includes(q) ||
-        (d.archetype || '').toLowerCase().includes(q) ||
-        (d.colors || []).join('').toLowerCase().includes(q) ||
-        (d.speed || '').toLowerCase().includes(q)
-    );
-    renderMetaDecks(filtered);
-}
-
-function editMetaJSON() {
-    document.getElementById('meta-json').value = JSON.stringify(metaData, null, 2);
-    document.getElementById('meta-editor').classList.add('open');
-}
-
-function closeMetaEditor() {
-    document.getElementById('meta-editor').classList.remove('open');
-}
-
-async function saveMetaJSON() {
-    const text = document.getElementById('meta-json').value;
-    try {
-        const data = JSON.parse(text);
-        const res = await fetch('/api/manage/meta-decks', {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data),
-        });
-        if (res.ok) {
-            showToast(`Meta decks saved (${(data.meta_decks || []).length} decks)`);
-            closeMetaEditor();
-            loadMetaDecks();
-        } else {
-            showToast('Save failed', true);
-        }
-    } catch (e) {
-        showToast('Invalid JSON: ' + e.message, true);
-    }
-}
-
-// ── Cloud Sync ──
-async function loadCloudConfig() {
-    const status = document.getElementById('cloud-status');
-    try {
-        const res = await fetch('/api/manage/cloud-config');
-        const c = await res.json();
-        document.getElementById('cloud-enabled').checked = !!c.enabled;
-        document.getElementById('cloud-url').value = c.url || '';
-        document.getElementById('cloud-interval').value = c.interval_secs || 900;
-        document.getElementById('cloud-token').placeholder =
-            c.token_set ? '•••••••• (set — leave blank to keep)' : '(none)';
-        document.getElementById('cloud-env-note').style.display = c.env_override ? 'block' : 'none';
-        status.textContent = '';
-    } catch (e) {
-        status.textContent = `Error: ${e.message}`;
-        status.style.color = '#f44336';
-    }
-    loadCloudAccount();
-}
-
-// Account-status widget (read-only). Reads /api/manage/cloud-me (the host proxies
-// GET {cloud}/me with the stored per-user token). Email is set via textContent so
-// it's never interpreted as HTML.
-async function loadCloudAccount() {
-    const icon = document.getElementById('cloud-account-icon');
-    const text = document.getElementById('cloud-account-text');
-    const signin = document.getElementById('cloud-signin-btn');
-    signin.style.display = 'none';
-    try {
-        const r = await fetch('/api/manage/cloud-me');
-        const d = await r.json();
-        const b = d.body || {};
-        if (d.status === 'disabled') {
-            icon.textContent = '○'; text.textContent = 'Cloud sync is off.';
-        } else if (d.status === 'ok' && b.email) {
-            icon.textContent = '✓';
-            text.textContent = 'Signed in as ' + b.email;
-            text.style.color = '#81c784';
-        } else if (d.status === 'ok') {
-            icon.textContent = '◐';
-            text.textContent = 'Anonymous account (this device). Sign in to sync across your devices.';
-            text.style.color = '#c8c6be';
-            signin.style.display = '';   // offer sign-in only for an anon account
-        } else {
-            icon.textContent = '⚠'; text.textContent = 'Not connected to the cloud.';
-            text.style.color = '#e0a060';
-        }
-    } catch (e) {
-        icon.textContent = '⚠'; text.textContent = 'Account status unavailable.';
-    }
-}
-
-// Interactive sign-in: opens the system browser to the cloud /authorize page and
-// blocks (up to ~3 min) until the loopback flow completes, then refreshes the
-// account status. This device's anon telemetry is merged into the account.
-async function cloudSignIn() {
-    const btn = document.getElementById('cloud-signin-btn');
-    const text = document.getElementById('cloud-account-text');
-    btn.disabled = true;
-    text.textContent = 'Complete sign-in in your browser…';
-    text.style.color = '#c8c6be';
-    try {
-        const res = await fetch('/api/manage/cloud-signin', { method: 'POST' });
-        const d = await res.json();
-        if (d.status === 'ok') {
-            showToast(d.report && d.report.merged ? 'Signed in — this device’s data was merged in.' : 'Signed in.');
-        } else {
-            showToast('Sign-in failed: ' + (d.error || 'unknown error'), true);
-        }
-    } catch (e) {
-        showToast('Sign-in failed: ' + e, true);
-    } finally {
-        btn.disabled = false;
-        loadCloudAccount();
-    }
-}
-
-async function saveCloudConfig() {
-    const btn = document.getElementById('cloud-save-btn');
-    const status = document.getElementById('cloud-status');
-    const body = {
-        enabled: document.getElementById('cloud-enabled').checked,
-        url: document.getElementById('cloud-url').value.trim(),
-        interval_secs: parseInt(document.getElementById('cloud-interval').value, 10) || 900,
-    };
-    const token = document.getElementById('cloud-token').value;
-    if (token) body.token = token;
-    btn.disabled = true;
-    try {
-        const res = await fetch('/api/manage/cloud-config', {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body),
-        });
-        const data = await res.json();
-        if (data.status === 'ok') {
-            document.getElementById('cloud-token').value = '';
-            showToast('Cloud config saved');
-            loadCloudConfig();
-        } else {
-            status.textContent = data.error || 'Save failed';
-            status.style.color = '#f44336';
-            showToast('Save failed', true);
-        }
-    } catch (e) {
-        status.textContent = `Error: ${e.message}`;
-        status.style.color = '#f44336';
-    } finally {
-        btn.disabled = false;
-    }
-}
-
-async function cloudSyncNow() {
-    const btn = document.getElementById('cloud-sync-btn');
-    const status = document.getElementById('cloud-status');
-    btn.disabled = true;
-    btn.textContent = 'Syncing...';
-    status.textContent = 'Uploading telemetry + pulling bundle...';
-    status.style.color = '#7f8de0';
-    try {
-        const res = await fetch('/api/manage/cloud-sync', { method: 'POST' });
-        const data = await res.json();
-        if (data.status === 'ok') {
-            const r = data.report || {};
-            const bits = [`uploaded ${r.uploaded || 0}`, `bundle v${r.bundle_version || 0}`];
-            if (r.training_uploaded) bits.push(`training ${r.training_uploaded}`);
-            if (r.meta_decks_written) bits.push('meta_decks updated');
-            if (r.profiles_merged) bits.push('profiles merged');
-            status.textContent = bits.join(' · ');
-            status.style.color = '#4caf50';
-            showToast('Cloud sync complete');
-        } else {
-            status.textContent = data.error || (data.report && data.report.error) || 'Sync failed';
-            status.style.color = '#f44336';
-            showToast('Sync failed', true);
-        }
-    } catch (e) {
-        status.textContent = `Error: ${e.message}`;
-        status.style.color = '#f44336';
-        showToast('Sync error', true);
-    } finally {
-        btn.disabled = false;
-        btn.textContent = 'Sync now';
-    }
-}
-
-// ── Link email (magic-link claim) ──
-// Map the proxied {http, body, error} into a friendly message.
-function claimErr(data) {
-    if (data.error) return data.error;
-    const b = data.body || {};
-    if (data.http === 429) return 'Too many attempts — wait an hour and try again';
-    if (data.http === 409) return b.error || 'That email is already linked to another account';
-    if (data.http === 401) return 'Invalid or expired code';
-    return b.error || null;
-}
-
-async function claimSendCode() {
-    const email = document.getElementById('claim-email').value.trim();
-    const status = document.getElementById('claim-status');
-    if (!email.includes('@')) { status.textContent = 'Enter a valid email'; status.style.color = '#f44336'; return; }
-    const btn = document.getElementById('claim-send-btn');
-    btn.disabled = true;
-    status.textContent = 'Sending code...';
-    status.style.color = '#7f8de0';
-    try {
-        const res = await fetch('/api/manage/cloud-claim-start', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email }),
-        });
-        const data = await res.json();
-        if (data.status === 'ok') {
-            document.getElementById('claim-code-label').style.display = '';
-            document.getElementById('claim-code').style.display = '';
-            document.getElementById('claim-send-btn').style.display = 'none';
-            document.getElementById('claim-verify-btn').style.display = '';
-            status.textContent = `Code sent to ${email} — check your inbox`;
-            status.style.color = '#4caf50';
-        } else {
-            status.textContent = claimErr(data) || 'Could not send code';
-            status.style.color = '#f44336';
-        }
-    } catch (e) {
-        status.textContent = `Error: ${e.message}`;
-        status.style.color = '#f44336';
-    } finally {
-        btn.disabled = false;
-    }
-}
-
-async function claimVerifyCode() {
-    const email = document.getElementById('claim-email').value.trim();
-    const code = document.getElementById('claim-code').value.trim();
-    const status = document.getElementById('claim-status');
-    if (code.length !== 6) { status.textContent = 'Enter the 6-digit code'; status.style.color = '#f44336'; return; }
-    const btn = document.getElementById('claim-verify-btn');
-    btn.disabled = true;
-    status.textContent = 'Confirming...';
-    status.style.color = '#7f8de0';
-    try {
-        const res = await fetch('/api/manage/cloud-claim-verify', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, code }),
-        });
-        const data = await res.json();
-        if (data.status === 'ok') {
-            status.textContent = `✓ ${email} linked — sign in at scryglass.win/app`;
-            status.style.color = '#4caf50';
-            showToast('Email linked to your account');
-            document.getElementById('claim-verify-btn').disabled = true;
-        } else {
-            status.textContent = claimErr(data) || 'Invalid or expired code';
-            status.style.color = '#f44336';
-        }
-    } catch (e) {
-        status.textContent = `Error: ${e.message}`;
-        status.style.color = '#f44336';
-    } finally {
-        btn.disabled = false;
-    }
-}
-
-// ── Meta Sync ──
-async function syncMeta() {
-    const btn = document.getElementById('sync-meta-btn');
-    const status = document.getElementById('sync-status');
-    btn.disabled = true;
-    btn.textContent = 'Syncing...';
-    status.textContent = 'Scraping MTGGoldfish + merging + LLM enrichment...';
-    status.style.color = '#7f8de0';
-
-    try {
-        const res = await fetch('/api/manage/sync-meta', { method: 'POST' });
-        const data = await res.json();
-
-        if (res.status === 409) {
-            status.textContent = 'Sync already running, try again later';
-            status.style.color = '#ffa500';
-        } else if (data.status === 'ok') {
-            const summary = (data.summary || []).join(' | ');
-            status.textContent = summary || 'Sync complete';
-            status.style.color = '#4caf50';
-            showToast('Meta decks synced');
-            loadMetaDecks();
-        } else {
-            status.textContent = 'Sync failed — check server logs';
-            status.style.color = '#f44336';
-            showToast('Sync failed', true);
-            console.error('Sync output:', data.output);
-        }
-    } catch (e) {
-        status.textContent = `Error: ${e.message}`;
-        status.style.color = '#f44336';
-        showToast('Sync error', true);
-    }
-
-    btn.disabled = false;
-    btn.textContent = 'Sync from MTGGoldfish';
-}
-
-// ── Collection Refresh ──
-function setCollectionRefreshStatusText(text, color = '#7f8de0') {
+  function setCollectionRefreshStatusText(text, color) {
     const status = document.getElementById('refresh-collection-status');
     status.textContent = text;
-    status.style.color = color;
-}
+    status.style.color = color || 'var(--muted)';
+  }
 
-function applyCollectionRefreshState(data) {
-    const btn = document.getElementById('refresh-collection-btn');
+  function applyCollectionRefreshState(data) {
+    const btn = document.getElementById('btn-refresh-collection');
     const summary = data.summary || {};
     const inv = summary.inventory || {};
     const wc = inv.wildcards
-        ? `${inv.wildcards.common}C/${inv.wildcards.uncommon}U/${inv.wildcards.rare}R/${inv.wildcards.mythic}M`
-        : 'WC unknown';
+      ? `${inv.wildcards.common}C/${inv.wildcards.uncommon}U/${inv.wildcards.rare}R/${inv.wildcards.mythic}M`
+      : 'WC unknown';
 
     if (data.running) {
-        btn.disabled = true;
-        btn.textContent = 'Refreshing...';
-        setCollectionRefreshStatusText(data.message || 'Refreshing collection...', '#7f8de0');
-        return;
+      btn.disabled = true;
+      btn.textContent = 'Refreshing…';
+      setCollectionRefreshStatusText(data.message || 'Refreshing collection…', 'var(--accent)');
+      return;
     }
 
     btn.disabled = false;
-    btn.textContent = 'Refresh from MTGA Memory';
+    btn.textContent = '⚡ Refresh Collection';
 
     if (data.state === 'ok') {
-        setCollectionRefreshStatusText(
-            summary.unique_cards ? `${summary.unique_cards} cards synced · ${wc}` : (data.message || 'Collection refreshed'),
-            '#4caf50'
-        );
-        loadCollectionStats();
-        return;
+      setCollectionRefreshStatusText(
+        summary.unique_cards ? `${summary.unique_cards} cards synced · ${wc}` : (data.message || 'Collection refreshed'),
+        'var(--success, #22c55e)'
+      );
+      loadCollectionStats();
+      return;
     }
 
     if (data.state === 'error') {
-        setCollectionRefreshStatusText(data.detail || data.message || 'Collection refresh failed', '#f44336');
-        return;
+      setCollectionRefreshStatusText(data.detail || data.message || 'Collection refresh failed', 'var(--error, #ef4444)');
+      return;
     }
 
-    setCollectionRefreshStatusText(data.message || 'Idle', '#7f8de0');
-}
+    setCollectionRefreshStatusText(data.message || 'Idle', 'var(--muted)');
+  }
 
-async function pollCollectionRefreshStatus() {
+  async function pollCollectionRefreshStatus() {
     try {
-        const res = await fetch('/api/manage/refresh-collection-status');
-        const data = await res.json();
-        const prevState = lastCollectionRefreshState;
-        lastCollectionRefreshState = data.state || null;
-        applyCollectionRefreshState(data);
+      const res = await fetch('/api/manage/refresh-collection-status');
+      const data = await res.json();
+      const prevState = lastCollectionRefreshState;
+      lastCollectionRefreshState = data.state || null;
+      applyCollectionRefreshState(data);
 
-        if (prevState === 'running' && data.state === 'ok') {
-            showToast('Collection refreshed');
-        } else if (prevState === 'running' && data.state === 'error') {
-            showToast('Collection refresh failed', true);
-        }
+      if (prevState === 'running' && data.state === 'ok') {
+        notify('Collection refreshed');
+      } else if (prevState === 'running' && data.state === 'error') {
+        notify('Collection refresh failed', true);
+      }
 
-        if (!data.running && collectionRefreshPollTimer) {
-            clearInterval(collectionRefreshPollTimer);
-            collectionRefreshPollTimer = null;
-        }
+      if (!data.running && collectionRefreshPollTimer) {
+        clearInterval(collectionRefreshPollTimer);
+        collectionRefreshPollTimer = null;
+      }
     } catch (e) {
-        if (collectionRefreshPollTimer) {
-            clearInterval(collectionRefreshPollTimer);
-            collectionRefreshPollTimer = null;
-        }
-        setCollectionRefreshStatusText(`Error: ${e.message}`, '#f44336');
+      if (collectionRefreshPollTimer) {
+        clearInterval(collectionRefreshPollTimer);
+        collectionRefreshPollTimer = null;
+      }
+      setCollectionRefreshStatusText(`Error: ${e.message}`, 'var(--error, #ef4444)');
     }
-}
+  }
 
-function ensureCollectionRefreshPolling() {
+  function ensureCollectionRefreshPolling() {
     if (!collectionRefreshPollTimer) {
-        collectionRefreshPollTimer = setInterval(pollCollectionRefreshStatus, 1200);
+      collectionRefreshPollTimer = setInterval(pollCollectionRefreshStatus, 1200);
     }
     pollCollectionRefreshStatus();
-}
+  }
 
-async function refreshCollection() {
-    const btn = document.getElementById('refresh-collection-btn');
+  async function refreshCollection() {
+    const btn = document.getElementById('btn-refresh-collection');
     btn.disabled = true;
-    btn.textContent = 'Refreshing...';
-    setCollectionRefreshStatusText('Starting MTGA memory reader...', '#7f8de0');
+    btn.textContent = 'Refreshing…';
+    setCollectionRefreshStatusText('Starting MTGA memory reader…', 'var(--accent)');
 
     try {
-        const res = await fetch('/api/manage/refresh-collection', { method: 'POST' });
-        const data = await res.json();
+      const res = await fetch('/api/manage/refresh-collection', { method: 'POST' });
+      const data = await res.json();
 
-        if (res.status === 409) {
-            applyCollectionRefreshState(data.progress || {});
-            ensureCollectionRefreshPolling();
-            showToast('Collection refresh already running', true);
-        } else if (!res.ok || (data.status !== 'started' && data.status !== 'ok')) {
-            const detail = data.detail || data.stderr || 'Collection refresh failed';
-            setCollectionRefreshStatusText(
-                typeof detail === 'string' ? detail.slice(0, 140) : 'Collection refresh failed',
-                '#f44336'
-            );
-            showToast('Collection refresh failed', true);
-            console.error('Collection refresh error:', data);
-        } else {
-            applyCollectionRefreshState(data.progress || {});
-            ensureCollectionRefreshPolling();
-            showToast('Collection refresh started');
-        }
+      if (res.status === 409) {
+        applyCollectionRefreshState(data.progress || {});
+        ensureCollectionRefreshPolling();
+        notify('Collection refresh already running', true);
+      } else if (!res.ok || (data.status !== 'started' && data.status !== 'ok')) {
+        const detail = data.detail || data.stderr || 'Collection refresh failed';
+        setCollectionRefreshStatusText(
+          typeof detail === 'string' ? detail.slice(0, 140) : 'Collection refresh failed',
+          'var(--error, #ef4444)'
+        );
+        notify('Collection refresh failed', true);
+        console.error('Collection refresh error:', data);
+      } else {
+        applyCollectionRefreshState(data.progress || {});
+        ensureCollectionRefreshPolling();
+        notify('Collection refresh started');
+      }
     } catch (e) {
-        setCollectionRefreshStatusText(`Error: ${e.message}`, '#f44336');
-        showToast('Collection refresh error', true);
-        btn.disabled = false;
-        btn.textContent = 'Refresh from MTGA Memory';
+      setCollectionRefreshStatusText(`Error: ${e.message}`, 'var(--error, #ef4444)');
+      notify('Collection refresh error', true);
+      btn.disabled = false;
+      btn.textContent = '⚡ Refresh Collection';
     }
-}
+  }
 
-async function loadCollectionStats() {
+  // ─────────────────────────────────────────────────────────────
+  // 2. META DECKS
+  //    GET /api/manage/meta-decks        → { meta_decks: [...] }
+  //    POST /api/manage/sync-meta        (scrape MTGGoldfish)
+  // ─────────────────────────────────────────────────────────────
+  async function loadMetaDecks() {
+    const tbody = document.getElementById('meta-decks-body');
     try {
-        const res = await fetch('/api/manage/collection-stats');
-        const data = await res.json();
-        const panel = document.getElementById('collection-stats');
-        if (data.status !== 'ok') {
-            panel.style.display = 'none';
-            return;
-        }
-        panel.style.display = '';
-        const r = data.rarities || {};
-        document.getElementById('cs-total').textContent =
-            `${data.total_unique} unique · ${data.total_copies} copies`;
-        document.getElementById('cs-common').textContent =
-            `Common: ${(r.Common || r.common || {}).copies || 0}`;
-        document.getElementById('cs-uncommon').textContent =
-            `Uncommon: ${(r.Uncommon || r.uncommon || {}).copies || 0}`;
-        document.getElementById('cs-rare').textContent =
-            `Rare: ${(r.Rare || r.rare || {}).unique || 0} unique / ${(r.Rare || r.rare || {}).copies || 0}`;
-        document.getElementById('cs-mythic').textContent =
-            `Mythic: ${(r.Mythic || r.mythic || {}).unique || 0} unique / ${(r.Mythic || r.mythic || {}).copies || 0}`;
-
-        const wc = data.wildcards || {};
-        if (Object.keys(wc).length) {
-            document.getElementById('cs-wildcards').textContent =
-                `WC: ${wc.common || 0}C / ${wc.uncommon || 0}U / ${wc.rare || 0}R / ${wc.mythic || 0}M`;
-        } else {
-            document.getElementById('cs-wildcards').textContent = '';
-        }
-
-        if (data.snapshot_date) {
-            const d = new Date(data.snapshot_date * 1000);
-            document.getElementById('cs-date').textContent =
-                `Snapshot: ${d.toLocaleDateString()} ${d.toLocaleTimeString()}`;
-        }
+      const res = await fetch('/api/manage/meta-decks');
+      const data = await res.json();
+      allMetaDecks = (data && data.meta_decks) || [];
     } catch (e) {
-        console.error('Failed to load collection stats:', e);
+      tbody.innerHTML = '<tr><td colspan="5" style="color:var(--error, #ef4444);">Failed to load meta decks</td></tr>';
+      return;
     }
-}
 
-// Load stats/status on page load
-document.addEventListener('DOMContentLoaded', () => {
+    // Review banner (needs_review decks)
+    const bannerEl = document.getElementById('meta-review-banner');
+    const needsReview = allMetaDecks.filter(d => d.needs_review);
+    if (needsReview.length > 0) {
+      bannerEl.innerHTML =
+        `<div style="background:rgba(245,158,11,0.12); border:1px solid rgba(245,158,11,0.35); ` +
+        `border-radius:var(--radius-md); padding:10px 14px; margin-bottom:12px; font-size:12px; color:var(--warning);">` +
+        `⚠ <strong>${needsReview.length} deck(s) need review</strong> — missing key threats or description.</div>`;
+    } else {
+      bannerEl.innerHTML = '';
+    }
+
+    renderMetaDecks(allMetaDecks);
+  }
+
+  function renderMetaDecks(decks) {
+    const tbody = document.getElementById('meta-decks-body');
+    if (!decks.length) {
+      tbody.innerHTML = '<tr><td colspan="5" style="color:var(--muted); font-style:italic;">No meta decks defined</td></tr>';
+      return;
+    }
+    tbody.innerHTML = decks.map(d => {
+      const colors = (d.colors || []).join('');
+      const colorTag = colors ? ` <span style="color:var(--muted); font-weight:400; font-size:11px;">(${esc(colors)})</span>` : '';
+
+      // Signature cards: prefer signal_cards keys, fall back to key_threats.
+      let signals = Object.keys(d.signal_cards || {}).slice(0, 4);
+      if (!signals.length) signals = (d.key_threats || []).map(t => t && t.card).filter(Boolean).slice(0, 4);
+      const signalsHtml = signals.length ? signals.map(esc).join(', ') : '—';
+
+      const metaShare = (d.meta_pct != null && d.meta_pct !== '') ? `${esc(d.meta_pct)}%` : '—';
+
+      let status;
+      if (d.needs_review) {
+        status = '<span class="badge" style="background:rgba(245,158,11,0.15); color:var(--warning); border:1px solid rgba(245,158,11,0.3);">NEEDS REVIEW</span>';
+      } else if (d.source === 'observed') {
+        status = '<span class="badge badge-indigo">OBSERVED</span>';
+      } else {
+        status = '<span class="badge badge-success">ACTIVE</span>';
+      }
+
+      return `<tr>
+        <td><strong>${esc(d.name)}</strong>${colorTag}</td>
+        <td>${esc(d.archetype || '—')}</td>
+        <td>${metaShare}</td>
+        <td>${signalsHtml}</td>
+        <td>${status}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  async function syncMeta() {
+    const btn = document.getElementById('btn-sync-meta');
+    const status = document.getElementById('sync-meta-status');
+    btn.disabled = true;
+    btn.textContent = 'Syncing…';
+    status.textContent = 'Scraping MTGGoldfish + merging…';
+    status.style.color = 'var(--accent)';
+
+    try {
+      const res = await fetch('/api/manage/sync-meta', { method: 'POST' });
+      const data = await res.json();
+
+      if (res.status === 409) {
+        status.textContent = 'Sync already running, try again later';
+        status.style.color = 'var(--warning)';
+      } else if (data.status === 'ok') {
+        const summary = (data.summary || []).join(' | ');
+        status.textContent = summary || 'Sync complete';
+        status.style.color = 'var(--success, #22c55e)';
+        notify('Meta decks synced');
+        loadMetaDecks();
+      } else {
+        status.textContent = 'Sync failed — check server logs';
+        status.style.color = 'var(--error, #ef4444)';
+        notify('Sync failed', true);
+        console.error('Sync output:', data.output);
+      }
+    } catch (e) {
+      status.textContent = `Error: ${e.message}`;
+      status.style.color = 'var(--error, #ef4444)';
+      notify('Sync error', true);
+    }
+
+    btn.disabled = false;
+    btn.textContent = '🔄 Sync from MTGGoldfish';
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // 3. CLOUD SYNC (config only — URL/token hidden; account in header)
+  //    GET/PUT /api/manage/cloud-config
+  //    POST    /api/manage/cloud-sync
+  // ─────────────────────────────────────────────────────────────
+  async function loadCloudConfig() {
+    const status = document.getElementById('cloud-status');
+    try {
+      const res = await fetch('/api/manage/cloud-config');
+      const c = await res.json();
+
+      document.getElementById('sync-enabled-toggle').checked = !!c.enabled;
+      document.getElementById('cloud-url').value = c.url || '';
+
+      // interval_secs (server) ↔ minutes (select)
+      const mins = Math.round((c.interval_secs || 900) / 60);
+      const sel = document.getElementById('sync-interval-select');
+      if (![...sel.options].some(o => o.value === String(mins))) {
+        const opt = document.createElement('option');
+        opt.value = String(mins);
+        opt.textContent = `Every ${mins} minutes`;
+        sel.appendChild(opt);
+      }
+      sel.value = String(mins);
+
+      // If env vars override, note it and lock the inputs.
+      const override = !!c.env_override;
+      document.getElementById('cloud-env-note').style.display = override ? 'block' : 'none';
+      document.getElementById('sync-enabled-toggle').disabled = override;
+      document.getElementById('sync-interval-select').disabled = override;
+      document.getElementById('btn-save-cloud-config').disabled = override;
+    } catch (e) {
+      status.textContent = `Error: ${e.message}`;
+      status.style.color = 'var(--error, #ef4444)';
+    }
+  }
+
+  async function saveCloudConfig() {
+    const btn = document.getElementById('btn-save-cloud-config');
+    const status = document.getElementById('cloud-status');
+    const mins = parseInt(document.getElementById('sync-interval-select').value, 10) || 15;
+    const body = {
+      enabled: document.getElementById('sync-enabled-toggle').checked,
+      url: document.getElementById('cloud-url').value.trim(),
+      interval_secs: mins * 60,
+    };
+    // Token is left untouched (not sent) so the server keeps any existing token.
+    btn.disabled = true;
+    try {
+      const res = await fetch('/api/manage/cloud-config', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (data.status === 'ok') {
+        status.textContent = 'Settings saved.';
+        status.style.color = 'var(--success, #22c55e)';
+        notify('Cloud config saved');
+        loadCloudConfig();
+      } else {
+        status.textContent = data.error || 'Save failed';
+        status.style.color = 'var(--error, #ef4444)';
+        notify('Save failed', true);
+      }
+    } catch (e) {
+      status.textContent = `Error: ${e.message}`;
+      status.style.color = 'var(--error, #ef4444)';
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  async function cloudSyncNow() {
+    const btn = document.getElementById('btn-cloud-sync-now');
+    const status = document.getElementById('cloud-status');
+    btn.disabled = true;
+    btn.textContent = 'Syncing…';
+    status.textContent = 'Uploading telemetry + pulling bundle…';
+    status.style.color = 'var(--accent)';
+    try {
+      const res = await fetch('/api/manage/cloud-sync', { method: 'POST' });
+      const data = await res.json();
+      if (data.status === 'ok') {
+        const r = data.report || {};
+        const bits = [`uploaded ${r.uploaded || 0}`, `bundle v${r.bundle_version || 0}`];
+        if (r.training_uploaded) bits.push(`training ${r.training_uploaded}`);
+        if (r.meta_decks_written) bits.push('meta_decks updated');
+        if (r.profiles_merged) bits.push('profiles merged');
+        status.textContent = bits.join(' · ');
+        status.style.color = 'var(--success, #22c55e)';
+        notify('Cloud sync complete');
+      } else {
+        status.textContent = data.error || (data.report && data.report.error) || 'Sync failed';
+        status.style.color = 'var(--error, #ef4444)';
+        notify('Sync failed', true);
+      }
+    } catch (e) {
+      status.textContent = `Error: ${e.message}`;
+      status.style.color = 'var(--error, #ef4444)';
+      notify('Sync error', true);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '⚡ Sync now';
+    }
+  }
+
+  // ── Init: all three sections are visible at once (no tabs) ──
+  document.addEventListener('DOMContentLoaded', () => {
     loadCollectionStats();
     pollCollectionRefreshStatus();
-});
-
-// ── Decks ──
-async function loadDecks() {
-    const res = await fetch('/api/manage/decks');
-    const decks = await res.json();
-
-    const tbody = document.getElementById('decks-body');
-    tbody.innerHTML = decks.map(d => `<tr>
-        <td><strong>${d.name}</strong> ${colorDots(d.colors)}</td>
-        <td>${d.card_count}</td>
-        <td>${d.rules_count} rules</td>
-        <td>${d.archetype}</td>
-        <td><button class="btn btn-secondary btn-small" onclick="viewDeck('${d.deck_id}')">View</button>
-            <a href="/decks#${d.deck_id}" class="btn btn-secondary btn-small" style="text-decoration:none">Manage</a></td>
-    </tr>`).join('') || '<tr><td colspan="5" style="color:#555;font-style:italic">No decks found</td></tr>';
-}
-
-async function viewDeck(deckId) {
-    const res = await fetch(`/api/manage/deck/${deckId}`);
-    const data = await res.json();
-    if (data.error) { showToast(data.error, true); return; }
-    const panel = document.getElementById('deck-detail');
-    const activeV = (data.versions || []).find(v => v.is_active);
-    const deckList = activeV ? activeV.deck_list : '(no active version)';
-    panel.innerHTML = `
-        <h3>${data.name} ${colorDots(data.colors)} <span style="color:#888;font-size:12px">${data.archetype}</span></h3>
-        <div style="font-size:12px;color:#888;margin-bottom:8px">${data.versions?.length || 0} versions · Active: v${data.active_version || '—'}</div>
-        <pre class="deck-content">${escapeHtml(deckList)}</pre>
-        ${data.missing_cards?.length ? `<div style="margin-top:8px;color:#5b6ccf;font-size:12px">Missing: ${data.missing_cards.map(c => c.name + ' ×' + c.missing).join(', ')}</div>` : ''}
-        <div class="btn-row" style="margin-top:8px">
-            <button class="btn btn-secondary" onclick="document.getElementById('deck-detail').classList.remove('open')">Close</button>
-        </div>
-    `;
-    panel.classList.add('open');
-    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-}
-
-// ── Guides ──
-async function loadGuides() {
-    const res = await fetch('/api/manage/guides');
-    const guides = await res.json();
-
-    const tbody = document.getElementById('guides-body');
-    tbody.innerHTML = guides.map(g => `<tr>
-        <td><strong>${g.name}</strong></td>
-        <td>${g.deck_id || ''}</td>
-        <td>${(g.size_bytes / 1024).toFixed(1)} KB</td>
-        <td><button class="btn btn-secondary btn-small" onclick="viewGuide('${g.deck_id}','${g.file}')">View</button></td>
-    </tr>`).join('') || '<tr><td colspan="4" style="color:#555;font-style:italic">No guides found</td></tr>';
-}
-
-async function viewGuide(deckId, filename) {
-    const res = await fetch(`/api/manage/guide/${deckId}/${filename}`);
-    const data = await res.json();
-    const panel = document.getElementById('guide-detail');
-    panel.innerHTML = `
-        <h3>${filename} <span style="color:#888;font-size:12px">(${deckId})</span></h3>
-        <div class="guide-content">${marked.parse(data.content)}</div>
-        <div class="btn-row" style="margin-top:8px">
-            <button class="btn btn-secondary" onclick="document.getElementById('guide-detail').classList.remove('open')">Close</button>
-        </div>
-    `;
-    panel.classList.add('open');
-    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-}
-
-// ── Helpers ──
-// ── GA Runs ──
-async function loadGARuns() {
-    const [runsRes, liveRes] = await Promise.all([
-        fetch('/api/manage/ga-runs'),
-        fetch('/api/manage/ga-live').catch(() => ({ ok: false })),
-    ]);
-    const runs = await runsRes.json();
-    let live = null;
-    if (liveRes.ok) {
-        try { live = await liveRes.json(); } catch(e) {}
-    }
-
-    const totalGens = runs.reduce((s, r) => s + r.generations, 0);
-    const totalHours = runs.reduce((s, r) => s + r.elapsed_h, 0);
-    const bestRun = runs.length ? runs[0] : null;
-    const studioStatus = live?.reachable
-        ? (live.running ? '<span style="color:#81c784">running</span>' : '<span style="color:#666">idle</span>')
-        : '<span style="color:#ef5350">offline</span>';
-
-    document.getElementById('ga-summary').innerHTML = `
-        <div class="summary-card"><div class="value">${runs.length}</div><div class="label">Runs</div></div>
-        <div class="summary-card"><div class="value">${totalGens}</div><div class="label">Generations</div></div>
-        <div class="summary-card"><div class="value">${totalHours.toFixed(1)}h</div><div class="label">Compute</div></div>
-        <div class="summary-card"><div class="value">${bestRun ? (bestRun.best_fitness * 100).toFixed(1) + '%' : '—'}</div><div class="label">Best Fitness</div></div>
-        <div class="summary-card"><div class="value">${studioStatus}</div><div class="label">Studio</div></div>
-    `;
-
-    // Live running GA at the top
-    let liveRows = '';
-    if (live?.statuses?.length) {
-        liveRows = live.statuses.map(s => {
-            const progress = s.stages_total
-                ? `Stage ${s.stage_num}/${s.stages_total} (${s.stage}), gen ${s.generation}/${s.generations_total}`
-                : `Gen ${s.generation}/${s.generations_total}`;
-            const elapsed = s.elapsed_s ? (s.elapsed_s / 3600).toFixed(1) + 'h' : '—';
-            return `<tr style="background:rgba(76,175,80,0.08)">
-                <td><strong>${s.deck}</strong></td>
-                <td><span class="badge badge-managed" style="font-size:10px">LIVE</span> ${s.stage || ''}</td>
-                <td>${progress}</td>
-                <td><strong style="color:#81c784">${(s.best_fitness * 100).toFixed(1)}%</strong></td>
-                <td>${s.best_record}</td>
-                <td>${elapsed}</td>
-                <td><span style="font-size:11px;color:#888">${s.updated || ''}</span></td>
-            </tr>`;
-        }).join('');
-    }
-
-    const completedRows = runs.map(r => {
-        const runName = r.file.replace('.ga_log.json', '').replace(r.deck_id + '_', '');
-        return `<tr>
-            <td><strong>${r.deck_id}</strong></td>
-            <td>${runName || 'default'}</td>
-            <td>${r.generations}</td>
-            <td><strong style="color:${r.best_fitness >= 0.7 ? '#81c784' : r.best_fitness >= 0.5 ? '#ffc107' : '#ef5350'}">${(r.best_fitness * 100).toFixed(1)}%</strong></td>
-            <td>${r.best_record}</td>
-            <td>${r.elapsed_h}h</td>
-            <td><button class="btn btn-secondary btn-small" onclick="viewGARun('${r.deck_id}','${r.file}')">Detail</button></td>
-        </tr>`;
-    }).join('');
-
-    const tbody = document.getElementById('ga-body');
-    tbody.innerHTML = (liveRows + completedRows)
-        || '<tr><td colspan="7" style="color:#555;font-style:italic">No GA runs found</td></tr>';
-}
-
-async function viewGARun(deckId, filename) {
-    const res = await fetch('/api/manage/ga-runs');
-    const runs = await res.json();
-    const run = runs.find(r => r.deck_id === deckId && r.file === filename);
-    if (!run) return;
-
-    const panel = document.getElementById('ga-detail');
-    const matchups = run.matchups || {};
-    const matchupHtml = Object.entries(matchups)
-        .sort((a, b) => b[1] - a[1])
-        .map(([opp, wr]) => {
-            const pct = (wr * 100).toFixed(0);
-            const color = wr >= 0.6 ? '#81c784' : wr >= 0.4 ? '#ffc107' : '#ef5350';
-            return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
-                <span style="width:180px;font-size:12px">${opp}</span>
-                <div style="flex:1;background:#0f1117;height:14px;border-radius:3px;overflow:hidden">
-                    <div style="width:${pct}%;background:${color};height:100%"></div>
-                </div>
-                <span style="width:35px;text-align:right;font-size:11px;color:${color}">${pct}%</span>
-            </div>`;
-        }).join('');
-
-    panel.innerHTML = `
-        <h3>${deckId} — ${filename.replace('.ga_log.json','')}</h3>
-        <div style="font-size:12px;color:#888;margin-bottom:8px">
-            ${run.generations} generations · ${run.elapsed_h}h compute · Best: ${run.best_record}
-        </div>
-        <div style="margin-top:8px">
-            <h4 style="font-size:12px;color:#7f8de0;margin-bottom:6px">Matchup Win Rates (last gen)</h4>
-            ${matchupHtml || '<span style="color:#555">No matchup data</span>'}
-        </div>
-        <div class="btn-row" style="margin-top:12px">
-            <button class="btn btn-secondary" onclick="document.getElementById('ga-detail').classList.remove('open')">Close</button>
-        </div>
-    `;
-    panel.classList.add('open');
-    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-}
-
-function ruleCard(r) {
-    const meta = [];
-    if (r.layer) meta.push(`layer: ${r.layer}`);
-    if (r.phase) meta.push(`phase: ${Array.isArray(r.phase) ? r.phase.join('/') : r.phase}`);
-    if (r.my_turn === true) meta.push('my turn');
-    if (r.my_turn === false) meta.push('opp turn');
-    if (r.step) meta.push(`step: ${r.step}`);
-    if (r.weight !== undefined && r.weight !== 1.0) meta.push(`weight: ${r.weight}`);
-    if (r.tags && r.tags.length) meta.push(`tags: ${r.tags.join(', ')}`);
-    const stats = r.stats || {};
-    if (stats.fired) meta.push(`fired: ${stats.fired}`);
-
-    const conditions = [];
-    if (r.require) {
-        r.require.forEach(zc => {
-            const m = zc.match || {};
-            let desc = `${zc.zone}`;
-            if (m.type) desc += ` [${m.type}]`;
-            if (m.name) desc += ` "${Array.isArray(m.name) ? m.name.join('|') : m.name}"`;
-            if (m.keyword) desc += ` kw:${m.keyword}`;
-            if (m.castable) desc += ' (castable)';
-            if (zc.absent) desc += ' ABSENT';
-            if (zc.min_count > 1) desc += ` x${zc.min_count}+`;
-            conditions.push(desc);
-        });
-    }
-    if (r.life_below) conditions.push(`life < ${r.life_below}`);
-    if (r.opp_life_below) conditions.push(`opp life < ${r.opp_life_below}`);
-    if (r.mana_min) conditions.push(`mana >= ${r.mana_min}`);
-    if (r.my_creatures_min) conditions.push(`creatures >= ${r.my_creatures_min}`);
-    if (r.opp_creatures_min) conditions.push(`opp creatures >= ${r.opp_creatures_min}`);
-    if (r.opp_speed) conditions.push(`vs ${r.opp_speed}`);
-
-    return `<div class="rule-card priority-${r.priority || 'medium'}">
-        <div class="rule-id">${r.id} <span style="color:#666">· ${r.priority || 'medium'}</span></div>
-        <div class="rule-action">${r.action}</div>
-        ${conditions.length ? `<div style="font-size:11px;color:#7f8de0;margin-bottom:2px">Conditions: ${conditions.join(' · ')}</div>` : ''}
-        <div class="rule-meta">${meta.map(m => `<span>${m}</span>`).join('')}</div>
-    </div>`;
-}
-
-function escapeHtml(text) {
-    const d = document.createElement('div');
-    d.textContent = text;
-    return d.innerHTML;
-}
-
-// ── Init ──
-loadStrategies();
-</script>
+    loadMetaDecks();
+    loadCloudConfig();
+  });
+  </script>
 </body>
 </html>

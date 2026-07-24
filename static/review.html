@@ -1,236 +1,371 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Scryglass — Post-Game Review</title>
-<style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body { background: #0f1117; color: #e6e8ee; font-family: 'Inter', 'Segoe UI', system-ui, sans-serif; }
-
-#app { max-width: 900px; margin: 0 auto; padding: 16px; }
-
-header {
-    display: flex; align-items: center; gap: 16px;
-    padding: 12px 20px; background: #171a23; border-radius: 8px;
-    border: 1px solid #1e2230; margin-bottom: 16px;
-}
-header h1 { font-size: 20px; color: #5b6ccf; }
-header a { color: #7f8de0; text-decoration: none; font-size: 13px; }
-header a:hover { color: #fff; }
-.nav-links { margin-left: auto; display: flex; gap: 16px; }
-
-.match-header {
-    background: #171a23; border-radius: 8px; padding: 16px 20px;
-    border: 1px solid #1e2230; margin-bottom: 16px;
-    display: flex; align-items: center; gap: 16px;
-}
-.match-result { font-size: 24px; font-weight: 700; }
-.match-result.Win { color: #81c784; }
-.match-result.Loss { color: #ef5350; }
-.match-meta { font-size: 13px; color: #888; }
-.match-meta strong { color: #ccc; }
-
-.summary-bar {
-    display: flex; gap: 12px; margin-bottom: 16px;
-}
-.summary-card {
-    background: #171a23; border-radius: 6px; padding: 10px 16px;
-    border: 1px solid #1e2230; text-align: center; flex: 1;
-}
-.summary-card .value { font-size: 20px; font-weight: 600; color: #7f8de0; }
-.summary-card .label { font-size: 11px; color: #666; margin-top: 2px; }
-
-.timeline { margin-top: 16px; }
-
-.turn-card {
-    background: #171a23; border-radius: 8px; padding: 12px 16px;
-    border: 1px solid #1e2230; margin-bottom: 8px;
-}
-.turn-card.key { border-left: 3px solid #F4A261; }
-.turn-header {
-    display: flex; align-items: center; gap: 8px;
-    margin-bottom: 6px; font-size: 12px; color: #888;
-}
-.turn-num { font-weight: 600; color: #7f8de0; font-size: 14px; }
-
-.advice-item {
-    padding: 4px 0; padding-left: 12px; font-size: 13px;
-    border-left: 2px solid transparent; margin-bottom: 2px;
-}
-.advice-item.critical { border-left-color: #E63946; color: #fff; }
-.advice-item.high { border-left-color: #F4A261; }
-.advice-item.medium { border-left-color: #6C9A8B; color: #aaa; }
-.advice-source {
-    font-size: 10px; color: #555; margin-left: 4px;
-    text-transform: uppercase;
-}
-.advice-phase {
-    font-size: 10px; color: #444; margin-right: 6px;
-}
-
-.filter-bar {
-    display: flex; gap: 8px; margin-bottom: 12px;
-}
-.filter-btn {
-    background: #0f1117; border: 1px solid #333; color: #888;
-    padding: 4px 12px; border-radius: 4px; cursor: pointer; font-size: 12px;
-}
-.filter-btn.active { border-color: #7f8de0; color: #7f8de0; }
-.filter-btn:hover { border-color: #666; }
-
-.empty { color: #555; font-style: italic; text-align: center; padding: 40px; }
-.loading { color: #888; text-align: center; padding: 40px; }
-
-.match-list { margin-bottom: 16px; }
-.match-list-item {
-    display: flex; align-items: center; gap: 12px;
-    padding: 8px 12px; background: #171a23; border-radius: 6px;
-    border: 1px solid #1e2230; margin-bottom: 4px; cursor: pointer;
-}
-.match-list-item:hover { border-color: #7f8de0; }
-.match-list-item .result { font-weight: 600; width: 40px; }
-.match-list-item .result.Win { color: #81c784; }
-.match-list-item .result.Loss { color: #ef5350; }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Scryglass — Post-Game Replay & Review</title>
+  <link rel="stylesheet" href="/static/style.css" />
 </head>
 <body>
-<div id="app">
-    <header>
-        <h1>Post-Game Review</h1>
-        <div class="nav-links">
-            <a href="/">Advisor</a>
-            <a href="/manage">Manage</a>
-            <a href="/decks">Decks</a>
+  <div class="app-container">
+    <!-- Shell Header -->
+    <header class="app-header">
+      <div class="brand">
+        <div class="brand-icon"><span class="brand-mark">◈</span></div>
+        <span>Scryglass</span>
+      </div>
+
+      <nav class="main-nav">
+        <a href="/" class="nav-link">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m10 15 5-3-5-3v6z"/></svg>
+          Advisor
+        </a>
+        <a href="/stats" class="nav-link">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+          Stats
+        </a>
+        <a href="/review" class="nav-link active">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>
+          Review
+        </a>
+        <a href="/manage" class="nav-link">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
+          Manage
+        </a>
+      </nav>
+
+      <!-- Account / Identity Shell Control -->
+      <div class="account-control">
+        <div id="account-pill" class="account-pill">
+          <span class="user-avatar">?</span>
+          <div style="display:flex; flex-direction:column;">
+            <span class="account-email">Checking status...</span>
+            <span class="account-anon-hint">syncing anonymously</span>
+          </div>
         </div>
+
+        <div id="account-dropdown" class="account-dropdown">
+          <div class="dropdown-user-info">
+            <span id="dropdown-email-display" class="dropdown-email">planeswalker@scryglass.gg</span>
+            <div class="dropdown-badges">
+              <span id="dropdown-alpha-badge" class="badge-alpha">ALPHA</span>
+              <span class="badge badge-success">ACTIVE</span>
+            </div>
+          </div>
+          <div class="sync-status-row">
+            <span><span class="sync-dot"></span>Cloud Sync</span>
+            <span id="sync-time-text">Synced 2m ago</span>
+          </div>
+          <div class="dropdown-actions">
+            <button id="btn-cloud-sync" class="btn btn-secondary btn-sm">⚡ Sync now</button>
+            <button id="btn-cloud-signout" class="btn btn-ghost btn-sm" style="color:var(--error);">Sign out</button>
+          </div>
+        </div>
+      </div>
     </header>
 
-    <div id="match-list"></div>
-    <div id="review-content"><div class="loading">Loading latest match...</div></div>
-</div>
-
-<script>
-let currentFilter = 'key'; // 'key' | 'all'
-
-async function loadMatchList() {
-    const res = await fetch('/api/review/matches');
-    if (!res.ok) return;
-    const matches = await res.json();
-    const el = document.getElementById('match-list');
-    el.innerHTML = matches.slice(0, 10).map(m => `
-        <div class="match-list-item" onclick="loadReview('${m.match_id}')">
-            <span class="result ${m.result}">${m.result || '?'}</span>
-            <span><strong>${m.my_deck || '?'}</strong> vs ${m.opp_deck || '?'}</span>
-            <span style="margin-left:auto;color:#555;font-size:11px">${m.started?.split('T')[0] || ''}</span>
+    <!-- Page Body -->
+    <main class="page-body">
+      <div class="grid grid-1-2">
+        <!-- Match Selector Sidebar (Last 10 Matches) -->
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <h2 style="font-size:16px; font-weight:700; color:#fff;">Recent Matches (Last 10)</h2>
+          <div style="display:flex; flex-direction:column; gap:8px;" id="match-selector-list">
+            <div class="glass-card" style="color:var(--muted); font-size:12px; text-align:center;">Loading matches…</div>
+          </div>
         </div>
-    `).join('');
-}
 
-async function loadReview(matchId) {
-    const el = document.getElementById('review-content');
-    el.innerHTML = '<div class="loading">Loading...</div>';
+        <!-- Main Turn-by-Turn Replay Workspace -->
+        <div style="display:flex; flex-direction:column; gap:16px;" id="review-content">
+          <div class="glass-card" style="text-align:center; color:var(--muted); padding:40px;">Loading latest match…</div>
+        </div>
+      </div>
+    </main>
+  </div>
 
-    const url = matchId ? `/api/review/${matchId}` : '/api/review/latest';
-    const res = await fetch(url);
-    if (!res.ok) {
-        el.innerHTML = '<div class="empty">No match data found. Play a game first!</div>';
-        return;
+  <script src="/static/shell.js"></script>
+  <script>
+  // ---------------------------------------------------------------------------
+  // Post-Game Review — real data wired to the new design.
+  // Endpoints: /api/review/matches , /api/review/latest , /api/review/{id}
+  // ---------------------------------------------------------------------------
+  let currentFilter = 'key';   // 'key' | 'all'
+  let currentMatchId = null;
+  let currentData = null;
+  let matchListCache = [];
+
+  const RESULT_MAP = {
+    Win:  { label: 'VICTORY', cls: 'badge-success' },
+    Loss: { label: 'DEFEAT',  cls: 'badge-error' },
+  };
+  const PHASE_MAP = { 'Phase_Main1': 'Main 1', 'Phase_Main2': 'Main 2', 'Phase_Combat': 'Combat' };
+  const PRIORITY_COLOR = { critical: 'var(--error)', high: 'var(--warning)', medium: 'var(--muted)' };
+
+  function esc(s) {
+    return (s == null ? '' : String(s))
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  // Returns an HTML-safe string.
+  function fmtDate(s) {
+    if (!s) return '';
+    const d = new Date(s);
+    if (isNaN(d.getTime())) return esc(String(s).split('T')[0] || s);
+    return esc(d.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }));
+  }
+
+  function fmtDuration(start, end) {
+    if (!start || !end) return '';
+    const a = new Date(start), b = new Date(end);
+    if (isNaN(a.getTime()) || isNaN(b.getTime())) return '';
+    let s = Math.round((b - a) / 1000);
+    if (s <= 0) return '';
+    const m = Math.floor(s / 60); s = s % 60;
+    return m > 0 ? `${m}m ${s}s` : `${s}s`;
+  }
+
+  function nicePhase(p) {
+    if (!p) return '';
+    return PHASE_MAP[p] || String(p).replace(/^Phase_/, '').replace(/_/g, ' ');
+  }
+
+  // --- Match list (sidebar) -------------------------------------------------
+  async function loadMatchList() {
+    const el = document.getElementById('match-selector-list');
+    let matches;
+    try {
+      const res = await fetch('/api/review/matches');
+      if (!res.ok) throw new Error('status ' + res.status);
+      matches = await res.json();
+    } catch (e) {
+      el.innerHTML = '<div class="glass-card" style="color:var(--muted); font-size:12px; text-align:center;">Could not load matches.</div>';
+      return;
     }
-    const data = await res.json();
-    renderReview(data);
-}
+    matchListCache = (matches || []).slice(0, 10);
+    if (!matchListCache.length) {
+      el.innerHTML = '<div class="glass-card" style="color:var(--muted); font-size:12px; text-align:center;">No matches yet. Play a game first!</div>';
+      return;
+    }
+    el.innerHTML = matchListCache.map(m => {
+      const r = RESULT_MAP[m.result] || { label: esc(m.result || '?'), cls: 'badge-muted' };
+      return `
+        <div class="glass-card match-item" data-match-id="${esc(m.match_id)}" style="cursor:pointer; opacity:0.8;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span class="badge ${r.cls}">${r.label}</span>
+            <span style="font-size:11px; color:var(--muted);">${fmtDate(m.started)}</span>
+          </div>
+          <strong style="font-size:13px; color:#fff; display:block; margin-top:4px;">vs ${esc(m.opp_deck || 'Unknown')}</strong>
+          <div style="font-size:11px; color:var(--muted);">${esc(m.my_deck || 'Unknown')}</div>
+        </div>`;
+    }).join('');
+    highlightActive();
+  }
 
-function renderReview(data) {
+  function highlightActive() {
+    document.querySelectorAll('#match-selector-list .match-item').forEach(c => {
+      if (c.getAttribute('data-match-id') === currentMatchId) {
+        c.style.borderColor = 'var(--accent)';
+        c.style.opacity = '1';
+      } else {
+        c.style.borderColor = '';
+        c.style.opacity = '0.8';
+      }
+    });
+  }
+
+  // --- Match review (detail) ------------------------------------------------
+  async function loadReview(matchId) {
+    currentMatchId = matchId;
+    highlightActive();
     const el = document.getElementById('review-content');
-    const m = data.match;
+    el.innerHTML = '<div class="glass-card" style="text-align:center; color:var(--muted); padding:40px;">Loading…</div>';
+
+    const url = matchId ? `/api/review/${encodeURIComponent(matchId)}` : '/api/review/latest';
+    let res = null;
+    try { res = await fetch(url); } catch (e) { res = null; }
+    if (!res || !res.ok) {
+      currentData = null;
+      el.innerHTML = '<div class="glass-card" style="text-align:center; color:var(--muted); padding:40px;">No match data found. Play a game first!</div>';
+      return;
+    }
+    currentData = await res.json();
+    // /latest resolves to a concrete match_id — sync the sidebar selection.
+    currentMatchId = (currentData.match && currentData.match.match_id) || matchId;
+    renderReview(currentData);
+    highlightActive();
+  }
+
+  function setFilter(f) {
+    currentFilter = f;
+    if (currentData) renderReview(currentData);
+  }
+
+  function emptyTimeline(msg) {
+    return `<div class="glass-card" style="text-align:center; color:var(--muted); font-style:italic; padding:32px;">${esc(msg)}</div>`;
+  }
+
+  function renderReview(data) {
+    const el = document.getElementById('review-content');
+    const m = data.match || {};
     const keyMoments = data.key_moments || [];
+    const r = RESULT_MAP[m.result] || { label: esc(m.result || '?'), cls: 'badge-muted' };
+    const titleDeck = `${esc(m.my_deck || 'Unknown')} vs ${esc(m.opp_deck || 'Unknown')}`;
+    const dur = fmtDuration(m.started, m.ended);
+    const totalTurns = data.total_turns != null ? data.total_turns : 0;
+    const totalAdvice = data.total_advice != null ? data.total_advice : 0;
 
     let html = '';
 
-    // Match header
-    html += `<div class="match-header">
-        <span class="match-result ${m.result}">${m.result || '?'}</span>
+    // Match header card + summary bar
+    html += `<div class="glass-card">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
         <div>
-            <div class="match-meta"><strong>${m.my_deck || 'Unknown'}</strong> vs <strong>${m.opp_deck || 'Unknown'}</strong></div>
-            <div class="match-meta">${m.started || ''}</div>
+          <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+            <span class="badge ${r.cls}" style="font-size:13px; padding:4px 10px;">${r.label}</span>
+            <h2 style="font-size:18px; font-weight:800; color:#fff;">${titleDeck}</h2>
+          </div>
+          <div style="font-size:12px; color:var(--muted); margin-top:4px;">Match ID: <code>${esc(m.match_id || '?')}</code>${m.started ? ' • ' + fmtDate(m.started) : ''}</div>
         </div>
+      </div>
+
+      <div class="grid grid-3" style="background:var(--bg); padding:10px; border-radius:var(--radius-md); border:1px solid var(--border);">
+        <div>
+          <span style="font-size:11px; color:var(--muted);">Total Turns</span>
+          <div style="font-weight:700; color:#fff;">${totalTurns}${dur ? ` <span style="font-weight:400; color:var(--muted); font-size:12px;">(${dur})</span>` : ''}</div>
+        </div>
+        <div>
+          <span style="font-size:11px; color:var(--muted);">Key Moments</span>
+          <div style="font-weight:700; color:var(--warning);">${keyMoments.length} Pivotal Turn${keyMoments.length === 1 ? '' : 's'}</div>
+        </div>
+        <div>
+          <span style="font-size:11px; color:var(--muted);">Heuristic Advice Count</span>
+          <div style="font-weight:700; color:var(--success);">${totalAdvice} Advice Item${totalAdvice === 1 ? '' : 's'}</div>
+        </div>
+      </div>
     </div>`;
 
-    // Summary
-    html += `<div class="summary-bar">
-        <div class="summary-card"><div class="value">${data.total_turns}</div><div class="label">Turns</div></div>
-        <div class="summary-card"><div class="value">${keyMoments.length}</div><div class="label">Key Moments</div></div>
-        <div class="summary-card"><div class="value">${data.total_advice}</div><div class="label">Total Advice</div></div>
+    // Filter bar
+    html += `<div style="display:flex; justify-content:space-between; align-items:center;">
+      <h3 style="font-size:15px; font-weight:700; color:#fff;">Turn-by-Turn Replay Timeline</h3>
+      <div style="display:flex; gap:6px; background:var(--card); padding:3px; border-radius:var(--radius-md); border:1px solid var(--border);">
+        <button id="filter-all" class="btn ${currentFilter === 'all' ? 'btn-primary' : 'btn-ghost'} btn-sm">All Turns</button>
+        <button id="filter-key" class="btn ${currentFilter === 'key' ? 'btn-primary' : 'btn-ghost'} btn-sm">Key Moments Only</button>
+      </div>
     </div>`;
 
-    // Filter
-    html += `<div class="filter-bar">
-        <button class="filter-btn ${currentFilter === 'key' ? 'active' : ''}" onclick="setFilter('key')">Key Moments</button>
-        <button class="filter-btn ${currentFilter === 'all' ? 'active' : ''}" onclick="setFilter('all')">All Turns</button>
-    </div>`;
-
-    // Timeline
-    html += '<div class="timeline">';
-
+    // Turn timeline feed
+    html += `<div style="display:flex; flex-direction:column; gap:12px;" id="timeline-feed">`;
     if (currentFilter === 'key') {
-        if (!keyMoments.length) {
-            html += '<div class="empty">No key moments detected.</div>';
-        }
+      if (!keyMoments.length) {
+        html += emptyTimeline('No key moments detected in this match.');
+      } else {
         for (const km of keyMoments) {
-            html += renderTurnCard(km.turn, km.advice, true);
+          html += renderTurnCard(km.turn, km.advice || [], true, km.all_advice_count);
         }
+      }
     } else {
-        const turns = data.turns || {};
-        for (const [turnNum, advices] of Object.entries(turns)) {
-            const isKey = keyMoments.some(k => k.turn === parseInt(turnNum));
-            html += renderTurnCard(parseInt(turnNum), advices, isKey);
+      const turns = data.turns || {};
+      const entries = Object.entries(turns);
+      if (!entries.length) {
+        html += emptyTimeline('No advice recorded for this match.');
+      } else {
+        for (const [turnNum, advices] of entries) {
+          const t = parseInt(turnNum, 10);
+          const isKey = keyMoments.some(k => k.turn === t);
+          html += renderTurnCard(t, advices || [], isKey);
         }
+      }
     }
+    html += `</div>`;
 
-    html += '</div>';
     el.innerHTML = html;
-}
 
-function renderTurnCard(turn, advices, isKey) {
-    const phaseMap = { 'Phase_Main1': 'Main 1', 'Phase_Main2': 'Main 2', 'Phase_Combat': 'Combat' };
-    let html = `<div class="turn-card ${isKey ? 'key' : ''}">`;
-    html += `<div class="turn-header"><span class="turn-num">T${turn}</span>`;
-    html += `<span>${advices.length} advice${advices.length > 1 ? 's' : ''}</span></div>`;
+    // Wire filter buttons (they are re-created on every render).
+    const bAll = el.querySelector('#filter-all');
+    const bKey = el.querySelector('#filter-key');
+    if (bAll) bAll.addEventListener('click', () => setFilter('all'));
+    if (bKey) bKey.addEventListener('click', () => setFilter('key'));
+  }
 
-    for (const a of advices.slice(0, 5)) {
-        const phase = phaseMap[a.phase] || a.phase || '';
-        html += `<div class="advice-item ${a.priority}">`;
-        if (phase) html += `<span class="advice-phase">${phase}</span>`;
-        html += `${esc(a.message)}`;
-        html += `<span class="advice-source">${a.source}</span>`;
-        html += '</div>';
+  function renderTurnCard(turn, advices, isKey, allCount) {
+    advices = advices || [];
+    // Key-moment cards show their (backend-capped top-3) advice in full; All view caps at 5.
+    const shown = isKey ? advices : advices.slice(0, 5);
+
+    const hasCritical = advices.some(a => a && a.priority === 'critical');
+
+    let border, titleColor, bg, badgeCls, badgeText;
+    if (isKey) {
+      if (hasCritical) {
+        border = 'var(--error)'; titleColor = 'var(--error)'; bg = 'rgba(217, 115, 122, 0.08)';
+        badgeCls = 'badge-error'; badgeText = 'CRITICAL';
+      } else {
+        border = 'var(--warning)'; titleColor = 'var(--warning)'; bg = 'rgba(224, 160, 96, 0.08)';
+        badgeCls = 'badge-warning'; badgeText = 'PIVOTAL';
+      }
+    } else {
+      border = 'var(--accent)'; titleColor = '#fff'; bg = '';
+      badgeCls = 'badge-muted';
+      badgeText = `${advices.length} ADVICE`;
     }
-    if (advices.length > 5) {
-        html += `<div style="font-size:11px;color:#555;padding-left:12px">+${advices.length - 5} more</div>`;
+
+    const turnLabel = turn === 0 ? 'Mulligan (T0)' : `Turn ${turn}`;
+    const pivSuffix = isKey ? ' (Pivotal Moment)' : '';
+
+    let html = `<div class="glass-card" style="border-left:4px solid ${border};${bg ? ' background:' + bg + ';' : ''}">`;
+    html += `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+      <strong style="color:${titleColor}; font-size:14px;">${turnLabel}${pivSuffix}</strong>
+      <span class="badge ${badgeCls}">${badgeText}</span>
+    </div>`;
+
+    if (!shown.length) {
+      html += `<div style="font-size:12px; color:var(--muted);">No advice recorded this turn.</div>`;
+    }
+    for (const a of shown) {
+      html += renderAdvice(a);
     }
 
-    html += '</div>';
+    if (!isKey && advices.length > shown.length) {
+      html += `<div style="font-size:11px; color:var(--muted); padding-left:12px; margin-top:2px;">+${advices.length - shown.length} more</div>`;
+    }
+    if (isKey && allCount && allCount > advices.length) {
+      html += `<div style="font-size:11px; color:var(--muted); padding-left:12px; margin-top:2px;">Top ${advices.length} of ${allCount} advice this turn</div>`;
+    }
+
+    html += `</div>`;
     return html;
-}
+  }
 
-function setFilter(f) {
-    currentFilter = f;
-    loadReview(currentMatchId);
-}
+  function renderAdvice(a) {
+    if (!a) return '';
+    const priColor = PRIORITY_COLOR[a.priority] || 'var(--muted)';
+    const phase = nicePhase(a.phase);
+    let html = `<div style="padding:5px 0 5px 10px; border-left:2px solid ${priColor}; margin-bottom:4px; font-size:12px; color:var(--text); line-height:1.5;">`;
+    if (phase) {
+      html += `<span style="display:inline-block; font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:0.3px; margin-right:6px;">${esc(phase)}</span>`;
+    }
+    html += esc(a.message);
+    if (a.source) {
+      html += `<span style="font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:0.3px; margin-left:6px; opacity:0.7;">${esc(a.source)}</span>`;
+    }
+    html += `</div>`;
+    return html;
+  }
 
-function esc(s) {
-    return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}
+  // --- Wiring ---------------------------------------------------------------
+  document.getElementById('match-selector-list').addEventListener('click', (ev) => {
+    const card = ev.target.closest('.match-item');
+    if (!card) return;
+    loadReview(card.getAttribute('data-match-id'));
+  });
 
-let currentMatchId = null;
-const origLoadReview = loadReview;
-loadReview = async function(matchId) {
-    currentMatchId = matchId;
-    await origLoadReview(matchId);
-};
-
-// Load latest on page load
-loadReview(null);
-</script>
+  // Populate the sidebar and load the latest match on page load.
+  loadMatchList();
+  loadReview(null);
+  </script>
 </body>
 </html>

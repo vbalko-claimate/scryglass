@@ -6,6 +6,31 @@ version used for OTA updates.
 
 ## [0.8.16] — 2026-07-24
 
+### Changed
+
+- **New, unified app design + a first-class account control.** The whole app now
+  shares one design system (the same look as the web dashboard) with a single
+  persistent top bar on every page: unified nav (Advisor · Stats · Review ·
+  Manage) and — top-right, always visible, no longer buried in a settings tab —
+  your account. It shows whether you're signed in (your email, an *alpha* badge
+  when applicable, sync status) or on an anonymous device, with **Sign in**,
+  **Sync now**, and **Sign out** in one place. "Sign in" and the old "Link your
+  email" are now a single sign-in flow.
+- **Decluttered.** Removed the noise that had accumulated: the app now calls
+  itself only *Scryglass*; the Advisor drops the Focus/Full/Tactical profile
+  switcher, the "Ask AI" button, the Auto-LLM toggle, and the LLM backend selector
+  (advice is engine-driven — the only LLM feature left is the post-game Match
+  Summary); and Manage is slimmed to just Collection, Meta decks, and Cloud-sync
+  settings (the Strategies, General Rules, Decks, Guides, and GA-Runs tabs are
+  gone). Stats and Review keep all of their content, restyled.
+
+### Added
+
+- **Sign out.** The account menu now has a working **Sign out** — it forgets the
+  account on this device (reverting to an anonymous device that keeps syncing
+  anonymously). Your cloud account is untouched: it stays reachable from the web
+  dashboard and by signing in again.
+
 ### Fixed
 
 - **Sign-in no longer "disappears" after an update.** The app kept a check that

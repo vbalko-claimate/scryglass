@@ -1,158 +1,173 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Scryglass — Setup</title>
-<style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body { background: #0f1117; color: #e6e8ee; font-family: 'Inter', 'Segoe UI', system-ui, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-
-.setup-card {
-    background: #171a23; border-radius: 12px; padding: 40px;
-    border: 1px solid #1e2230; max-width: 500px; width: 90%;
-    text-align: center;
-}
-h1 { color: #5b6ccf; font-size: 28px; margin-bottom: 8px; }
-.subtitle { color: #888; font-size: 14px; margin-bottom: 32px; }
-
-.check-item {
-    display: flex; align-items: center; gap: 12px;
-    padding: 12px 16px; margin-bottom: 8px;
-    background: #0f1117; border-radius: 8px;
-    border: 1px solid #1e2230;
-    text-align: left;
-}
-.check-icon { font-size: 20px; width: 28px; text-align: center; }
-.check-icon.ok { color: #81c784; }
-.check-icon.warn { color: #ffc107; }
-.check-icon.fail { color: #ef5350; }
-.check-icon.loading { color: #888; }
-.check-text { flex: 1; }
-.check-label { font-size: 14px; font-weight: 500; }
-.check-detail { font-size: 11px; color: #666; margin-top: 2px; }
-
-.actions { margin-top: 24px; }
-.btn {
-    display: inline-block; padding: 10px 24px;
-    background: #5b6ccf; color: #fff; border: none;
-    border-radius: 6px; font-size: 14px; cursor: pointer;
-    text-decoration: none;
-}
-.btn:hover { background: #4d5cba; }
-.btn:disabled { background: #555; cursor: default; }
-.btn-secondary { background: transparent; border: 1px solid #444; color: #aaa; }
-.btn-secondary:hover { border-color: #888; color: #fff; }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Scryglass — First-Run Readiness Setup</title>
+  <link rel="stylesheet" href="/static/style.css" />
+  <style>
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: radial-gradient(circle at 50% 20%, rgba(91, 108, 207, 0.12) 0%, var(--bg) 70%);
+    }
+    .setup-container {
+      width: 100%;
+      max-width: 580px;
+    }
+  </style>
 </head>
 <body>
-<div class="setup-card">
-    <h1>Scryglass</h1>
-    <p class="subtitle">MTGA Real-Time Play Advisor</p>
+  <div class="setup-container">
+    <div class="glass-card" style="padding:28px;">
+      <!-- Logo Header -->
+      <div style="text-align:center; margin-bottom:24px;">
+        <div class="brand-icon" style="width:48px; height:48px; font-size:24px; margin:0 auto 12px auto; box-shadow:0 0 20px rgba(91, 108, 207, 0.4);">◈</div>
+        <h1 style="font-size:24px; font-weight:800; color:#fff;">Scryglass Desktop Setup</h1>
+        <p style="font-size:13px; color:var(--muted); margin-top:4px;">Verifying local environment &amp; MTGA log connectivity</p>
+      </div>
 
-    <div id="checks">
-        <div class="check-item" id="check-server">
-            <span class="check-icon loading" id="icon-server">⏳</span>
-            <div class="check-text">
-                <div class="check-label">Advisor Engine</div>
-                <div class="check-detail" id="detail-server">Checking...</div>
+      <!-- 4 Readiness Checks -->
+      <div style="display:flex; flex-direction:column; gap:12px; margin-bottom:24px;">
+        <!-- Check 1: Advisor Engine /health -->
+        <div style="display:flex; align-items:center; justify-content:space-between; background:var(--card); padding:12px 16px; border-radius:var(--radius-md); border:1px solid var(--border);">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <span style="font-size:18px;">⚡</span>
+            <div>
+              <strong style="color:#fff; font-size:13px;">Advisor Rule Engine</strong>
+              <div id="detail-engine" style="font-size:11px; color:var(--muted);">Checking /health endpoint...</div>
             </div>
+          </div>
+          <span id="check-engine-badge" class="badge badge-muted">CHECKING</span>
         </div>
-        <div class="check-item" id="check-cards">
-            <span class="check-icon loading" id="icon-cards">⏳</span>
-            <div class="check-text">
-                <div class="check-label">Card Database</div>
-                <div class="check-detail" id="detail-cards">Checking...</div>
+
+        <!-- Check 2: Card DB Count (from /health) -->
+        <div style="display:flex; align-items:center; justify-content:space-between; background:var(--card); padding:12px 16px; border-radius:var(--radius-md); border:1px solid var(--border);">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <span style="font-size:18px;">📚</span>
+            <div>
+              <strong style="color:#fff; font-size:13px;">Card Database Index</strong>
+              <div id="detail-cards" style="font-size:11px; color:var(--muted);">Verifying MTGA card mapping...</div>
             </div>
+          </div>
+          <span id="check-cards-badge" class="badge badge-muted">CHECKING</span>
         </div>
-        <div class="check-item" id="check-mtga">
-            <span class="check-icon loading" id="icon-mtga">⏳</span>
-            <div class="check-text">
-                <div class="check-label">MTGA Log</div>
-                <div class="check-detail" id="detail-mtga">Looking for Player.log...</div>
+
+        <!-- Check 3: MTGA Log Reader /match-status -->
+        <div style="display:flex; align-items:center; justify-content:space-between; background:var(--card); padding:12px 16px; border-radius:var(--radius-md); border:1px solid var(--border);">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <span style="font-size:18px;">📜</span>
+            <div>
+              <strong style="color:#fff; font-size:13px;">MTGA Log Reader</strong>
+              <div id="detail-log" style="font-size:11px; color:var(--muted);">Checking /match-status log stream...</div>
             </div>
+          </div>
+          <span id="check-log-badge" class="badge badge-muted">CHECKING</span>
         </div>
-        <div class="check-item" id="check-decks">
-            <span class="check-icon loading" id="icon-decks">⏳</span>
-            <div class="check-text">
-                <div class="check-label">Strategy Rules</div>
-                <div class="check-detail" id="detail-decks">Checking...</div>
+
+        <!-- Check 4: Strategy Rules Count /api/manage/strategies -->
+        <div style="display:flex; align-items:center; justify-content:space-between; background:var(--card); padding:12px 16px; border-radius:var(--radius-md); border:1px solid var(--border);">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <span style="font-size:18px;">🧠</span>
+            <div>
+              <strong style="color:#fff; font-size:13px;">Strategy Heuristic Rules</strong>
+              <div id="detail-rules" style="font-size:11px; color:var(--muted);">Compiling decision tree...</div>
             </div>
+          </div>
+          <span id="check-rules-badge" class="badge badge-muted">CHECKING</span>
         </div>
+      </div>
+
+      <!-- Action Button (hidden until checks complete) -->
+      <div id="actions" style="display:none;">
+        <a href="/" id="start-btn" class="btn btn-primary" style="width:100%; padding:12px; font-size:15px; box-shadow:var(--shadow-glow);">
+          🚀 Launch Scryglass Advisor
+        </a>
+      </div>
     </div>
+  </div>
 
-    <div class="actions" id="actions" style="display:none">
-        <a href="/" class="btn" id="start-btn">Start Advisor</a>
-    </div>
-</div>
+  <script>
+    // Maps the current page's (ok / warn / fail / pending) status onto the
+    // new design's badge + detail line. Detail strings are preserved exactly
+    // from the current wired page.
+    function setCheck(id, status, detail, badgeText) {
+      const badgeClass = {
+        ok: 'badge-success',
+        warn: 'badge-warning',
+        fail: 'badge-error',
+        pending: 'badge-muted'
+      }[status] || 'badge-muted';
+      const badge = document.getElementById('check-' + id + '-badge');
+      badge.className = 'badge ' + badgeClass;
+      badge.textContent = badgeText;
+      document.getElementById('detail-' + id).textContent = detail;
+    }
 
-<script>
-async function runChecks() {
-    let allOk = true;
+    async function runChecks() {
+      let allOk = true;
 
-    // Check 1: Server health + card count
-    let cardCount = 0;
-    try {
+      // Check 1: Server health + card count (GET /health)
+      let cardCount = 0;
+      try {
         const res = await fetch('/health');
         const data = await res.json();
-        setCheck('server', 'ok', `Engine v${data.engine_version} running`);
+        setCheck('engine', 'ok', `Engine v${data.engine_version} running`, 'PASSED');
         cardCount = data.card_count || 0;
-    } catch(e) {
-        setCheck('server', 'fail', 'Server not responding');
+      } catch (e) {
+        setCheck('engine', 'fail', 'Server not responding', 'FAILED');
         allOk = false;
-    }
+      }
 
-    // Check 2: Card database
-    if (cardCount > 1000) {
-        setCheck('cards', 'ok', `${cardCount.toLocaleString()} cards in database`);
-    } else if (cardCount > 0) {
-        setCheck('cards', 'warn', `Only ${cardCount} cards — restart may help`);
-    } else {
-        setCheck('cards', 'warn', 'No cards imported — install MTGA and restart');
+      // Check 2: Card database (card_count from /health)
+      if (cardCount > 1000) {
+        setCheck('cards', 'ok', `${cardCount.toLocaleString()} cards in database`, `${cardCount.toLocaleString()} CARDS`);
+      } else if (cardCount > 0) {
+        setCheck('cards', 'warn', `Only ${cardCount} cards — restart may help`, `${cardCount} CARDS`);
+      } else {
+        setCheck('cards', 'warn', 'No cards imported — install MTGA and restart', 'NO CARDS');
         allOk = false;
-    }
+      }
 
-    // Check 3: MTGA log
-    try {
+      // Check 3: MTGA log (GET /match-status)
+      try {
         const res = await fetch('/match-status');
         const data = await res.json();
-        // If we can check match status, log watcher is running
-        setCheck('mtga', data.active ? 'ok' : 'ok',
-            data.active ? 'Match active — log connected' : 'Log watcher ready — start MTGA to play');
-    } catch(e) {
-        setCheck('mtga', 'warn', 'Cannot check MTGA status');
-    }
+        // If we can check match status, the log watcher is running.
+        setCheck('log', data.active ? 'ok' : 'ok',
+          data.active ? 'Match active — log connected' : 'Log watcher ready — start MTGA to play',
+          data.active ? 'MATCH ACTIVE' : 'LOG READY');
+      } catch (e) {
+        setCheck('log', 'warn', 'Cannot check MTGA status', 'UNAVAILABLE');
+      }
 
-    // Check 4: Strategy rules
-    try {
+      // Check 4: Strategy rules (GET /api/manage/strategies)
+      try {
         const res = await fetch('/api/manage/strategies');
         const strategies = await res.json();
         const count = Array.isArray(strategies) ? strategies.length : 0;
         if (count > 0) {
-            setCheck('decks', 'ok', `${count} deck strategies loaded`);
+          setCheck('rules', 'ok', `${count} deck strategies loaded`, `${count} STRATEGIES`);
         } else {
-            setCheck('decks', 'warn', 'No strategies — go to /decks to create one');
+          setCheck('rules', 'warn', 'No strategies — go to /decks to create one', 'NONE');
         }
-    } catch(e) {
-        setCheck('decks', 'warn', 'Cannot check strategies');
+      } catch (e) {
+        setCheck('rules', 'warn', 'Cannot check strategies', 'UNAVAILABLE');
+      }
+
+      // Show start button (navigates to /). Degrade to "Continue Anyway" if not ready.
+      document.getElementById('actions').style.display = '';
+      if (!allOk) {
+        const btn = document.getElementById('start-btn');
+        btn.textContent = 'Continue Anyway';
+        btn.classList.remove('btn-primary');
+        btn.classList.add('btn-secondary');
+      }
     }
 
-    // Show start button
-    document.getElementById('actions').style.display = '';
-    if (!allOk) {
-        document.getElementById('start-btn').textContent = 'Continue Anyway';
-        document.getElementById('start-btn').classList.add('btn-secondary');
-    }
-}
-
-function setCheck(id, status, detail) {
-    const icons = { ok: '✓', warn: '⚠', fail: '✗', loading: '⏳' };
-    document.getElementById('icon-' + id).textContent = icons[status];
-    document.getElementById('icon-' + id).className = 'check-icon ' + status;
-    document.getElementById('detail-' + id).textContent = detail;
-}
-
-runChecks();
-</script>
+    runChecks();
+  </script>
 </body>
 </html>
