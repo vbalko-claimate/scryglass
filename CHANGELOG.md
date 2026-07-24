@@ -4,6 +4,19 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.14] — 2026-07-24
+
+### Added — flag a bad decision + hover to shrink the overlay
+
+- **Flag a decision (⚑).** When the overlay gives advice you think is wrong,
+  hold Right ⌘ (feedback mode) and click ⚑ to save that decision — the exact
+  engine input plus the advice shown — to the local database, so it can be
+  reproduced and debugged later without a screenshot.
+- **Hover-shrink (peek).** Move the cursor over the overlay panel and it
+  smoothly shrinks to a tiny corner badge so it stops covering the board (e.g.
+  the opponent's name), then springs back when the cursor leaves. Works over
+  fullscreen MTGA without breaking click-through.
+
 ## [0.8.13] — 2026-07-23
 
 ### Fixed — smarter burn/removal targeting + more "leaves" triggers

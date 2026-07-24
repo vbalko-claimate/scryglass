@@ -118,12 +118,19 @@ fn launch_overlay_windows(handle: &tauri::AppHandle) {
         }
     });
 
-    // Alt key polling thread for feedback mode (50ms poll)
+    // Alt key + cursor polling thread (50ms poll):
+    //  - Right-Win toggles feedback mode (click-through off + interactive buttons).
+    //  - Otherwise forward the cursor position so the overlay can peek (shrink) when
+    //    the cursor is over it. GetCursorPos is a passive read → click-through stays
+    //    intact; JS owns the geometry (see overlayCursor in overlay.html).
     let h2 = handle.clone();
     std::thread::spawn(move || {
+        use windows::Win32::Foundation::POINT;
         use windows::Win32::UI::Input::KeyboardAndMouse::{GetAsyncKeyState, VK_RWIN};
+        use windows::Win32::UI::WindowsAndMessaging::GetCursorPos;
 
         let mut was_alt = false;
+        let mut last_pt = (i32::MIN, i32::MIN);
 
         loop {
             std::thread::sleep(std::time::Duration::from_millis(50));
@@ -138,6 +145,27 @@ fn launch_overlay_windows(handle: &tauri::AppHandle) {
                     let _ = overlay.eval(&js);
                 }
                 was_alt = alt_down;
+            }
+
+            // Peek: forward cursor pos (skip while in feedback mode, if unmoved, or
+            // while the overlay is hidden — mirrors the Swift window.isVisible guard).
+            if !alt_down {
+                let mut pt = POINT::default();
+                if unsafe { GetCursorPos(&mut pt) }.is_ok() && (pt.x, pt.y) != last_pt {
+                    last_pt = (pt.x, pt.y);
+                    if let Some(overlay) = h2.get_webview_window("overlay") {
+                        if overlay.is_visible().unwrap_or(false) {
+                            if let (Ok(pos), Ok(scale)) =
+                                (overlay.inner_position(), overlay.scale_factor())
+                            {
+                                let dom_x = ((pt.x - pos.x) as f64 / scale).round() as i32;
+                                let dom_y = ((pt.y - pos.y) as f64 / scale).round() as i32;
+                                let _ =
+                                    overlay.eval(&format!("overlayCursor({}, {})", dom_x, dom_y));
+                            }
+                        }
+                    }
+                }
             }
         }
     });

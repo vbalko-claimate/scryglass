@@ -26,11 +26,17 @@ html, body {
     border: 1px solid rgba(255, 255, 255, 0.06);
     border-radius: 8px;
     color: rgba(240, 238, 230, 0.95);
-    transition: opacity 0.15s ease-out;
+    transform-origin: top left;
+    transition: opacity 0.15s ease-out, transform 0.22s cubic-bezier(0.34, 1.15, 0.4, 1);
 }
 
 #overlay.hidden { opacity: 0; pointer-events: none; }
 #overlay.compact { padding: 6px 10px; }
+/* Peek: hover over the panel (or key shortcut) shrinks it to a tiny corner badge
+   so it stops covering the board (e.g. the opponent name), then springs back when
+   the cursor leaves. Scale keeps the layout box intact, so the hit-test (offset*
+   metrics in JS) stays stable and doesn't flicker. */
+#overlay.peek { transform: scale(0.14); opacity: 0.55; }
 
 /* Opponent line */
 .opp-line {
@@ -211,6 +217,7 @@ html, body {
 .fb-btn:active { transform: scale(0.95); }
 .fb-btn.good { color: #81c784; }
 .fb-btn.bad { color: #ef5350; }
+.fb-btn.flag { color: #ffb74d; }
 .fb-btn.sent {
     opacity: 0.3;
     pointer-events: none;
@@ -464,6 +471,7 @@ html, body {
     <div class="feedback-btns" id="feedback-btns">
         <div class="fb-btn good" onclick="sendFeedback('up')" title="Good advice">✓</div>
         <div class="fb-btn bad" onclick="sendFeedback('down')" title="Bad advice">✗</div>
+        <div class="fb-btn flag" onclick="flagDecision(this)" title="Flag this decision — save the full game state to reproduce later">⚑</div>
     </div>
     <div id="interactive-indicator">⌘R FEEDBACK</div>
     <div id="debrief" style="display:none;text-align:center;padding:8px 0"></div>
@@ -874,6 +882,10 @@ let feedbackAdviceSnapshot = null;
 // Called by native overlay (Swift/Rust) when modifier key is pressed/released
 function setInteractiveMode(active) {
     feedbackMode = active;
+    // Entering feedback mode: cancel any active peek so the ✓/✗/⚑ buttons aren't
+    // stuck shrunk (the native cursor-forwarder is gated off while interactive, so
+    // nothing else would clear it).
+    if (active) setPeek(false);
     const btns = document.getElementById('feedback-btns');
     const indicator = document.getElementById('interactive-indicator');
 
@@ -914,6 +926,24 @@ function sendFeedback(vote) {
     const cls = vote === 'up' ? 'feedback-good' : 'feedback-bad';
     overlay.classList.add(cls);
     setTimeout(() => overlay.classList.remove(cls), 500);
+}
+
+// Flag the current decision — POST to the sidecar (same-origin :8765), which
+// persists the exact advise request + advice to advisor.db so a bad decision can
+// be reproduced later (no screenshots). Flashes green on save, red if nothing was
+// captured yet.
+function flagDecision(btn) {
+    fetch('/flag-decision', { method: 'POST' })
+        .then(r => r.json())
+        .then(d => {
+            const overlay = document.getElementById('overlay');
+            const ok = d && d.saved;
+            if (ok && btn) btn.classList.add('sent');
+            const cls = ok ? 'feedback-good' : 'feedback-bad';
+            overlay.classList.add(cls);
+            setTimeout(() => overlay.classList.remove(cls), 600);
+        })
+        .catch(() => {});
 }
 
 function showDebrief(data) {
@@ -977,6 +1007,34 @@ function moveOverlay(dx, dy) {
     el.style.top = (curY + dy) + 'px';
     localStorage.setItem('overlay-x', el.style.left);
     localStorage.setItem('overlay-y', el.style.top);
+}
+
+// ─── Peek (hover-shrink) ───────────────────────────────────────────────
+// The overlay window is a fullscreen, click-through, transparent surface, so the
+// webview never receives mouse events (they pass through to MTGA). The native
+// layer forwards the cursor position (in CSS px from the window's top-left) via
+// `overlayCursor()`; JS owns the geometry and toggles `.peek` (CSS shrinks the
+// panel). Also exposed as `togglePeek()` for a native key shortcut.
+let peekActive = false;
+function setPeek(on) {
+    if (feedbackMode) on = false;   // keep the full panel + buttons while giving feedback
+    if (on === peekActive) return;
+    peekActive = on;
+    document.getElementById('overlay').classList.toggle('peek', on);
+}
+function togglePeek() { setPeek(!peekActive); }
+function overlayCursor(x, y) {
+    const el = document.getElementById('overlay');
+    if (!el || el.classList.contains('hidden') || el.classList.contains('no-match')) {
+        setPeek(false);
+        return;
+    }
+    // Use offset* (layout box) not getBoundingClientRect: layout is unaffected by
+    // the peek transform, so the trigger region stays fixed → no shrink/expand flicker.
+    const M = 6;
+    const x0 = el.offsetLeft, y0 = el.offsetTop;
+    const w = el.offsetWidth, h = el.offsetHeight;
+    setPeek(x >= x0 - M && x <= x0 + w + M && y >= y0 - M && y <= y0 + h + M);
 }
 
 // Restore saved position

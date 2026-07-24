@@ -77,6 +77,38 @@ class OverlayDelegate: NSObject, NSApplicationDelegate {
             self.webView.evaluateJavaScript(js, completionHandler: nil)
         }
 
+        // Mouse-move monitor — peek (shrink) the overlay while the cursor is over
+        // it and spring it back when the cursor leaves, so it stops covering the
+        // board on demand. A GLOBAL monitor is a passive observer (it does not
+        // consume the event), so click-through to MTGA stays intact. JS owns the
+        // geometry; we just forward the throttled cursor position in CSS px.
+        NSEvent.addGlobalMonitorForEvents(matching: .mouseMoved) { [weak self] _ in
+            guard let self = self, self.window.isVisible, !self.isInteractive else { return }
+            let m = NSEvent.mouseLocation          // global coords, bottom-left origin
+            let f = self.window.frame
+            let domX = Int(m.x - f.minX)
+            let domY = Int(f.maxY - m.y)           // → top-left origin (CSS px)
+            let send = { [weak self] in
+                self?.webView.evaluateJavaScript("overlayCursor(\(domX), \(domY))", completionHandler: nil)
+            }
+            self.pendingPeek?.cancel()
+            let now = Date()
+            if now.timeIntervalSince(self.lastPeekSend) >= 0.05 {
+                self.lastPeekSend = now
+                send()
+            } else {
+                // Trailing flush: deliver the cursor's final resting position, which
+                // the leading throttle would otherwise drop — so a fast sweep off the
+                // panel can't leave it stuck shrunk.
+                let work = DispatchWorkItem { [weak self] in
+                    self?.lastPeekSend = Date()
+                    send()
+                }
+                self.pendingPeek = work
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.06, execute: work)
+            }
+        }
+
         // Create WKWebView with transparent background
         let config = WKWebViewConfiguration()
         webView = WKWebView(frame: window.contentView!.bounds, configuration: config)
@@ -142,6 +174,8 @@ class OverlayDelegate: NSObject, NSApplicationDelegate {
 
     var isInteractive = false
     var feedbackTimeout: DispatchWorkItem?
+    var lastPeekSend = Date.distantPast
+    var pendingPeek: DispatchWorkItem?
 
     func enterFeedbackMode() {
         isInteractive = true
