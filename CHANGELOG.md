@@ -4,6 +4,17 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.15] — 2026-07-24
+
+### Added
+
+- **Sign in from the app.** The Cloud Sync settings now show a **Sign in**
+  button for anonymous accounts. It opens your browser to sign in (magic-link),
+  and once you approve, this device is linked to your account and its play data
+  is merged in — no token to copy. Uses a secure OAuth loopback + PKCE flow; the
+  sign-in token never appears in any URL. (Requires the matching `glass-host`
+  build.)
+
 ## [0.8.14] — 2026-07-24
 
 ### Added

@@ -573,6 +573,8 @@ tr:hover { background: rgba(255,255,255,0.03); }
                  background:#16211c;border:1px solid #2c3a34">
                 <span id="cloud-account-icon" style="font-size:15px">◐</span>
                 <span id="cloud-account-text">Checking account…</span>
+                <button id="cloud-signin-btn" class="btn btn-primary" onclick="cloudSignIn()"
+                        style="display:none;margin-left:auto;padding:5px 12px;font-size:12px">Sign in</button>
             </div>
             <div id="cloud-env-note" style="display:none;margin:8px 0;padding:8px 12px;
                  background:#33240a;border:1px solid #6b5418;border-radius:6px;color:#e0c068;font-size:12px">
@@ -986,6 +988,8 @@ async function loadCloudConfig() {
 async function loadCloudAccount() {
     const icon = document.getElementById('cloud-account-icon');
     const text = document.getElementById('cloud-account-text');
+    const signin = document.getElementById('cloud-signin-btn');
+    signin.style.display = 'none';
     try {
         const r = await fetch('/api/manage/cloud-me');
         const d = await r.json();
@@ -998,14 +1002,40 @@ async function loadCloudAccount() {
             text.style.color = '#81c784';
         } else if (d.status === 'ok') {
             icon.textContent = '◐';
-            text.textContent = 'Anonymous account (this device). Link your email below to sign in from the web.';
+            text.textContent = 'Anonymous account (this device). Sign in to sync across your devices.';
             text.style.color = '#c8c6be';
+            signin.style.display = '';   // offer sign-in only for an anon account
         } else {
             icon.textContent = '⚠'; text.textContent = 'Not connected to the cloud.';
             text.style.color = '#e0a060';
         }
     } catch (e) {
         icon.textContent = '⚠'; text.textContent = 'Account status unavailable.';
+    }
+}
+
+// Interactive sign-in: opens the system browser to the cloud /authorize page and
+// blocks (up to ~3 min) until the loopback flow completes, then refreshes the
+// account status. This device's anon telemetry is merged into the account.
+async function cloudSignIn() {
+    const btn = document.getElementById('cloud-signin-btn');
+    const text = document.getElementById('cloud-account-text');
+    btn.disabled = true;
+    text.textContent = 'Complete sign-in in your browser…';
+    text.style.color = '#c8c6be';
+    try {
+        const res = await fetch('/api/manage/cloud-signin', { method: 'POST' });
+        const d = await res.json();
+        if (d.status === 'ok') {
+            showToast(d.report && d.report.merged ? 'Signed in — this device’s data was merged in.' : 'Signed in.');
+        } else {
+            showToast('Sign-in failed: ' + (d.error || 'unknown error'), true);
+        }
+    } catch (e) {
+        showToast('Sign-in failed: ' + e, true);
+    } finally {
+        btn.disabled = false;
+        loadCloudAccount();
     }
 }
 
