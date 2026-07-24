@@ -18,12 +18,17 @@ version used for OTA updates.
   Option/Alt+H. Works over fullscreen MTGA without breaking click-through.
 - **Drag to move the overlay.** In feedback mode you can drag the panel with the
   mouse to reposition it (the position persists), in addition to Option/Alt+arrows.
+- **Account status in Settings → Cloud Sync.** The tab now shows whether you're
+  signed in (as your email) or on an anonymous device account. (First step of a
+  larger cloud sign-in/linking UX overhaul.)
 
 ### Changed
 
 - **Feedback key moved to the left hand.** Feedback mode is now Left ⌘ (macOS) /
   Left Ctrl (Windows) instead of a right-hand key, so it can be held while the
   mouse stays in the right hand. The in-panel hint shows the platform's key.
+- **Cloud requests now use `scryglass.win`** (was `scryglass.app.claimate.tech`;
+  same backend) — one canonical domain for the app, web dashboard, and docs.
 
 ### Removed
 

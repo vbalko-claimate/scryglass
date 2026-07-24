@@ -568,6 +568,12 @@ tr:hover { background: rgba(255,255,255,0.03); }
                 meta decks + interaction profiles back. Off by default. The token is
                 stored locally and never shown again after saving.
             </p>
+            <div id="cloud-account" style="margin:10px 0 4px;padding:11px 14px;border-radius:8px;
+                 font-size:13px;display:flex;align-items:center;gap:9px;
+                 background:#16211c;border:1px solid #2c3a34">
+                <span id="cloud-account-icon" style="font-size:15px">◐</span>
+                <span id="cloud-account-text">Checking account…</span>
+            </div>
             <div id="cloud-env-note" style="display:none;margin:8px 0;padding:8px 12px;
                  background:#33240a;border:1px solid #6b5418;border-radius:6px;color:#e0c068;font-size:12px">
                 Configured via environment variables (SCRY_CLOUD_*) — those override these settings.
@@ -578,7 +584,7 @@ tr:hover { background: rgba(255,255,255,0.03); }
 
                 <label for="cloud-url">Cloud URL</label>
                 <input type="text" id="cloud-url" class="search-bar" style="margin:0"
-                       placeholder="https://scryglass.app.claimate.tech">
+                       placeholder="https://scryglass.win">
 
                 <label for="cloud-token">Token</label>
                 <input type="password" id="cloud-token" class="search-bar" style="margin:0"
@@ -970,6 +976,36 @@ async function loadCloudConfig() {
     } catch (e) {
         status.textContent = `Error: ${e.message}`;
         status.style.color = '#f44336';
+    }
+    loadCloudAccount();
+}
+
+// Account-status widget (read-only). Reads /api/manage/cloud-me (the host proxies
+// GET {cloud}/me with the stored per-user token). Email is set via textContent so
+// it's never interpreted as HTML.
+async function loadCloudAccount() {
+    const icon = document.getElementById('cloud-account-icon');
+    const text = document.getElementById('cloud-account-text');
+    try {
+        const r = await fetch('/api/manage/cloud-me');
+        const d = await r.json();
+        const b = d.body || {};
+        if (d.status === 'disabled') {
+            icon.textContent = '○'; text.textContent = 'Cloud sync is off.';
+        } else if (d.status === 'ok' && b.email) {
+            icon.textContent = '✓';
+            text.textContent = 'Signed in as ' + b.email;
+            text.style.color = '#81c784';
+        } else if (d.status === 'ok') {
+            icon.textContent = '◐';
+            text.textContent = 'Anonymous account (this device). Link your email below to sign in from the web.';
+            text.style.color = '#c8c6be';
+        } else {
+            icon.textContent = '⚠'; text.textContent = 'Not connected to the cloud.';
+            text.style.color = '#e0a060';
+        }
+    } catch (e) {
+        icon.textContent = '⚠'; text.textContent = 'Account status unavailable.';
     }
 }
 

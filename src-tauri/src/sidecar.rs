@@ -93,7 +93,7 @@ fn spawn_glass_host(app: &AppHandle) -> bool {
             // Bundled cloud URL (NOT a secret) — the host auto-provisions an
             // anonymous account on first launch so cloud sync just works. No
             // token is baked; `SCRY_CLOUD_SYNC=0` still disables it.
-            .env("SCRY_CLOUD_URL", "https://scryglass.app.claimate.tech"),
+            .env("SCRY_CLOUD_URL", "https://scryglass.win"),
         Err(e) => {
             eprintln!("[sidecar] glass-host sidecar command failed: {}", e);
             return false;
