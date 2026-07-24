@@ -4,6 +4,19 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.16] — 2026-07-24
+
+### Fixed
+
+- **Sign-in no longer "disappears" after an update.** The app kept a check that
+  reused whatever glass-host was already on :8765 — so an old sidecar orphaned by
+  a previous update (or a second copy of the app) was adopted, and the app ran
+  stale backend code (e.g. missing the account/sign-in endpoints). Production
+  launches now kill any stale `glass-host`/`overlay-helper` and always run this
+  build's bundled binary (dev/manual hosts opt out via `SCRY_EXTERNAL_HOST`).
+- **Quit works.** The tray "Quit Scryglass" item had no handler (it did nothing —
+  you had to force-quit). It now shuts the sidecars down cleanly and exits.
+
 ## [0.8.15] — 2026-07-24
 
 ### Added

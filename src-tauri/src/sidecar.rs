@@ -10,16 +10,16 @@ const MAX_WAIT_SECS: u64 = 45;
 /// responds to health checks. This is the sole backend — there is no Python
 /// fallback. Returns Ok(()) on success, Err(message) on failure.
 pub async fn start_and_wait(app: &AppHandle) -> Result<(), String> {
-    // Check if server is already running (e.g. a glass-host launched out-of-band)
-    println!("[sidecar] Checking if server is already running...");
-    if check_health().await {
-        println!("[sidecar] Server already running at {}", SIDECAR_URL);
-        return Ok(());
-    }
-
-    // Dev mode: don't try the sidecar, just wait for a manually started server.
-    if cfg!(debug_assertions) {
-        println!("[sidecar] Dev mode — waiting for manual server start...");
+    // Dev, or an explicitly external host (SCRY_EXTERNAL_HOST): DON'T manage the
+    // sidecar — reuse a manually-started glass-host (or wait for one). This is the
+    // only path that reuses a running server.
+    let external = std::env::var("SCRY_EXTERNAL_HOST").is_ok();
+    if external || cfg!(debug_assertions) {
+        println!("[sidecar] External/dev host mode — using a manually started server...");
+        if check_health().await {
+            println!("[sidecar] Server already running at {}", SIDECAR_URL);
+            return Ok(());
+        }
         for i in 0..MAX_WAIT_SECS {
             tokio::time::sleep(Duration::from_secs(1)).await;
             if check_health().await {
@@ -27,11 +27,18 @@ pub async fn start_and_wait(app: &AppHandle) -> Result<(), String> {
                 return Ok(());
             }
         }
-        return Err("Dev mode: glass-host not running. Build + start it from glass-shard: \
-                    cargo run -p glass-mtga --features server --bin glass-host".into());
+        return Err("No glass-host on :8765. Start it: \
+                    cargo run -p glass-mtga --features server --bin glass-host \
+                    (or unset SCRY_EXTERNAL_HOST to use the bundled one).".into());
     }
 
-    // Production: spawn the bundled all-Rust host (the only backend).
+    // Production: NEVER reuse whatever is on :8765 — an orphan from a prior
+    // version's update (or a second copy) would otherwise be adopted, so the app
+    // ends up running stale backend code. Kill any stale sidecars, then always run
+    // THIS bundle's binary.
+    kill_stale_sidecars();
+    tokio::time::sleep(Duration::from_millis(600)).await; // let :8765 free up
+
     if !spawn_glass_host(app) {
         return Err("Failed to spawn glass-host. Is the Rust binary bundled in externalBin? \
                     (no Python fallback exists anymore)".into());
@@ -45,6 +52,26 @@ pub async fn start_and_wait(app: &AppHandle) -> Result<(), String> {
     }
 
     Err(format!("glass-host did not respond within {}s. Check logs for errors.", MAX_WAIT_SECS))
+}
+
+/// Best-effort kill of any running `glass-host` / `overlay-helper` sidecar
+/// processes — an orphan that survived a prior version's update, or a second
+/// copy of the app. Called on production launch (before spawning the bundled
+/// binary) and on quit (clean shutdown). Never runs in dev/external mode, so a
+/// manually-started host is left alone.
+pub fn kill_stale_sidecars() {
+    for name in ["glass-host", "overlay-helper"] {
+        #[cfg(unix)]
+        {
+            let _ = std::process::Command::new("pkill").arg("-x").arg(name).status();
+        }
+        #[cfg(windows)]
+        {
+            let _ = std::process::Command::new("taskkill")
+                .args(["/F", "/IM", &format!("{name}.exe")])
+                .status();
+        }
+    }
 }
 
 /// Spawn the bundled glass-host (Rust) sidecar on :8765, pointing it at the

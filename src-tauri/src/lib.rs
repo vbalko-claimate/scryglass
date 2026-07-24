@@ -352,6 +352,14 @@ pub fn run() {
                                 });
                             }
                         }
+                        "quit" => {
+                            // Clean shutdown: the "Quit" item had NO handler, so it
+                            // did nothing (menu-bar app never quit). Kill the
+                            // sidecars first so they don't orphan + get reused by
+                            // the next launch, then exit.
+                            sidecar::kill_stale_sidecars();
+                            app.exit(0);
+                        }
                         _ => {}
                     }
                 })
