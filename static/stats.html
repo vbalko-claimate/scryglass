@@ -6,7 +6,7 @@
     <title>MTGA Stats</title>
     <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { background: #1a1a2e; color: #e0e0e0; font-family: 'Segoe UI', system-ui, sans-serif; }
+body { background: #0f1117; color: #e6e8ee; font-family: 'Segoe UI', system-ui, sans-serif; }
 
 #app {
     max-width: 1100px;
@@ -22,13 +22,13 @@ header {
     align-items: center;
     gap: 16px;
     padding: 12px 20px;
-    background: #16213e;
+    background: #171a23;
     border-radius: 8px;
-    border: 1px solid #0f3460;
+    border: 1px solid #1e2230;
 }
-header h1 { font-size: 20px; color: #e94560; }
+header h1 { font-size: 20px; color: #5b6ccf; }
 header a {
-    color: #90caf9;
+    color: #7f8de0;
     text-decoration: none;
     font-size: 13px;
     margin-left: auto;
@@ -42,8 +42,8 @@ header a:hover { color: #fff; }
     gap: 12px;
 }
 .stat-card {
-    background: #16213e;
-    border: 1px solid #0f3460;
+    background: #171a23;
+    border: 1px solid #1e2230;
     border-radius: 8px;
     padding: 16px;
     text-align: center;
@@ -51,7 +51,7 @@ header a:hover { color: #fff; }
 .stat-card .value {
     font-size: 32px;
     font-weight: 700;
-    color: #e94560;
+    color: #5b6ccf;
 }
 .stat-card .label {
     font-size: 12px;
@@ -64,14 +64,14 @@ header a:hover { color: #fff; }
 
 /* Sections */
 .section {
-    background: #16213e;
-    border: 1px solid #0f3460;
+    background: #171a23;
+    border: 1px solid #1e2230;
     border-radius: 8px;
     padding: 16px;
 }
 .section h2 {
     font-size: 16px;
-    color: #e94560;
+    color: #5b6ccf;
     margin-bottom: 12px;
     display: flex;
     align-items: center;
@@ -87,7 +87,7 @@ table {
 th {
     text-align: left;
     padding: 8px 10px;
-    border-bottom: 2px solid #0f3460;
+    border-bottom: 2px solid #1e2230;
     color: #888;
     font-size: 11px;
     text-transform: uppercase;
@@ -95,9 +95,9 @@ th {
 }
 td {
     padding: 8px 10px;
-    border-bottom: 1px solid #0f3460;
+    border-bottom: 1px solid #1e2230;
 }
-tr:hover { background: rgba(233, 69, 96, 0.05); }
+tr:hover { background: rgba(91, 108, 207, 0.05); }
 .result-win { color: #4caf50; font-weight: 600; }
 .result-loss { color: #f44336; font-weight: 600; }
 
@@ -150,8 +150,8 @@ tr:hover { background: rgba(233, 69, 96, 0.05); }
     bottom: 110%;
     left: 50%;
     transform: translateX(-50%);
-    background: #0f3460;
-    color: #e0e0e0;
+    background: #1e2230;
+    color: #e6e8ee;
     padding: 4px 8px;
     border-radius: 4px;
     font-size: 11px;
@@ -174,12 +174,12 @@ canvas { width: 100%; height: 100%; }
 .match-detail {
     display: none;
     padding: 8px 10px;
-    background: #1a1a2e;
+    background: #0f1117;
 }
 .match-detail.open { display: table-row; }
 .match-detail td {
     padding: 12px;
-    border-bottom: 1px solid #0f3460;
+    border-bottom: 1px solid #1e2230;
 }
 .game-tabs {
     display: flex;
@@ -188,17 +188,17 @@ canvas { width: 100%; height: 100%; }
 }
 .game-tab {
     padding: 4px 12px;
-    background: #0f3460;
-    border: 1px solid #1a1a4e;
+    background: #1e2230;
+    border: 1px solid #171a23;
     border-radius: 4px;
-    color: #90caf9;
+    color: #7f8de0;
     cursor: pointer;
     font-size: 12px;
 }
 .game-tab.active {
-    background: #e94560;
+    background: #5b6ccf;
     color: #fff;
-    border-color: #e94560;
+    border-color: #5b6ccf;
 }
 
 /* Streak badge */
@@ -242,10 +242,10 @@ canvas { width: 100%; height: 100%; }
     min-height: 2px;
     position: relative;
 }
-.mana-bar.available { background: #0f3460; }
-.mana-bar.spent { background: #e94560; }
+.mana-bar.available { background: #1e2230; }
+.mana-bar.spent { background: #5b6ccf; }
 .mana-turn-label { font-size: 10px; color: #666; }
-.mana-eff-label { font-size: 10px; color: #90caf9; }
+.mana-eff-label { font-size: 10px; color: #7f8de0; }
 
 /* Mulligan cards */
 .mull-decisions {
@@ -254,8 +254,8 @@ canvas { width: 100%; height: 100%; }
     flex-wrap: wrap;
 }
 .mull-card {
-    background: #1a1a2e;
-    border: 1px solid #0f3460;
+    background: #0f1117;
+    border: 1px solid #1e2230;
     border-radius: 6px;
     padding: 12px 20px;
     text-align: center;
@@ -283,15 +283,15 @@ canvas { width: 100%; height: 100%; }
 /* Match summary */
 .summary-btn {
     padding: 3px 10px;
-    background: #0f3460;
-    border: 1px solid #1a1a4e;
+    background: #1e2230;
+    border: 1px solid #171a23;
     border-radius: 4px;
-    color: #90caf9;
+    color: #7f8de0;
     cursor: pointer;
     font-size: 11px;
     white-space: nowrap;
 }
-.summary-btn:hover { background: #e94560; color: #fff; border-color: #e94560; }
+.summary-btn:hover { background: #5b6ccf; color: #fff; border-color: #5b6ccf; }
 .summary-btn:disabled { opacity: 0.5; cursor: wait; }
 .summary-btn.cached {
     border-color: #4caf50;
@@ -300,8 +300,8 @@ canvas { width: 100%; height: 100%; }
 .match-summary {
     display: none;
     padding: 12px 16px;
-    background: #1a1a2e;
-    border-top: 1px solid #0f3460;
+    background: #0f1117;
+    border-top: 1px solid #1e2230;
     font-size: 13px;
     line-height: 1.6;
     white-space: pre-wrap;
@@ -310,7 +310,7 @@ canvas { width: 100%; height: 100%; }
 .match-summary.open { display: table-row; }
 .match-summary td {
     padding: 14px 16px;
-    border-bottom: 2px solid #0f3460;
+    border-bottom: 2px solid #1e2230;
 }
 .summary-text {
     max-width: 100%;
@@ -327,7 +327,7 @@ canvas { width: 100%; height: 100%; }
     font-size: 11px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    color: #e94560;
+    color: #5b6ccf;
     font-weight: 600;
 }
 .summary-close {
@@ -339,24 +339,24 @@ canvas { width: 100%; height: 100%; }
     cursor: pointer;
     font-size: 11px;
 }
-.summary-close:hover { color: #e94560; border-color: #e94560; }
+.summary-close:hover { color: #5b6ccf; border-color: #5b6ccf; }
 
 /* Timeline */
 .timeline-btn {
     padding: 3px 10px;
-    background: #0f3460;
-    border: 1px solid #1a1a4e;
+    background: #1e2230;
+    border: 1px solid #171a23;
     border-radius: 4px;
-    color: #90caf9;
+    color: #7f8de0;
     cursor: pointer;
     font-size: 11px;
     margin-left: 8px;
 }
-.timeline-btn:hover { background: #e94560; color: #fff; border-color: #e94560; }
+.timeline-btn:hover { background: #5b6ccf; color: #fff; border-color: #5b6ccf; }
 .timeline-panel {
     display: none;
     margin-top: 12px;
-    border-top: 1px solid #0f3460;
+    border-top: 1px solid #1e2230;
     padding-top: 12px;
 }
 .timeline-panel.open { display: block; }
@@ -372,16 +372,16 @@ canvas { width: 100%; height: 100%; }
 .tl-game-header {
     font-size: 13px;
     font-weight: 600;
-    color: #e94560;
+    color: #5b6ccf;
     margin: 12px 0 6px;
     padding-bottom: 4px;
-    border-bottom: 1px solid #0f3460;
+    border-bottom: 1px solid #1e2230;
 }
 .tl-turn {
     display: flex;
     gap: 8px;
     padding: 6px 0;
-    border-bottom: 1px solid rgba(15, 52, 96, 0.5);
+    border-bottom: 1px solid rgba(30, 34, 48, 0.5);
     font-size: 12px;
     align-items: flex-start;
 }
@@ -389,7 +389,7 @@ canvas { width: 100%; height: 100%; }
 .tl-turn-num {
     min-width: 28px;
     font-weight: 700;
-    color: #e94560;
+    color: #5b6ccf;
     font-size: 13px;
 }
 .tl-turn-mana {
@@ -406,7 +406,7 @@ canvas { width: 100%; height: 100%; }
 .tl-ev-play { color: #4caf50; }
 .tl-ev-opp { color: #f44336; }
 .tl-ev-atk { color: #ff9800; }
-.tl-ev-life { color: #90caf9; }
+.tl-ev-life { color: #7f8de0; }
 .tl-ev-comply { color: #ce93d8; font-size: 11px; }
 .tl-turn-life {
     min-width: 80px;
@@ -430,8 +430,8 @@ canvas { width: 100%; height: 100%; }
     padding: 1px 5px;
     border-radius: 3px;
     font-size: 10px;
-    background: rgba(233, 69, 96, 0.15);
-    color: #e94560;
+    background: rgba(91, 108, 207, 0.15);
+    color: #5b6ccf;
     margin-left: 4px;
     font-weight: 600;
 }
@@ -960,7 +960,7 @@ function drawLifeGraph() {
     function y(life) { return PAD.top + plotH - ((life - minLife) / lifeRange) * plotH; }
 
     // Grid lines
-    ctx.strokeStyle = '#0f3460';
+    ctx.strokeStyle = '#1e2230';
     ctx.lineWidth = 0.5;
     for (let l = Math.ceil(minLife / 5) * 5; l <= maxLife; l += 5) {
         ctx.beginPath();
@@ -1121,8 +1121,8 @@ async function loadManaCurve() {
     }
     html += '</div>';
     html += '<div style="font-size:11px;color:#666;display:flex;gap:16px;margin-top:4px">'
-        + '<span><span style="display:inline-block;width:10px;height:10px;background:#0f3460;border-radius:2px"></span> Available</span>'
-        + '<span><span style="display:inline-block;width:10px;height:10px;background:#e94560;border-radius:2px"></span> Spent</span>'
+        + '<span><span style="display:inline-block;width:10px;height:10px;background:#1e2230;border-radius:2px"></span> Available</span>'
+        + '<span><span style="display:inline-block;width:10px;height:10px;background:#5b6ccf;border-radius:2px"></span> Spent</span>'
         + '</div>';
     el.innerHTML = html;
 }
@@ -1137,7 +1137,7 @@ async function loadCompliance() {
     let html = `<div class="mull-decisions">
         <div class="mull-card">
             <div class="mull-label">Follow Rate</div>
-            <div class="mull-value" style="color:#90caf9">${data.follow_rate}%</div>
+            <div class="mull-value" style="color:#7f8de0">${data.follow_rate}%</div>
             <div class="mull-wr" style="color:#666">${data.total} plays tracked</div>
         </div>`;
     for (const d of data.decisions) {

@@ -7,7 +7,7 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { background: #1a1a2e; color: #e0e0e0; font-family: 'Segoe UI', system-ui, sans-serif; }
+body { background: #0f1117; color: #e6e8ee; font-family: 'Segoe UI', system-ui, sans-serif; }
 
 #app {
     max-width: 1100px;
@@ -23,13 +23,13 @@ header {
     align-items: center;
     gap: 16px;
     padding: 12px 20px;
-    background: #16213e;
+    background: #171a23;
     border-radius: 8px;
-    border: 1px solid #0f3460;
+    border: 1px solid #1e2230;
 }
-header h1 { font-size: 20px; color: #e94560; }
+header h1 { font-size: 20px; color: #5b6ccf; }
 header a {
-    color: #90caf9;
+    color: #7f8de0;
     text-decoration: none;
     font-size: 13px;
 }
@@ -41,13 +41,13 @@ header a:hover { color: #fff; }
     align-items: center;
     gap: 12px;
     padding: 12px 16px;
-    background: #16213e;
+    background: #171a23;
     border-radius: 8px;
-    border: 1px solid #0f3460;
+    border: 1px solid #1e2230;
 }
 .utility-bar .label {
     font-size: 13px;
-    color: #e0e0e0;
+    color: #e6e8ee;
     font-weight: 600;
 }
 .utility-bar .hint {
@@ -56,7 +56,7 @@ header a:hover { color: #fff; }
 }
 .utility-bar .status {
     font-size: 12px;
-    color: #90caf9;
+    color: #7f8de0;
     margin-left: auto;
     text-align: right;
 }
@@ -65,10 +65,10 @@ header a:hover { color: #fff; }
 .tabs {
     display: flex;
     gap: 4px;
-    background: #16213e;
+    background: #171a23;
     border-radius: 8px;
     padding: 4px;
-    border: 1px solid #0f3460;
+    border: 1px solid #1e2230;
 }
 .tab {
     padding: 8px 20px;
@@ -80,13 +80,13 @@ header a:hover { color: #fff; }
     cursor: pointer;
     transition: all 0.2s;
 }
-.tab:hover { color: #e0e0e0; background: rgba(255,255,255,0.05); }
-.tab.active { background: #0f3460; color: #e94560; font-weight: 600; }
+.tab:hover { color: #e6e8ee; background: rgba(255,255,255,0.05); }
+.tab.active { background: #1e2230; color: #5b6ccf; font-weight: 600; }
 
 /* Section */
 .section {
-    background: #16213e;
-    border: 1px solid #0f3460;
+    background: #171a23;
+    border: 1px solid #1e2230;
     border-radius: 8px;
     padding: 16px;
     display: none;
@@ -94,13 +94,13 @@ header a:hover { color: #fff; }
 .section.active { display: block; }
 .section h2 {
     font-size: 16px;
-    color: #e94560;
+    color: #5b6ccf;
     margin-bottom: 12px;
 }
 
 /* Tables */
 table { width: 100%; border-collapse: collapse; }
-th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid #0f3460; font-size: 13px; }
+th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid #1e2230; font-size: 13px; }
 th { color: #888; font-weight: 600; font-size: 12px; text-transform: uppercase; }
 tr:hover { background: rgba(255,255,255,0.03); }
 .badge {
@@ -110,8 +110,8 @@ tr:hover { background: rgba(255,255,255,0.03); }
     font-size: 11px;
     font-weight: 600;
 }
-.badge-user { background: rgba(233,69,96,0.2); color: #e94560; border: 1px solid rgba(233,69,96,0.3); }
-.badge-builtin { background: rgba(33,150,243,0.15); color: #90caf9; border: 1px solid rgba(33,150,243,0.2); }
+.badge-user { background: rgba(91, 108, 207,0.2); color: #5b6ccf; border: 1px solid rgba(91, 108, 207,0.3); }
+.badge-builtin { background: rgba(91, 108, 207,0.15); color: #7f8de0; border: 1px solid rgba(91, 108, 207,0.2); }
 .badge-managed { background: rgba(76,175,80,0.2); color: #81c784; border: 1px solid rgba(76,175,80,0.3); }
 .badge-stub { background: rgba(255,193,7,0.15); color: #ffc107; border: 1px solid rgba(255,193,7,0.2); }
 .color-dot {
@@ -123,7 +123,7 @@ tr:hover { background: rgba(255,255,255,0.03); }
     border: 1px solid rgba(255,255,255,0.2);
 }
 .color-W { background: #f5f0d0; }
-.color-U { background: #1a6fb0; }
+.color-U { background: #5b6ccf; }
 .color-B { background: #3d3040; }
 .color-R { background: #c03030; }
 .color-G { background: #2d7a1e; }
@@ -137,20 +137,20 @@ tr:hover { background: rgba(255,255,255,0.03); }
     cursor: pointer;
     transition: all 0.2s;
 }
-.btn-primary { background: #e94560; color: #fff; }
-.btn-primary:hover { background: #c73650; }
+.btn-primary { background: #5b6ccf; color: #fff; }
+.btn-primary:hover { background: #4d5cba; }
 .btn-danger { background: rgba(244,67,54,0.15); color: #ef5350; border: 1px solid rgba(244,67,54,0.3); }
 .btn-danger:hover { background: rgba(244,67,54,0.3); }
-.btn-secondary { background: #0f3460; color: #90caf9; border: 1px solid #2196f3; }
-.btn-secondary:hover { background: #1a4a80; }
+.btn-secondary { background: #1e2230; color: #7f8de0; border: 1px solid #5b6ccf; }
+.btn-secondary:hover { background: #262a36; }
 .btn-small { padding: 3px 10px; font-size: 11px; }
 .btn-row { display: flex; gap: 8px; align-items: center; }
 
 /* Detail panel / Editor */
 .detail-panel {
     margin-top: 12px;
-    background: #1a1a2e;
-    border: 1px solid #0f3460;
+    background: #0f1117;
+    border: 1px solid #1e2230;
     border-radius: 8px;
     padding: 16px;
     display: none;
@@ -158,14 +158,14 @@ tr:hover { background: rgba(255,255,255,0.03); }
 .detail-panel.open { display: block; }
 .detail-panel h3 {
     font-size: 14px;
-    color: #e94560;
+    color: #5b6ccf;
     margin-bottom: 12px;
 }
 
 /* Rule cards */
 .rule-card {
-    background: #0f3460;
-    border: 1px solid #1a1a4e;
+    background: #1e2230;
+    border: 1px solid #171a23;
     border-radius: 6px;
     padding: 10px 14px;
     margin-bottom: 8px;
@@ -173,12 +173,12 @@ tr:hover { background: rgba(255,255,255,0.03); }
 }
 .rule-card .rule-id {
     font-weight: 600;
-    color: #e94560;
+    color: #5b6ccf;
     font-size: 11px;
     margin-bottom: 4px;
 }
 .rule-card .rule-action {
-    color: #e0e0e0;
+    color: #e6e8ee;
     font-size: 13px;
     margin-bottom: 4px;
 }
@@ -192,13 +192,13 @@ tr:hover { background: rgba(255,255,255,0.03); }
 .rule-card .rule-meta span { white-space: nowrap; }
 .priority-critical { border-left: 3px solid #f44336; }
 .priority-high { border-left: 3px solid #ff9800; }
-.priority-medium { border-left: 3px solid #2196f3; }
+.priority-medium { border-left: 3px solid #5b6ccf; }
 .priority-low { border-left: 3px solid #4caf50; }
 
 /* Meta deck cards */
 .meta-card {
-    background: #0f3460;
-    border: 1px solid #1a1a4e;
+    background: #1e2230;
+    border: 1px solid #171a23;
     border-radius: 6px;
     padding: 12px 14px;
     margin-bottom: 8px;
@@ -221,7 +221,7 @@ tr:hover { background: rgba(255,255,255,0.03); }
 }
 .meta-card .signal-cards {
     font-size: 11px;
-    color: #90caf9;
+    color: #7f8de0;
 }
 .meta-card .key-threats {
     font-size: 11px;
@@ -233,9 +233,9 @@ tr:hover { background: rgba(255,255,255,0.03); }
 .json-editor {
     width: 100%;
     min-height: 400px;
-    background: #0d1b2a;
-    color: #90caf9;
-    border: 1px solid #0f3460;
+    background: #0f1117;
+    color: #7f8de0;
+    border: 1px solid #1e2230;
     border-radius: 6px;
     padding: 12px;
     font-family: 'JetBrains Mono', 'Fira Code', monospace;
@@ -244,15 +244,15 @@ tr:hover { background: rgba(255,255,255,0.03); }
     resize: vertical;
     tab-size: 2;
 }
-.json-editor:focus { outline: 1px solid #e94560; }
+.json-editor:focus { outline: 1px solid #5b6ccf; }
 
 /* Deck content */
 .deck-content {
     width: 100%;
     min-height: 300px;
-    background: #0d1b2a;
-    color: #e0e0e0;
-    border: 1px solid #0f3460;
+    background: #0f1117;
+    color: #e6e8ee;
+    border: 1px solid #1e2230;
     border-radius: 6px;
     padding: 12px;
     font-family: 'JetBrains Mono', monospace;
@@ -264,8 +264,8 @@ tr:hover { background: rgba(255,255,255,0.03); }
 
 /* Guide content (rendered markdown) */
 .guide-content {
-    background: #0d1b2a;
-    border: 1px solid #0f3460;
+    background: #0f1117;
+    border: 1px solid #1e2230;
     border-radius: 6px;
     padding: 16px;
     font-size: 13px;
@@ -274,7 +274,7 @@ tr:hover { background: rgba(255,255,255,0.03); }
     overflow-y: auto;
 }
 .guide-content h1, .guide-content h2, .guide-content h3 {
-    color: #e94560;
+    color: #5b6ccf;
     margin: 16px 0 8px;
 }
 .guide-content h1 { font-size: 18px; }
@@ -284,14 +284,14 @@ tr:hover { background: rgba(255,255,255,0.03); }
 .guide-content ul, .guide-content ol { margin: 6px 0 6px 20px; }
 .guide-content li { margin: 2px 0; }
 .guide-content code {
-    background: #16213e;
+    background: #171a23;
     padding: 1px 5px;
     border-radius: 3px;
     font-family: 'JetBrains Mono', monospace;
     font-size: 12px;
 }
 .guide-content pre {
-    background: #16213e;
+    background: #171a23;
     padding: 10px;
     border-radius: 4px;
     overflow-x: auto;
@@ -300,31 +300,31 @@ tr:hover { background: rgba(255,255,255,0.03); }
 .guide-content pre code { background: none; padding: 0; }
 .guide-content strong { color: #ffb052; }
 .guide-content blockquote {
-    border-left: 3px solid #0f3460;
+    border-left: 3px solid #1e2230;
     padding-left: 12px;
     color: #97a9c4;
     margin: 8px 0;
 }
 .guide-content table { border-collapse: collapse; margin: 8px 0; width: 100%; }
 .guide-content th, .guide-content td {
-    border: 1px solid #0f3460;
+    border: 1px solid #1e2230;
     padding: 4px 8px;
     font-size: 12px;
 }
-.guide-content th { background: #16213e; color: #e94560; }
+.guide-content th { background: #171a23; color: #5b6ccf; }
 
 /* Search */
 .search-bar {
     padding: 8px 14px;
-    background: #0d1b2a;
-    border: 1px solid #0f3460;
+    background: #0f1117;
+    border: 1px solid #1e2230;
     border-radius: 6px;
-    color: #e0e0e0;
+    color: #e6e8ee;
     font-size: 13px;
     width: 100%;
     margin-bottom: 12px;
 }
-.search-bar:focus { outline: 1px solid #e94560; }
+.search-bar:focus { outline: 1px solid #5b6ccf; }
 .search-bar::placeholder { color: #555; }
 
 /* Summary stats */
@@ -335,12 +335,12 @@ tr:hover { background: rgba(255,255,255,0.03); }
     margin-bottom: 16px;
 }
 .summary-card {
-    background: #0f3460;
+    background: #1e2230;
     border-radius: 6px;
     padding: 12px;
     text-align: center;
 }
-.summary-card .value { font-size: 28px; font-weight: 700; color: #e94560; }
+.summary-card .value { font-size: 28px; font-weight: 700; color: #5b6ccf; }
 .summary-card .label { font-size: 11px; color: #888; margin-top: 2px; }
 
 /* Toast */
@@ -419,12 +419,12 @@ tr:hover { background: rgba(255,255,255,0.03); }
             <div id="refresh-collection-status" class="status">Idle</div>
             <div id="collection-stats" style="width:100%; display:none; margin-top:4px;">
                 <div style="display:flex; gap:16px; flex-wrap:wrap; font-size:13px;">
-                    <div id="cs-total" style="color:#e0e0e0;"></div>
+                    <div id="cs-total" style="color:#e6e8ee;"></div>
                     <div id="cs-common" style="color:#b0b0b0;"></div>
                     <div id="cs-uncommon" style="color:#b0c4de;"></div>
                     <div id="cs-rare" style="color:#ffd700;"></div>
-                    <div id="cs-mythic" style="color:#e94560;"></div>
-                    <div id="cs-wildcards" style="color:#90caf9; margin-left:auto;"></div>
+                    <div id="cs-mythic" style="color:#5b6ccf;"></div>
+                    <div id="cs-wildcards" style="color:#7f8de0; margin-left:auto;"></div>
                 </div>
                 <div id="cs-date" style="font-size:11px; color:#555; margin-top:2px;"></div>
             </div>
@@ -606,7 +606,7 @@ tr:hover { background: rgba(255,255,255,0.03); }
                 <h3 style="margin:0 0 6px;font-size:15px">Link your email</h3>
                 <p style="color:#888;font-size:13px;max-width:680px;margin:0 0 12px">
                     Bind an email to this account so you can sign in to the web dashboard
-                    (<a href="https://scryglass.win/app" target="_blank" style="color:#90caf9">scryglass.win/app</a>)
+                    (<a href="https://scryglass.win/app" target="_blank" style="color:#7f8de0">scryglass.win/app</a>)
                     and see your stats from anywhere. We email you a 6-digit code to confirm.
                 </p>
                 <div style="display:grid;grid-template-columns:140px 1fr;gap:10px 12px;max-width:640px;align-items:center">
@@ -807,7 +807,7 @@ async function loadGeneralRules() {
     const layerCounts = Object.entries(byLayer).map(([k, v]) => `${k}: ${v}`).join(', ');
     document.getElementById('general-summary').innerHTML = `
         <div class="summary-card"><div class="value">${allGeneralRules.length}</div><div class="label">Rules</div></div>
-        <div class="summary-card" style="grid-column:span 2"><div class="value" style="font-size:14px;color:#90caf9">${layerCounts}</div><div class="label">By Layer</div></div>
+        <div class="summary-card" style="grid-column:span 2"><div class="value" style="font-size:14px;color:#7f8de0">${layerCounts}</div><div class="label">By Layer</div></div>
     `;
 
     renderGeneralRules(allGeneralRules);
@@ -875,7 +875,7 @@ async function loadMetaDecks() {
     document.getElementById('meta-summary').innerHTML = `
         <div class="summary-card"><div class="value">${allMetaDecks.length}</div><div class="label">Meta Decks</div></div>
         <div class="summary-card"><div class="value">${observed.length}</div><div class="label">Observed</div></div>
-        <div class="summary-card" style="grid-column:span 2"><div class="value" style="font-size:14px;color:#90caf9">${archStr}</div><div class="label">By Archetype</div></div>
+        <div class="summary-card" style="grid-column:span 2"><div class="value" style="font-size:14px;color:#7f8de0">${archStr}</div><div class="label">By Archetype</div></div>
     `;
 
     // Review banner
@@ -1080,7 +1080,7 @@ async function cloudSyncNow() {
     btn.disabled = true;
     btn.textContent = 'Syncing...';
     status.textContent = 'Uploading telemetry + pulling bundle...';
-    status.style.color = '#90caf9';
+    status.style.color = '#7f8de0';
     try {
         const res = await fetch('/api/manage/cloud-sync', { method: 'POST' });
         const data = await res.json();
@@ -1126,7 +1126,7 @@ async function claimSendCode() {
     const btn = document.getElementById('claim-send-btn');
     btn.disabled = true;
     status.textContent = 'Sending code...';
-    status.style.color = '#90caf9';
+    status.style.color = '#7f8de0';
     try {
         const res = await fetch('/api/manage/cloud-claim-start', {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -1160,7 +1160,7 @@ async function claimVerifyCode() {
     const btn = document.getElementById('claim-verify-btn');
     btn.disabled = true;
     status.textContent = 'Confirming...';
-    status.style.color = '#90caf9';
+    status.style.color = '#7f8de0';
     try {
         const res = await fetch('/api/manage/cloud-claim-verify', {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -1191,7 +1191,7 @@ async function syncMeta() {
     btn.disabled = true;
     btn.textContent = 'Syncing...';
     status.textContent = 'Scraping MTGGoldfish + merging + LLM enrichment...';
-    status.style.color = '#90caf9';
+    status.style.color = '#7f8de0';
 
     try {
         const res = await fetch('/api/manage/sync-meta', { method: 'POST' });
@@ -1223,7 +1223,7 @@ async function syncMeta() {
 }
 
 // ── Collection Refresh ──
-function setCollectionRefreshStatusText(text, color = '#90caf9') {
+function setCollectionRefreshStatusText(text, color = '#7f8de0') {
     const status = document.getElementById('refresh-collection-status');
     status.textContent = text;
     status.style.color = color;
@@ -1240,7 +1240,7 @@ function applyCollectionRefreshState(data) {
     if (data.running) {
         btn.disabled = true;
         btn.textContent = 'Refreshing...';
-        setCollectionRefreshStatusText(data.message || 'Refreshing collection...', '#90caf9');
+        setCollectionRefreshStatusText(data.message || 'Refreshing collection...', '#7f8de0');
         return;
     }
 
@@ -1261,7 +1261,7 @@ function applyCollectionRefreshState(data) {
         return;
     }
 
-    setCollectionRefreshStatusText(data.message || 'Idle', '#90caf9');
+    setCollectionRefreshStatusText(data.message || 'Idle', '#7f8de0');
 }
 
 async function pollCollectionRefreshStatus() {
@@ -1302,7 +1302,7 @@ async function refreshCollection() {
     const btn = document.getElementById('refresh-collection-btn');
     btn.disabled = true;
     btn.textContent = 'Refreshing...';
-    setCollectionRefreshStatusText('Starting MTGA memory reader...', '#90caf9');
+    setCollectionRefreshStatusText('Starting MTGA memory reader...', '#7f8de0');
 
     try {
         const res = await fetch('/api/manage/refresh-collection', { method: 'POST' });
@@ -1406,7 +1406,7 @@ async function viewDeck(deckId) {
         <h3>${data.name} ${colorDots(data.colors)} <span style="color:#888;font-size:12px">${data.archetype}</span></h3>
         <div style="font-size:12px;color:#888;margin-bottom:8px">${data.versions?.length || 0} versions · Active: v${data.active_version || '—'}</div>
         <pre class="deck-content">${escapeHtml(deckList)}</pre>
-        ${data.missing_cards?.length ? `<div style="margin-top:8px;color:#e94560;font-size:12px">Missing: ${data.missing_cards.map(c => c.name + ' ×' + c.missing).join(', ')}</div>` : ''}
+        ${data.missing_cards?.length ? `<div style="margin-top:8px;color:#5b6ccf;font-size:12px">Missing: ${data.missing_cards.map(c => c.name + ' ×' + c.missing).join(', ')}</div>` : ''}
         <div class="btn-row" style="margin-top:8px">
             <button class="btn btn-secondary" onclick="document.getElementById('deck-detail').classList.remove('open')">Close</button>
         </div>
@@ -1525,7 +1525,7 @@ async function viewGARun(deckId, filename) {
             const color = wr >= 0.6 ? '#81c784' : wr >= 0.4 ? '#ffc107' : '#ef5350';
             return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
                 <span style="width:180px;font-size:12px">${opp}</span>
-                <div style="flex:1;background:#1a1a2e;height:14px;border-radius:3px;overflow:hidden">
+                <div style="flex:1;background:#0f1117;height:14px;border-radius:3px;overflow:hidden">
                     <div style="width:${pct}%;background:${color};height:100%"></div>
                 </div>
                 <span style="width:35px;text-align:right;font-size:11px;color:${color}">${pct}%</span>
@@ -1538,7 +1538,7 @@ async function viewGARun(deckId, filename) {
             ${run.generations} generations · ${run.elapsed_h}h compute · Best: ${run.best_record}
         </div>
         <div style="margin-top:8px">
-            <h4 style="font-size:12px;color:#90caf9;margin-bottom:6px">Matchup Win Rates (last gen)</h4>
+            <h4 style="font-size:12px;color:#7f8de0;margin-bottom:6px">Matchup Win Rates (last gen)</h4>
             ${matchupHtml || '<span style="color:#555">No matchup data</span>'}
         </div>
         <div class="btn-row" style="margin-top:12px">
@@ -1585,7 +1585,7 @@ function ruleCard(r) {
     return `<div class="rule-card priority-${r.priority || 'medium'}">
         <div class="rule-id">${r.id} <span style="color:#666">· ${r.priority || 'medium'}</span></div>
         <div class="rule-action">${r.action}</div>
-        ${conditions.length ? `<div style="font-size:11px;color:#90caf9;margin-bottom:2px">Conditions: ${conditions.join(' · ')}</div>` : ''}
+        ${conditions.length ? `<div style="font-size:11px;color:#7f8de0;margin-bottom:2px">Conditions: ${conditions.join(' · ')}</div>` : ''}
         <div class="rule-meta">${meta.map(m => `<span>${m}</span>`).join('')}</div>
     </div>`;
 }

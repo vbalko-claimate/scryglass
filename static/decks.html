@@ -6,7 +6,7 @@
     <title>MTGA Advisor — Deck Management</title>
     <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { background: #1a1a2e; color: #e0e0e0; font-family: 'Segoe UI', system-ui, sans-serif; }
+body { background: #0f1117; color: #e6e8ee; font-family: 'Segoe UI', system-ui, sans-serif; }
 
 #app {
     max-width: 1200px;
@@ -23,12 +23,12 @@ header {
     align-items: center;
     gap: 16px;
     padding: 12px 20px;
-    background: #16213e;
+    background: #171a23;
     border-radius: 8px;
-    border: 1px solid #0f3460;
+    border: 1px solid #1e2230;
 }
-header h1 { font-size: 20px; color: #e94560; }
-header a { color: #90caf9; text-decoration: none; font-size: 13px; }
+header h1 { font-size: 20px; color: #5b6ccf; }
+header a { color: #7f8de0; text-decoration: none; font-size: 13px; }
 header a:hover { color: #fff; }
 .nav-links { margin-left: auto; display: flex; gap: 16px; }
 
@@ -42,12 +42,12 @@ header a:hover { color: #fff; }
 
 /* Panels */
 .panel {
-    background: #16213e;
-    border: 1px solid #0f3460;
+    background: #171a23;
+    border: 1px solid #1e2230;
     border-radius: 8px;
     padding: 16px;
 }
-.panel h2 { font-size: 16px; color: #e94560; margin-bottom: 12px; }
+.panel h2 { font-size: 16px; color: #5b6ccf; margin-bottom: 12px; }
 
 /* Deck list */
 .deck-list-header {
@@ -62,8 +62,8 @@ header a:hover { color: #fff; }
     transition: all 0.15s;
     margin-bottom: 6px;
 }
-.deck-item:hover { background: rgba(255,255,255,0.04); border-color: #0f3460; }
-.deck-item.active { background: #0f3460; border-color: #e94560; }
+.deck-item:hover { background: rgba(255,255,255,0.04); border-color: #1e2230; }
+.deck-item.active { background: #1e2230; border-color: #5b6ccf; }
 .deck-item-name { font-weight: 600; font-size: 13px; margin-bottom: 3px; display: flex; align-items: center; gap: 6px; }
 .deck-item-meta { font-size: 11px; color: #888; display: flex; gap: 10px; flex-wrap: wrap; }
 
@@ -73,7 +73,7 @@ header a:hover { color: #fff; }
     margin-right: 1px; vertical-align: middle; border: 1px solid rgba(255,255,255,0.2);
 }
 .color-W { background: #f5f0d0; }
-.color-U { background: #1a6fb0; }
+.color-U { background: #5b6ccf; }
 .color-B { background: #3d3040; }
 .color-R { background: #c03030; }
 .color-G { background: #2d7a1e; }
@@ -84,7 +84,7 @@ header a:hover { color: #fff; }
     font-size: 10px; font-weight: 600;
 }
 .badge-deployed { background: rgba(76,175,80,0.2); color: #4caf50; border: 1px solid rgba(76,175,80,0.3); }
-.badge-rules { background: rgba(33,150,243,0.15); color: #90caf9; border: 1px solid rgba(33,150,243,0.2); }
+.badge-rules { background: rgba(91, 108, 207,0.15); color: #7f8de0; border: 1px solid rgba(91, 108, 207,0.2); }
 .badge-warn { background: rgba(255,193,7,0.15); color: #ffc107; border: 1px solid rgba(255,193,7,0.2); }
 .badge-ga { background: rgba(255,152,0,0.15); color: #ffa500; border: 1px solid rgba(255,152,0,0.3); }
 
@@ -93,10 +93,10 @@ header a:hover { color: #fff; }
     padding: 6px 14px; border-radius: 4px; border: none;
     font-size: 12px; cursor: pointer; transition: all 0.2s;
 }
-.btn-primary { background: #e94560; color: #fff; }
-.btn-primary:hover { background: #c73650; }
-.btn-secondary { background: #0f3460; color: #90caf9; border: 1px solid #2196f3; }
-.btn-secondary:hover { background: #1a4a80; }
+.btn-primary { background: #5b6ccf; color: #fff; }
+.btn-primary:hover { background: #4d5cba; }
+.btn-secondary { background: #1e2230; color: #7f8de0; border: 1px solid #5b6ccf; }
+.btn-secondary:hover { background: #262a36; }
 .btn-small { padding: 3px 10px; font-size: 11px; }
 .btn-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -105,43 +105,43 @@ header a:hover { color: #fff; }
 .dropdown { position: relative; display: inline-block; }
 .dropdown-menu {
     display: none; position: absolute; top: 100%; left: 0; margin-top: 4px;
-    background: #0f3460; border: 1px solid #2196f3; border-radius: 4px;
+    background: #1e2230; border: 1px solid #5b6ccf; border-radius: 4px;
     min-width: 180px; z-index: 10; overflow: hidden;
 }
 .dropdown-menu.open { display: block; }
 .dropdown-menu button {
     display: block; width: 100%; padding: 8px 14px; border: none; background: none;
-    color: #90caf9; font-size: 12px; text-align: left; cursor: pointer;
+    color: #7f8de0; font-size: 12px; text-align: left; cursor: pointer;
 }
 .dropdown-menu button:hover { background: rgba(255,255,255,0.06); }
 
 /* Detail sections */
 .detail-section {
-    background: #1a1a2e; border: 1px solid #0f3460; border-radius: 6px;
+    background: #0f1117; border: 1px solid #1e2230; border-radius: 6px;
     padding: 14px; margin-bottom: 12px;
 }
-.detail-section h3 { font-size: 14px; color: #e94560; margin-bottom: 8px; }
+.detail-section h3 { font-size: 14px; color: #5b6ccf; margin-bottom: 8px; }
 
 /* Version list */
 .version-item {
     padding: 8px 10px; border-radius: 4px; margin-bottom: 4px;
     font-size: 12px; display: flex; align-items: center; gap: 8px;
-    background: rgba(15,52,96,0.3); border: 1px solid transparent;
+    background: rgba(30, 34, 48,0.3); border: 1px solid transparent;
 }
-.version-item:hover { border-color: #0f3460; }
-.version-item .v-num { font-weight: 700; color: #e94560; min-width: 32px; }
+.version-item:hover { border-color: #1e2230; }
+.version-item .v-num { font-weight: 700; color: #5b6ccf; min-width: 32px; }
 .version-item .v-date { color: #888; min-width: 80px; }
-.version-item .v-summary { color: #e0e0e0; flex: 1; }
+.version-item .v-summary { color: #e6e8ee; flex: 1; }
 .version-item .v-badges { display: flex; gap: 4px; margin-left: auto; }
 
 /* Deck textarea */
 .deck-textarea {
-    width: 100%; min-height: 200px; background: #0d1b2a; color: #e0e0e0;
-    border: 1px solid #0f3460; border-radius: 6px; padding: 10px;
+    width: 100%; min-height: 200px; background: #0f1117; color: #e6e8ee;
+    border: 1px solid #1e2230; border-radius: 6px; padding: 10px;
     font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 12px;
     line-height: 1.5; resize: vertical; white-space: pre;
 }
-.deck-textarea:focus { outline: 1px solid #e94560; }
+.deck-textarea:focus { outline: 1px solid #5b6ccf; }
 .deck-textarea[readonly] { opacity: 0.7; }
 
 /* Matchup bar */
@@ -172,16 +172,16 @@ header a:hover { color: #fff; }
 }
 .modal-overlay.open { display: flex; }
 .modal {
-    background: #16213e; border: 1px solid #0f3460; border-radius: 8px;
+    background: #171a23; border: 1px solid #1e2230; border-radius: 8px;
     padding: 24px; width: 480px; max-width: 90vw; max-height: 90vh; overflow-y: auto;
 }
-.modal h2 { font-size: 16px; color: #e94560; margin-bottom: 16px; }
+.modal h2 { font-size: 16px; color: #5b6ccf; margin-bottom: 16px; }
 .modal label { display: block; font-size: 12px; color: #888; margin-bottom: 4px; }
 .modal input[type="text"] {
-    width: 100%; padding: 8px 12px; background: #0d1b2a; border: 1px solid #0f3460;
-    border-radius: 4px; color: #e0e0e0; font-size: 13px; margin-bottom: 12px;
+    width: 100%; padding: 8px 12px; background: #0f1117; border: 1px solid #1e2230;
+    border-radius: 4px; color: #e6e8ee; font-size: 13px; margin-bottom: 12px;
 }
-.modal input[type="text"]:focus { outline: 1px solid #e94560; }
+.modal input[type="text"]:focus { outline: 1px solid #5b6ccf; }
 
 /* Toast */
 .toast {
@@ -197,11 +197,11 @@ header a:hover { color: #fff; }
 
 /* Editable description */
 .editable-desc {
-    width: 100%; padding: 6px 10px; background: #0d1b2a; border: 1px solid #0f3460;
-    border-radius: 4px; color: #e0e0e0; font-size: 12px; resize: vertical; min-height: 40px;
+    width: 100%; padding: 6px 10px; background: #0f1117; border: 1px solid #1e2230;
+    border-radius: 4px; color: #e6e8ee; font-size: 12px; resize: vertical; min-height: 40px;
     font-family: 'Segoe UI', system-ui, sans-serif;
 }
-.editable-desc:focus { outline: 1px solid #e94560; }
+.editable-desc:focus { outline: 1px solid #5b6ccf; }
 
 /* Responsive */
 @media (max-width: 800px) {

@@ -6,23 +6,23 @@
 <title>Scryglass — Post-Game Review</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { background: #1a1a2e; color: #e0e0e0; font-family: 'Inter', 'Segoe UI', system-ui, sans-serif; }
+body { background: #0f1117; color: #e6e8ee; font-family: 'Inter', 'Segoe UI', system-ui, sans-serif; }
 
 #app { max-width: 900px; margin: 0 auto; padding: 16px; }
 
 header {
     display: flex; align-items: center; gap: 16px;
-    padding: 12px 20px; background: #16213e; border-radius: 8px;
-    border: 1px solid #0f3460; margin-bottom: 16px;
+    padding: 12px 20px; background: #171a23; border-radius: 8px;
+    border: 1px solid #1e2230; margin-bottom: 16px;
 }
-header h1 { font-size: 20px; color: #e94560; }
-header a { color: #90caf9; text-decoration: none; font-size: 13px; }
+header h1 { font-size: 20px; color: #5b6ccf; }
+header a { color: #7f8de0; text-decoration: none; font-size: 13px; }
 header a:hover { color: #fff; }
 .nav-links { margin-left: auto; display: flex; gap: 16px; }
 
 .match-header {
-    background: #16213e; border-radius: 8px; padding: 16px 20px;
-    border: 1px solid #0f3460; margin-bottom: 16px;
+    background: #171a23; border-radius: 8px; padding: 16px 20px;
+    border: 1px solid #1e2230; margin-bottom: 16px;
     display: flex; align-items: center; gap: 16px;
 }
 .match-result { font-size: 24px; font-weight: 700; }
@@ -35,24 +35,24 @@ header a:hover { color: #fff; }
     display: flex; gap: 12px; margin-bottom: 16px;
 }
 .summary-card {
-    background: #16213e; border-radius: 6px; padding: 10px 16px;
-    border: 1px solid #0f3460; text-align: center; flex: 1;
+    background: #171a23; border-radius: 6px; padding: 10px 16px;
+    border: 1px solid #1e2230; text-align: center; flex: 1;
 }
-.summary-card .value { font-size: 20px; font-weight: 600; color: #90caf9; }
+.summary-card .value { font-size: 20px; font-weight: 600; color: #7f8de0; }
 .summary-card .label { font-size: 11px; color: #666; margin-top: 2px; }
 
 .timeline { margin-top: 16px; }
 
 .turn-card {
-    background: #16213e; border-radius: 8px; padding: 12px 16px;
-    border: 1px solid #0f3460; margin-bottom: 8px;
+    background: #171a23; border-radius: 8px; padding: 12px 16px;
+    border: 1px solid #1e2230; margin-bottom: 8px;
 }
 .turn-card.key { border-left: 3px solid #F4A261; }
 .turn-header {
     display: flex; align-items: center; gap: 8px;
     margin-bottom: 6px; font-size: 12px; color: #888;
 }
-.turn-num { font-weight: 600; color: #90caf9; font-size: 14px; }
+.turn-num { font-weight: 600; color: #7f8de0; font-size: 14px; }
 
 .advice-item {
     padding: 4px 0; padding-left: 12px; font-size: 13px;
@@ -73,10 +73,10 @@ header a:hover { color: #fff; }
     display: flex; gap: 8px; margin-bottom: 12px;
 }
 .filter-btn {
-    background: #1a1a2e; border: 1px solid #333; color: #888;
+    background: #0f1117; border: 1px solid #333; color: #888;
     padding: 4px 12px; border-radius: 4px; cursor: pointer; font-size: 12px;
 }
-.filter-btn.active { border-color: #90caf9; color: #90caf9; }
+.filter-btn.active { border-color: #7f8de0; color: #7f8de0; }
 .filter-btn:hover { border-color: #666; }
 
 .empty { color: #555; font-style: italic; text-align: center; padding: 40px; }
@@ -85,10 +85,10 @@ header a:hover { color: #fff; }
 .match-list { margin-bottom: 16px; }
 .match-list-item {
     display: flex; align-items: center; gap: 12px;
-    padding: 8px 12px; background: #16213e; border-radius: 6px;
-    border: 1px solid #0f3460; margin-bottom: 4px; cursor: pointer;
+    padding: 8px 12px; background: #171a23; border-radius: 6px;
+    border: 1px solid #1e2230; margin-bottom: 4px; cursor: pointer;
 }
-.match-list-item:hover { border-color: #90caf9; }
+.match-list-item:hover { border-color: #7f8de0; }
 .match-list-item .result { font-weight: 600; width: 40px; }
 .match-list-item .result.Win { color: #81c784; }
 .match-list-item .result.Loss { color: #ef5350; }
