@@ -6,13 +6,6 @@ version used for OTA updates.
 
 ## [0.8.14] — 2026-07-24
 
-### Fixed
-
-- **Hand badges no longer break when advice targets are present.** A reference
-  to an undefined `FAMILY_MAP` threw a `ReferenceError` while building the hand
-  badges (should have been `FAMILY_LABEL`), blanking them whenever the advisor
-  had card recommendations.
-
 ### Added — flag a bad decision + hover to shrink the overlay
 
 - **Flag a decision (⚑).** When the overlay gives advice you think is wrong,
@@ -23,6 +16,13 @@ version used for OTA updates.
   smoothly shrinks to a tiny corner badge so it stops covering the board (e.g.
   the opponent's name), then springs back when the cursor leaves. Works over
   fullscreen MTGA without breaking click-through.
+
+### Removed
+
+- **Over-the-board card indicators dropped.** The left-side recommendation
+  strip and the opponent-threat badges shown over the table were removed — the
+  overlay can't reconstruct the order of cards in hand or on the battlefield, so
+  those per-card indicators couldn't be placed reliably and were misleading.
 
 ## [0.8.13] — 2026-07-23
 

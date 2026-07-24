@@ -275,112 +275,6 @@ html, body {
     font-style: italic;
 }
 
-/* Recommendation strip — vertical column on left side */
-#hand-badges {
-    position: fixed;
-    left: 8px;
-    top: 50%;
-    transform: translateY(-50%);
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    pointer-events: none;
-    visibility: hidden;
-}
-#hand-badges.visible { visibility: visible; }
-
-#threat-badges {
-    position: fixed;
-    left: 0; right: 0;
-    display: flex;
-    justify-content: center;
-    pointer-events: none;
-    visibility: hidden;
-    top: 18%;
-}
-#threat-badges.visible { visibility: visible; }
-
-.rec-chip {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    padding: 4px 10px;
-    border-radius: 6px;
-    font-size: 11px;
-    font-weight: 600;
-    white-space: nowrap;
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-}
-.rec-chip .chip-action {
-    font-size: 9px;
-    font-weight: 800;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    opacity: 0.85;
-    min-width: 32px;
-}
-.rec-chip .chip-name {
-    font-weight: 500;
-}
-
-/* Action type chip colors */
-.rec-chip.chip-cast   { background: rgba(240, 180, 41, 0.8); color: #1a1a2e; }
-.rec-chip.chip-attack { background: rgba(232, 68, 58, 0.8);  color: #fff; }
-.rec-chip.chip-block  { background: rgba(59, 130, 246, 0.8); color: #fff; }
-.rec-chip.chip-hold   { background: rgba(100, 116, 139, 0.6); color: #e2e8f0; }
-.rec-chip.chip-target { background: rgba(217, 70, 239, 0.8); color: #fff; }
-
-/* Critical priority pulse */
-.rec-chip.chip-critical {
-    animation: chip-pulse 1.5s ease-in-out infinite;
-}
-@keyframes chip-pulse {
-    0%, 100% { box-shadow: none; }
-    50% { box-shadow: 0 0 10px 2px rgba(255, 255, 255, 0.3); }
-}
-
-/* Unused legacy — kept for threat badges */
-.card-badge {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 2px 5px;
-    border-radius: 4px;
-    font-size: 9px;
-    line-height: 1.2;
-    text-align: center;
-    min-width: 40px;
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
-}
-.badge-name {
-    font-weight: 500;
-    max-width: 65px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-.badge-sub {
-    font-size: 8px;
-    opacity: 0.7;
-}
-
-/* Threat badges */
-.card-badge.threat {
-    background: rgba(60, 20, 20, 0.6);
-    border: 1px solid rgba(200, 80, 80, 0.4);
-    color: rgba(239, 180, 180, 0.9);
-}
-.card-badge.must-answer {
-    background: rgba(233, 57, 70, 0.6);
-    border: 1px solid rgba(233, 57, 70, 0.9);
-    color: #fff;
-    box-shadow: 0 0 8px rgba(233, 57, 70, 0.3);
-}
-
 /* Loud lethal warning — the "you're about to die" banner. */
 .lethal-banner {
     display: none;
@@ -477,9 +371,6 @@ html, body {
     <div id="debrief" style="display:none;text-align:center;padding:8px 0"></div>
 </div>
 
-<div id="threat-badges"></div>
-<div id="hand-badges"></div>
-
 <script>
 let ws = null;
 let currentStrategyInfo = null;
@@ -523,8 +414,6 @@ async function tick() {
     document.getElementById('combo-banner').classList.remove('visible');
     document.getElementById('do-now').classList.remove('visible');
     document.getElementById('threat-line').classList.remove('visible');
-    document.getElementById('hand-badges').classList.remove('visible');
-    document.getElementById('threat-badges').classList.remove('visible');
     document.getElementById('debrief').style.display = 'none';
     if (!wm) return;
     try {
@@ -610,9 +499,6 @@ function updateState(state) {
         document.getElementById('phase-line').textContent =
             `T${turnNum} · ${phase} · ${isMyTurn ? 'Your turn' : 'Opp turn'}`;
     }
-
-    updateHandBadges(state);
-    updateThreatBadges(state);
 }
 
 function updateOppLine(info) {
@@ -806,75 +692,6 @@ function updateAdvice(data) {
     }
 }
 
-function updateHandBadges(state) {
-    const el = document.getElementById('hand-badges');
-    if (!inMatch || !lastAdvice) { el.classList.remove('visible'); return; }
-
-    // Collect recommendations: card name → {action, priority}
-    const recs = new Map(); // name → {action, priority}
-    for (const a of lastAdvice) {
-        const scores = a.action_scores || [];
-        for (const s of scores) {
-            if (!s.target) continue;
-            if (recs.has(s.target)) continue; // keep first (highest priority)
-            recs.set(s.target, {
-                action: FAMILY_TYPE[s.family] || 'cast',
-                label: (FAMILY_LABEL[s.family] || 'cast').toUpperCase(),
-                priority: a.priority || 'medium',
-            });
-        }
-    }
-
-    if (!recs.size) { el.classList.remove('visible'); return; }
-
-    // Build chips
-    const chips = [];
-    for (const [name, r] of recs) {
-        const priClass = r.priority === 'critical' ? ' chip-critical' : '';
-        chips.push(
-            `<span class="rec-chip chip-${r.action}${priClass}">` +
-            `<span class="chip-action">${r.label}</span>` +
-            `<span class="chip-name">${name}</span>` +
-            `</span>`
-        );
-    }
-
-    el.innerHTML = chips.join('');
-    el.classList.add('visible');
-}
-
-function updateThreatBadges(state) {
-    const el = document.getElementById('threat-badges');
-    const opp = state.opp_battlefield || [];
-    const creatures = opp.filter(c => c.is_creature && c.power > 0)
-        .sort((a, b) => b.power - a.power).slice(0, 7);
-
-    if (!creatures.length || !inMatch) { el.classList.remove('visible'); return; }
-
-    const mustAnswer = new Set();
-    if (currentStrategyInfo && currentStrategyInfo.opp_key_threats) {
-        currentStrategyInfo.opp_key_threats.forEach(t => {
-            const name = typeof t === 'string' ? t : t.card;
-            if (name) mustAnswer.add(name);
-        });
-    }
-
-    const cardWidth = Math.min(75, Math.floor(window.innerWidth * 0.45 / creatures.length));
-    const gap = Math.max(2, Math.floor((window.innerWidth * 0.45 - cardWidth * creatures.length) / Math.max(1, creatures.length - 1)));
-
-    el.style.gap = gap + 'px';
-    el.innerHTML = creatures.map(c => {
-        const isMust = mustAnswer.has(c.name);
-        const cls = 'card-badge ' + (isMust ? 'must-answer' : 'threat');
-        const shortName = c.name.length > 10 ? c.name.substring(0, 9) + '…' : c.name;
-        return `<div class="${cls}" style="width:${cardWidth}px">
-            <span class="badge-name">${shortName}</span>
-            <span class="badge-sub">${c.power}/${c.toughness}</span>
-        </div>`;
-    }).join('');
-    el.classList.add('visible');
-}
-
 let lastAdvice = null;
 let feedbackMode = false;
 let feedbackAdviceSnapshot = null;
@@ -983,8 +800,6 @@ function showDebrief(data) {
 
 function resetOverlay() {
     inMatch = false;
-    document.getElementById('hand-badges').classList.remove('visible');
-    document.getElementById('threat-badges').classList.remove('visible');
     document.getElementById('key-play').style.display = 'none';
     document.getElementById('threat-line').classList.remove('visible');
     document.getElementById('do-now').classList.remove('visible');
