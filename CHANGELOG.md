@@ -6,6 +6,13 @@ version used for OTA updates.
 
 ## [0.8.14] — 2026-07-24
 
+### Fixed
+
+- **Hand badges no longer break when advice targets are present.** A reference
+  to an undefined `FAMILY_MAP` threw a `ReferenceError` while building the hand
+  badges (should have been `FAMILY_LABEL`), blanking them whenever the advisor
+  had card recommendations.
+
 ### Added — flag a bad decision + hover to shrink the overlay
 
 - **Flag a decision (⚑).** When the overlay gives advice you think is wrong,

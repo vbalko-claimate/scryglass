@@ -819,7 +819,7 @@ function updateHandBadges(state) {
             if (recs.has(s.target)) continue; // keep first (highest priority)
             recs.set(s.target, {
                 action: FAMILY_TYPE[s.family] || 'cast',
-                label: (FAMILY_MAP[s.family] || 'cast').toUpperCase(),
+                label: (FAMILY_LABEL[s.family] || 'cast').toUpperCase(),
                 priority: a.priority || 'medium',
             });
         }
