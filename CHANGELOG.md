@@ -4,6 +4,33 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.17] — 2026-07-25
+
+### Fixed
+
+- **The "Swing for lethal" banner no longer promises a kill your opponent can
+  simply block.** It was comparing your attackers' raw power to their life
+  total and ignoring their board entirely — measured against real games, half
+  the lethal calls you acted on were wrong (a 26-power Chocobo called lethal
+  into 17 life, chump-blocked by a 1/1 for zero). It now works out what
+  actually gets through after their best block, and says "lethal if it
+  connects, but they have blockers that can absorb it" when it can't promise.
+  Trample is understood, so a real Mossborn Hydra kill is still called lethal.
+- **Attack advice stops billing fully-blockable damage as "pressure"** — it now
+  names how much their blockers can stop.
+- **Two combat-advice bugs from flagged in-game decisions.** Two identically
+  named attackers were collapsed into one, so a losing chump block looked
+  good; and creatures tapped for mana were still offered as attackers.
+- **Delney, Streetwise Lookout and friends are read correctly.** "Creatures you
+  control with power 2 or less can't be blocked by creatures with power 3 or
+  greater" — and the cards that name themselves instead of saying "this
+  creature" — were silently ignored by block-legality.
+
+### Changed
+
+- **The overlay rests as the small pill between matches** and opens when you
+  hover it, the reverse of its in-match behaviour (expanded, hides on hover).
+
 ## [0.8.16] — 2026-07-24
 
 ### Changed

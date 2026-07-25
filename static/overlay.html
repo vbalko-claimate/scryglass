@@ -395,6 +395,10 @@ let ws = null;
 let currentStrategyInfo = null;
 let isMyTurn = false;
 let inMatch = false;
+// Whether the in-match/out-of-match peek polarity has been asserted at least
+// once. Without it a session that STARTS out of match never sees a transition,
+// so the panel would sit expanded instead of resting as the pill.
+let peekPolarityApplied = false;
 
 // Shared action family mappings
 const FAMILY_TYPE = {
@@ -417,10 +421,26 @@ async function tick() {
     try {
         active = ((await (await fetch('/match-status')).json()).active === true);
     } catch (e) { return; /* engine not reachable — keep last state */ }
+    const wasInMatch = inMatch;
     inMatch = active;
     const overlay = document.getElementById('overlay');
     overlay.classList.remove('no-match'); // never force-hide all; managed below
     const wm = document.getElementById('waiting-msg');
+    // Peek polarity is INVERTED out of match: in a match the panel is expanded
+    // and hovering shrinks it out of the way; between matches there is nothing
+    // to read, so it rests as the pill and hovering opens it (see
+    // `overlayCursor`). Only drive it on the transition — mid-state the cursor
+    // handler owns it, and re-asserting every 2s would fight a live hover.
+    if (active !== wasInMatch || !peekPolarityApplied) {
+        peekPolarityApplied = true;
+        setPeek(!active);
+        const hint = document.getElementById('hint-line');
+        if (hint) {
+            hint.textContent = active
+                ? 'Left ⌘: feedback + drag to move · hover to hide'
+                : 'Left ⌘: feedback + drag to move · hover to open';
+        }
+    }
     if (active) {
         // In a match: the advisor panels render from WS (updateState/updateAdvice).
         if (wm) wm.style.display = 'none';
@@ -876,11 +896,21 @@ function overlayCursor(x, y) {
         setPeek(false);
         return;
     }
+    const M = 6;
+    const hits = (r) => x >= r.l - M && x <= r.l + r.w + M && y >= r.t - M && y <= r.t + r.h + M;
+    if (!inMatch) {
+        // Between matches the polarity flips: resting state is the pill and
+        // hovering OPENS the panel. Hit-test the CURRENT box rather than the
+        // cached expanded one — the expanded box strictly contains the pill
+        // (same top-left, larger), so growing on hover can't bounce the cursor
+        // outside and oscillate the way the in-match shrink direction would.
+        setPeek(!hits({ l: el.offsetLeft, t: el.offsetTop, w: el.offsetWidth, h: el.offsetHeight }));
+        return;
+    }
     if (!peekActive) measurePeekRect();
     const r = peekRect;
     if (!r) return;                        // never measured yet — nothing to hit-test
-    const M = 6;
-    setPeek(x >= r.l - M && x <= r.l + r.w + M && y >= r.t - M && y <= r.t + r.h + M);
+    setPeek(hits(r));
 }
 
 // ─── Drag to move (in feedback mode) ───────────────────────────────────
