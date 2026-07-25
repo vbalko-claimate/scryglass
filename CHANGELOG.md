@@ -4,6 +4,55 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.19] — 2026-07-25
+
+### Added
+
+- **Combat advice finally accounts for instant-speed play — on both sides.**
+  Attack and block advice was computed from the board alone: it could not see
+  what you were holding or how much mana your opponent had up, and recommended
+  every swing as if neither player could act. Your side is now read as fact (a
+  castable trick, a flash creature, an uncracked fetch land you should hold);
+  their side as what they could physically do with the mana they have open.
+  The opponent warning only appears through turn 6, where an open opponent is
+  measurably a 9× blowout risk in your own games — later it is noise, so it
+  stays quiet rather than crying wolf.
+- **The "they likely run board wipes, hold some back" advice appears.** The
+  opponent-archetype layer had been computing this all along and then throwing
+  it away — nothing on the display side ever read the field it wrote to.
+  Capped at two notes, because a wall of caveats teaches you to stop reading.
+
+### Fixed
+
+- **Three more ways the lethal banner could lie.** Two 2/1 first strikers were
+  tested one at a time against a 6/3 trampler, so a board that stops the swing
+  cold read as harmless; damage already marked on an attacker was ignored, so a
+  wounded trampler looked harder to stop than it is. The third was the opposite
+  error — capping the search at 8 attackers threw away *real* lethals on the
+  most common alpha-strike board there is, nine tokens into one blocker.
+- **Lethal is no longer promised when a planeswalker or battle can soak the
+  attack.** Part of that damage may not be going at the face, so the swing that
+  "wins this turn" doesn't. The advice now describes the damage without
+  promising the kill.
+- **Blocking advice tells two identically named attackers apart.** A base 2/2
+  and a pumped 5/5 sharing a name were matched by name against the board, so
+  block advice could reason about a threat less than half the real one — or drop
+  attackers entirely and suppress a lethal warning. Each attacker is now bound
+  to its actual game object.
+- **"Whenever a creature dies" fires on removal and board wipes.** Destroy
+  effects moved the creature to the graveyard without it ever counting as a
+  death, so every aristocrat payoff — Blood Artist, Mayhem Devil, Meathook
+  Massacre — silently skipped the most common way creatures leave the
+  battlefield.
+- **The Vision and Three Bowls of Porridge do what they print.** A modal card
+  whose text reads "choose one that hasn't been chosen this turn —" had every
+  mode left dangling and unusable, so The Vision was modelled as a plain 2/5
+  with no double strike and no indestructible to grant — which is how an 11/1
+  came to attack into it and die.
+- **A removal spell offering two different −N/−N sizes no longer gets aimed at
+  the small creature.** The advisor narrowed to the weakest mode and picked the
+  1/1 it could kill over the 4/4 the spell was cast to answer.
+
 ## [0.8.18] — 2026-07-25
 
 ### Fixed
