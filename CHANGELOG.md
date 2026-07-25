@@ -12,6 +12,22 @@ version used for OTA updates.
   makes it rest as a small pill between matches never handed control back when
   a match started, so it sat collapsed the entire game. It now expands on match
   start as it always did, and only shrinks when you hover it.
+- **The advisor reads +1/+1 counters again.** It only ever saw a creature's
+  resulting power/toughness, never the counters themselves, so anything that
+  reads counters scored as if there were none — Bristly Bill's "double the
+  +1/+1 counters on each creature you control" was literally never worth
+  playing to it. It now scales with the board and gets recommended when it
+  should.
+- **Creatures that aren't printed as creatures count again** — animated lands,
+  crewed Vehicles and tokens were skipped when picking blocks and targets, so
+  the advisor could tell you to take damage you could have blocked for free.
+
+### Changed
+
+- **Your games reach the cloud as soon as they end**, instead of waiting out the
+  periodic sync — and decisions you flag in-game are uploaded too, so a flagged
+  problem can be reconstructed and analysed later instead of living only on this
+  machine.
 
 ## [0.8.17] — 2026-07-25
 
