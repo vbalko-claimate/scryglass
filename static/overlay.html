@@ -395,10 +395,13 @@ let ws = null;
 let currentStrategyInfo = null;
 let isMyTurn = false;
 let inMatch = false;
-// Whether the in-match/out-of-match peek polarity has been asserted at least
-// once. Without it a session that STARTS out of match never sees a transition,
-// so the panel would sit expanded instead of resting as the pill.
-let peekPolarityApplied = false;
+// The `active` value the peek polarity was last APPLIED for (null = never).
+// Deliberately NOT derived from `inMatch`: six other places write that (the WS
+// handlers flip it to true the instant a match starts), so comparing tick()'s
+// fresh `active` against it made the match-start transition invisible and left
+// the overlay stuck as the pill for the whole match. This variable has exactly
+// one writer — the block below.
+let peekPolarityFor = null;
 
 // Shared action family mappings
 const FAMILY_TYPE = {
@@ -421,7 +424,6 @@ async function tick() {
     try {
         active = ((await (await fetch('/match-status')).json()).active === true);
     } catch (e) { return; /* engine not reachable — keep last state */ }
-    const wasInMatch = inMatch;
     inMatch = active;
     const overlay = document.getElementById('overlay');
     overlay.classList.remove('no-match'); // never force-hide all; managed below
@@ -431,8 +433,8 @@ async function tick() {
     // to read, so it rests as the pill and hovering opens it (see
     // `overlayCursor`). Only drive it on the transition — mid-state the cursor
     // handler owns it, and re-asserting every 2s would fight a live hover.
-    if (active !== wasInMatch || !peekPolarityApplied) {
-        peekPolarityApplied = true;
+    if (peekPolarityFor !== active) {
+        peekPolarityFor = active;
         setPeek(!active);
         const hint = document.getElementById('hint-line');
         if (hint) {

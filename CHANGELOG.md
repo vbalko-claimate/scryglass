@@ -4,6 +4,15 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.18] — 2026-07-25
+
+### Fixed
+
+- **The overlay stayed minimized for the whole match.** The v0.8.17 change that
+  makes it rest as a small pill between matches never handed control back when
+  a match started, so it sat collapsed the entire game. It now expands on match
+  start as it always did, and only shrinks when you hover it.
+
 ## [0.8.17] — 2026-07-25
 
 ### Fixed
