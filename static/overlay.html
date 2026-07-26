@@ -449,12 +449,7 @@ async function tick() {
         return;
     }
     // Between matches: hide the advisor panels, show the session record.
-    document.getElementById('key-play').style.display = 'none';
-    document.getElementById('advice-confidence').style.display = 'none';
-    document.getElementById('lethal-banner').classList.remove('visible');
-    document.getElementById('combo-banner').classList.remove('visible');
-    document.getElementById('do-now').classList.remove('visible');
-    document.getElementById('threat-line').classList.remove('visible');
+    clearAdvicePanels();
     document.getElementById('debrief').style.display = 'none';
     if (!wm) return;
     try {
@@ -561,10 +556,28 @@ function updateOppLine(info) {
     }
 }
 
+// Every panel `updateAdvice` can turn on. One list, used by both the empty-push
+// path and the between-matches branch — `synergy-hint` was missing from the
+// latter, so a teaching hint survived into the session-record view.
+function clearAdvicePanels() {
+    document.getElementById('key-play').style.display = 'none';
+    document.getElementById('advice-confidence').style.display = 'none';
+    for (const id of ['lethal-banner', 'combo-banner', 'synergy-hint', 'do-now', 'threat-line']) {
+        document.getElementById(id).classList.remove('visible');
+    }
+}
+
 function updateAdvice(data) {
     const items = data.items || data || [];
     lastAdvice = items;
-    if (!items.length) return;
+    // An EMPTY push means "nothing to recommend right now" — the engine sends it
+    // deliberately ("a confident 'no play' stays quiet", advise_client.rs). This
+    // used to `return` and leave the previous window's advice on screen, so a
+    // main-phase recommendation stayed up through the end step and read as advice
+    // for a board that no longer existed (USER-REPORTED 2026-07-26: a Main2
+    // "Remove Krang, Master Mind" still showing at Phase_Ending, and a synergy
+    // header outliving the turn that earned it). Quiet means BLANK, not stale.
+    if (!items.length) { clearAdvicePanels(); return; }
 
     // Advice means match is active
     if (!inMatch) {

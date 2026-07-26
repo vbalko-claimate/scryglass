@@ -65,6 +65,8 @@ vm.createContext(sandbox);
 vm.runInContext(script, sandbox);
 
 const peeked = () => getEl('overlay')._classes.has('peek');
+const keyPlayShown = () => getEl('key-play').style.display !== 'none';
+const comboShown = () => getEl('combo-banner')._classes.has('visible');
 const tick = () => vm.runInContext('tick()', sandbox);
 const wsSend = (msg) => wsInstance && wsInstance.onmessage && wsInstance.onmessage({ data: JSON.stringify(msg) });
 
@@ -94,6 +96,24 @@ const run = async () => {
   check('in-match hover shrinks', peeked(), true);
   vm.runInContext('overlayCursor(9999, 9999)', sandbox);
   check('in-match unhover restores', peeked(), false);
+
+  // 3b. An EMPTY advice push must BLANK the panels, not leave the last window's
+  //     advice on screen. USER-REPORTED 2026-07-26: a main-phase "Remove Krang,
+  //     Master Mind with Llanowar Elves" was still displayed at Phase_Ending, and
+  //     a synergy header outlived the turn that earned it. `updateAdvice` returned
+  //     early on an empty list, so "a confident no-play stays quiet" (the engine's
+  //     own words) rendered as STALE rather than blank.
+  wsSend({ type: 'state_update', data: { turn: { number: 17, is_my_turn: true, phase: 'Phase_Main2' } } });
+  wsSend({ type: 'advice', data: [{
+    source: 'engine', priority: 'high', message: 'Remove Krang, Master Mind with Llanowar Elves',
+    details: '', recommended_cards: ['Llanowar Elves'], action_scores: [],
+    synergies: [{ tier: 'combo', message: "Sazh's Chocobo builds a landfall engine" }],
+  }] });
+  check('advice push shows the key play', keyPlayShown(), true);
+  check('advice push shows the combo banner', comboShown(), true);
+  wsSend({ type: 'advice', data: [] });
+  check('empty push clears the key play', keyPlayShown(), false);
+  check('empty push clears the combo banner', comboShown(), false);
 
   // 4. Match ends → back to the pill.
   wsSend({ type: 'match_end', data: {} });
