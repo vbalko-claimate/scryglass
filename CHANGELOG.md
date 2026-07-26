@@ -4,6 +4,39 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.20] — 2026-07-27
+
+### Fixed
+
+- **The advisor no longer tells you to cast a spell in a colour you don't have.**
+  Reported from two games: it recommended a white one-drop on a board of one
+  Hushwood Verge and no Plains. A Verge only makes its second colour while you
+  control the land it asks for ("Activate only if you control a Forest or a
+  Plains"), and the mana model never read that condition — so it credited both
+  colours from an empty board. This is the whole Verge cycle, ten lands in
+  Standard, plus Mox Jasper's "you control a Dragon": any deck on them could be
+  told to cast a card it cannot pay for. The three flagged decisions now
+  recommend green cards the board actually pays for.
+- **"Castable" no longer includes spells with nothing to target.** A Treasure
+  covering the cost short-circuited the check that a spell has a legal target,
+  so a pump with no creature on board was listed as castable.
+- **Opponent hand size is read again.** Cards in an opponent's hand are hidden,
+  and the counter walked hidden objects — so it reported an empty hand in
+  essentially every game. It now counts the zone.
+- **A token no longer counts as evidence of what the opponent's deck is.**
+  Archetype identification treated created tokens as cards it had seen played,
+  so a board of Treasures or Clues pushed the deck read toward whatever list
+  happens to contain those names.
+- **An archetype with no measured interaction data no longer reports zero.** The
+  fallback wrote a literal "runs 0 tricks" for archetypes nobody had measured,
+  which reads as "they have nothing" instead of "we don't know".
+
+### Notes
+
+- The transformed-permanent reconstruction shipped in 0.8.19's notes was
+  reverted: it made the lethal banner over-count. Back-face support is coming as
+  its own change rather than a partial one.
+
 ## [0.8.19] — 2026-07-25
 
 ### Added
