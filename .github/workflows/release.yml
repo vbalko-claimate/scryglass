@@ -122,10 +122,17 @@ jobs:
           # manual script that gated nothing (review finding, 2026-07-27).
           #
           # Non-fatal when the catalogue is absent — that is a deliberate degrade, not a defect.
+          # CALL THE SCRIPT, do not re-implement it. The first version inlined the example and
+          # left `check_belief_prior.sh` referenced by nothing but a comment — two copies of a
+          # gate that can drift, while the commit message claimed the script was now called.
+          # It also picked `ls | sort | tail -1` over ALL json, where the RUNTIME filters to
+          # exactly `YYYY-MM.json`: staging `standard_arena_current.json` alongside `2026-07.json`
+          # made the gate validate one file while the app loaded another. The script now owns the
+          # selection rule and matches runtime.
           if compgen -G "src-tauri/resources/deck_catalog/*.json" > /dev/null; then
-            CAT=$(ls -1 src-tauri/resources/deck_catalog/*.json | sort | tail -1)
-            (cd glass-shard && cargo run -q --release -p glass-data --example belief_prior_check -- \
-               "../$CAT" ../src-tauri/resources/glass_advise_db.json)
+            (cd glass-shard && bash scripts/check_belief_prior.sh \
+               "" ../src-tauri/resources/glass_advise_db.json \
+               --catalog-dir ../src-tauri/resources/deck_catalog)
           else
             echo "no catalogue staged — belief ships OFF by design, nothing to gate"
           fi

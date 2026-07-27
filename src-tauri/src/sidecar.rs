@@ -99,7 +99,7 @@ fn spawn_glass_host(app: &AppHandle) -> bool {
     // above: a missing catalogue must degrade to "no opponent model" (the pre-belief
     // behavior), not refuse to start the host at all.
     //
-    // ★ `.filter(|p| p.exists())` is load-bearing. Tauri's `PathResolver::resolve` only JOINS
+    // ★ `.filter(|p| p.is_dir())` is load-bearing. Tauri's `PathResolver::resolve` only JOINS
     // path components — it never checks the filesystem — so `res(..).ok()` is ALWAYS `Some` and
     // the "no bundled deck catalogue" branch below was dead code. A catalogue that failed to
     // stage therefore produced zero diagnostics anywhere: the env var was set to a path that did
