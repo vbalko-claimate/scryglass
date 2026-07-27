@@ -102,12 +102,33 @@ jobs:
           # before the belief shipped.
           mkdir -p src-tauri/resources/deck_catalog
           if compgen -G "glass-shard/data/meta/deck_catalog/*.json" > /dev/null; then
+            # CLEAR FIRST. `cp` never removes, so stale months would accumulate in every
+            # bundle forever — and the host picks the lexically greatest YYYY-MM.json, so a
+            # stale file is harmless only until someone adds a differently-named one.
+            rm -f src-tauri/resources/deck_catalog/*.json
             cp glass-shard/data/meta/deck_catalog/*.json src-tauri/resources/deck_catalog/
             echo "catalogue(s) staged from glass-shard:"
           else
             echo "glass-shard catalogue absent → using the committed copy:"
           fi
           ls -la src-tauri/resources/deck_catalog/ || echo "  (none — belief will be off)"
+
+      - name: Gate — the shipped catalogue must build a prior against the shipped advise DB
+        run: |
+          # The belief fails CLOSED, so a mismatched pair does not break the build — it ships an
+          # app that logs "opponent model OFF" and keeps advising. Indistinguishable from a
+          # belief that loaded and found nothing; the same shape as the 2026-07-06
+          # Marvel-blindness incident. Until this step existed, check_belief_prior.sh was a
+          # manual script that gated nothing (review finding, 2026-07-27).
+          #
+          # Non-fatal when the catalogue is absent — that is a deliberate degrade, not a defect.
+          if compgen -G "src-tauri/resources/deck_catalog/*.json" > /dev/null; then
+            CAT=$(ls -1 src-tauri/resources/deck_catalog/*.json | sort | tail -1)
+            (cd glass-shard && cargo run -q --release -p glass-data --example belief_prior_check -- \
+               "../$CAT" ../src-tauri/resources/glass_advise_db.json)
+          else
+            echo "no catalogue staged — belief ships OFF by design, nothing to gate"
+          fi
 
       # overlay-helper placeholder per-platform (macOS builds it separately; CI
       # stub for now to satisfy externalBin — replace with a real build if needed).

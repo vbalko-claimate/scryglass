@@ -98,7 +98,15 @@ fn spawn_glass_host(app: &AppHandle) -> bool {
     // Deck catalogue → the belief engine's prior over opponent decklists. NOT in the tuple
     // above: a missing catalogue must degrade to "no opponent model" (the pre-belief
     // behavior), not refuse to start the host at all.
-    let deck_catalog_dir = res("resources/deck_catalog").ok();
+    //
+    // ★ `.filter(|p| p.exists())` is load-bearing. Tauri's `PathResolver::resolve` only JOINS
+    // path components — it never checks the filesystem — so `res(..).ok()` is ALWAYS `Some` and
+    // the "no bundled deck catalogue" branch below was dead code. A catalogue that failed to
+    // stage therefore produced zero diagnostics anywhere: the env var was set to a path that did
+    // not exist and glass-host swallowed the `read_dir` error. Found by review, 2026-07-27.
+    let deck_catalog_dir = res("resources/deck_catalog")
+        .ok()
+        .filter(|p| std::path::Path::new(p).is_dir());
 
     // Persistent user data — match the Python host (USER_DATA_DIR =
     // $SCRY_USER_DATA or ~/MTG/mtg-data; db + decks + collection underneath).
