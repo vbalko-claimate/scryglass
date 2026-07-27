@@ -93,6 +93,22 @@ jobs:
             exit 1
           fi
 
+      - name: Stage deck catalogue (belief prior)
+        run: |
+          # The belief engine's prior over opponent decklists. glass-shard owns the
+          # catalogue, so prefer the freshly-checked-out copy and fall back to the
+          # committed one — same policy as the advise DB above. A MISSING catalogue is
+          # not fatal: glass-host then logs "opponent model OFF" and behaves as it did
+          # before the belief shipped.
+          mkdir -p src-tauri/resources/deck_catalog
+          if compgen -G "glass-shard/data/meta/deck_catalog/*.json" > /dev/null; then
+            cp glass-shard/data/meta/deck_catalog/*.json src-tauri/resources/deck_catalog/
+            echo "catalogue(s) staged from glass-shard:"
+          else
+            echo "glass-shard catalogue absent → using the committed copy:"
+          fi
+          ls -la src-tauri/resources/deck_catalog/ || echo "  (none — belief will be off)"
+
       # overlay-helper placeholder per-platform (macOS builds it separately; CI
       # stub for now to satisfy externalBin — replace with a real build if needed).
       - name: Stage overlay-helper

@@ -95,6 +95,10 @@ fn spawn_glass_host(app: &AppHandle) -> bool {
         eprintln!("[sidecar] cannot resolve bundled glass-host resources");
         return false;
     };
+    // Deck catalogue → the belief engine's prior over opponent decklists. NOT in the tuple
+    // above: a missing catalogue must degrade to "no opponent model" (the pre-belief
+    // behavior), not refuse to start the host at all.
+    let deck_catalog_dir = res("resources/deck_catalog").ok();
 
     // Persistent user data — match the Python host (USER_DATA_DIR =
     // $SCRY_USER_DATA or ~/MTG/mtg-data; db + decks + collection underneath).
@@ -124,6 +128,15 @@ fn spawn_glass_host(app: &AppHandle) -> bool {
         Err(e) => {
             eprintln!("[sidecar] glass-host sidecar command failed: {}", e);
             return false;
+        }
+    };
+    // Belief prior. Passed only when the resource resolved; glass-host falls back to its own
+    // relative default and, failing that, logs "opponent model OFF" rather than guessing.
+    let cmd = match deck_catalog_dir {
+        Some(d) => cmd.env("GLASS_DECK_CATALOG_DIR", d),
+        None => {
+            eprintln!("[sidecar] no bundled deck catalogue — belief opponent model will be off");
+            cmd
         }
     };
     match cmd.spawn() {
