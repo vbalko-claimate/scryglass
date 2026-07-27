@@ -4,6 +4,26 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.21] — 2026-07-27
+
+### Fixed
+
+- **"Remove their big creature with …" no longer names a card that cannot remove
+  anything.** Reported from a game where the advice was to answer a 9/4 with
+  Llanowar Elves. The rule behind it asks for a card whose ROLE is removal, and
+  the engine had quietly stopped enforcing that half of the condition — so any
+  castable card in hand qualified. Measured across your own logged games: the
+  advice fired 176 times and 66 of the 161 resolvable ones named something that
+  is not removal (Healer's Hawk, Ajani's Pridemate, Defend the Rider). It now
+  uses the engine's own classifier, so "removal" means a spell that actually
+  destroys, exiles or burns a creature.
+- **The overlay stops showing advice from a turn that has passed.** When there is
+  nothing to recommend, the advisor deliberately says nothing — and the overlay
+  was leaving the previous recommendation on screen instead of clearing it. That
+  is why a main-phase suggestion could still be sitting there during the end
+  step, where the play it suggests is not even legal, and why a synergy note
+  could outlive the turn that earned it. A quiet turn is now a blank panel.
+
 ## [0.8.20] — 2026-07-27
 
 ### Fixed
