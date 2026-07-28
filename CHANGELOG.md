@@ -4,6 +4,41 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.22] — 2026-07-28
+
+**The advisor now has an opponent model.** Until now it simulated your opponent as
+holding *nothing* — every line it recommended was scored against an empty hand. It
+now infers a posterior over their likely decklist from what they have publicly
+played and seeds a coherent hidden hand and library into the search.
+
+- **Opponent hand/library are inferred, not blank.** A prior over the current
+  Standard archetypes is updated by subtracting the cards you have actually seen,
+  then a consistent world is sampled for the search to reason about. Available on
+  ~90% of decisions; the stricter band used for stated probabilities is 53%.
+- **The belief prior now ships with the app** — it was computed but never bundled,
+  so the feature was inert in the installed build.
+- **Unknown deck slots are represented.** When an opponent demonstrably owns more
+  cards than any known list explains (a 61-card deck, an off-meta brew), the
+  extra slots are modelled as unidentified cards instead of the whole hypothesis
+  being thrown away. That took world availability from 82% to 90%, and from 55% to
+  100% against the one real oversized deck in the corpus.
+
+### Fixed
+
+- **A card in the simulation could invent a board wipe that does not exist.** The
+  placeholder used for an unidentified card carried a sentinel mana value of 255.
+  Anything reading a mana value read 255: a card that deals damage equal to the
+  greatest mana value discarded dealt **255 damage to every creature**, and
+  card-selection heuristics preferred the placeholder over every real card. It is
+  now a zero-cost, non-permanent placeholder, so it cannot be put onto the
+  battlefield, cannot be sacrificed, and cannot inflate any damage calculation.
+- The advise database is recompiled so the shipped build actually contains that
+  fix (4852 cards, none lost).
+- The probability that an opponent holds a specific card disagreed with the hands
+  the simulation actually dealt, for unidentified cards. The two now agree.
+- The belief delivery check was not a gate: it reported success without running
+  the script it claimed to run.
+
 ## [0.8.21] — 2026-07-27
 
 ### Fixed
