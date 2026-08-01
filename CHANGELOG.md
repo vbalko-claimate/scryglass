@@ -4,6 +4,31 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.23] — 2026-08-01
+
+### Fixed
+
+- **Your creatures were being treated as permanently bigger than they are.** A
+  static ability that only grants its bonus under a condition — "as long as you
+  have at least 7 life more than your starting life total, creatures you control
+  get +2/+2" — had its condition ignored, so the bonus applied at every life
+  total. The advisor then valued attacks and blocks on a board bigger than the one
+  on the table. Seven cards were in that shape; the one that surfaced it is in your
+  own deck (Leyline of Hope, present in 37 of your last 198 games).
+- **Cards playable only for their cheaper alternative cost are now offered.** The
+  advisor reported a card as castable only if you could pay its FULL cost, so an
+  Adventure half, a warp cost, a disguise, a bargain or a prepare cost that you
+  COULD afford never appeared. Roughly 240 cards in the current set have such a
+  cost; Adventure is the sharpest case, because a 1-mana instant half is a real
+  trick while the creature side is unaffordable.
+- **An opponent's mana rock no longer counts as one mana.** A rock that taps for
+  three read as one, under-stating the opponent's available mana — the direction
+  that can hide a warning about a trick they can actually pay for.
+- **"Up to one target" spells are no longer treated as needing a target.** 152
+  abilities that let you choose ZERO targets were judged unplayable on an empty
+  board, so the advisor never offered them and the simulation never expected the
+  opponent to cast them.
+
 ## [0.8.22] — 2026-07-28
 
 **The advisor now has an opponent model.** Until now it simulated your opponent as
