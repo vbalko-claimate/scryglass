@@ -4,10 +4,25 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
-## [0.8.23] — 2026-08-01
+## [0.8.23] — 2026-08-06
 
 ### Fixed
 
+- **An Aura or Equipment stopped counting as soon as the advisor looked past this
+  turn.** The bonus reached the advisor only as a correction applied to the current
+  board, and that correction expired at the first simulated turn boundary — so the
+  number you saw was right, but every line the search explored beyond this turn
+  read the creature at its printed size, and lost the granted keyword with it. The
+  attachment itself is now part of the position. The card that surfaced it is
+  Sheltered by Ghosts, on the board in 58 of your recorded matches — more than any
+  other card in this class.
+- **Animated lands and crewed Vehicles were not creatures to the advisor.** A
+  Restless-cycle land that had been activated, or a Vehicle you had crewed, kept
+  its real power and toughness but was never counted as an attacker or a blocker —
+  on either side of the table. Some permanent that can become a creature was on the
+  board in 14.9% of your recorded decisions, and every confirmed case of one
+  actually attacking was the opponent's, so the loss landed mostly on blocking
+  advice.
 - **Your creatures were being treated as permanently bigger than they are.** A
   static ability that only grants its bonus under a condition — "as long as you
   have at least 7 life more than your starting life total, creatures you control
@@ -28,6 +43,22 @@ version used for OTA updates.
   abilities that let you choose ZERO targets were judged unplayable on an empty
   board, so the advisor never offered them and the simulation never expected the
   opponent to cast them.
+
+- **High Noon's spell cap now exists in the simulation.** "Each player can't cast
+  more than one spell each turn" compiled to nothing, so every line the search
+  explored let both players cast freely under it. ⚠ Partial: the simulation
+  respects the cap, but the advisor's own legality check still cannot count the
+  spells you have cast this turn, so it will not stop you from being offered a
+  second one. Rare — the card was on the board in 4 recorded matches.
+
+### Diagnostics
+
+- **Games now record what MTGA actually allowed at each decision.** The tooling
+  that grades the advisor's own advice was checking it against the client's card
+  MENU, which includes greyed-out entries and spells you cannot yet pay for —
+  measurably too permissive, so a clean grade meant less than it looked. The real
+  per-moment list is now recorded alongside it. Nothing you see changes; games
+  played from this build on can be graded honestly, and games before it cannot.
 
 ## [0.8.22] — 2026-07-28
 
