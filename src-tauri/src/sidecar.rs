@@ -132,7 +132,17 @@ fn spawn_glass_host(app: &AppHandle) -> bool {
             // Bundled cloud URL (NOT a secret) — the host auto-provisions an
             // anonymous account on first launch so cloud sync just works. No
             // token is baked; `SCRY_CLOUD_SYNC=0` still disables it.
-            .env("SCRY_CLOUD_URL", "https://scryglass.win"),
+            .env("SCRY_CLOUD_URL", "https://scryglass.win")
+            // WHICH APP BUILD IS PLAYING. The host stamps this onto every match
+            // row it creates. It has to come from here: glass-host's own
+            // `CARGO_PKG_VERSION` is the workspace `0.0.1` and identifies nothing.
+            //
+            // Worth the two lines because of a measured incident — on 2026-08-06 a
+            // whole evening of games was played by the v0.8.21 engine while v0.8.22
+            // had been installed for nine days. An OTA update only takes effect
+            // when the app is RELAUNCHED (this function is what swaps the binary,
+            // and it runs at launch), and nothing recorded which build was live.
+            .env("SCRY_APP_VERSION", app.package_info().version.to_string()),
         Err(e) => {
             eprintln!("[sidecar] glass-host sidecar command failed: {}", e);
             return false;

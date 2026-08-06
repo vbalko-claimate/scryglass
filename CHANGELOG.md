@@ -43,7 +43,6 @@ version used for OTA updates.
   abilities that let you choose ZERO targets were judged unplayable on an empty
   board, so the advisor never offered them and the simulation never expected the
   opponent to cast them.
-
 - **High Noon's spell cap now exists in the simulation.** "Each player can't cast
   more than one spell each turn" compiled to nothing, so every line the search
   explored let both players cast freely under it. ⚠ Partial: the simulation
@@ -53,6 +52,13 @@ version used for OTA updates.
 
 ### Diagnostics
 
+- **Each match now records which build played it.** On 2026-08-06 a whole evening
+  of games turned out to have been played by the v0.8.21 engine — nine days after
+  v0.8.22 was installed. An update swaps the app bundle, but the advice engine only
+  restarts when you RELAUNCH the app, and nothing recorded which one was live.
+  Recovering it afterwards was possible only for the four decisions that happened to
+  be flagged. ⚠ The behaviour itself is unchanged: **relaunch the app after an
+  update, or you keep the previous engine.**
 - **Games now record what MTGA actually allowed at each decision.** The tooling
   that grades the advisor's own advice was checking it against the client's card
   MENU, which includes greyed-out entries and spells you cannot yet pay for —
