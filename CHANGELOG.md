@@ -4,6 +4,33 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.24] — 2026-08-07
+
+### Fixed
+
+- **Thirty-four instants and sorceries did nothing at all when cast.** The compiler
+  filed their rules text under the wrong kind of ability, and the code that resolves a
+  spell never looked there — so the card went to the graveyard and the game state was
+  untouched. Among them: Spectacular Pileup (its entire board wipe), Blasphemous
+  Edict, Exsanguinate, No Witnesses, Trial of Agony, Dream Harvest. A further **ten
+  lost only part of their text**, which is worse to spot because the spell half worked
+  and the card looked fine — Rowan's Grim Search silently skipped its draw-and-lose-
+  life, Great Train Heist its untap. This affected the advisor as much as the
+  simulation: a line built around casting one of these was built around a spell that
+  does nothing.
+- **"You gain that much life plus 1 instead" now happens.** Leyline of Hope and Angel
+  of Vitality had no runtime for that clause at all, so in a lifegain deck every
+  single life gain was one short, all game. Leyline of Hope is in six of your
+  decklists and forty of your recorded matches.
+
+### Notes
+
+- The advice database is recompiled, which is what actually carries the spell fix into
+  the installed app.
+- ⚠ **Relaunch the app after updating.** An update swaps the bundle, but the advice
+  engine keeps running the previous build until the app is restarted — on 2026-08-06 a
+  whole evening of games was played by a nine-day-old engine that way.
+
 ## [0.8.23] — 2026-08-06
 
 ### Fixed
