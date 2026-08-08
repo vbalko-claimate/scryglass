@@ -4,6 +4,37 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.25] — 2026-08-08
+
+### Fixed
+
+- **The advisor was reconstructing every combat decision as if it were your precombat
+  main phase.** MTGA reports which step you are in — declare attackers, declare
+  blockers, end step — and the host collapsed all of them to "main 1" one line before
+  use. Nine and a half percent of your recorded decisions are declare-blockers ones,
+  and each was reasoned about in the wrong step: what is castable at sorcery speed,
+  whether a window is proactive or reactive, and how the deep search values holding a
+  trick all key on that. The recorded conformance fixture had the contradiction in
+  plain sight — a decision labelled "declare attackers" pinned as phase "main 1".
+- **The declare-blockers step now exists in the engine at all.** Combat ran entirely
+  inside the declare-attackers step, so the priority window after attackers are
+  declared and the one after blockers are declared were indistinguishable. Blocks are
+  the moment a combat trick becomes worth casting, and nothing could tell the two
+  apart.
+
+### Changed
+
+- ⚠ **Combat advice will differ from 0.8.24.** This is the point of the release, but
+  it has not run live before: with the real step in hand the reconstructed position no
+  longer offers sorcery-speed plays during combat. If something looks wrong in a
+  combat window specifically, that is where to look, and 0.8.24 is one tag away.
+
+### Notes
+
+- No card-compiler changes, so the bundled advice database is unchanged from 0.8.24.
+- ⚠ **Relaunch the app after updating.** An OTA swaps the bundle; the running advisor
+  keeps answering until you restart it.
+
 ## [0.8.24] — 2026-08-07
 
 ### Fixed
