@@ -24,10 +24,17 @@ version used for OTA updates.
 
 ### Changed
 
-- ⚠ **Combat advice will differ from 0.8.24.** This is the point of the release, but
-  it has not run live before: with the real step in hand the reconstructed position no
-  longer offers sorcery-speed plays during combat. If something looks wrong in a
-  combat window specifically, that is where to look, and 0.8.24 is one tag away.
+- ⚠ **Combat advice may differ from 0.8.24**, and it has not run live before. Corrected
+  after release: the first version of this note said the reconstructed position "no
+  longer offers sorcery-speed plays during combat". That mechanism does not happen —
+  measured over every combat decision since 2026-07-27, the advisor produced 139
+  attackers, 33 blockers and 20 target recommendations there and **zero** main-phase
+  ones, so there was nothing of the kind to stop offering. What actually changes is the
+  reasoning inside the attack, block and target modes: they build their position from
+  the same reconstruction, which now reports the true step, so the instant-speed
+  picture, whether the opponent can act, and the deep search's rollouts all start from
+  the right place. If something looks wrong in a combat window, that is where to look,
+  and 0.8.24 is one tag away.
 
 ### Notes
 
