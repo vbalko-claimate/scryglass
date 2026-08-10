@@ -402,24 +402,43 @@ html, body {
 .advice-idle.visible { display: block; }
 
 /* ── Follow acknowledgement ──────────────────────────────────────────────────
-   One brief pulse on the card, then gone. Deliberately not a badge: it is
-   feedback on a play already made, not information about the next one. */
-@keyframes kp-followed {
-    0%   { box-shadow: inset 2px 0 0 rgba(129,199,132,0); }
-    18%  { box-shadow: inset 2px 0 0 rgba(129,199,132,0.95); }
-    100% { box-shadow: inset 2px 0 0 rgba(129,199,132,0); }
+   Feedback on a play ALREADY MADE, so it deliberately does not live on the
+   advice card:
+     * v1 animated `inset 2px 0 0` on `.key-play`, whose left edge is covered by
+       the 3px-wide `.key-play-indicator` — invisible even when it ran;
+     * and it was cleared at the top of `updateAdvice`, while MEASURED telemetry
+       says the next decision arrives within the 1.6s window 57% of the time
+       (median 0.0s). So more than half were killed before a frame.
+   Its own element over the whole panel, its own timer, and nothing in the advice
+   path touches it. */
+#compliance-flash {
+    position: absolute;
+    inset: 0;
+    border-radius: 8px;
+    pointer-events: none;
+    opacity: 0;
+    z-index: 3;
 }
-@keyframes kp-ignored {
-    0%   { box-shadow: inset 2px 0 0 rgba(244,162,97,0); }
-    18%  { box-shadow: inset 2px 0 0 rgba(244,162,97,0.85); }
-    100% { box-shadow: inset 2px 0 0 rgba(244,162,97,0); }
+#compliance-flash.followed {
+    animation: cf-pulse 1.3s ease-out 1;
+    background: radial-gradient(ellipse at 12% 50%, rgba(129,199,132,0.30), transparent 62%);
+    box-shadow: inset 0 0 0 1px rgba(129,199,132,0.55);
 }
-.key-play.followed { animation: kp-followed 1.6s ease-out 1; }
-.key-play.ignored  { animation: kp-ignored  1.6s ease-out 1; }
+#compliance-flash.ignored {
+    animation: cf-pulse 1.3s ease-out 1;
+    background: radial-gradient(ellipse at 12% 50%, rgba(244,162,97,0.26), transparent 62%);
+    box-shadow: inset 0 0 0 1px rgba(244,162,97,0.45);
+}
+@keyframes cf-pulse {
+    0%   { opacity: 0; }
+    14%  { opacity: 1; }
+    100% { opacity: 0; }
+}
 </style>
 </head>
 <body>
 <div id="overlay" class="no-match">
+    <div id="compliance-flash"></div>
     <div id="peek-pill"><span class="peek-pill-mark">◈</span> <span class="peek-pill-label">Scryglass</span></div>
     <div class="opp-line" id="opp-line">
         <span class="waiting" id="waiting-msg">Waiting for match...</span>
@@ -695,14 +714,22 @@ function renderAdviceFor() {
     if (card) card.classList.toggle('stale', stale);
 }
 
-// One brief pulse when a scored play lands. Removed on the next advice push so a
-// stale animation class can't ride along.
+// One brief pulse when a scored play lands. On its OWN element and its OWN timer:
+// tying it to the advice card meant the next decision wiped it (measured: within
+// the animation window 57% of the time, median 0.0s), and an empty push hid the
+// card outright.
+let complianceTimer = null;
 function flashCompliance(followed) {
-    const card = document.getElementById('key-play');
-    if (!card) return;
-    card.classList.remove('followed', 'ignored');
-    void card.offsetWidth; // restart the animation if the class was just cleared
-    card.classList.add(followed ? 'followed' : 'ignored');
+    const el = document.getElementById('compliance-flash');
+    if (!el) return;
+    clearTimeout(complianceTimer);
+    el.classList.remove('followed', 'ignored');
+    void el.offsetWidth; // restart the animation after clearing the class
+    el.classList.add(followed ? 'followed' : 'ignored');
+    complianceTimer = setTimeout(
+        () => el.classList.remove('followed', 'ignored'),
+        1400,
+    );
 }
 
 function updateOppLine(info) {
@@ -729,7 +756,7 @@ function updateOppLine(info) {
 // latter, so a teaching hint survived into the session-record view.
 function clearAdvicePanels() {
     document.getElementById('advice-for')?.classList.remove('visible', 'live', 'stale');
-    document.getElementById('key-play').classList.remove('stale', 'followed', 'ignored');
+    document.getElementById('key-play').classList.remove('stale');
     document.getElementById('key-play').style.display = 'none';
     document.getElementById('advice-confidence').style.display = 'none';
     for (const id of ['lethal-banner', 'combo-banner', 'synergy-hint', 'do-now', 'threat-line']) {
@@ -763,8 +790,6 @@ function updateAdvice(data) {
     }
 
     document.getElementById('advice-idle')?.classList.remove('visible');
-    // Drop any previous compliance pulse so it cannot ride along on new advice.
-    document.getElementById('key-play')?.classList.remove('followed', 'ignored');
 
     // Advice means match is active
     if (!inMatch) {
@@ -1072,7 +1097,8 @@ function resetOverlay() {
     // the seat rows describe a match that is over.
     document.getElementById('advice-idle').classList.remove('visible');
     document.getElementById('advice-for').classList.remove('visible', 'live', 'stale');
-    document.getElementById('key-play').classList.remove('stale', 'followed', 'ignored');
+    document.getElementById('key-play').classList.remove('stale');
+    document.getElementById('compliance-flash').classList.remove('followed', 'ignored');
     document.getElementById('seat-lines').innerHTML = '';
     adviceForCtx = null;
 }

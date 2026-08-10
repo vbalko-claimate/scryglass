@@ -4,6 +4,19 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.28] — 2026-08-10
+
+### Fixed
+
+- **The follow / don't-follow effect was invisible.** Shipped in 0.8.27 and never seen once in real
+  play, for two independent reasons. It was drawn as a 2px glow along the left edge of the advice
+  card — which is exactly where the 3px priority stripe sits, so it was painted underneath an
+  opaque bar. And it was cleared whenever new advice arrived, which the telemetry says happens
+  within the effect's own 1.3-second window **57% of the time, median 0.0 seconds**. It now lives
+  on its own layer over the whole panel, with its own timer, and nothing in the advice path can
+  cancel it: a soft green wash when you follow the recommendation, amber when you play something
+  else.
+
 ## [0.8.27] — 2026-08-10
 
 ### Added

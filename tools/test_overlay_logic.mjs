@@ -104,7 +104,7 @@ function stubDom(ids) {
     return els;
 }
 
-const RENDER_IDS = ['seat-lines', 'advice-for', 'key-play', 'advice-idle'];
+const RENDER_IDS = ['seat-lines', 'advice-for', 'key-play', 'advice-idle', 'compliance-flash'];
 const els = stubDom(RENDER_IDS);
 globalThis.document = { getElementById: id => els[id] ?? null };
 
@@ -112,7 +112,9 @@ const src = `${extract('adviceStatus')}\n${extract('seatRows')}\n`
     + `${extract('renderSeatLines')}\n${extract('renderAdviceFor')}\n${extract('flashCompliance')}\n`
     + 'return { renderSeatLines, renderAdviceFor, flashCompliance,'
     + ' set: (t,p,s,c) => { liveTurn=t; livePhase=p; mySeatId=s; adviceForCtx=c; } };';
-const R = new Function('let liveTurn=null, livePhase="", mySeatId=null, adviceForCtx=null;\n' + src)();
+const R = new Function(
+    'let liveTurn=null, livePhase="", mySeatId=null, adviceForCtx=null, complianceTimer=null;\n' + src
+)();
 
 // Seat rows reach the DOM at all, and priority is marked on the right row.
 R.set(6, 'Main 1', 1, null);
@@ -146,13 +148,31 @@ eq([els['advice-for'].classList.contains('stale'), els['key-play'].classList.con
    [true, true], 'DOM: superseded advice is marked stale and dimmed');
 eq(els['advice-for'].innerHTML.includes('superseded'), true, 'DOM: stale row says so');
 
-// Compliance pulse lands on the card, and the two states are exclusive.
+// ── The compliance pulse ─────────────────────────────────────────────────────
+// v1 put it on `.key-play` as an inset shadow at the left edge — under the 3px
+// `.key-play-indicator`, so invisible — and cleared it at the top of
+// `updateAdvice`, while the next decision arrives inside the animation window 57%
+// of the time (median 0.0s). It was never seen once in real play. Both properties
+// are pinned here.
+globalThis.setTimeout = () => 0;      // the fade-out timer is not under test
+globalThis.clearTimeout = () => {};
 R.flashCompliance(true);
+eq([els['compliance-flash'].classList.contains('followed'),
+    els['compliance-flash'].classList.contains('ignored')],
+   [true, false], 'DOM: followed pulse lands on its own element');
 eq([els['key-play'].classList.contains('followed'), els['key-play'].classList.contains('ignored')],
-   [true, false], 'DOM: followed pulse applied');
+   [false, false], 'DOM: the pulse is NOT on the advice card (its left edge is covered)');
 R.flashCompliance(false);
-eq([els['key-play'].classList.contains('followed'), els['key-play'].classList.contains('ignored')],
+eq([els['compliance-flash'].classList.contains('followed'),
+    els['compliance-flash'].classList.contains('ignored')],
    [false, true], 'DOM: ignored replaces followed, never both');
+
+// ★ THE REGRESSION THAT MADE IT INVISIBLE: a new advice push must not cancel it.
+// `updateAdvice` is too entangled with the DOM to call here, so this asserts the
+// property at the source — no advice-path function may touch the flash element.
+const advicePath = extract('updateAdvice') + extract('clearAdvicePanels');
+eq(/compliance-flash/.test(advicePath), false,
+   'SOURCE: no advice-path function clears the compliance flash');
 
 console.log(failures ? `\n${failures} FAILED` : '\nall passed');
 process.exit(failures ? 1 : 0);
