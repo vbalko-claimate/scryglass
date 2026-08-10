@@ -4,6 +4,32 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.27] — 2026-08-10
+
+### Added
+
+- **The advice panel tells you which decision it belongs to.** A line under the recommendation
+  reads `advice for: T6 · Main 1 · your turn`, and once the game moves past that decision it
+  changes to `— superseded` and the recommendation itself dims. It stays readable — the play may
+  still be right — but it stops looking current. Before this, advice for a phase you had already
+  left was indistinguishable from advice for the board in front of you.
+- **Whose turn it is AND who holds priority.** Two rows under the phase:
+
+      T6 · Main 1
+      YOU  ● active, opp responding
+      OPP  ● responding
+
+  The green dot marks who holds priority. These are different things: on your own turn, the
+  opponent holding priority is the moment a combat trick or a removal spell arrives. The app has
+  been receiving both values all along and showing neither.
+- **A note instead of an empty panel.** When there is genuinely nothing to recommend the advisor
+  used to go blank, which looks the same as a broken advisor. It now says "No play recommended
+  right now." on your turn, or "Watching the opponent's turn…" on theirs.
+- **A brief pulse when you make a play the advisor scored.** Green if you followed the
+  recommendation, amber if you played something else. One 1.6-second glow on the card, then gone —
+  it is feedback on the play you just made, not advice about the next one. The app has been
+  recording this in the background for a long time without ever showing it to you.
+
 ## [0.8.26] — 2026-08-10
 
 ### Changed
