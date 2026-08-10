@@ -353,6 +353,69 @@ html, body {
 }
 .synergy-hint.visible { display: block; }
 .synergy-hint .synergy-tag { opacity: 0.9; margin-right: 5px; }
+
+/* ── Seat status: who is active, who holds priority ──────────────────────────
+   Active player and priority holder are DIFFERENT things and the payload has
+   carried both all along (`turn.active_player`, `turn.priority_player`); the
+   overlay only ever read `is_my_turn`. Priority is the one that matters at the
+   table: on my own turn the opponent holding priority is the moment a trick
+   lands. */
+.seat-lines { margin-top: 3px; font-size: 10px; line-height: 1.35; }
+.seat-row { display: flex; align-items: center; gap: 6px; color: rgba(160,158,150,0.55); }
+.seat-row.active { color: rgba(214,211,201,0.85); }
+.seat-who { width: 26px; letter-spacing: 0.06em; }
+.seat-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(160,158,150,0.25); flex-shrink: 0; }
+.seat-row.has-priority .seat-dot { background: #81c784; box-shadow: 0 0 5px rgba(129,199,132,0.7); }
+.seat-state { opacity: 0.8; }
+
+/* ── Which decision the advice on screen belongs to ─────────────────────────── */
+.advice-for {
+    margin-top: 3px;
+    font-size: 10px;
+    color: rgba(160, 158, 150, 0.45);
+    display: none;
+    align-items: center;
+    gap: 5px;
+}
+.advice-for.visible { display: flex; }
+.advice-for .af-mark { font-size: 9px; }
+.advice-for.live .af-mark { color: #81c784; }
+.advice-for.stale .af-mark { color: rgba(160,158,150,0.5); }
+.advice-for.stale { color: rgba(160, 158, 150, 0.35); }
+
+/* STALE advice stays readable but stops competing for attention: the play may
+   still be right, it is just no longer about the board in front of you. */
+.key-play.stale { opacity: 0.42; filter: saturate(0.35); }
+.key-play.stale .key-play-indicator { background: rgba(160,158,150,0.35) !important; }
+
+/* ── Filler when there is nothing to recommend ───────────────────────────────
+   A blank panel is indistinguishable from a broken one. An empty advice push is
+   DELIBERATE ("a confident 'no play' stays quiet"), so say that instead of
+   showing nothing. */
+.advice-idle {
+    display: none;
+    font-size: 11px;
+    color: rgba(160, 158, 150, 0.45);
+    font-style: italic;
+    padding: 2px 0;
+}
+.advice-idle.visible { display: block; }
+
+/* ── Follow acknowledgement ──────────────────────────────────────────────────
+   One brief pulse on the card, then gone. Deliberately not a badge: it is
+   feedback on a play already made, not information about the next one. */
+@keyframes kp-followed {
+    0%   { box-shadow: inset 2px 0 0 rgba(129,199,132,0); }
+    18%  { box-shadow: inset 2px 0 0 rgba(129,199,132,0.95); }
+    100% { box-shadow: inset 2px 0 0 rgba(129,199,132,0); }
+}
+@keyframes kp-ignored {
+    0%   { box-shadow: inset 2px 0 0 rgba(244,162,97,0); }
+    18%  { box-shadow: inset 2px 0 0 rgba(244,162,97,0.85); }
+    100% { box-shadow: inset 2px 0 0 rgba(244,162,97,0); }
+}
+.key-play.followed { animation: kp-followed 1.6s ease-out 1; }
+.key-play.ignored  { animation: kp-ignored  1.6s ease-out 1; }
 </style>
 </head>
 <body>
@@ -364,6 +427,7 @@ html, body {
     <div class="lethal-banner" id="lethal-banner"></div>
     <div class="combo-banner" id="combo-banner"></div>
     <div class="synergy-hint" id="synergy-hint"></div>
+    <div class="advice-idle" id="advice-idle"></div>
     <div class="key-play" id="key-play" style="display:none">
         <div class="key-play-indicator medium" id="key-play-indicator"></div>
         <div class="key-play-content">
@@ -379,7 +443,9 @@ html, body {
     <div class="advice-confidence" id="advice-confidence" style="display:none"></div>
     <div class="threat-line" id="threat-line"></div>
     <div class="do-now" id="do-now"></div>
+    <div class="advice-for" id="advice-for"></div>
     <div class="phase-line" id="phase-line"></div>
+    <div class="seat-lines" id="seat-lines"></div>
     <div class="hint-line" id="hint-line">Left ⌘: feedback + drag to move · hover to hide</div>
     <div class="feedback-btns" id="feedback-btns">
         <div class="fb-btn good" onclick="sendFeedback('up')" title="Good advice">✓</div>
@@ -395,6 +461,12 @@ let ws = null;
 let currentStrategyInfo = null;
 let isMyTurn = false;
 let inMatch = false;
+// Live decision context (from `state_update`) and the context the advice on
+// screen was computed for (from the `advice` push's `for` field).
+let liveTurn = null;
+let livePhase = '';
+let mySeatId = null;
+let adviceForCtx = null;
 // The `active` value the peek polarity was last APPLIED for (null = never).
 // Deliberately NOT derived from `inMatch`: six other places write that (the WS
 // handlers flip it to true the instant a match starts), so comparing tick()'s
@@ -482,7 +554,13 @@ function connect() {
                 updateState(msg.data);
                 break;
             case 'advice':
+                // `for` is the decision the push was computed for; older builds
+                // omit it, and `adviceStatus` treats a missing context as live.
+                adviceForCtx = msg.for || null;
                 updateAdvice(msg.data);
+                break;
+            case 'advice_compliance':
+                flashCompliance(msg.data && msg.data.followed === true);
                 break;
             case 'strategy_info':
                 currentStrategyInfo = msg.data;
@@ -506,9 +584,51 @@ function connect() {
     };
 }
 
+// ── Is the advice on screen still about the board in front of the player? ─────
+// PURE, so it can be tested without a DOM (see the block at the end of this
+// script). `for` is the decision context the server attached to the push; the
+// live values come from `state_update`. A push with no context at all predates
+// this feature — treat it as live rather than greying out every recommendation.
+function adviceStatus(adviceFor, liveTurn, livePhase) {
+    if (!adviceFor) return 'unknown';
+    if (adviceFor.turn !== liveTurn) return 'stale';
+    if (adviceFor.phase && livePhase && adviceFor.phase !== livePhase) return 'stale';
+    return 'live';
+}
+
+// What the two seat rows should say. Active player and priority holder are
+// separate: on my turn the opponent can hold priority, which is exactly when a
+// trick lands, and the overlay used to throw that away.
+function seatRows(ti, mySeat) {
+    const active = ti.active_player;
+    const prio = ti.priority_player;
+    const row = (who, seat) => ({
+        who,
+        active: seat != null && active === seat,
+        priority: seat != null && prio === seat,
+        state: seat == null ? '—'
+            : active === seat ? (prio === seat ? 'your move' : 'active, opp responding')
+            : prio === seat ? 'responding' : 'waiting',
+    });
+    // ⚠ Only derivable once MY seat is known. `[1,2].find(sn => sn !== null)` returns 1,
+    // which silently attributed the OPP row to seat 1 — so before the first state carrying
+    // `my_seat_id` the opponent row claimed whatever seat 1 was doing. Caught by the test.
+    const oppSeat = mySeat == null ? null : [1, 2].find(sn => sn !== mySeat) ?? null;
+    const you = row('YOU', mySeat ?? null);
+    // From MY point of view the opponent's own row should not read "your move".
+    const opp = row('OPP', oppSeat);
+    if (opp.state === 'your move') opp.state = 'their move';
+    return [you, opp];
+}
+
 function updateState(state) {
     const ti = state.turn || {};
     isMyTurn = ti.is_my_turn === true;
+    liveTurn = ti.number ?? null;
+    livePhase = ti.phase_display || '';
+    mySeatId = state.my_seat_id ?? null;
+    renderSeatLines(ti);
+    renderAdviceFor();
     const overlay = document.getElementById('overlay');
 
     // Show overlay if we get state updates (match is active)
@@ -537,6 +657,54 @@ function updateState(state) {
     }
 }
 
+function renderSeatLines(ti) {
+    const el = document.getElementById('seat-lines');
+    if (!el) return;
+    if (!ti || !ti.number) { el.innerHTML = ''; return; }
+    el.innerHTML = seatRows(ti, mySeatId).map(r =>
+        `<div class="seat-row${r.active ? ' active' : ''}${r.priority ? ' has-priority' : ''}">`
+        + `<span class="seat-dot"></span>`
+        + `<span class="seat-who">${r.who}</span>`
+        + `<span class="seat-state">${r.state}</span>`
+        + `</div>`
+    ).join('');
+}
+
+// The "advice for: …" row, plus the stale styling on the card itself. Called
+// from BOTH sides — a new advice push and a new game state can each change the
+// answer, and only one of them used to trigger a re-render.
+function renderAdviceFor() {
+    const el = document.getElementById('advice-for');
+    const card = document.getElementById('key-play');
+    if (!el) return;
+    const showing = card && card.style.display !== 'none';
+    if (!showing || !adviceForCtx) {
+        el.classList.remove('visible', 'live', 'stale');
+        if (card) card.classList.remove('stale');
+        return;
+    }
+    const status = adviceStatus(adviceForCtx, liveTurn, livePhase);
+    const stale = status === 'stale';
+    const whose = adviceForCtx.is_my_turn ? 'your turn' : 'opp turn';
+    el.classList.add('visible');
+    el.classList.toggle('live', !stale);
+    el.classList.toggle('stale', stale);
+    el.innerHTML = `<span class="af-mark">${stale ? '○' : '●'}</span>`
+        + `<span>advice for: T${adviceForCtx.turn} · ${adviceForCtx.phase} · ${whose}`
+        + `${stale ? ' — superseded' : ''}</span>`;
+    if (card) card.classList.toggle('stale', stale);
+}
+
+// One brief pulse when a scored play lands. Removed on the next advice push so a
+// stale animation class can't ride along.
+function flashCompliance(followed) {
+    const card = document.getElementById('key-play');
+    if (!card) return;
+    card.classList.remove('followed', 'ignored');
+    void card.offsetWidth; // restart the animation if the class was just cleared
+    card.classList.add(followed ? 'followed' : 'ignored');
+}
+
 function updateOppLine(info) {
     const el = document.getElementById('opp-line');
     const waitMsg = document.getElementById('waiting-msg');
@@ -560,6 +728,8 @@ function updateOppLine(info) {
 // path and the between-matches branch — `synergy-hint` was missing from the
 // latter, so a teaching hint survived into the session-record view.
 function clearAdvicePanels() {
+    document.getElementById('advice-for')?.classList.remove('visible', 'live', 'stale');
+    document.getElementById('key-play').classList.remove('stale', 'followed', 'ignored');
     document.getElementById('key-play').style.display = 'none';
     document.getElementById('advice-confidence').style.display = 'none';
     for (const id of ['lethal-banner', 'combo-banner', 'synergy-hint', 'do-now', 'threat-line']) {
@@ -577,7 +747,24 @@ function updateAdvice(data) {
     // for a board that no longer existed (USER-REPORTED 2026-07-26: a Main2
     // "Remove Krang, Master Mind" still showing at Phase_Ending, and a synergy
     // header outliving the turn that earned it). Quiet means BLANK, not stale.
-    if (!items.length) { clearAdvicePanels(); return; }
+    if (!items.length) {
+        clearAdvicePanels();
+        // FILLER, not a blank panel. An empty push is deliberate — a confident
+        // "no play" stays quiet — but silence and a broken advisor look identical,
+        // so say which one it is.
+        const idle = document.getElementById('advice-idle');
+        if (idle) {
+            idle.textContent = isMyTurn
+                ? 'No play recommended right now.'
+                : 'Watching the opponent\u2019s turn\u2026';
+            idle.classList.add('visible');
+        }
+        return;
+    }
+
+    document.getElementById('advice-idle')?.classList.remove('visible');
+    // Drop any previous compliance pulse so it cannot ride along on new advice.
+    document.getElementById('key-play')?.classList.remove('followed', 'ignored');
 
     // Advice means match is active
     if (!inMatch) {
@@ -752,6 +939,13 @@ function updateAdvice(data) {
     } else {
         synEl.classList.remove('visible');
     }
+
+    // LAST: the "advice for: …" row and the stale styling depend on the key play
+    // now being visible, so this has to run after it is rendered. It also runs on
+    // every `state_update` — both a new push and a new game state can change the
+    // answer, and rendering from only one of them was the original bug (advice
+    // outliving the phase it belonged to with no sign of it).
+    renderAdviceFor();
 }
 
 let lastAdvice = null;
@@ -871,6 +1065,16 @@ function resetOverlay() {
     document.getElementById('opp-line').innerHTML =
         '<span class="waiting" id="waiting-msg">Waiting for match...</span>';
     document.getElementById('phase-line').textContent = '';
+    // ⚠ EVERY panel this file can turn on must be turned off here. The file already
+    // records one bug of exactly this shape (a synergy hint surviving into the
+    // session-record view because the between-matches path missed it), and the three
+    // panels added for the phase/staleness work are the same trap: the idle filler and
+    // the seat rows describe a match that is over.
+    document.getElementById('advice-idle').classList.remove('visible');
+    document.getElementById('advice-for').classList.remove('visible', 'live', 'stale');
+    document.getElementById('key-play').classList.remove('stale', 'followed', 'ignored');
+    document.getElementById('seat-lines').innerHTML = '';
+    adviceForCtx = null;
 }
 
 connect();
