@@ -52,6 +52,28 @@ jobs:
             src-tauri
             ../glass-shard
 
+      # ★ WHICH ENGINE SHA THIS RELEASE CONTAINS — read from a file the release commit sets.
+      #
+      # ⚠ THE BUG THIS FIXES, found in a pre-release review (2026-08-10): this step used to have no
+      # `ref:`, so each matrix job checked out glass-shard's DEFAULT-BRANCH HEAD independently. Two
+      # consequences, both silent: a commit landing on glass-shard `main` between the macOS job and
+      # the Windows job made the two platforms ship DIFFERENT engines, and nothing recorded which
+      # SHA any release actually contained — so "we reviewed X and released it" was never verifiable.
+      #
+      # `.glass-shard-sha` lives in THIS repo, so the pin is part of the same commit as the version
+      # bump and the changelog: one commit says "this app version contains that engine".
+      - name: Resolve the pinned glass-shard SHA
+        id: pin
+        run: |
+          test -f .glass-shard-sha || { echo "::error::.glass-shard-sha is missing"; exit 1; }
+          sha="$(tr -d '[:space:]' < .glass-shard-sha)"
+          case "$sha" in
+            ????????????????????????????????????????) ;;
+            *) echo "::error::.glass-shard-sha must be a full 40-char commit sha, got '$sha'"; exit 1 ;;
+          esac
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          echo "pinned glass-shard to $sha"
+
       # Check out the sibling Rust repo that owns the backend + advice engine.
       - name: Checkout glass-shard (sidecar source)
         uses: actions/checkout@v4
@@ -61,6 +83,20 @@ jobs:
           # scryglass only. GLASS_SHARD_PAT is a token with read access to it.
           token: ${{ secrets.GLASS_SHARD_PAT }}
           path: glass-shard
+          ref: ${{ steps.pin.outputs.sha }}
+
+      # Fail loudly rather than silently shipping a different engine: `build.rs` bakes
+      # `GLASS_GIT_SHA` from the checkout's git HEAD, so this is the same value the running app
+      # reports back in its match rows.
+      - name: Verify the engine checkout matches the pin
+        run: |
+          got="$(cd glass-shard && git rev-parse HEAD)"
+          want="${{ steps.pin.outputs.sha }}"
+          if [ "$got" != "$want" ]; then
+            echo "::error::glass-shard checkout is $got, expected $want"
+            exit 1
+          fi
+          echo "engine SHA verified: $got"
 
       - name: Build Rust sidecars (glass-host + glass-server)
         run: |

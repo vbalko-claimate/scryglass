@@ -4,6 +4,44 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.26] — 2026-08-10
+
+### Changed
+
+- **The deep search no longer overwrites the instant recommendation.** For every main-phase
+  decision the app shows a fast pick immediately, then re-runs the same decision with the
+  Monte-Carlo search and, until now, replaced the on-screen advice whenever the search
+  disagreed. Those replacements were measured and they were **worse than the pick they
+  replaced**: 92 of them were rendered as blinded A/B positions and judged by two independent
+  raters who could not see which pilot proposed what, and the search won 34% of the decisive
+  comparisons — 0.338 with a 95% confidence interval of [0.238, 0.456] after controlling for a
+  bias the judges have toward developing the board. Every interval excluded parity. So the
+  search now stays quiet when it disagrees.
+- **It still tells you when it AGREES.** When the search lands on the same play the instant
+  advice named, that still arrives and the key-play badge still reads "✓ verified". You lose
+  the "↻ refined" replacements and keep the confirmation.
+- **One exception, deliberately kept:** an override into a reactive "trick" instant is still
+  published. The instant heuristic scores that whole card class below "pass" by design, so
+  there the search is not correcting noise but working around a hard limit.
+
+### Fixed
+
+- **The "✓ verified" badge could appear on advice the search had CHANGED, not confirmed.** When
+  the instant advice recommended nothing and the search named a play, the badge compared against
+  an empty string and read as a confirmation — telling you the search had verified a
+  recommendation that never existed. It now reads "↻ refined".
+- **A low-confidence warning or a synergy hint could silently replace a real recommendation.**
+  When the search's own answer was "pass" but the engine also had a card-recognition warning or a
+  board synergy to report, that converted into a message with no recommended card and overwrote
+  the play on your screen. It is now suppressed like any other override.
+
+### Internal
+
+- Releases now pin the exact engine commit (`.glass-shard-sha`) and fail the build if the
+  checkout does not match it. Previously each platform checked out the engine's default branch
+  independently, so a macOS and a Windows build of the same release could contain different
+  engines and nothing recorded which one shipped.
+
 ## [0.8.25] — 2026-08-08
 
 ### Fixed

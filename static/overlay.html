@@ -633,7 +633,15 @@ function updateAdvice(data) {
         const refinedEl = document.getElementById('key-play-refined');
         if (refinedEl) {
             if (keyPlay.refined) {
-                const changed = keyPlay.replaces && keyPlay.replaces !== cardName;
+                // ⚠ `replaces` may be the EMPTY STRING — that is an override which broke a
+                // SILENCE (the heuristic recommended nothing, the search names a play). The
+                // first version wrote `keyPlay.replaces && ...`, and "" is falsy in JS, so
+                // those arrived stamped "✓ verified": the badge claimed the search had
+                // CONFIRMED a heuristic recommendation that never existed. Found in review
+                // before the abstention release, which concentrates exactly that shape.
+                // Compare explicitly, and treat a MISSING `replaces` as changed too — over-
+                // claiming "changed" is the safe direction, "verified" is the unsafe one.
+                const changed = (keyPlay.replaces ?? null) !== cardName;
                 refinedEl.textContent = changed ? '↻ refined' : '✓ verified';
                 refinedEl.className = 'key-play-refined ' + (changed ? 'changed' : 'confirmed');
                 refinedEl.style.display = '';
