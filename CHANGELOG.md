@@ -4,6 +4,19 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.31] — 2026-08-13
+
+### Fixed
+
+- **The advisor thought 21 cards drew you a card when they don't.** A shortcut in the card
+  compiler treated any "search your library" as "draw a card" — a fair approximation when the
+  searched card ends up in your hand, but a fabrication everywhere else. Ugin's ultimate exiles
+  the cards it finds, Wood Elves puts a Forest onto the battlefield, Vile Entomber puts a card
+  in the graveyard: in each case the advisor was planning with a card that never existed. The
+  approximation now applies only when the card actually reaches a hand. Four land-fetching
+  creatures additionally got their real effect instead of the draw, and Claim Jumper stopped
+  drawing twice.
+
 ## [0.8.30] — 2026-08-13
 
 ### Fixed
