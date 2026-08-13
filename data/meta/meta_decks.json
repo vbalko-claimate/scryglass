@@ -8,16 +8,16 @@
       "name": "Izzet Prowess",
       "signal_cards": {
         "Ancestral Anger": 0.35,
-        "Boomerang Basics": 0.16,
-        "Callous Sell-Sword": 0.31,
-        "Drake Hatcher": 0.31,
+        "Boomerang Basics": 0.18,
+        "Callous Sell-Sword": 0.25,
+        "Drake Hatcher": 0.25,
         "Elusive Otter": 0.35,
-        "Full Bore": 0.31,
-        "Opt": 0.27,
+        "Full Bore": 0.25,
+        "Opt": 0.22,
         "Secret Identity": 0.35,
-        "Sleight of Hand": 0.2,
-        "Slickshot Show-Off": 0.27,
-        "Stormchaser's Talent": 0.22,
+        "Sleight of Hand": 0.18,
+        "Slickshot Show-Off": 0.19,
+        "Stormchaser's Talent": 0.24,
         "Wild Ride": 0.35
       }
     },
@@ -28,18 +28,39 @@
       ],
       "name": "Jeskai Lessons",
       "signal_cards": {
-        "Abandon Attachments": 0.35,
-        "Accumulate Wisdom": 0.35,
-        "Combustion Technique": 0.35,
-        "Firebending Lesson": 0.29,
-        "Gran-Gran": 0.29,
-        "Great Hall of the Biblioplex": 0.35,
-        "Iroh's Demonstration": 0.34,
-        "Jeskai Revelation": 0.35,
-        "Mistrise Village": 0.29,
-        "Sundown Pass": 0.34,
-        "Tablet of Discovery": 0.29,
-        "Three Steps Ahead": 0.29
+        "Abandon Attachments": 0.32,
+        "Accumulate Wisdom": 0.32,
+        "Avengers Disassembled": 0.35,
+        "Combustion Technique": 0.32,
+        "Firebending Lesson": 0.28,
+        "Great Hall of the Biblioplex": 0.22,
+        "Improvisation Capstone": 0.3,
+        "It'll Quench Ya!": 0.24,
+        "Jeskai Revelation": 0.24,
+        "Price of Freedom": 0.3,
+        "Tablet of Discovery": 0.25,
+        "Thor, God of Thunder": 0.24
+      }
+    },
+    {
+      "colors": [
+        "U",
+        "R"
+      ],
+      "name": "Sleight Of Hand",
+      "signal_cards": {
+        "Bounce Off": 0.26,
+        "Eddymurk Crab": 0.28,
+        "Flow State": 0.28,
+        "Get Out": 0.25,
+        "Hearth Elemental": 0.21,
+        "Hydro-Man, Fluid Felon": 0.22,
+        "Namor the Sub-Mariner": 0.22,
+        "Opt": 0.22,
+        "Sleight of Hand": 0.24,
+        "Sunderflock": 0.35,
+        "Thundering Falls": 0.22,
+        "Traumatic Critique": 0.22
       }
     },
     {
@@ -49,18 +70,39 @@
       ],
       "name": "Selesnya Ouroboroid",
       "signal_cards": {
-        "Abandoned Air Temple": 0.23,
-        "Badgermole Cub": 0.22,
-        "Brightglass Gearhulk": 0.27,
-        "Hushwood Verge": 0.22,
-        "Leatherhead, Swamp Stalker": 0.35,
+        "Abandoned Air Temple": 0.28,
+        "Badgermole Cub": 0.28,
+        "Brightglass Gearhulk": 0.32,
+        "Hushwood Verge": 0.28,
+        "Leatherhead, Swamp Stalker": 0.32,
         "Llanowar Elves": 0.22,
-        "Ouroboroid": 0.2,
-        "Pawpatch Recruit": 0.27,
-        "Seam Rip": 0.2,
-        "Skateboard": 0.22,
-        "Spider Manifestation": 0.31,
-        "Surrak, Elusive Hunter": 0.31
+        "Ouroboroid": 0.24,
+        "Pawpatch Recruit": 0.32,
+        "Practiced Offense": 0.25,
+        "Skateboard": 0.25,
+        "Spider Manifestation": 0.35,
+        "Surrak, Elusive Hunter": 0.35
+      }
+    },
+    {
+      "colors": [
+        "W",
+        "U"
+      ],
+      "name": "Season of Growth",
+      "signal_cards": {
+        "Agna Qel'a": 0.25,
+        "Captain Marvel, Earth's Protector": 0.3,
+        "Consult the Star Charts": 0.25,
+        "Day of Judgment": 0.28,
+        "Final Showdown": 0.25,
+        "Get Lost": 0.35,
+        "Gleaming Bastion": 0.25,
+        "Negate": 0.28,
+        "No More Lies": 0.28,
+        "Rest in Peace": 0.3,
+        "Soul-Guide Lantern": 0.25,
+        "Ultima": 0.25
       }
     },
     {
@@ -70,18 +112,39 @@
       ],
       "name": "Izzet Spellementals",
       "signal_cards": {
-        "Boomerang Basics": 0.22,
-        "Burst Lightning": 0.19,
+        "Boomerang Basics": 0.3,
         "Eddymurk Crab": 0.35,
         "Flow State": 0.35,
         "Get Out": 0.22,
         "Hearth Elemental": 0.22,
         "Opt": 0.27,
         "Prismari Charm": 0.22,
-        "Roaring Furnace // Steaming Sauna": 0.22,
-        "Sleight of Hand": 0.27,
-        "Slickshot Show-Off": 0.27,
-        "Stormchaser's Talent": 0.22
+        "Roaring Furnace // Steaming Sauna": 0.27,
+        "Sleight of Hand": 0.3,
+        "Slickshot Show-Off": 0.24,
+        "Stormchaser's Talent": 0.3,
+        "Vibrant Outburst": 0.22
+      }
+    },
+    {
+      "colors": [
+        "W",
+        "B"
+      ],
+      "name": "Inniaz, the Gale Force",
+      "signal_cards": {
+        "Amalia Benavides Aguirre": 0.28,
+        "Aunt May": 0.28,
+        "Case of the Uneaten Feast": 0.28,
+        "Essence Channeler": 0.28,
+        "Godless Shrine": 0.19,
+        "Haliya, Guided by Light": 0.24,
+        "Hinterland Sanctifier": 0.24,
+        "Leonardo, Cutting Edge": 0.22,
+        "Lunar Convocation": 0.28,
+        "Starscape Cleric": 0.28,
+        "Tigra, Feline Fury": 0.26,
+        "Virulent Emissary": 0.35
       }
     },
     {
@@ -90,18 +153,39 @@
       ],
       "name": "Mono-Green Landfall",
       "signal_cards": {
-        "Ba Sing Se": 0.29,
-        "Bristly Bill, Spine Sower": 0.34,
+        "Ba Sing Se": 0.27,
+        "Bristly Bill, Spine Sower": 0.26,
         "Earthbender Ascension": 0.35,
-        "Escape Tunnel": 0.35,
+        "Escape Tunnel": 0.3,
         "Esper Origins": 0.35,
-        "Fabled Passage": 0.35,
+        "Fabled Passage": 0.3,
         "Icetill Explorer": 0.35,
         "Meltstrider's Resolve": 0.35,
         "Mightform Harmonizer": 0.35,
-        "Mole Man, Moloid Master": 0.34,
-        "Sapling Nursery": 0.34,
-        "Sazh's Chocobo": 0.35
+        "Mole Man, Moloid Master": 0.32,
+        "Sapling Nursery": 0.32,
+        "Sazh's Chocobo": 0.3
+      }
+    },
+    {
+      "colors": [
+        "W",
+        "B"
+      ],
+      "name": "Jace, Unraveler of Secrets",
+      "signal_cards": {
+        "Amalia Benavides Aguirre": 0.32,
+        "Case of the Uneaten Feast": 0.32,
+        "Clarion Conqueror": 0.25,
+        "Concealed Courtyard": 0.24,
+        "Deep-Cavern Bat": 0.28,
+        "Emptiness": 0.3,
+        "Haliya, Guided by Light": 0.24,
+        "Hinterland Sanctifier": 0.28,
+        "Lunar Convocation": 0.32,
+        "Moseo, Vein's New Dean": 0.35,
+        "Shattered Sanctum": 0.24,
+        "Zoraline, Cosmos Caller": 0.25
       }
     },
     {
@@ -113,18 +197,40 @@
       ],
       "name": "4c Control",
       "signal_cards": {
-        "Bleachbone Verge": 0.31,
-        "Blood Crypt": 0.29,
-        "Consult the Star Charts": 0.34,
-        "Flashback": 0.34,
-        "Great Hall of the Biblioplex": 0.35,
-        "Inevitable Defeat": 0.34,
+        "Bleachbone Verge": 0.27,
+        "Blood Crypt": 0.35,
+        "Deadly Cover-Up": 0.26,
+        "Firebending Lesson": 0.31,
+        "Great Hall of the Biblioplex": 0.28,
+        "Inevitable Defeat": 0.3,
         "Jeskai Revelation": 0.35,
-        "Pest Control": 0.29,
-        "Sear": 0.34,
-        "Spell Snare": 0.29,
+        "Pest Control": 0.31,
+        "Sear": 0.3,
+        "Tablet of Discovery": 0.31,
+        "Together as One": 0.3,
+        "Undercity Sewers": 0.3
+      }
+    },
+    {
+      "colors": [
+        "W",
+        "U",
+        "R"
+      ],
+      "name": "Stock Up",
+      "signal_cards": {
+        "Abrade": 0.35,
+        "Cori Mountain Monastery": 0.29,
+        "Day of Judgment": 0.28,
+        "Inevitable Defeat": 0.33,
+        "Jeskai Revelation": 0.32,
+        "Lightning Helix": 0.29,
+        "Mistrise Village": 0.28,
+        "No More Lies": 0.28,
+        "Shattered Sanctum": 0.28,
+        "Slagstorm": 0.29,
         "Tablet of Discovery": 0.29,
-        "Together as One": 0.34
+        "Thunder Magic": 0.29
       }
     },
     {
@@ -134,18 +240,39 @@
       ],
       "name": "Dimir Excruciator",
       "signal_cards": {
-        "Bitter Triumph": 0.23,
-        "Day of Black Sun": 0.26,
-        "Deceit": 0.35,
-        "Doomsday Excruciator": 0.31,
-        "Duress": 0.27,
-        "Emeritus of Ideation": 0.26,
-        "Gloomlake Verge": 0.27,
-        "Requiting Hex": 0.22,
-        "Restless Reef": 0.27,
-        "Superior Spider-Man": 0.27,
-        "Watery Grave": 0.22,
-        "Winternight Stories": 0.26
+        "Day of Black Sun": 0.24,
+        "Deceit": 0.32,
+        "Doomsday Excruciator": 0.35,
+        "Duress": 0.22,
+        "Emeritus of Ideation": 0.3,
+        "Gloomlake Verge": 0.28,
+        "Hidden Lair": 0.24,
+        "M.O.D.O.K.": 0.25,
+        "Restless Reef": 0.32,
+        "Superior Spider-Man": 0.28,
+        "Undercity Sewers": 0.24,
+        "Winternight Stories": 0.24
+      }
+    },
+    {
+      "colors": [
+        "W",
+        "U"
+      ],
+      "name": "Liliana, Heretical Healer",
+      "signal_cards": {
+        "Adagia, Windswept Bastion": 0.22,
+        "Authority of the Consuls": 0.35,
+        "Clay-Fired Bricks": 0.28,
+        "Cryogen Relic": 0.28,
+        "Fomori Vault": 0.22,
+        "Perilous Snare": 0.35,
+        "Pinnacle Starcage": 0.35,
+        "Repurposing Bay": 0.35,
+        "Simulacrum Synthesizer": 0.35,
+        "Spring-Loaded Sawblades": 0.35,
+        "The Enigma Jewel": 0.22,
+        "United Battlefront": 0.28
       }
     },
     {
@@ -155,39 +282,80 @@
       ],
       "name": "Izzet Lessons",
       "signal_cards": {
-        "Abandon Attachments": 0.27,
-        "Accumulate Wisdom": 0.27,
-        "Combustion Technique": 0.27,
+        "Abandon Attachments": 0.28,
+        "Accumulate Wisdom": 0.28,
+        "Combustion Technique": 0.28,
         "Fire Magic": 0.22,
-        "Firebending Lesson": 0.22,
-        "Gran-Gran": 0.22,
-        "It'll Quench Ya!": 0.27,
+        "Firebending Lesson": 0.24,
+        "Gran-Gran": 0.28,
+        "It'll Quench Ya!": 0.28,
         "Mathemagics": 0.26,
-        "Negate": 0.22,
         "Questing Druid": 0.35,
+        "Splatter Technique": 0.22,
         "Tablet of Discovery": 0.22,
-        "Willowrush Verge": 0.27
+        "Willowrush Verge": 0.22
       }
     },
     {
       "colors": [
-        "W",
-        "B"
+        "B",
+        "G"
       ],
-      "name": "Lifegain",
+      "name": "Llanowar Elves",
       "signal_cards": {
-        "Amalia Benavides Aguirre": 0.35,
-        "Case of the Uneaten Feast": 0.35,
-        "Concealed Courtyard": 0.23,
-        "Deep-Cavern Bat": 0.31,
-        "Emptiness": 0.26,
-        "Godless Shrine": 0.22,
-        "Haliya, Guided by Light": 0.31,
-        "Hinterland Sanctifier": 0.35,
-        "Lunar Convocation": 0.35,
-        "Moseo, Vein's New Dean": 0.31,
-        "Shattered Sanctum": 0.23,
-        "Starscape Cleric": 0.26
+        "Beorn the Fierce": 0.35,
+        "Blooming Marsh": 0.32,
+        "Firdoch Core": 0.24,
+        "Gollum, Riddle Master": 0.3,
+        "Head of the Hunt": 0.3,
+        "Keen-Eyed Curator": 0.24,
+        "Mutable Explorer": 0.35,
+        "Professor Dellian Fel": 0.28,
+        "Restless Cottage": 0.3,
+        "Studious First-Year": 0.35,
+        "Unholy Annex // Ritual Chamber": 0.25,
+        "Wastewood Verge": 0.28
+      }
+    },
+    {
+      "colors": [
+        "U",
+        "R"
+      ],
+      "name": "Boros",
+      "signal_cards": {
+        "Arcane Epiphany": 0.26,
+        "Archmage of Runes": 0.22,
+        "Chart a Course": 0.31,
+        "Dive Down": 0.31,
+        "Enigma Drake": 0.26,
+        "Fiery Annihilation": 0.26,
+        "Ghitu Lavarunner": 0.35,
+        "Heartfire Immolator": 0.26,
+        "Izzet Guildgate": 0.35,
+        "Mischievous Mystic": 0.26,
+        "Swiftwater Cliffs": 0.35,
+        "Tolarian Terror": 0.31
+      }
+    },
+    {
+      "colors": [
+        "W"
+      ],
+      "name": "Phyrexian Obliterator",
+      "signal_cards": {
+        "Ajani's Pridemate": 0.35,
+        "Banishing Light": 0.26,
+        "Essence Channeler": 0.28,
+        "Exemplar of Light": 0.26,
+        "Haliya, Guided by Light": 0.24,
+        "Healer's Hawk": 0.35,
+        "Hinterland Sanctifier": 0.24,
+        "Leonin Vanguard": 0.35,
+        "Leyline of Hope": 0.35,
+        "Ruin-Lurker Bat": 0.35,
+        "Scoured Barrens": 0.26,
+        "Sheltered by Ghosts": 0.24
       }
     },
     {
@@ -197,18 +365,38 @@
       ],
       "name": "Azorius Tempo",
       "signal_cards": {
-        "Aang, Swift Savior": 0.27,
-        "Abandoned Air Temple": 0.2,
+        "Aang, Swift Savior": 0.28,
+        "Abandoned Air Temple": 0.21,
         "Avatar's Wrath": 0.35,
         "Aven Interrupter": 0.35,
-        "Enduring Curiosity": 0.2,
-        "Floodfarm Verge": 0.27,
-        "Floodpits Drowner": 0.23,
-        "Hallowed Fountain": 0.19,
+        "Enduring Curiosity": 0.21,
+        "Floodfarm Verge": 0.19,
+        "Floodpits Drowner": 0.25,
         "High Noon": 0.35,
+        "Jennifer Walters": 0.18,
         "Restless Anchorage": 0.35,
         "Skycoach Conductor": 0.35,
-        "Voice of Victory": 0.27
+        "Voice of Victory": 0.28
+      }
+    },
+    {
+      "colors": [
+        "B"
+      ],
+      "name": "Venus, Torn Between Worlds",
+      "signal_cards": {
+        "Archenemy's Charm": 0.26,
+        "Bloodletter of Aclazotz": 0.28,
+        "Deep-Cavern Bat": 0.28,
+        "Demon Wall": 0.22,
+        "Duress": 0.15,
+        "Feed the Swarm": 0.22,
+        "Intimidation Tactics": 0.31,
+        "Ruthless Negotiation": 0.26,
+        "Shoot the Sheriff": 0.16,
+        "Tragic Trajectory": 0.31,
+        "Unholy Annex // Ritual Chamber": 0.22,
+        "Unstoppable Slasher": 0.35
       }
     },
     {
@@ -219,18 +407,36 @@
       ],
       "name": "Sultai Reanimator",
       "signal_cards": {
-        "Ardyn, the Usurper": 0.26,
-        "Breeding Pool": 0.27,
-        "Bringer of the Last Gift": 0.35,
+        "Breeding Pool": 0.22,
+        "Bringer of the Last Gift": 0.28,
         "Commune with Beavers": 0.26,
-        "Formidable Speaker": 0.35,
+        "Formidable Speaker": 0.24,
         "Jadzi, Steward of Fate": 0.31,
+        "Kiora, the Rising Tide": 0.22,
         "Oblivious Bookworm": 0.35,
-        "Overlord of the Balemurk": 0.35,
+        "Overlord of the Balemurk": 0.28,
         "Rapid Rescue": 0.35,
-        "Superior Spider-Man": 0.27,
-        "Town Greeter": 0.31,
-        "Wastewood Verge": 0.31
+        "Superior Spider-Man": 0.24,
+        "Town Greeter": 0.25,
+        "Wastewood Verge": 0.21
+      }
+    },
+    {
+      "colors": [
+        "W"
+      ],
+      "name": "Abzan",
+      "signal_cards": {
+        "Ethereal Armor": 0.35,
+        "Feather of Flight": 0.35,
+        "Grand Entryway // Elegant Rotunda": 0.35,
+        "Optimistic Scavenger": 0.28,
+        "Seam Rip": 0.22,
+        "Shardmage's Rescue": 0.35,
+        "Sheltered by Ghosts": 0.24,
+        "Skyward Spider": 0.35,
+        "Slumbering Keepguard": 0.35,
+        "Veteran Survivor": 0.35
       }
     },
     {
@@ -240,18 +446,40 @@
       ],
       "name": "Dimir Midrange",
       "signal_cards": {
-        "Bitter Triumph": 0.2,
         "Dream Beavers": 0.31,
-        "Enduring Curiosity": 0.23,
-        "Floodpits Drowner": 0.23,
-        "Gloomlake Verge": 0.27,
-        "Hidden Lair": 0.27,
+        "Enduring Curiosity": 0.25,
+        "Floodpits Drowner": 0.25,
+        "Gloomlake Verge": 0.24,
+        "Hidden Lair": 0.28,
         "Kaito, Bane of Nightmares": 0.35,
-        "Preacher of the Schism": 0.31,
-        "Requiting Hex": 0.22,
+        "Preacher of the Schism": 0.25,
+        "Restless Reef": 0.21,
         "Spyglass Siren": 0.35,
-        "Watery Grave": 0.22,
+        "The Wondrous Wasp": 0.21,
+        "Watery Grave": 0.19,
         "We Say Thee Nay!": 0.26
+      }
+    },
+    {
+      "colors": [
+        "W",
+        "B",
+        "R"
+      ],
+      "name": "Angrath, Captain of Chaos",
+      "signal_cards": {
+        "Blood Crypt": 0.24,
+        "Bloodghast": 0.35,
+        "Carnage, Crimson Chaos": 0.22,
+        "Concealed Courtyard": 0.24,
+        "Cool but Rude": 0.35,
+        "Hardened Academic": 0.28,
+        "Inspiring Vantage": 0.26,
+        "Inti, Seneschal of the Sun": 0.22,
+        "Iron-Shield Elf": 0.35,
+        "Marauding Mako": 0.35,
+        "Moonshadow": 0.35,
+        "Practiced Offense": 0.22
       }
     },
     {
@@ -262,14 +490,14 @@
       ],
       "name": "4c Legends",
       "signal_cards": {
-        "Aang, Swift Savior": 0.23,
+        "Aang, Swift Savior": 0.25,
         "Arachne, Psionic Weaver": 0.31,
         "Bruce Banner": 0.22,
-        "Cavern of Souls": 0.22,
         "Cecil, Dark Knight": 0.31,
         "Celestial Reunion": 0.31,
         "Cloak and Dagger, Entwined": 0.26,
         "Elektra, Daughter of the Hand": 0.22,
+        "Hellcat, Undying Vigilante": 0.22,
         "Secluded Courtyard": 0.35,
         "Serah Farron": 0.26,
         "Spectacular Spider-Man": 0.31,
@@ -278,22 +506,65 @@
     },
     {
       "colors": [
+        "W",
+        "B"
+      ],
+      "name": "Godless Shrine",
+      "signal_cards": {
+        "Bleachbone Verge": 0.22,
+        "Case of the Stashed Skeleton": 0.28,
+        "Concealed Courtyard": 0.24,
+        "Corpses of the Lost": 0.28,
+        "Forsaken Miner": 0.28,
+        "Godless Shrine": 0.19,
+        "Nowhere to Run": 0.19,
+        "Optimistic Scavenger": 0.28,
+        "Origin of Spider-Man": 0.35,
+        "Seam Rip": 0.22,
+        "Sheltered by Ghosts": 0.24,
+        "United Battlefront": 0.28
+      }
+    },
+    {
+      "colors": [
         "R"
       ],
       "name": "Mono-Red Aggro",
       "signal_cards": {
-        "Burst Lightning": 0.19,
-        "Channeled Dragonfire": 0.23,
-        "Emberheart Challenger": 0.27,
-        "Greasewrench Goblin": 0.27,
-        "Hexing Squelcher": 0.2,
-        "Hired Claw": 0.27,
-        "Nova Hellkite": 0.27,
-        "Shock": 0.35,
-        "Soulstone Sanctuary": 0.19,
-        "Sunspine Lynx": 0.26,
-        "Tersa Lightshatter": 0.19,
-        "Zhao, the Moon Slayer": 0.31
+        "Burst Lightning": 0.14,
+        "Channeled Dragonfire": 0.28,
+        "Emberheart Challenger": 0.22,
+        "Greasewrench Goblin": 0.32,
+        "Hexing Squelcher": 0.24,
+        "Hired Claw": 0.22,
+        "Nova Hellkite": 0.28,
+        "Shock": 0.28,
+        "Soulstone Sanctuary": 0.16,
+        "Sunspine Lynx": 0.3,
+        "Tersa Lightshatter": 0.22,
+        "Zhao, the Moon Slayer": 0.35
+      }
+    },
+    {
+      "colors": [
+        "U",
+        "B",
+        "G"
+      ],
+      "name": "Grolnok, the Omnivore",
+      "signal_cards": {
+        "Ardyn, the Usurper": 0.21,
+        "Awaken the Honored Dead": 0.35,
+        "Breeding Pool": 0.22,
+        "Bringer of the Last Gift": 0.28,
+        "Deceit": 0.25,
+        "Formidable Speaker": 0.24,
+        "Overlord of the Balemurk": 0.25,
+        "Steamcore Scholar": 0.26,
+        "Superior Spider-Man": 0.24,
+        "Terror of the Peaks": 0.26,
+        "Town Greeter": 0.28,
+        "Wistfulness": 0.26
       }
     },
     {
@@ -302,40 +573,58 @@
       ],
       "name": "Selesnya Landfall",
       "signal_cards": {
-        "Badgermole Cub": 0.29,
-        "Demolition Field": 0.29,
+        "Badgermole Cub": 0.3,
         "Earthbender Ascension": 0.35,
-        "Escape Tunnel": 0.31,
+        "Erode": 0.24,
+        "Escape Tunnel": 0.26,
         "Esper Origins": 0.26,
-        "Fabled Passage": 0.35,
+        "Fabled Passage": 0.3,
         "Icetill Explorer": 0.35,
-        "Keen-Eyed Curator": 0.31,
-        "Llanowar Elves": 0.29,
-        "Lumbering Worldwagon": 0.29,
+        "Keen-Eyed Curator": 0.26,
+        "Llanowar Elves": 0.24,
+        "Lumbering Worldwagon": 0.27,
         "Mightform Harmonizer": 0.35,
-        "Sazh's Chocobo": 0.35
+        "Sazh's Chocobo": 0.3
       }
     },
     {
       "colors": [
-        "W",
-        "B",
-        "R"
+        "G"
       ],
-      "name": "Mardu Discard",
+      "name": "Isshin",
       "signal_cards": {
-        "Blood Crypt": 0.22,
-        "Bloodghast": 0.35,
-        "Carnage, Crimson Chaos": 0.26,
-        "Casey Jones, Vigilante": 0.26,
-        "Concealed Courtyard": 0.23,
-        "Cool but Rude": 0.35,
-        "Hardened Academic": 0.27,
-        "Inspiring Vantage": 0.26,
-        "Inti, Seneschal of the Sun": 0.26,
-        "Iron-Shield Elf": 0.35,
-        "Marauding Mako": 0.35,
-        "Moonshadow": 0.35
+        "Bristly Bill, Spine Sower": 0.25,
+        "Escape Tunnel": 0.24,
+        "Evolving Wilds": 0.22,
+        "Fabled Passage": 0.24,
+        "Hard-Hitting Question": 0.31,
+        "Mossborn Hydra": 0.35,
+        "Ordeal of Nylea": 0.35,
+        "Sazh's Chocobo": 0.24,
+        "Snakeskin Veil": 0.31,
+        "Springbloom Druid": 0.26,
+        "Tifa Lockhart": 0.35,
+        "Traveling Chocobo": 0.35
+      }
+    },
+    {
+      "colors": [
+        "B"
+      ],
+      "name": "Bloodletter Of Aclazotz",
+      "signal_cards": {
+        "Bloodletter of Aclazotz": 0.28,
+        "Case of the Stashed Skeleton": 0.28,
+        "Corpses of the Lost": 0.28,
+        "Forsaken Miner": 0.28,
+        "Mischievous Sneakling": 0.35,
+        "Nowhere to Run": 0.15,
+        "Requiting Hex": 0.18,
+        "Shoot the Sheriff": 0.16,
+        "Soulstone Sanctuary": 0.12,
+        "Strategic Betrayal": 0.15,
+        "Tinybones, the Pickpocket": 0.26,
+        "Unholy Annex // Ritual Chamber": 0.22
       }
     },
     {
@@ -346,13 +635,13 @@
       "name": "Naya Delirium",
       "signal_cards": {
         "Break Out": 0.35,
-        "Bushwhack": 0.22,
         "Fear of Missing Out": 0.35,
-        "Hardened Academic": 0.23,
-        "Hushwood Verge": 0.22,
-        "Keen-Eyed Curator": 0.27,
+        "Hardened Academic": 0.25,
+        "Hushwood Verge": 0.24,
+        "Keen-Eyed Curator": 0.24,
         "Patchwork Beastie": 0.35,
         "Pick Your Poison": 0.22,
+        "Restless Prairie": 0.22,
         "Royal Treatment": 0.26,
         "Stomping Ground": 0.35,
         "Thornspire Verge": 0.35,
@@ -364,20 +653,60 @@
         "U",
         "R"
       ],
+      "name": "Omniscience",
+      "signal_cards": {
+        "Boltwave": 0.28,
+        "Dispelling Exhale": 0.35,
+        "Evendo, Waking Haven": 0.35,
+        "Fleeting Effigy": 0.35,
+        "Impractical Joke": 0.28,
+        "Kona, Rescue Beastie": 0.35,
+        "Lightning Strike": 0.28,
+        "Lost in the Maze": 0.29,
+        "Omniscience": 0.35,
+        "Roiling Dragonstorm": 0.29,
+        "Tectonic Hazard": 0.35,
+        "Uthros, Titanic Godcore": 0.35
+      }
+    },
+    {
+      "colors": [
+        "U",
+        "R"
+      ],
       "name": "Izzet Aggro",
       "signal_cards": {
-        "Channeled Dragonfire": 0.23,
+        "Channeled Dragonfire": 0.25,
         "Colorstorm Stallion": 0.35,
-        "Emberheart Challenger": 0.27,
-        "Greasewrench Goblin": 0.27,
-        "Hexing Squelcher": 0.2,
-        "Hired Claw": 0.27,
+        "Emberheart Challenger": 0.19,
+        "Greasewrench Goblin": 0.28,
+        "Hexing Squelcher": 0.21,
+        "Hired Claw": 0.19,
         "Kellan, Planar Trailblazer": 0.22,
-        "Mockingbird": 0.23,
-        "Rockface Village": 0.22,
+        "Mockingbird": 0.25,
+        "Rockface Village": 0.18,
         "Scalding Viper": 0.35,
-        "Stormcarved Coast": 0.22,
-        "Vibrant Outburst": 0.23
+        "Stormcarved Coast": 0.18,
+        "Vibrant Outburst": 0.25
+      }
+    },
+    {
+      "colors": [
+        "R"
+      ],
+      "name": "Burst Lightning",
+      "signal_cards": {
+        "Blazemire Verge": 0.24,
+        "Boltwave": 0.28,
+        "Burnout Bashtronaut": 0.28,
+        "Burst Lightning": 0.13,
+        "Callous Sell-Sword": 0.28,
+        "Dreadmaw's Ire": 0.35,
+        "Emberheart Challenger": 0.19,
+        "Full Bore": 0.28,
+        "Hired Claw": 0.19,
+        "Slickshot Show-Off": 0.19,
+        "Turn Inside Out": 0.35
       }
     },
     {
@@ -388,18 +717,58 @@
       ],
       "name": "4c Gearhulk",
       "signal_cards": {
-        "Badgermole Cub": 0.22,
+        "Badgermole Cub": 0.24,
         "Bloom Tender": 0.35,
-        "Boomerang Basics": 0.22,
+        "Boomerang Basics": 0.24,
         "Botanical Sanctum": 0.31,
-        "Breeding Pool": 0.23,
-        "Brightglass Gearhulk": 0.27,
-        "Cryogen Relic": 0.26,
+        "Breeding Pool": 0.19,
+        "Brightglass Gearhulk": 0.28,
+        "Cryogen Relic": 0.21,
         "Nature's Rhythm": 0.35,
         "Nurturing Pixie": 0.26,
-        "Seam Rip": 0.23,
         "Sewer-veillance Cam": 0.35,
-        "Stormchaser's Talent": 0.22
+        "Stormchaser's Talent": 0.24,
+        "The Jolly Balloon Man": 0.22
+      }
+    },
+    {
+      "colors": [
+        "B"
+      ],
+      "name": "Duress",
+      "signal_cards": {
+        "Bitter Triumph": 0.19,
+        "Blazemire Verge": 0.21,
+        "Blooming Marsh": 0.25,
+        "Day of Black Sun": 0.21,
+        "Deathcap Glade": 0.35,
+        "Duress": 0.19,
+        "Firdoch Core": 0.28,
+        "Great Hall of the Biblioplex": 0.19,
+        "Preacher of the Schism": 0.21,
+        "Professor Dellian Fel": 0.28,
+        "Together as One": 0.28,
+        "Unholy Annex // Ritual Chamber": 0.22
+      }
+    },
+    {
+      "colors": [
+        "R"
+      ],
+      "name": "Shadow",
+      "signal_cards": {
+        "Burnout Bashtronaut": 0.35,
+        "Burst Lightning": 0.16,
+        "Emberheart Challenger": 0.24,
+        "Hired Claw": 0.24,
+        "Lightning Strike": 0.35,
+        "Nova Hellkite": 0.26,
+        "Ojer Axonil, Deepest Might": 0.27,
+        "Razorkin Needlehead": 0.32,
+        "Rockface Village": 0.35,
+        "Shock": 0.3,
+        "Slickshot Show-Off": 0.24,
+        "Tersa Lightshatter": 0.23
       }
     }
   ]

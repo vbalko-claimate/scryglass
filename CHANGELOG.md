@@ -4,6 +4,18 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.34] — 2026-08-13
+
+### Added
+
+- **Opponent recognition nearly doubled its archetype list, 19 → 37.** The metagame pipeline had
+  been running on one source because the second needed a browser session; it now has both, so the
+  ladder archetypes that only show up in play — not in curated deck sites — are recognised too.
+  Coverage is the thing that limits recognition, so this is the lever that matters.
+- **Every one of the 37 has a measured interaction profile** read off a real decklist, so the
+  advisor knows whether that deck holds counterspells and removal rather than assuming it holds
+  none.
+
 ## [0.8.33] — 2026-08-13
 
 ### Fixed
