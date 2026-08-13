@@ -4,6 +4,17 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.32] — 2026-08-13
+
+### Fixed
+
+- **Ugin, Eye of the Storms is fully modelled.** Only his first exile trigger was; the advisor
+  saw nothing when a colorless spell was cast and nothing at all from his ultimate. All of it
+  works now — the repeatable "whenever you cast a colorless spell" exile, with the colour check
+  that keeps it from firing on everything, and the −11, which exiles every colorless nonland
+  card in the library and lets you cast them for free that turn. He was the top opponent-side
+  card the advisor could not read correctly.
+
 ## [0.8.31] — 2026-08-13
 
 ### Fixed
