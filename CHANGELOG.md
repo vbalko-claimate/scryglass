@@ -4,6 +4,19 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.33] — 2026-08-13
+
+### Fixed
+
+- **An ability that costs you a creature now actually costs you one.** The Soul Stone, The
+  Terminus of Return, Tithing Blade and Jade Seedstones all charge "exile a creature you
+  control" as part of an activation. The advisor knew the effect and not the price, so it would
+  offer the play with no creatures on board and treat it as free — a line that cannot legally
+  be made.
+- **Three cards drew two cards where they draw one.** Delivery Moogle, Fang-Druid Summoner and
+  Guidelight Pathmaker each fetch a single card; the compiler counted the closing "if you search
+  your library this way, shuffle" as a second search.
+
 ## [0.8.32] — 2026-08-13
 
 ### Fixed
