@@ -8,6 +8,14 @@ version used for OTA updates.
 
 ### Fixed
 
+- **83 double-faced cards were colourless to the advisor.** Scryfall reports those cards' colours
+  per face, and the card compiler was reading a field that isn't there — so every transforming
+  card in the format read as colourless. That broke colour-matters effects in both directions at
+  once: they could not be hit by "target permanent that's one or more colors", and they counted as
+  colourless spells. Found by an adversarial review of the Ugin work, and live since well before it.
+- **The engine could cast X spells for free with a large X.** When a card is cast "without paying
+  its mana cost", the rules fix X at 0; the engine was still asking for a value. It was quietly
+  playing better than the rules allow — in its own simulations and in the advice built on them.
 - **Ugin, Eye of the Storms is fully modelled.** Only his first exile trigger was; the advisor
   saw nothing when a colorless spell was cast and nothing at all from his ultimate. All of it
   works now — the repeatable "whenever you cast a colorless spell" exile, with the colour check
