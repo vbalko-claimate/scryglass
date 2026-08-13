@@ -4,6 +4,18 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.30] — 2026-08-13
+
+### Fixed
+
+- **The Infinity Stones did nothing.** The Mind Stone, The Soul Stone and The Terminus of
+  Return are the three most-seen cards in the advisor's fidelity queue that it could not
+  model — all three on opponents' boards. Their "Harness" ability compiled to nothing, so
+  the advisor thought six mana bought your opponent no threat at all, and their ∞ ability
+  was compiled in a form that could never fire. Both halves work now: the advisor knows a
+  harnessed Stone will blink a permanent at end step or reanimate a creature at upkeep,
+  and it knows an unharnessed one does not.
+
 ## [0.8.29] — 2026-08-13
 
 ### Added
