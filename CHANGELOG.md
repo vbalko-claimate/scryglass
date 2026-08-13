@@ -4,6 +4,33 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.29] — 2026-08-13
+
+### Added
+
+- **The Hobbit.** All 188 cards of the new set are in the advisor's database, so it no longer reads
+  a Hobbit card as a blank. Two of the set's mechanics are modelled properly rather than skipped:
+  **recruit** (ten cards that previously compiled to nothing at all) and **Storied** — the
+  "enduring story" latch, which stays on for the rest of the game once it turns on, plus eight of
+  its nine payoff cards (Bombur's untap, Balin's burn, Thorin's ward at his own cost, Kíli's free
+  equip, Bifur's extra trigger). Dáin's attack tax is deliberately NOT modelled — it needs a cost
+  step the engine does not have yet, and it is recorded as a known gap instead of silently ignored.
+
+### Fixed
+
+- **Opponent recognition was running on a two-month-old metagame.** The archetype list the advisor
+  identifies opponents against was built on 20 June and could not even name 13 of the 19 decks
+  currently being played. Measured top-1 recognition on today's decks: **26% before, 98% after**.
+  Two separate causes, both fixed: the meta pipeline was built against a card pool that omitted
+  608 Standard-legal cards (whole decks were being dropped over cards the app does have), and the
+  archetype list was being filtered down to decks the simulator can play — an irrelevant
+  restriction for merely *naming* an opponent.
+- **Every archetype now has a measured interaction profile** (whether that deck holds counterspells
+  and removal), 19 of 19, each read off a real decklist. Archetypes without one previously fell
+  back to an all-zero profile, which reads as "runs no interaction" when the truth is "not measured".
+- **Match records now carry MTGA's event id**, so Brawl and limited games can be told apart from
+  Standard instead of being mixed into the same statistics.
+
 ## [0.8.28] — 2026-08-10
 
 ### Fixed
