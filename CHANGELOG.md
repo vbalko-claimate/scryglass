@@ -4,6 +4,16 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.36] — 2026-08-14
+
+### Fixed
+
+- **Fugitive Droid threw itself away for nothing.** Its ability — sacrifice it to counter a spell
+  aimed at your own artifact or creature — was read as the sacrifice alone, so the advisor treated
+  it as a play with no upside and never suggested it, nor counted it as interaction you were
+  holding. It counters now, and only against spells actually pointed at your board, which is what
+  the card says. Fear of Impostors' enter-the-battlefield counter had the same gap and also works.
+
 ## [0.8.35] — 2026-08-14
 
 ### Fixed
