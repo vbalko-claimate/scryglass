@@ -4,6 +4,25 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.38] — 2026-08-14
+
+### Fixed
+
+- **Sixteen cards that remove a permanent were wrong, and seven of them did nothing at all.**
+  The "exile it until this leaves the battlefield" effect was fully built and used by 27 cards,
+  but only two kinds of card could reach it, so the same sentence printed on a creature or a
+  plain enchantment compiled to nothing: Aang's Iceberg, Werefox Bodyguard, All-Fates Stalker,
+  Earth Kingdom Jailer, Mardu Siegebreaker, Turncoat Kunoichi and Celebrate the Mountain-king
+  were all inert.
+- **Five more exiled the permanent FOREVER.** Driftgloom Coyote, Henchbots, Perilous Snare,
+  White Auracite and Dusk Rose Reliquary all give the card back when they leave; the advisor
+  believed the removal was permanent, so it over-valued them and mis-planned around an opponent
+  who was in fact getting their creature back.
+- **Liminal Hold and Prayer of Binding lost their exile entirely** and counted only as "gain 2
+  life" — the whole point of both cards was missing.
+- **Assimilation Aegis and Glass Casket could be aimed at things they cannot touch.** Both say
+  "target creature"; the advisor had been offered any nonland permanent.
+
 ## [0.8.37] — 2026-08-14
 
 ### Fixed
