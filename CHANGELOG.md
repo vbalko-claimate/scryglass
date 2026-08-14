@@ -4,6 +4,27 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.37] — 2026-08-14
+
+### Fixed
+
+- **Earthbender Ascension was treated as a free pump on every land drop.** The card puts a quest
+  counter on itself when a land enters, and only once it has four does it grow a creature. The
+  advisor skipped the counting and behaved as though every land you played put a +1/+1 counter on
+  a creature — so it valued the enchantment, and boards built around it, higher than the card can
+  actually deliver. It now counts to four like the card does. (The trample the fourth trigger
+  grants is still not modelled.)
+
+### Changed
+
+- **Uploads are compressed, and several times smaller.** Telemetry went up as raw JSON until now;
+  it is repetitive text, which compresses well, so the same data costs a fraction of the
+  bandwidth. Nothing about what is sent has changed.
+- **Finished games now upload as a full replay.** The corpus that measurement runs on used to be
+  rebuildable only from the raw game log on one machine, and the game keeps only the last two of
+  those — so every rotation destroyed matches nothing could reconstruct. The app now builds the
+  record itself when a match ends.
+
 ## [0.8.36] — 2026-08-14
 
 ### Fixed
