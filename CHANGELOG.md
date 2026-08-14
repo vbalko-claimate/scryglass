@@ -4,6 +4,18 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.35] — 2026-08-14
+
+### Fixed
+
+- **202 of The Hobbit's cards were nameless to the advisor.** Two card files ship with the app —
+  one the engine reasons with, one that turns the game's internal card ids into names — and only
+  the first had been updated for the new set. When an opponent played a Hobbit card the board
+  showed an unnamed placeholder, and the opponent model refused to work for that decision
+  entirely, without any error. On a real game log this took the model from 100% coverage down to
+  97%, and it would have got steadily worse as more people picked up the new set. All 349 missing
+  cards are in now.
+
 ## [0.8.34] — 2026-08-13
 
 ### Added
