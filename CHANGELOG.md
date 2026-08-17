@@ -4,6 +4,28 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.40] — 2026-08-17
+
+### Fixed
+
+- **The advisor never saw a single game on any computer not set to US English.** MTGA writes its
+  log using the machine's own date format, and Scryglass only recognised the American one
+  (`8/17/2026 10:23:47 PM`). On a Czech or German Windows the very same line reads
+  `17.08.2026 23:57:36`, and the advisor read *nothing at all* from a log that was present,
+  readable and full of the game it was looking for — so it never noticed a match had started and
+  the overlay never appeared. Every part of the app reported itself healthy, because every part
+  of it was.
+
+### Added
+
+- **The diagnostics log now says whether the engine reads anything from MTGA's log.** The
+  previous build narrowed a "no overlay" report to one line — MTGA in the foreground, but no
+  match ever detected — and then ran out of things to say: it proved the log file was readable
+  and proved no match was active, with nothing in between. It now records the first time it
+  successfully parses the live log, and every change to the match-active flag, so "MTGA isn't
+  writing match data" and "we read it but never register the match" are finally
+  distinguishable.
+
 ## [0.8.39] — 2026-08-17
 
 ### Added
