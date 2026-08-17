@@ -10,6 +10,36 @@ Real-time play advice for Magic: The Gathering Arena. Reads game logs, identifie
 - **Deck management** — lifecycle with versioning, rule generation, GA optimization
 - **Web UI** — real-time dashboard with Focus/Tactical/Full view profiles
 
+## Installing the desktop app
+
+Download the latest installer from
+[Releases](https://github.com/vbalko-claimate/scryglass/releases/latest):
+`Scryglass_<version>_x64_en-US.msi` (Windows) or `Scryglass_<version>_aarch64.dmg` (macOS).
+
+### Windows: SmartScreen will warn you, and it is right to
+
+The installer is **not code-signed** — a certificate costs money and the app is
+pre-alpha — so Windows has no publisher to check and shows *"Windows protected
+your PC"*. To install anyway: **More info → Run anyway**. Some antivirus
+products flag any new unsigned installer for the same reason; that is a
+reputation check, not a detection.
+
+If that trade is not acceptable to you, do not install it. Saying "just click
+through the warning" without saying why the warning exists would be teaching a
+bad habit — the warning is the system working.
+
+Once installed, Scryglass lives in the system tray. If something looks wrong,
+**tray → Open Diagnostics Log** — it works even when the backend is down, which
+is exactly when you need it.
+
+### What it needs from MTGA
+
+* **Detailed Logs** must be on: MTGA → Settings → Account → *Detailed Logs
+  (Plugin Support)*, then **restart MTGA**. Without it the log carries no match
+  data and no advisor can see your game.
+* The advisor's card knowledge is **Standard**. In Historic, Alchemy or Timeless
+  most of your deck is outside it, and the app says so rather than guessing.
+
 ## Quick Start
 
 ```bash

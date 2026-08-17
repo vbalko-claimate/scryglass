@@ -173,15 +173,21 @@ jobs:
             echo "no catalogue staged — belief ships OFF by design, nothing to gate"
           fi
 
-      # overlay-helper placeholder per-platform (macOS builds it separately; CI
-      # stub for now to satisfy externalBin — replace with a real build if needed).
-      - name: Stage overlay-helper
+      # overlay-helper is macOS-ONLY. Windows drives its overlay from a Tauri
+      # window and never spawns this sidecar, and `tauri.windows.conf.json`
+      # drops it from `externalBin` there (RFC 7396 merge replaces the array),
+      # so nothing needs staging on Windows.
+      #
+      # ⚠ THIS STEP USED TO WRITE A ONE-LINE TEXT FILE NAMED `overlay-helper.exe`
+      # purely to satisfy externalBin, and it shipped inside the MSI — confirmed
+      # by inspecting the published v0.8.38 installer. A non-PE file with an .exe
+      # extension inside an installer is a textbook antivirus heuristic trigger,
+      # and a tester's antivirus did fire on download. Do not reintroduce it.
+      - name: Stage overlay-helper (macOS only)
+        if: runner.os == 'macOS'
         run: |
-          # Windows uses a Tauri overlay window (no Swift helper), but Tauri's
-          # externalBin still requires a file per target — and .exe on Windows.
-          EXT=""; [ "${{ runner.os }}" = "Windows" ] && EXT=".exe"
-          DEST="src-tauri/binaries/overlay-helper-${{ matrix.target }}${EXT}"
-          [ -f "$DEST" ] || echo "placeholder — Windows overlay uses a Tauri window" > "$DEST"
+          DEST="src-tauri/binaries/overlay-helper-${{ matrix.target }}"
+          [ -f "$DEST" ] || echo "placeholder — real helper is committed" > "$DEST"
 
       - name: Extract release notes from CHANGELOG
         id: changelog
