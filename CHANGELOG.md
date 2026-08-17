@@ -4,6 +4,27 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.41] — 2026-08-18
+
+### Fixed
+
+- **The overlay appeared on the wrong screen.** It followed whichever monitor the Scryglass
+  window happened to be on, because the Windows code never actually looked up where MTGA was —
+  it reported "found" and nothing else. It now reads MTGA's real window rectangle and sits on
+  top of it, re-checking every time it appears, so moving MTGA to another monitor mid-session
+  works too.
+- **Updating was blocked by Scryglass's own background process.** The installer closes the app,
+  but `glass-host.exe` is a separate process it never knew about, so it stayed running and
+  Windows refused to replace it. The updater now stops it first — and starts it again if the
+  install fails, instead of leaving the app running with nothing behind it.
+
+### Added
+
+- **Failures are now reported to the cloud** (and only when cloud sync is on — turning sync off
+  silences this too). When the backend cannot start, the app sends what it knows along with the
+  tail of its own log, so a problem on a tester's machine can be looked at without asking them
+  to find and paste a file.
+
 ## [0.8.40] — 2026-08-17
 
 ### Fixed
