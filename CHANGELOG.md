@@ -4,6 +4,39 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.39] — 2026-08-17
+
+### Added
+
+- **The app now says why it failed.** A Windows tester reported "it starts, but there's no
+  overlay and it never sees the game", and nothing anywhere could explain it: every window in
+  the app loads from the local backend, so when that backend does not start there is no UI left
+  to report from, and all the diagnostics went to a console that a Windows app does not have.
+  Scryglass now writes a log file (menu bar → **Open Diagnostics Log**, always available), shows
+  a dialog naming the problem and the log when the backend fails to start, and records whether
+  it can read MTGA's `Player.log` at all — an unreadable log used to look exactly like a quiet
+  one. The overlay also records which of its two conditions is unmet, so "no overlay" now says
+  whether MTGA wasn't in the foreground or no match was detected.
+
+### Fixed
+
+- **Eight cards gained 2 life they do not have.** The compiler read the phrase "you gained life
+  this turn" — a CONDITION, or a reference to an amount — as an instruction to gain life, and
+  invented it. Tragedy Feaster gained 2 life every time it was cast. On Will, Scion of Peace and
+  Gumdrop Poisoner the invented life gain was the *only* thing that compiled, replacing a cost
+  reduction and a targeted -4/-4 respectively.
+- **Twenty-eight cards untapped themselves for free.** "Untapped" is an adjective, and the
+  compiler matched it as the verb — so every card that costs "tap two untapped creatures you
+  control" also granted an untap it never had. Tangle Tumbler, Archangel of Tithes, Spelunking
+  and Caparocti Sunborn among them.
+- **Five cards scried when they should not.** A rule written for Warden of the Inner Sky fired on
+  any tap-cost card mentioning a +1/+1 counter and gave it a fixed body. Baylen, the Haymaker now
+  gets its three counters instead of one and its trample; Dust Animus keeps the counters it enters
+  with instead of an ability that could be activated.
+- **Twelve "Infusion" cards were read wrong.** The keyword is a label, but it hid each card's
+  real text from the compiler. Old-Growth Educator's two +1/+1 counters were applied as it was
+  cast rather than when it entered the battlefield.
+
 ## [0.8.38] — 2026-08-14
 
 ### Fixed
