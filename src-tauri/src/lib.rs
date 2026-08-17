@@ -10,6 +10,7 @@ use tauri_plugin_updater::UpdaterExt;
 #[cfg(not(debug_assertions))]
 use tauri_plugin_dialog::{DialogExt, MessageDialogButtons};
 
+mod diag;
 mod mtga_detect;
 mod sidecar;
 
@@ -93,6 +94,11 @@ fn launch_overlay_windows(handle: &tauri::AppHandle) {
         }
 
         let mut was_visible = false;
+        // The overlay needs BOTH conditions true, and when it fails to appear
+        // nothing said which one was false — that ambiguity is most of the "the
+        // overlay doesn't start" report from 2026-08-17. Log the pair on CHANGE
+        // only; this loop runs every 2s for the life of the app.
+        let mut last_inputs: Option<(bool, bool)> = None;
 
         loop {
             std::thread::sleep(std::time::Duration::from_secs(2));
@@ -102,17 +108,32 @@ fn launch_overlay_windows(handle: &tauri::AppHandle) {
                 check_match_active().await
             });
 
+            if last_inputs != Some((mtga_front, match_active)) {
+                last_inputs = Some((mtga_front, match_active));
+                crate::diag::log(&format!(
+                    "[overlay] mtga_foreground={mtga_front} match_active={match_active} \
+                     (both must be true to show)"
+                ));
+            }
+
             let should_show = mtga_front && match_active;
 
-            if let Some(overlay) = h1.get_webview_window("overlay") {
-                if should_show && !was_visible {
-                    println!("[overlay] MTGA in foreground + match active → showing overlay");
-                    let _ = overlay.show();
-                    was_visible = true;
-                } else if !should_show && was_visible {
-                    println!("[overlay] Hiding overlay");
-                    let _ = overlay.hide();
-                    was_visible = false;
+            match h1.get_webview_window("overlay") {
+                Some(overlay) => {
+                    if should_show && !was_visible {
+                        crate::diag::log("[overlay] showing");
+                        let _ = overlay.show();
+                        was_visible = true;
+                    } else if !should_show && was_visible {
+                        crate::diag::log("[overlay] hiding");
+                        let _ = overlay.hide();
+                        was_visible = false;
+                    }
+                }
+                None => {
+                    if should_show {
+                        crate::diag::log("[overlay!] no 'overlay' window exists — cannot show it");
+                    }
                 }
             }
         }
@@ -216,6 +237,11 @@ pub fn run() {
             find_mtga,
         ])
         .setup(|app| {
+            // FIRST, before anything can fail: open the diagnostics log. Every
+            // window in this app loads from the sidecar's :8765, so if the
+            // sidecar dies there is no in-app surface left to report from.
+            diag::init(app.handle());
+
             // macOS: accessory app — no dock icon, lives in menu bar
             #[cfg(target_os = "macos")]
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);
@@ -234,7 +260,29 @@ pub fn run() {
                         }
                     }
                     Err(e) => {
-                        eprintln!("[error] Sidecar failed: {}", e);
+                        diag::log(&format!("[error] Sidecar failed: {e}"));
+                        // A NATIVE dialog, in addition to the error page below.
+                        // The page is a `data:` URL, which Tauri may refuse to
+                        // navigate to — and if it does, the tester is left with a
+                        // blank window and no explanation at all, which is the
+                        // report that started this. The dialog cannot be blocked
+                        // by webview policy and names the log file.
+                        //
+                        // Non-blocking `show`: this runs inside the async runtime,
+                        // where `blocking_show` is not allowed.
+                        {
+                            use tauri_plugin_dialog::DialogExt;
+                            let where_to_look = match diag::log_path() {
+                                Some(p) => format!("Log: {}", p.display()),
+                                None => "No log file could be opened.".to_string(),
+                            };
+                            let detail = diag::tail(12).join("\n");
+                            handle
+                                .dialog()
+                                .message(format!("{e}\n\n{where_to_look}\n\n{detail}"))
+                                .title("Scryglass — the backend did not start")
+                                .show(|_| {});
+                        }
                         // Show error page inline
                         if let Some(win) = handle.get_webview_window("main") {
                             let error_html = format!(
@@ -287,6 +335,9 @@ pub fn run() {
             let review_item = MenuItemBuilder::with_id("review", "Post-Game Review").build(app)?;
             let setup_item = MenuItemBuilder::with_id("setup", "Setup").build(app)?;
             let update_item = MenuItemBuilder::with_id("update", "Check for Updates…").build(app)?;
+            // Always available, NOT only after a failure: when the backend is
+            // down every other item here opens a localhost URL that cannot load.
+            let diag_item = MenuItemBuilder::with_id("diagnostics", "Open Diagnostics Log").build(app)?;
             let quit_item = MenuItemBuilder::with_id("quit", "Quit Scryglass").build(app)?;
 
             let menu = MenuBuilder::new(app)
@@ -295,6 +346,7 @@ pub fn run() {
                 .separator()
                 .item(&setup_item)
                 .item(&update_item)
+                .item(&diag_item)
                 .separator()
                 .item(&quit_item)
                 .build()?;
@@ -350,6 +402,22 @@ pub fn run() {
                                 tauri::async_runtime::spawn(async move {
                                     run_update_check(h).await;
                                 });
+                            }
+                        }
+                        "diagnostics" => {
+                            // Open the FILE, not a localhost page: this item has to
+                            // work in exactly the state where the sidecar is dead.
+                            match diag::log_path() {
+                                Some(p) => {
+                                    let _ = open::that(&p);
+                                }
+                                None => {
+                                    use tauri_plugin_dialog::DialogExt;
+                                    app.dialog()
+                                        .message(diag::tail(40).join("\n"))
+                                        .title("Scryglass diagnostics (memory only)")
+                                        .show(|_| {});
+                                }
                             }
                         }
                         "quit" => {

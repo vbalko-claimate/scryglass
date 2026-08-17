@@ -15,15 +15,15 @@ pub async fn start_and_wait(app: &AppHandle) -> Result<(), String> {
     // only path that reuses a running server.
     let external = std::env::var("SCRY_EXTERNAL_HOST").is_ok();
     if external || cfg!(debug_assertions) {
-        println!("[sidecar] External/dev host mode — using a manually started server...");
+        crate::diag::log("[sidecar] External/dev host mode — using a manually started server...");
         if check_health().await {
-            println!("[sidecar] Server already running at {}", SIDECAR_URL);
+            crate::diag::log(&format!("[sidecar] Server already running at {SIDECAR_URL}"));
             return Ok(());
         }
         for i in 0..MAX_WAIT_SECS {
             tokio::time::sleep(Duration::from_secs(1)).await;
             if check_health().await {
-                println!("[sidecar] Server ready after {}s", i + 1);
+                crate::diag::log(&format!("[sidecar] Server ready after {}s", i + 1));
                 return Ok(());
             }
         }
@@ -46,7 +46,7 @@ pub async fn start_and_wait(app: &AppHandle) -> Result<(), String> {
     for i in 0..MAX_WAIT_SECS {
         tokio::time::sleep(Duration::from_secs(1)).await;
         if check_health().await {
-            println!("[sidecar] glass-host (Rust) ready after {}s", i + 1);
+            crate::diag::log(&format!("[sidecar] glass-host (Rust) ready after {}s", i + 1));
             return Ok(());
         }
     }
@@ -92,7 +92,7 @@ fn spawn_glass_host(app: &AppHandle) -> bool {
         res("scry/data"),
         res("resources/glass_advise_db.json"),
     ) else {
-        eprintln!("[sidecar] cannot resolve bundled glass-host resources");
+        crate::diag::log("[sidecar!] cannot resolve bundled glass-host resources");
         return false;
     };
     // Deck catalogue → the belief engine's prior over opponent decklists. NOT in the tuple
@@ -144,7 +144,7 @@ fn spawn_glass_host(app: &AppHandle) -> bool {
             // and it runs at launch), and nothing recorded which build was live.
             .env("SCRY_APP_VERSION", app.package_info().version.to_string()),
         Err(e) => {
-            eprintln!("[sidecar] glass-host sidecar command failed: {}", e);
+            crate::diag::log(&format!("[sidecar!] glass-host sidecar command failed: {e}"));
             return false;
         }
     };
@@ -153,17 +153,46 @@ fn spawn_glass_host(app: &AppHandle) -> bool {
     let cmd = match deck_catalog_dir {
         Some(d) => cmd.env("GLASS_DECK_CATALOG_DIR", d),
         None => {
-            eprintln!("[sidecar] no bundled deck catalogue — belief opponent model will be off");
+            crate::diag::log("[sidecar] no bundled deck catalogue — belief opponent model will be off");
             cmd
         }
     };
     match cmd.spawn() {
-        Ok((_rx, _child)) => {
-            println!("[sidecar] Spawned glass-host (Rust), waiting for health...");
+        Ok((mut rx, _child)) => {
+            crate::diag::log("[sidecar] Spawned glass-host (Rust), waiting for health...");
+            // ★ DRAIN THE RECEIVER. This is the whole reason a Windows "it just
+            // doesn't work" was undiagnosable: `spawn` hands back glass-host's
+            // stdout, stderr, spawn errors AND its exit code, and this was
+            // `Ok((_rx, _child))` — the answer was already arriving and being
+            // dropped on the floor. A failure now leaves a record on disk.
+            tauri::async_runtime::spawn(async move {
+                use tauri_plugin_shell::process::CommandEvent;
+                while let Some(ev) = rx.recv().await {
+                    match ev {
+                        CommandEvent::Stdout(b) => {
+                            crate::diag::log(&format!("[host] {}", String::from_utf8_lossy(&b)))
+                        }
+                        CommandEvent::Stderr(b) => {
+                            crate::diag::log(&format!("[host!] {}", String::from_utf8_lossy(&b)))
+                        }
+                        CommandEvent::Error(e) => {
+                            crate::diag::log(&format!("[host!] pipe error: {e}"))
+                        }
+                        CommandEvent::Terminated(p) => crate::diag::log(&format!(
+                            "[host!] EXITED code={:?} signal={:?}",
+                            p.code, p.signal
+                        )),
+                        _ => {}
+                    }
+                }
+                crate::diag::log("[host] output stream closed");
+            });
             true
         }
         Err(e) => {
-            eprintln!("[sidecar] glass-host spawn failed: {} (is it bundled?)", e);
+            crate::diag::log(&format!(
+                "[sidecar!] glass-host spawn failed: {e} (is it bundled?)"
+            ));
             false
         }
     }
