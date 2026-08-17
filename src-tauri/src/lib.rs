@@ -96,6 +96,32 @@ fn launch_overlay_macos(handle: &tauri::AppHandle) {
 /// cross-platform is what lets `cargo check` prove it before it ships.
 #[cfg_attr(not(target_os = "windows"), allow(dead_code))]
 fn fit_overlay_to_monitor(overlay: &tauri::WebviewWindow) {
+    // Prefer MTGA'S OWN rectangle. `current_monitor()` reports the monitor the
+    // OVERLAY is on, which before it has ever moved is wherever the app window
+    // is — so fitting to it put the overlay on the wrong screen for a
+    // dual-monitor tester while cheerfully logging a correct-looking size.
+    let mtga = mtga_detect::find_mtga_window();
+    if mtga.found && mtga.width > 0 && mtga.height > 0 {
+        let r1 = overlay.set_position(tauri::PhysicalPosition::new(mtga.x, mtga.y));
+        let r2 = overlay.set_size(tauri::PhysicalSize::new(
+            mtga.width as u32,
+            mtga.height as u32,
+        ));
+        diag::log(&format!(
+            "[overlay] fitted to the MTGA window {}x{} at ({},{}) (set_position={:?} set_size={:?})",
+            mtga.width,
+            mtga.height,
+            mtga.x,
+            mtga.y,
+            r1.is_ok(),
+            r2.is_ok()
+        ));
+        return;
+    }
+    diag::log(&format!(
+        "[overlay] no MTGA geometry (found={}) — falling back to this window's monitor",
+        mtga.found
+    ));
     let monitor = match overlay.current_monitor() {
         Ok(Some(m)) => Some(m),
         _ => overlay.primary_monitor().ok().flatten(),

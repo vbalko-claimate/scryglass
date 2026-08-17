@@ -97,14 +97,52 @@ print(front.contains("MTGA") ? "1" : "0")
 
 // ── Windows ────────────────────────────────────────────────────────────
 
+/// MTGA's window rectangle in PHYSICAL pixels, or `found: false`.
+///
+/// This used to return a zeroed rect with only `found` filled in, which is why
+/// the Windows overlay could never follow MTGA: with no geometry to aim at, it
+/// stayed on whatever monitor the app happened to be on. A tester on
+/// 2026-08-17 saw the overlay appear on the wrong screen for exactly that
+/// reason.
+///
+/// Reading the FOREGROUND window is sufficient and is not a shortcut: the
+/// overlay is only ever positioned when `is_mtga_frontmost()` already gated it,
+/// so the foreground window IS MTGA at that moment. Enumerating every window to
+/// find a background MTGA would answer a question nothing asks.
 #[cfg(target_os = "windows")]
 pub fn find_mtga_window() -> MtgaWindow {
-    MtgaWindow {
+    use windows::Win32::Foundation::RECT;
+    use windows::Win32::UI::WindowsAndMessaging::{GetForegroundWindow, GetWindowRect};
+
+    let none = MtgaWindow {
         x: 0,
         y: 0,
         width: 0,
         height: 0,
-        found: is_mtga_frontmost(),
+        found: false,
+    };
+    if !is_mtga_frontmost() {
+        return none;
+    }
+    unsafe {
+        let hwnd = GetForegroundWindow();
+        let mut rect = RECT::default();
+        if GetWindowRect(hwnd, &mut rect).is_err() {
+            // Title matched but the rect is unreadable: report FOUND with no
+            // geometry so the caller falls back to its monitor rather than
+            // placing the overlay at (0,0) with zero size.
+            return MtgaWindow {
+                found: true,
+                ..none
+            };
+        }
+        MtgaWindow {
+            x: rect.left,
+            y: rect.top,
+            width: (rect.right - rect.left).max(0),
+            height: (rect.bottom - rect.top).max(0),
+            found: true,
+        }
     }
 }
 
