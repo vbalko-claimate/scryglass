@@ -2,8 +2,7 @@ fn main() {
     // Compile Swift overlay helper into native binary
     #[cfg(target_os = "macos")]
     {
-        let manifest_dir =
-            std::path::PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap());
+        let manifest_dir = std::path::PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap());
         let arch = std::env::var("CARGO_CFG_TARGET_ARCH").unwrap();
         let target_triple = format!("{}-apple-darwin", arch);
         let output_path = manifest_dir

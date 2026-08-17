@@ -17,7 +17,9 @@ pub async fn start_and_wait(app: &AppHandle) -> Result<(), String> {
     if external || cfg!(debug_assertions) {
         crate::diag::log("[sidecar] External/dev host mode — using a manually started server...");
         if check_health().await {
-            crate::diag::log(&format!("[sidecar] Server already running at {SIDECAR_URL}"));
+            crate::diag::log(&format!(
+                "[sidecar] Server already running at {SIDECAR_URL}"
+            ));
             return Ok(());
         }
         for i in 0..MAX_WAIT_SECS {
@@ -29,7 +31,8 @@ pub async fn start_and_wait(app: &AppHandle) -> Result<(), String> {
         }
         return Err("No glass-host on :8765. Start it: \
                     cargo run -p glass-mtga --features server --bin glass-host \
-                    (or unset SCRY_EXTERNAL_HOST to use the bundled one).".into());
+                    (or unset SCRY_EXTERNAL_HOST to use the bundled one)."
+            .into());
     }
 
     // Production: NEVER reuse whatever is on :8765 — an orphan from a prior
@@ -40,18 +43,27 @@ pub async fn start_and_wait(app: &AppHandle) -> Result<(), String> {
     tokio::time::sleep(Duration::from_millis(600)).await; // let :8765 free up
 
     if !spawn_glass_host(app) {
-        return Err("Failed to spawn glass-host. Is the Rust binary bundled in externalBin? \
-                    (no Python fallback exists anymore)".into());
+        return Err(
+            "Failed to spawn glass-host. Is the Rust binary bundled in externalBin? \
+                    (no Python fallback exists anymore)"
+                .into(),
+        );
     }
     for i in 0..MAX_WAIT_SECS {
         tokio::time::sleep(Duration::from_secs(1)).await;
         if check_health().await {
-            crate::diag::log(&format!("[sidecar] glass-host (Rust) ready after {}s", i + 1));
+            crate::diag::log(&format!(
+                "[sidecar] glass-host (Rust) ready after {}s",
+                i + 1
+            ));
             return Ok(());
         }
     }
 
-    Err(format!("glass-host did not respond within {}s. Check logs for errors.", MAX_WAIT_SECS))
+    Err(format!(
+        "glass-host did not respond within {}s. Check logs for errors.",
+        MAX_WAIT_SECS
+    ))
 }
 
 /// Best-effort kill of any running `glass-host` / `overlay-helper` sidecar
@@ -63,7 +75,10 @@ pub fn kill_stale_sidecars() {
     for name in ["glass-host", "overlay-helper"] {
         #[cfg(unix)]
         {
-            let _ = std::process::Command::new("pkill").arg("-x").arg(name).status();
+            let _ = std::process::Command::new("pkill")
+                .arg("-x")
+                .arg(name)
+                .status();
         }
         #[cfg(windows)]
         {
@@ -113,7 +128,12 @@ fn spawn_glass_host(app: &AppHandle) -> bool {
     let user_root = std::env::var("SCRY_USER_DATA").unwrap_or_else(|_| {
         app.path()
             .home_dir()
-            .map(|h| h.join("MTG").join("mtg-data").to_string_lossy().into_owned())
+            .map(|h| {
+                h.join("MTG")
+                    .join("mtg-data")
+                    .to_string_lossy()
+                    .into_owned()
+            })
             .unwrap_or_else(|_| "mtg-data".into())
     });
     let app_data = format!("{user_root}/app_data");
@@ -144,7 +164,9 @@ fn spawn_glass_host(app: &AppHandle) -> bool {
             // and it runs at launch), and nothing recorded which build was live.
             .env("SCRY_APP_VERSION", app.package_info().version.to_string()),
         Err(e) => {
-            crate::diag::log(&format!("[sidecar!] glass-host sidecar command failed: {e}"));
+            crate::diag::log(&format!(
+                "[sidecar!] glass-host sidecar command failed: {e}"
+            ));
             return false;
         }
     };
@@ -153,7 +175,9 @@ fn spawn_glass_host(app: &AppHandle) -> bool {
     let cmd = match deck_catalog_dir {
         Some(d) => cmd.env("GLASS_DECK_CATALOG_DIR", d),
         None => {
-            crate::diag::log("[sidecar] no bundled deck catalogue — belief opponent model will be off");
+            crate::diag::log(
+                "[sidecar] no bundled deck catalogue — belief opponent model will be off",
+            );
             cmd
         }
     };

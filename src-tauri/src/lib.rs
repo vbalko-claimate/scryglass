@@ -3,15 +3,16 @@ use tauri::{
     tray::TrayIconBuilder,
     Manager,
 };
-use tauri_plugin_shell::ShellExt;
-use tauri_plugin_shell::process::CommandEvent;
-#[cfg(not(debug_assertions))]
-use tauri_plugin_updater::UpdaterExt;
 #[cfg(not(debug_assertions))]
 use tauri_plugin_dialog::{DialogExt, MessageDialogButtons};
+use tauri_plugin_shell::process::CommandEvent;
+use tauri_plugin_shell::ShellExt;
+#[cfg(not(debug_assertions))]
+use tauri_plugin_updater::UpdaterExt;
 
 mod diag;
 mod mtga_detect;
+mod report;
 mod sidecar;
 
 #[tauri::command]
@@ -32,7 +33,10 @@ fn launch_overlay_macos(handle: &tauri::AppHandle) {
     let mut restart_count = 0u32;
 
     loop {
-        println!("[overlay] Starting overlay helper (attempt {})", restart_count + 1);
+        println!(
+            "[overlay] Starting overlay helper (attempt {})",
+            restart_count + 1
+        );
 
         let cmd = match shell.sidecar("overlay-helper") {
             Ok(c) => c,
@@ -53,8 +57,10 @@ fn launch_overlay_macos(handle: &tauri::AppHandle) {
                             eprintln!("[overlay] {}", String::from_utf8_lossy(&line));
                         }
                         CommandEvent::Terminated(payload) => {
-                            println!("[overlay] Exited: code={:?} signal={:?}",
-                                payload.code, payload.signal);
+                            println!(
+                                "[overlay] Exited: code={:?} signal={:?}",
+                                payload.code, payload.signal
+                            );
                             break;
                         }
                         _ => {}
@@ -104,9 +110,7 @@ fn launch_overlay_windows(handle: &tauri::AppHandle) {
             std::thread::sleep(std::time::Duration::from_secs(2));
 
             let mtga_front = mtga_detect::is_mtga_frontmost();
-            let match_active = rt.block_on(async {
-                check_match_active().await
-            });
+            let match_active = rt.block_on(async { check_match_active().await });
 
             if last_inputs != Some((mtga_front, match_active)) {
                 last_inputs = Some((mtga_front, match_active));
@@ -210,7 +214,9 @@ async fn check_match_active() -> bool {
     match resp {
         Ok(r) => {
             if let Ok(json) = r.json::<serde_json::Value>().await {
-                json.get("active").and_then(|v| v.as_bool()).unwrap_or(false)
+                json.get("active")
+                    .and_then(|v| v.as_bool())
+                    .unwrap_or(false)
             } else {
                 false
             }
@@ -283,6 +289,10 @@ pub fn run() {
                                 .title("Scryglass — the backend did not start")
                                 .show(|_| {});
                         }
+                        // Best-effort, and deliberately AFTER the dialog: the
+                        // tester is told first, the analysis copy second. An
+                        // upload that hangs must not delay what they see.
+                        report::send_failure(&handle, "sidecar_failed", &e).await;
                         // Show error page inline
                         if let Some(win) = handle.get_webview_window("main") {
                             let error_html = format!(

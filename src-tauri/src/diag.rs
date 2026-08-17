@@ -104,7 +104,11 @@ pub fn log(line: &str) {
     }
     g.ring.push_back(stamped.clone());
     if let Some(p) = g.path.clone() {
-        if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(&p) {
+        if let Ok(mut f) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(&p)
+        {
             let _ = writeln!(f, "{stamped}");
         }
     }
@@ -150,7 +154,8 @@ mod tests {
             all.len()
         );
         assert!(
-            all.last().is_some_and(|l| l.ends_with(&format!("line {}", RING_CAPACITY + 49))),
+            all.last()
+                .is_some_and(|l| l.ends_with(&format!("line {}", RING_CAPACITY + 49))),
             "newest line must survive, got {:?}",
             all.last()
         );
@@ -158,6 +163,10 @@ mod tests {
             !all.iter().any(|l| l.ends_with("line 0")),
             "oldest line must have been evicted"
         );
-        assert_eq!(tail(5).len(), 5, "a short tail returns exactly what was asked");
+        assert_eq!(
+            tail(5).len(),
+            5,
+            "a short tail returns exactly what was asked"
+        );
     }
 }

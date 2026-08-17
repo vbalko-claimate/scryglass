@@ -41,10 +41,7 @@ for window in windowList {
 print("\(bestX),\(bestY),\(bestW),\(bestH)")
 "#;
 
-    let output = Command::new("swift")
-        .arg("-e")
-        .arg(script)
-        .output();
+    let output = Command::new("swift").arg("-e").arg(script).output();
 
     match output {
         Ok(out) => {
@@ -59,10 +56,22 @@ print("\(bestX),\(bestY),\(bestW),\(bestH)")
                     found: true,
                 }
             } else {
-                MtgaWindow { x: 0, y: 0, width: 0, height: 0, found: false }
+                MtgaWindow {
+                    x: 0,
+                    y: 0,
+                    width: 0,
+                    height: 0,
+                    found: false,
+                }
             }
         }
-        Err(_) => MtgaWindow { x: 0, y: 0, width: 0, height: 0, found: false },
+        Err(_) => MtgaWindow {
+            x: 0,
+            y: 0,
+            width: 0,
+            height: 0,
+            found: false,
+        },
     }
 }
 
@@ -75,10 +84,7 @@ let front = NSWorkspace.shared.frontmostApplication?.localizedName ?? ""
 print(front.contains("MTGA") ? "1" : "0")
 "#;
 
-    let output = Command::new("swift")
-        .arg("-e")
-        .arg(script)
-        .output();
+    let output = Command::new("swift").arg("-e").arg(script).output();
 
     match output {
         Ok(out) => {
@@ -93,7 +99,13 @@ print(front.contains("MTGA") ? "1" : "0")
 
 #[cfg(target_os = "windows")]
 pub fn find_mtga_window() -> MtgaWindow {
-    MtgaWindow { x: 0, y: 0, width: 0, height: 0, found: is_mtga_frontmost() }
+    MtgaWindow {
+        x: 0,
+        y: 0,
+        width: 0,
+        height: 0,
+        found: is_mtga_frontmost(),
+    }
 }
 
 #[cfg(target_os = "windows")]
