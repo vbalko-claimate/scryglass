@@ -81,6 +81,45 @@ fn launch_overlay_macos(handle: &tauri::AppHandle) {
     }
 }
 
+/// Put the overlay over the WHOLE monitor it currently sits on.
+///
+/// `tauri.conf.json` pins the overlay to 1920x1080 at (0,0). On any other
+/// resolution that is simply the wrong rectangle — on a larger screen it covers
+/// the top-left corner, and the advice card, which CSS positions relative to
+/// that surface, lands somewhere the player is not looking. A tester on
+/// 2026-08-17 detected matches correctly and still saw no overlay.
+///
+/// ⚠ COMPILED ON EVERY PLATFORM ON PURPOSE. Only the Windows path calls it
+/// (macOS drives its own Swift overlay), but `#[cfg(target_os = "windows")]`
+/// code is NOT type-checked on the machine this is developed on, and the
+/// cross-check of that target fails locally in a C dependency. Keeping this
+/// cross-platform is what lets `cargo check` prove it before it ships.
+#[cfg_attr(not(target_os = "windows"), allow(dead_code))]
+fn fit_overlay_to_monitor(overlay: &tauri::WebviewWindow) {
+    let monitor = match overlay.current_monitor() {
+        Ok(Some(m)) => Some(m),
+        _ => overlay.primary_monitor().ok().flatten(),
+    };
+    let Some(monitor) = monitor else {
+        diag::log("[overlay!] no monitor reported — leaving the configured geometry");
+        return;
+    };
+    let size = *monitor.size();
+    let pos = *monitor.position();
+    let r1 = overlay.set_position(tauri::PhysicalPosition::new(pos.x, pos.y));
+    let r2 = overlay.set_size(tauri::PhysicalSize::new(size.width, size.height));
+    diag::log(&format!(
+        "[overlay] fitted to monitor {}x{} at ({},{}) scale={:.2} (set_position={:?} set_size={:?})",
+        size.width,
+        size.height,
+        pos.x,
+        pos.y,
+        monitor.scale_factor(),
+        r1.is_ok(),
+        r2.is_ok()
+    ));
+}
+
 /// Windows: Use Tauri overlay window — poll MTGA foreground + match status to show/hide.
 /// Also polls Alt key for feedback mode toggle.
 #[cfg(target_os = "windows")]
@@ -125,9 +164,18 @@ fn launch_overlay_windows(handle: &tauri::AppHandle) {
             match h1.get_webview_window("overlay") {
                 Some(overlay) => {
                     if should_show && !was_visible {
-                        crate::diag::log("[overlay] showing");
+                        // Re-fit on every show, not once at startup: the player
+                        // may have moved MTGA to another monitor or changed
+                        // resolution since the last match.
+                        fit_overlay_to_monitor(&overlay);
                         let _ = overlay.show();
                         was_visible = true;
+                        crate::diag::log(&format!(
+                            "[overlay] showing — visible={:?} position={:?} size={:?}",
+                            overlay.is_visible(),
+                            overlay.outer_position(),
+                            overlay.outer_size()
+                        ));
                     } else if !should_show && was_visible {
                         crate::diag::log("[overlay] hiding");
                         let _ = overlay.hide();
@@ -538,14 +586,29 @@ async fn run_update_check(app: tauri::AppHandle) {
         ))
         .blocking_show();
     if install {
+        // ⚠ STOP THE SIDECAR FIRST. Windows cannot replace a binary that a
+        // running process holds open, and the installer's own "close related
+        // apps" step only knows about Scryglass.exe — `glass-host.exe` is a
+        // separate process it never sees. A tester hit exactly this: every
+        // other app closed, the sidecar stayed, and the update was blocked.
+        crate::diag::log("[update] stopping glass-host so the installer can replace it");
+        sidecar::kill_stale_sidecars();
         match update.download_and_install(|_, _| {}, || {}).await {
             Ok(()) => app.restart(),
             Err(e) => {
+                crate::diag::log(&format!("[update!] install failed: {e}"));
                 let _ = app
                     .dialog()
                     .message(format!("Install failed: {e}"))
                     .title("Scryglass")
                     .blocking_show();
+                // We killed the backend to let the installer run and the
+                // install did not happen, so nothing else will bring it back:
+                // without this the app keeps running with a dead sidecar and
+                // every window it owns is a blank page.
+                if let Err(e) = sidecar::start_and_wait(&app).await {
+                    crate::diag::log(&format!("[update!] could not restart glass-host: {e}"));
+                }
             }
         }
     }
