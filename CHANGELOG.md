@@ -4,6 +4,29 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.42] — 2026-08-18
+
+### Fixed
+
+- **A counterspell was being read as a removal spell.** Aven Interrupter is a flash creature that
+  counters a spell as it arrives; Scryglass understood it as a 3-mana flier that destroys any
+  permanent, a card that does not exist. So it recommended casting it in your main phase, where
+  the real trigger has nothing to counter and does nothing at all. Found because a tester flagged
+  exactly that recommendation.
+- **The Windows installer no longer contains a file pretending to be a program.** A one-line text
+  file named `overlay-helper.exe` was being packed in to satisfy a build requirement; Windows
+  never used it, and a stray non-program with an .exe name is the kind of thing antivirus
+  software reacts to. It is gone.
+
+### Changed
+
+- **Telemetry now uploads every kind of event except one.** Previously five kinds were sent and
+  twenty were silently dropped — including the record of which cards were played, which is what
+  every "how often does this card actually turn up" measurement is built on, so those questions
+  could only ever be answered for the machine sitting in front of you. The one exception is the
+  bulky per-candidate scoring, which is 37% of all data and can be recomputed from the game
+  record.
+
 ## [0.8.41] — 2026-08-18
 
 ### Fixed
