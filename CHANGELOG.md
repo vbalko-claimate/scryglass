@@ -4,6 +4,27 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.44] — 2026-08-18
+
+### Fixed
+
+- **A creature that had attacked could not use its own abilities.** Attacking taps a creature, and
+  the advisor treated a tapped permanent as unable to activate *anything* — even abilities that
+  never asked to be tapped. So the pump you were holding mana for stopped being suggested for the
+  rest of the turn. 106 cards seen in real games are affected; the most common appears in 92
+  matches.
+- **A decision's outcome could be measured against the wrong game.** The feature added in the
+  previous release tracked how the board moved two turns after a recommendation, but a
+  recommendation still waiting when a match ended was finished off against the *next* match — one
+  game's numbers recorded under another's. Fixed before it had time to distort much.
+
+### Added
+
+- **Scry, surveil, explore and "discard a card" choices are finally seen at all.** Every prompt of
+  the "choose some cards" kind was invisible to Scryglass — no record, no advice, nothing in the
+  history. They are now captured, which is the prerequisite for advising on them; a single game
+  turns out to contain seven such moments.
+
 ## [0.8.43] — 2026-08-18
 
 ### Fixed
