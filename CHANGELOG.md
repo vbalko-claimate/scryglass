@@ -4,6 +4,26 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.43] — 2026-08-18
+
+### Fixed
+
+- **Your thumbs-up and thumbs-down were going nowhere.** The ✓ / ✗ buttons sent their verdict
+  over a channel the app never listened on, so every rating anyone has ever given was silently
+  discarded. They now save the same full snapshot the flag button does, which means a verdict can
+  actually be looked at — and replayed — later.
+- **A flagged decision never recorded WHY.** Every flag until now carried an empty reason, so we
+  knew a recommendation was disliked without knowing what was wrong with it. A thumb now supplies
+  it (good / bad); the ⚑ button stays "save this, I'll look later".
+
+### Added
+
+- **The app records how a decision turned out.** It already noted what it recommended and whether
+  you took the advice; now it also measures what the board did two turns later — life and
+  creatures on both sides. That is the difference between knowing advice was *followed* and
+  knowing it was *good*. This existed in the old Python version and was lost in the rewrite in
+  June; it has been missing for every game since.
+
 ## [0.8.42] — 2026-08-18
 
 ### Fixed
