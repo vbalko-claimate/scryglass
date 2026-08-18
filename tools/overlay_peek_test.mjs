@@ -40,6 +40,7 @@ const getEl = id => { if (!els.has(id)) els.set(id, makeEl(id)); return els.get(
 
 let matchActive = false;
 let wsInstance = null;
+const fetchLog = [];
 const sandbox = {
   console,
   document: {
@@ -51,10 +52,13 @@ const sandbox = {
   location: { hostname: 'localhost', hash: '' },
   setInterval: () => 0, clearInterval() {}, setTimeout: () => 0, clearTimeout() {},
   requestAnimationFrame: () => 0,
-  fetch: async (url) => ({
-    ok: true,
-    json: async () => (url.includes('/match-status') ? { active: matchActive } : {}),
-  }),
+  fetch: async (url, opts) => {
+    fetchLog.push({ url, method: (opts && opts.method) || 'GET' });
+    return {
+      ok: true,
+      json: async () => (url.includes('/match-status') ? { active: matchActive } : { saved: true }),
+    };
+  },
   WebSocket: class { constructor() { wsInstance = this; } send() {} close() {} },
   navigator: { userAgent: 'Mac' },
   localStorage: { getItem: () => null, setItem() {}, removeItem() {} },
@@ -127,7 +131,25 @@ const run = async () => {
   vm.runInContext('overlayCursor(9999, 9999)', sandbox);
   check('out-of-match unhover re-pills', peeked(), true);
 
-  console.log(failures ? `\n${failures} FAILURE(S)` : '\nall good');
+  // ── feedback: a thumb must PERSIST, and say why ─────────────────────────────
+// Until 2026-08-18 `sendFeedback` sent a `feedback` frame over the WebSocket and
+// the server's `ws_client` is send-only — it never reads incoming frames, so
+// every ✓ and ✗ ever clicked was dropped. And the ⚑ button posted with no
+// reason, so all 33 flags in the cloud carried an empty one: we knew a decision
+// was disliked, never why.
+fetchLog.length = 0;
+vm.runInContext("sendFeedback('down')", sandbox);
+const bad = fetchLog.find((f) => f.url.includes('/flag-decision'));
+check('a thumbs-down PERSISTS via /flag-decision', !!bad, true);
+check('...and carries its reason', bad ? decodeURIComponent(bad.url).includes('reason=bad') : false, true);
+check('...by POST', bad ? bad.method : '', 'POST');
+
+fetchLog.length = 0;
+vm.runInContext("sendFeedback('up')", sandbox);
+const good = fetchLog.find((f) => f.url.includes('/flag-decision'));
+check('a thumbs-up carries reason=good', good ? decodeURIComponent(good.url).includes('reason=good') : false, true);
+
+console.log(failures ? `\n${failures} FAILURE(S)` : '\nall good');
   process.exit(failures ? 1 : 0);
 };
 run();

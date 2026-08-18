@@ -469,7 +469,7 @@ html, body {
     <div class="feedback-btns" id="feedback-btns">
         <div class="fb-btn good" onclick="sendFeedback('up')" title="Good advice">✓</div>
         <div class="fb-btn bad" onclick="sendFeedback('down')" title="Bad advice">✗</div>
-        <div class="fb-btn flag" onclick="flagDecision(this)" title="Flag this decision — save the full game state to reproduce later">⚑</div>
+        <div class="fb-btn flag" onclick="flagDecision(this, 'flag')" title="Flag this decision — save the full game state to reproduce later">⚑</div>
     </div>
     <div id="interactive-indicator">FEEDBACK</div>
     <div id="debrief" style="display:none;text-align:center;padding:8px 0"></div>
@@ -1007,18 +1007,17 @@ function setInteractiveMode(active) {
 }
 
 function sendFeedback(vote) {
-    if (!ws || ws.readyState !== WebSocket.OPEN || !feedbackAdviceSnapshot) return;
-
-    // Disable buttons
+    // ⚠ A THUMB USED TO GO NOWHERE. This sent a `feedback` message over the
+    // WebSocket, and `ws_client` on the server is send-only — it never reads
+    // incoming frames. Every ✓ and ✗ ever clicked was dropped on the floor.
+    //
+    // Votes now travel the SAME path as the flag button, which already persists
+    // the exact advise request + advice for later replay, and they arrive with a
+    // reason attached — so a verdict is a reproducible record instead of a
+    // number. Typing a reason mid-game is not an option, so the button IS the
+    // reason.
     document.querySelectorAll('.fb-btn').forEach(b => b.classList.add('sent'));
-
-    ws.send(JSON.stringify({
-        type: 'feedback',
-        vote: vote,
-        decision_id: feedbackAdviceSnapshot.decision_id,
-        advice_text: feedbackAdviceSnapshot.message,
-        snapshot_ts: feedbackAdviceSnapshot.timestamp
-    }));
+    flagDecision(null, vote === 'up' ? 'good' : 'bad');
 
     // Visual confirmation flash
     const overlay = document.getElementById('overlay');
@@ -1031,8 +1030,13 @@ function sendFeedback(vote) {
 // persists the exact advise request + advice to advisor.db so a bad decision can
 // be reproduced later (no screenshots). Flashes green on save, red if nothing was
 // captured yet.
-function flagDecision(btn) {
-    fetch('/flag-decision', { method: 'POST' })
+function flagDecision(btn, reason) {
+    // `reason` is what makes a flag triageable: every flag in the cloud before
+    // 2026-08-18 carried an empty one, so we knew a decision was disliked but
+    // never why. '⚑' stays deliberately unlabelled ("save this, I'll look
+    // later"); the thumbs supply 'good' / 'bad'.
+    const q = reason ? ('?reason=' + encodeURIComponent(reason)) : '';
+    fetch('/flag-decision' + q, { method: 'POST' })
         .then(r => r.json())
         .then(d => {
             const overlay = document.getElementById('overlay');
