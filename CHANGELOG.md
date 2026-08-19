@@ -4,6 +4,19 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.48] — 2026-08-20
+
+### Added
+
+- **Deck card overview.** The deck screen now lists every card of the active version — and after
+  generating a guide, each card shows its ROLE (engine / payoff / removal / finisher…) from the
+  analysis step, with a one-line why on hover.
+- **Generation insight.** Generating a guide now shows what is happening (analyzing card roles →
+  writing guide + rules → validating → repair) with elapsed time, and finishes with a summary:
+  rules per layer, the real cost of the generation, and the reason if rules were omitted.
+- **Real rules preview.** The rules dialog shows the actual rules grouped by layer — action,
+  conditions and priority — instead of a file path.
+
 ## [0.8.47] — 2026-08-19
 
 ### Added

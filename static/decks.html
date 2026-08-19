@@ -36,6 +36,18 @@
         .spin { display:inline-block; width: 10px; height: 10px; border: 2px solid #ffd166; border-top-color: transparent; border-radius: 50%; animation: sp 0.9s linear infinite; }
         @keyframes sp { to { transform: rotate(360deg); } }
         pre.rules-json { background: #0f1117; padding: 10px; border-radius: 8px; overflow: auto; max-height: 40vh; font-size: 11px; }
+        .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 4px 14px; margin-top: 8px; font-size: 13px; }
+        .card-row { display: flex; gap: 8px; align-items: baseline; }
+        .card-row .cnt { color: #8b8e98; min-width: 18px; text-align: right; }
+        .role-tag { font-size: 10px; padding: 0 6px; border-radius: 8px; background: rgba(108,123,217,0.18); color: #9aa5e8; margin-left: auto; white-space: nowrap; }
+        .gen-panel { border: 1px solid #2a2d37; border-radius: 8px; padding: 10px 12px; margin-top: 10px; font-size: 13px; }
+        .gen-steps { display: flex; gap: 10px; margin: 6px 0; flex-wrap: wrap; }
+        .gen-step { padding: 2px 10px; border-radius: 10px; background: rgba(139,142,152,0.12); color: #8b8e98; font-size: 12px; }
+        .gen-step.active { background: rgba(255,209,102,0.18); color: #ffd166; }
+        .gen-step.done { background: rgba(129,199,132,0.15); color: #81c784; }
+        .rule-item { padding: 6px 8px; border-bottom: 1px solid #22252e; font-size: 13px; }
+        .rule-item .muted { display: block; margin-top: 2px; }
+        .layer-head { margin: 10px 0 4px; font-weight: 600; color: #9aa5e8; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
         .toast { position: fixed; bottom: 18px; right: 18px; background: #15171e; border: 1px solid #2a2d37; border-left: 4px solid #6c7bd9; border-radius: 8px; padding: 10px 14px; display: none; z-index: 60; }
         .toast.error { border-left-color: #e57373; }
         .toast.open { display: block; }
@@ -261,9 +273,14 @@
                 <tr><th>Version</th><th>Cards</th><th>Changes</th><th>Rules</th><th></th></tr>
                 ${rows}
             </table>
-            <p class="muted" style="margin-top:10px;">Generate builds an English play guide + advisor rules from this exact list
-            (mulligans, first turns, combos, dangerous meta cards). Rules go live only after you review and press Activate.</p>
+            <div class="gen-panel" id="gen-panel" style="display:none;"></div>
+            <p class="muted" style="margin-top:10px;">Generate builds an English play guide + advisor rules from this exact list —
+            it analyzes every card's role, writes the guide and rules with a stronger model against the current meta,
+            and validates the rules before you ever see them (typical cost ~$0.10, cached decks are free).
+            Rules go live only after you review and press Activate.</p>
+            <div id="cards-overview"></div>
             <button class="btn btn-ghost btn-sm" disabled title="Simulated optimization vs the meta — planned">Optimize vs meta — coming soon</button>`;
+        renderCards(body);
         // resume polling for versions with a pending job and no guide yet
         for (const v of versions) {
             if (v.guide_job_id && !v.guide_path) pollJob(body.deck_id, v.guide_job_id);
@@ -338,6 +355,8 @@
             return;
         }
         toast(body.cached ? 'Served from cache — free' : 'Generation started');
+        genStart = Date.now();
+        if (!body.cached) renderGenPanel('queued');
         loadDetail(deckId);
         if (body.job_id) pollJob(deckId, body.job_id);
         loadQuota();
@@ -349,13 +368,21 @@
             const el = document.getElementById('gen-' + jobId);
             if (el && body.status && body.status !== 'done' && body.status !== 'failed')
                 el.innerHTML = `<span class="spin"></span> ${esc(body.status)}…`;
+            if (body.status && body.status !== 'done' && body.status !== 'failed')
+                renderGenPanel(body.status);
             if (body.status === 'done' || body.status === 'failed') {
                 clearInterval(pollers[jobId]);
                 delete pollers[jobId];
-                if (body.status === 'failed') toast('Generation failed: ' + (body.error || 'unknown'), true);
-                else if (body.result && body.result.rules_omitted_reason)
-                    toast('Guide ready — rules omitted: ' + body.result.rules_omitted_reason, true);
-                else toast('Guide ready');
+                if (body.status === 'failed') {
+                    toast('Generation failed: ' + (body.error || 'unknown'), true);
+                    const gp = document.getElementById('gen-panel');
+                    if (gp) { gp.style.display = 'block'; gp.innerHTML = `<strong>Failed.</strong> <span class="muted">${esc(body.error || '')}</span>`; }
+                } else {
+                    if (body.result && body.result.rules_omitted_reason)
+                        toast('Guide ready — rules omitted: ' + body.result.rules_omitted_reason, true);
+                    else toast('Guide ready');
+                    if (body.result) renderGenResult(body.result);
+                }
                 loadDetail(deckId);
                 loadQuota();
             }
@@ -371,18 +398,107 @@
         document.getElementById('guide-body').innerHTML = marked.parse(md);
         document.getElementById('guide-back').classList.add('open');
     }
+    // ── Card overview: the version's list, enriched with ROLES from the
+    // pipeline's digest step when a guide has been generated. ────────────────
+    async function renderCards(deck) {
+        const el = document.getElementById('cards-overview');
+        const versions = deck.versions || [];
+        if (!versions.length) return;
+        const active = versions.find(v => v.is_active) || versions[versions.length - 1];
+        const lines = (active.deck_list || '').split('\n');
+        const cards = [];
+        for (const line of lines) {
+            const m = line.trim().match(/^(\d+)\s+([^(]+?)(\s*\(.*)?$/);
+            if (m) cards.push({ count: +m[1], name: m[2].trim() });
+        }
+        if (!cards.length) return;
+        // roles from the digest, when present
+        let roles = {};
+        const dg = await api(`/api/decks/${encodeURIComponent(deck.deck_id)}/versions/${active.version_number}/digest`);
+        if (dg.ok && Array.isArray(dg.body)) {
+            for (const c of dg.body) if (c.name) roles[c.name] = c;
+        }
+        const total = cards.reduce((a, c) => a + c.count, 0);
+        el.innerHTML = `<div class="layer-head" style="margin-top:14px;">Cards — v${active.version_number} (${total})</div>
+            <div class="cards-grid">` + cards.map(c => {
+                const r = roles[c.name];
+                const tag = r && r.role ? `<span class="role-tag" title="${esc(r.note || '')}">${esc(r.role)}</span>` : '';
+                return `<div class="card-row"><span class="cnt">${c.count}×</span> <span>${esc(c.name)}</span>${tag}</div>`;
+            }).join('') + '</div>' +
+            (Object.keys(roles).length ? '' :
+             '<div class="muted" style="margin-top:4px;">Generate a guide to see each card\'s role (engine / payoff / removal / finisher…).</div>');
+    }
+
+    // ── Generation insight panel ────────────────────────────────────────────
+    const STEP_LABELS = {
+        queued:   'queued',
+        digest:   'analyzing card roles (fast model)',
+        synth:    'writing guide + rules (strong model)',
+        validate: 'validating rules against the engine',
+        repair:   'fixing rules (one repair round)',
+    };
+    let genStart = null;
+    function renderGenPanel(status, extra) {
+        const el = document.getElementById('gen-panel');
+        if (!el) return;
+        el.style.display = 'block';
+        const order = ['digest', 'synth', 'validate', 'repair'];
+        const idx = order.indexOf(status);
+        const steps = order.map((st, i) => {
+            const cls = i < idx ? 'done' : (st === status ? 'active' : '');
+            return `<span class="gen-step ${cls}">${STEP_LABELS[st]}</span>`;
+        }).join('');
+        const secs = genStart ? Math.round((Date.now() - genStart) / 1000) : 0;
+        el.innerHTML = `<strong>Generating…</strong> <span class="muted">${secs}s</span>
+            <div class="gen-steps">${steps}</div>${extra || ''}`;
+    }
+    function renderGenResult(result) {
+        const el = document.getElementById('gen-panel');
+        if (!el) return;
+        el.style.display = 'block';
+        const sj = result.strategy_json;
+        let layers = '';
+        if (sj && sj.rules) {
+            const byLayer = {};
+            for (const r of sj.rules) byLayer[r.layer] = (byLayer[r.layer] || 0) + 1;
+            layers = Object.entries(byLayer).map(([l, n]) => `${l} ${n}`).join(' · ');
+        }
+        const cost = (result.usage || []).reduce((a, u) => a + (u.cost_usd || 0), 0);
+        el.innerHTML = `<strong>Done.</strong>
+            ${sj ? `<span class="pill ok">${sj.rules.length} rules</span> <span class="muted">${layers}</span>` :
+                   `<span class="pill warn">guide only</span> <span class="muted">${esc(result.rules_omitted_reason || '')}</span>`}
+            <span class="muted"> · cost $${cost.toFixed(3)}</span>
+            <div class="muted" style="margin-top:4px;">Review the rules, then Activate — nothing is applied until you do.</div>`;
+    }
+
     async function previewRules(deckId, v) {
-        const detail = await api('/api/decks/' + encodeURIComponent(deckId));
-        const ver = (detail.body.versions || []).find(x => x.version_number === v);
-        if (!ver || !ver.rules_path) { toast('No rules stored for this version', true); return; }
-        // The version strategy file is served through the manage strategy API
-        // only after activation, so preview reads it via a dedicated fetch of
-        // the deck detail; the JSON itself rides in rules_path on disk — show
-        // counts from rules_count and fetch content lazily via activate step.
-        const summary = `${ver.rules_count} rules · source ${esc(ver.rules_source || '?')} · ${ver.rules_validated ? 'validated' : 'NOT validated'}`;
-        document.getElementById('rules-summary').textContent = summary;
-        document.getElementById('rules-json').textContent = 'Rules are stored at:\n' + ver.rules_path +
-            '\n\nActivate to load them into the advisor. After activation the full JSON is visible under Manage → Strategies.';
+        const { ok, body } = await api(`/api/decks/${encodeURIComponent(deckId)}/versions/${v}/rules`);
+        if (!ok) { toast(body.error || 'No rules stored for this version', true); return; }
+        const rules = body.rules || [];
+        const byLayer = {};
+        for (const r of rules) (byLayer[r.layer] = byLayer[r.layer] || []).push(r);
+        document.getElementById('rules-summary').textContent =
+            `${rules.length} rules · signature: ${(body.deck_signature || []).join(', ')}`;
+        const parts = [];
+        for (const [layer, rs] of Object.entries(byLayer)) {
+            parts.push(`<div class="layer-head">${esc(layer)} (${rs.length})</div>`);
+            for (const r of rs) {
+                const conds = [];
+                if (r.phase) conds.push('phase ' + [].concat(r.phase).join('/'));
+                if (r.turn_min != null) conds.push('turn ≥' + r.turn_min);
+                if (r.turn_max != null) conds.push('turn ≤' + r.turn_max);
+                if (r.mana_min != null) conds.push('mana ≥' + r.mana_min);
+                if (r.life_below != null) conds.push('life <' + r.life_below);
+                if (r.require) for (const q of [].concat(r.require)) {
+                    if (q.match && q.match.name) conds.push(`${q.zone}: ${q.match.name}`);
+                    else if (q.zone) conds.push(q.zone + ' condition');
+                }
+                parts.push(`<div class="rule-item">${esc(r.action || '')}
+                    <span class="muted">${esc(conds.join(' · '))} · ${esc(r.priority || 'medium')}</span></div>`);
+            }
+        }
+        document.getElementById('rules-json').innerHTML = parts.join('');
+        document.getElementById('rules-json').style.whiteSpace = 'normal';
         const btn = document.getElementById('rules-activate');
         btn.onclick = async () => {
             const { ok, body } = await api(`/api/decks/${encodeURIComponent(deckId)}/versions/${v}/activate`, { method: 'POST' });
