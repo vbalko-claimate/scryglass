@@ -174,5 +174,17 @@ const advicePath = extract('updateAdvice') + extract('clearAdvicePanels');
 eq(/compliance-flash/.test(advicePath), false,
    'SOURCE: no advice-path function clears the compliance flash');
 
+// ★ THE "EMPTY WINDOW" REGRESSION (user-reported 2026-08-19). When there is
+// nothing to recommend, `#advice-idle` is the panel's ONLY content — and at 11px
+// on 45% opacity it was unreadable, so a deliberately quiet turn looked exactly
+// like a dead overlay. That is a functional failure, not a visual preference: the
+// message exists solely to tell the two apart, so it is pinned here even though
+// this file otherwise leaves styling to be checked by eye.
+const idleRule = (html.match(/\.advice-idle\s*\{([^}]*)\}/) || [])[1] || '';
+const idlePx = Number((idleRule.match(/font-size:\s*(\d+)px/) || [])[1] || 0);
+eq(idlePx >= 15, true, `CSS: the idle message is legible (font-size ${idlePx}px, needs >= 15)`);
+const idleAlpha = Number((idleRule.match(/color:\s*rgba\([^)]*,\s*([\d.]+)\s*\)/) || [])[1] || 0);
+eq(idleAlpha >= 0.7, true, `CSS: the idle message has real contrast (alpha ${idleAlpha}, needs >= 0.7)`);
+
 console.log(failures ? `\n${failures} FAILED` : '\nall passed');
 process.exit(failures ? 1 : 0);

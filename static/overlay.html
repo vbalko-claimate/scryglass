@@ -392,12 +392,21 @@ html, body {
    A blank panel is indistinguishable from a broken one. An empty advice push is
    DELIBERATE ("a confident 'no play' stays quiet"), so say that instead of
    showing nothing. */
+/* The "nothing to recommend" message. USER-REPORTED 2026-08-19: at 11px and 45%
+   opacity this read as an EMPTY WINDOW — the player could not tell a deliberately
+   quiet turn from a broken advisor, which is the exact confusion the idle message
+   was added to prevent. Sized against `.key-play-card` (20px) rather than the fine
+   print: it is the panel's only content when it shows, so it has to carry the
+   panel. Kept a step smaller and unbolded so it still reads as a status, not as a
+   recommendation. */
 .advice-idle {
     display: none;
-    font-size: 11px;
-    color: rgba(160, 158, 150, 0.45);
-    font-style: italic;
-    padding: 2px 0;
+    font-size: 17px;
+    font-weight: 500;
+    line-height: 1.25;
+    color: rgba(235, 233, 226, 0.82);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+    padding: 6px 0;
 }
 .advice-idle.visible { display: block; }
 
@@ -498,10 +507,17 @@ let peekPolarityFor = null;
 const FAMILY_TYPE = {
     cast_spell: 'cast', play_land: 'cast', activate: 'cast',
     attack: 'attack', block: 'block', pass: 'hold',
+    // "Choose some cards" (scry / surveil / discard / stripping a hand). Not a
+    // cast — the player is picking from a list the game put in front of them.
+    select: 'cast',
+    // Combat damage split (trample / multi-block) — combat styling.
+    assign: 'attack',
 };
 const FAMILY_LABEL = {
     cast_spell: 'CAST', play_land: 'PLAY LAND', activate: 'ACTIVATE',
     attack: 'ATTACK', block: 'BLOCK', pass: 'HOLD',
+    select: 'CHOOSE',
+    assign: 'SPLIT DMG',
 };
 
 // Match-state driver. `/match-status` is the AUTHORITATIVE in-match signal
