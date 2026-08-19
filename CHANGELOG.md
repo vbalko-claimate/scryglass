@@ -4,6 +4,34 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.45] — 2026-08-19
+
+### Added
+
+- **The advisor now speaks up when the game asks you to CHOOSE.** Scry, surveil and discard
+  prompts, modal spells ("Choose one —"), kicker offers and combat damage splits all reach the
+  advisor for the first time. Which way a pick runs comes from whose cards they are — when you
+  strip the opponent's hand the advisor names their best card, when you discard your own it names
+  the cheapest — and when it cannot tell, it says so instead of guessing.
+- **Kicker guidance.** If the kicker is payable and doesn't price out another play, the advisor
+  says pay it and quotes what the kicked effect does; if it would cost you another spell this
+  turn, it names the trade-off.
+- **Damage-split guidance.** When you split combat damage the advisor confirms a correct default
+  with the reason ("deathtouch makes 1 lethal, trample carries the rest") or spells out a better
+  split row by row.
+
+### Fixed
+
+- **The advisor could recommend an illegal activation.** Abilities with an "Activate only if …"
+  condition (e.g. Hired Claw) were offered even when the condition was false. The condition is
+  now checked — and Hired Claw's own combo (attack → 1 damage → pump becomes legal) falls out
+  correctly.
+- **22 activated abilities were invisible to the advisor** (Umbral Collar Zealot, the Roads
+  cycle, Magda, Immersturm Predator …) — compiled under a wrong ability kind, they were never
+  offered as plays. Promoted to real activations, with the cost actually checked and paid.
+- **A quiet overlay no longer looks broken.** "No play recommended right now" is now large and
+  readable instead of near-invisible fine print.
+
 ## [0.8.44] — 2026-08-18
 
 ### Fixed
