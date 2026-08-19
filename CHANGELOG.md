@@ -4,6 +4,28 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.47] — 2026-08-19
+
+### Added
+
+- **Deck management.** A new Decks screen: create decks from an MTGA export or import one you
+  already played (no copy-paste — every played deck is recorded), version them with change
+  diffs, and generate an **AI play guide** for your exact list — game plan, key cards, combos,
+  mulligans, first turns, role assessment, meta matchups, dangerous cards, and a cheat sheet.
+  Generation also produces advisor rules; you review them and press Activate — nothing goes
+  live silently. Guide generation runs on your account budget (alpha allowance included).
+- **The advisor now knows which deck you're playing.** Activated deck rules bind automatically
+  when a match starts — no configuration.
+- **Deck sync.** Your decks, versions, guides and rules mirror to your account: sign in on a
+  new computer and they come back. Sync never deletes anything locally.
+
+### Fixed
+
+- **Transformed cards have names again.** A flipped double-faced card (e.g. Bloodbat Summoner)
+  showed as "Unknown" to the advisor — 1487 back faces added to the card catalog.
+- **Modal "choose one that hasn't been chosen" is enforced** — the engine no longer re-picks a
+  spent mode (The Vision, Gollum, Three Bowls of Porridge).
+
 ## [0.8.46] — 2026-08-19
 
 ### Added
