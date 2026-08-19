@@ -4,6 +4,15 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.46] — 2026-08-19
+
+### Added
+
+- **You can now see when an update is ready.** A banner appears in the app window (dismissible),
+  in the overlay between matches, and as a line on the minimized overlay pill. The app checks on
+  every launch and every 4 hours while running. Installing stays in the tray menu; nothing
+  interrupts a game.
+
 ## [0.8.45] — 2026-08-19
 
 ### Added
