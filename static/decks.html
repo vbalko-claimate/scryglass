@@ -3,767 +3,413 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MTGA Advisor — Deck Management</title>
+    <title>Scryglass — Decks</title>
+    <link rel="stylesheet" href="/static/style.css?v=16">
+    <link rel="stylesheet" href="/static/live.css?v=16">
+    <script>document.documentElement.className='profile-'+(localStorage.getItem('scry-profile')||'full');</script>
     <style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body { background: #0f1117; color: #e6e8ee; font-family: 'Segoe UI', system-ui, sans-serif; }
-
-#app {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    min-height: 100vh;
-}
-
-header {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    padding: 12px 20px;
-    background: #171a23;
-    border-radius: 8px;
-    border: 1px solid #1e2230;
-}
-header h1 { font-size: 20px; color: #5b6ccf; }
-header a { color: #7f8de0; text-decoration: none; font-size: 13px; }
-header a:hover { color: #fff; }
-.nav-links { margin-left: auto; display: flex; gap: 16px; }
-
-/* Layout */
-.main-grid {
-    display: grid;
-    grid-template-columns: 320px 1fr;
-    gap: 16px;
-    flex: 1;
-}
-
-/* Panels */
-.panel {
-    background: #171a23;
-    border: 1px solid #1e2230;
-    border-radius: 8px;
-    padding: 16px;
-}
-.panel h2 { font-size: 16px; color: #5b6ccf; margin-bottom: 12px; }
-
-/* Deck list */
-.deck-list-header {
-    display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 12px;
-}
-.deck-item {
-    padding: 10px 12px;
-    border-radius: 6px;
-    border: 1px solid transparent;
-    cursor: pointer;
-    transition: all 0.15s;
-    margin-bottom: 6px;
-}
-.deck-item:hover { background: rgba(255,255,255,0.04); border-color: #1e2230; }
-.deck-item.active { background: #1e2230; border-color: #5b6ccf; }
-.deck-item-name { font-weight: 600; font-size: 13px; margin-bottom: 3px; display: flex; align-items: center; gap: 6px; }
-.deck-item-meta { font-size: 11px; color: #888; display: flex; gap: 10px; flex-wrap: wrap; }
-
-/* Color dots */
-.color-dot {
-    display: inline-block; width: 12px; height: 12px; border-radius: 50%;
-    margin-right: 1px; vertical-align: middle; border: 1px solid rgba(255,255,255,0.2);
-}
-.color-W { background: #f5f0d0; }
-.color-U { background: #5b6ccf; }
-.color-B { background: #3d3040; }
-.color-R { background: #c03030; }
-.color-G { background: #2d7a1e; }
-
-/* Badges */
-.badge {
-    display: inline-block; padding: 1px 7px; border-radius: 3px;
-    font-size: 10px; font-weight: 600;
-}
-.badge-deployed { background: rgba(76,175,80,0.2); color: #4caf50; border: 1px solid rgba(76,175,80,0.3); }
-.badge-rules { background: rgba(91, 108, 207,0.15); color: #7f8de0; border: 1px solid rgba(91, 108, 207,0.2); }
-.badge-warn { background: rgba(255,193,7,0.15); color: #ffc107; border: 1px solid rgba(255,193,7,0.2); }
-.badge-ga { background: rgba(255,152,0,0.15); color: #ffa500; border: 1px solid rgba(255,152,0,0.3); }
-
-/* Buttons */
-.btn {
-    padding: 6px 14px; border-radius: 4px; border: none;
-    font-size: 12px; cursor: pointer; transition: all 0.2s;
-}
-.btn-primary { background: #5b6ccf; color: #fff; }
-.btn-primary:hover { background: #4d5cba; }
-.btn-secondary { background: #1e2230; color: #7f8de0; border: 1px solid #5b6ccf; }
-.btn-secondary:hover { background: #262a36; }
-.btn-small { padding: 3px 10px; font-size: 11px; }
-.btn-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-.btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-/* Dropdown wrapper */
-.dropdown { position: relative; display: inline-block; }
-.dropdown-menu {
-    display: none; position: absolute; top: 100%; left: 0; margin-top: 4px;
-    background: #1e2230; border: 1px solid #5b6ccf; border-radius: 4px;
-    min-width: 180px; z-index: 10; overflow: hidden;
-}
-.dropdown-menu.open { display: block; }
-.dropdown-menu button {
-    display: block; width: 100%; padding: 8px 14px; border: none; background: none;
-    color: #7f8de0; font-size: 12px; text-align: left; cursor: pointer;
-}
-.dropdown-menu button:hover { background: rgba(255,255,255,0.06); }
-
-/* Detail sections */
-.detail-section {
-    background: #0f1117; border: 1px solid #1e2230; border-radius: 6px;
-    padding: 14px; margin-bottom: 12px;
-}
-.detail-section h3 { font-size: 14px; color: #5b6ccf; margin-bottom: 8px; }
-
-/* Version list */
-.version-item {
-    padding: 8px 10px; border-radius: 4px; margin-bottom: 4px;
-    font-size: 12px; display: flex; align-items: center; gap: 8px;
-    background: rgba(30, 34, 48,0.3); border: 1px solid transparent;
-}
-.version-item:hover { border-color: #1e2230; }
-.version-item .v-num { font-weight: 700; color: #5b6ccf; min-width: 32px; }
-.version-item .v-date { color: #888; min-width: 80px; }
-.version-item .v-summary { color: #e6e8ee; flex: 1; }
-.version-item .v-badges { display: flex; gap: 4px; margin-left: auto; }
-
-/* Deck textarea */
-.deck-textarea {
-    width: 100%; min-height: 200px; background: #0f1117; color: #e6e8ee;
-    border: 1px solid #1e2230; border-radius: 6px; padding: 10px;
-    font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 12px;
-    line-height: 1.5; resize: vertical; white-space: pre;
-}
-.deck-textarea:focus { outline: 1px solid #5b6ccf; }
-.deck-textarea[readonly] { opacity: 0.7; }
-
-/* Matchup bar */
-.matchup-bar {
-    display: flex; height: 20px; border-radius: 4px; overflow: hidden; margin-top: 8px;
-}
-.matchup-bar .win { background: #4caf50; }
-.matchup-bar .loss { background: #f44336; }
-.matchup-bar .draw { background: #666; }
-
-/* Warning */
-.warning-box {
-    background: rgba(255,152,0,0.1); border: 1px solid rgba(255,152,0,0.3);
-    border-radius: 6px; padding: 10px 14px; font-size: 12px; color: #ffcc80;
-    margin-bottom: 12px;
-}
-
-/* Empty state */
-.empty-state {
-    color: #555; font-style: italic; font-size: 13px; padding: 40px 16px;
-    text-align: center;
-}
-
-/* Modal */
-.modal-overlay {
-    display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.6); z-index: 100; align-items: center; justify-content: center;
-}
-.modal-overlay.open { display: flex; }
-.modal {
-    background: #171a23; border: 1px solid #1e2230; border-radius: 8px;
-    padding: 24px; width: 480px; max-width: 90vw; max-height: 90vh; overflow-y: auto;
-}
-.modal h2 { font-size: 16px; color: #5b6ccf; margin-bottom: 16px; }
-.modal label { display: block; font-size: 12px; color: #888; margin-bottom: 4px; }
-.modal input[type="text"] {
-    width: 100%; padding: 8px 12px; background: #0f1117; border: 1px solid #1e2230;
-    border-radius: 4px; color: #e6e8ee; font-size: 13px; margin-bottom: 12px;
-}
-.modal input[type="text"]:focus { outline: 1px solid #5b6ccf; }
-
-/* Toast */
-.toast {
-    position: fixed; bottom: 24px; right: 24px; background: #4caf50; color: #fff;
-    padding: 10px 20px; border-radius: 6px; font-size: 13px; z-index: 200;
-    opacity: 0; transition: opacity 0.3s; pointer-events: none;
-}
-.toast.show { opacity: 1; }
-.toast.error { background: #f44336; }
-
-/* Loading */
-.loading { color: #888; font-size: 13px; padding: 20px; text-align: center; }
-
-/* Editable description */
-.editable-desc {
-    width: 100%; padding: 6px 10px; background: #0f1117; border: 1px solid #1e2230;
-    border-radius: 4px; color: #e6e8ee; font-size: 12px; resize: vertical; min-height: 40px;
-    font-family: 'Segoe UI', system-ui, sans-serif;
-}
-.editable-desc:focus { outline: 1px solid #5b6ccf; }
-
-/* Responsive */
-@media (max-width: 800px) {
-    .main-grid { grid-template-columns: 1fr; }
-}
+        /* Page-local layout: master list + detail. Everything else reuses the
+           app shell's classes. */
+        .decks-layout { display: grid; grid-template-columns: 300px 1fr; gap: 16px; padding: 16px; align-items: start; }
+        .deck-list-panel, .deck-detail-panel { background: var(--bg-card, #15171e); border: 1px solid var(--border, #2a2d37); border-radius: 10px; padding: 14px; }
+        .deck-row { padding: 10px 12px; border-radius: 8px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .deck-row:hover { background: rgba(255,255,255,0.04); }
+        .deck-row.selected { background: rgba(108,123,217,0.15); }
+        .deck-row .muted, .muted { color: #8b8e98; font-size: 12px; }
+        .quota-badge { font-size: 12px; color: #8b8e98; margin-left: auto; }
+        .version-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
+        .version-table th, .version-table td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border, #2a2d37); vertical-align: top; }
+        .pill { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+        .pill.ok { background: rgba(129,199,132,0.18); color: #81c784; }
+        .pill.warn { background: rgba(255,209,102,0.18); color: #ffd166; }
+        .pill.off { background: rgba(139,142,152,0.15); color: #8b8e98; }
+        .diff-add { color: #81c784; } .diff-del { color: #e57373; }
+        .modal-back { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 50; }
+        .modal-back.open { display: flex; }
+        .modal { background: #15171e; border: 1px solid #2a2d37; border-radius: 12px; padding: 18px; width: min(760px, 92vw); max-height: 86vh; overflow: auto; }
+        .modal textarea { width: 100%; min-height: 220px; background: #0f1117; color: #e6e6ea; border: 1px solid #2a2d37; border-radius: 8px; padding: 10px; font-family: ui-monospace, monospace; font-size: 12px; }
+        .modal input[type=text] { width: 100%; background: #0f1117; color: #e6e6ea; border: 1px solid #2a2d37; border-radius: 8px; padding: 8px 10px; }
+        .guide-body { line-height: 1.55; font-size: 14px; }
+        .guide-body h1, .guide-body h2 { border-bottom: 1px solid #2a2d37; padding-bottom: 4px; }
+        .guide-body code { background: #0f1117; padding: 1px 5px; border-radius: 4px; }
+        .gen-status { display: inline-flex; gap: 8px; align-items: center; font-size: 12px; color: #ffd166; }
+        .spin { display:inline-block; width: 10px; height: 10px; border: 2px solid #ffd166; border-top-color: transparent; border-radius: 50%; animation: sp 0.9s linear infinite; }
+        @keyframes sp { to { transform: rotate(360deg); } }
+        pre.rules-json { background: #0f1117; padding: 10px; border-radius: 8px; overflow: auto; max-height: 40vh; font-size: 11px; }
+        .toast { position: fixed; bottom: 18px; right: 18px; background: #15171e; border: 1px solid #2a2d37; border-left: 4px solid #6c7bd9; border-radius: 8px; padding: 10px 14px; display: none; z-index: 60; }
+        .toast.error { border-left-color: #e57373; }
+        .toast.open { display: block; }
     </style>
 </head>
 <body>
-    <div id="app">
-        <header>
-            <h1>Deck Management</h1>
-            <div class="nav-links">
-                <a href="/">Advisor</a>
-                <a href="/manage">Manage</a>
-                <a href="/stats">Stats</a>
+    <div class="app-container">
+        <!-- Shared shell top bar (markup mirrors index.html; shell.js drives it) -->
+        <header class="app-header">
+            <div class="brand">
+                <div class="brand-icon"><span class="brand-mark">◈</span></div>
+                <span>Scryglass</span>
+            </div>
+            <nav class="main-nav">
+                <a href="/" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m10 15 5-3-5-3v6z"/></svg>
+                    Advisor
+                </a>
+                <a href="/decks" class="nav-link active">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="14" height="17" rx="2"/><path d="M7 4V2h10a2 2 0 0 1 2 2v15"/></svg>
+                    Decks
+                </a>
+                <a href="/stats" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+                    Stats
+                </a>
+                <a href="/review" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>
+                    Review
+                </a>
+                <a href="/manage" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/></svg>
+                    Manage
+                </a>
+            </nav>
+            <div class="account-control">
+                <div id="account-pill" class="account-pill">
+                    <span class="user-avatar">?</span>
+                    <div style="display:flex; flex-direction:column;">
+                        <span class="account-email">Checking status...</span>
+                        <span class="account-anon-hint">syncing anonymously</span>
+                    </div>
+                </div>
             </div>
         </header>
 
-        <div class="main-grid">
-            <div class="panel" id="deck-list-panel">
-                <div class="deck-list-header">
-                    <h2>Decks</h2>
-                    <button class="btn btn-primary btn-small" onclick="openCreateModal()">+ Create Deck</button>
+        <div class="decks-layout">
+            <div class="deck-list-panel">
+                <div style="display:flex; gap:8px; align-items:center; margin-bottom:10px;">
+                    <strong>My Decks</strong>
+                    <span id="quota" class="quota-badge" title="Guide-generation budget"></span>
                 </div>
-                <div id="deck-list"><div class="loading">Loading...</div></div>
+                <div style="display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap;">
+                    <button class="btn btn-secondary btn-sm" onclick="openCreate()">+ New</button>
+                    <button class="btn btn-secondary btn-sm" onclick="openImport()">Import from games</button>
+                    <button class="btn btn-ghost btn-sm" onclick="syncCloud()" title="Push/pull decks to your account">⇅ Sync</button>
+                </div>
+                <div id="deck-list"><span class="muted">Loading…</span></div>
             </div>
 
-            <div class="panel" id="deck-detail-panel">
-                <div id="deck-detail">
-                    <div class="empty-state">Select a deck or create a new one</div>
-                </div>
+            <div class="deck-detail-panel" id="detail">
+                <span class="muted">Select a deck — or create one from an MTGA export, or import a deck you already played.</span>
             </div>
         </div>
     </div>
 
-    <!-- Create Modal -->
-    <div id="create-modal" class="modal-overlay">
+    <!-- Create / new-version modal -->
+    <div class="modal-back" id="create-back">
         <div class="modal">
-            <h2>Create New Deck</h2>
-            <label for="new-deck-name">Deck Name</label>
-            <input type="text" id="new-deck-name" placeholder="e.g. Azorius Control">
-            <label for="new-deck-list">Deck List (paste from MTGA)</label>
-            <textarea id="new-deck-list" class="deck-textarea" style="min-height:260px"
-                placeholder="Deck&#10;4 Lightning Bolt&#10;4 Monastery Swiftspear&#10;..."></textarea>
-            <div class="btn-row" style="margin-top:12px; justify-content:flex-end;">
-                <button class="btn btn-secondary" onclick="closeCreateModal()">Cancel</button>
-                <button class="btn btn-primary" id="create-btn" onclick="createDeck()">Create</button>
+            <h3 id="create-title">New deck</h3>
+            <p class="muted">Paste an MTGA export (Deck → Export). Lines like <code>4 Lightning Strike (DMU) 137</code> or just <code>4 Lightning Strike</code>.</p>
+            <input type="text" id="create-name" placeholder="Deck name" style="margin-bottom:8px;">
+            <textarea id="create-list" placeholder="Deck&#10;4 Lightning Strike (DMU) 137&#10;…"></textarea>
+            <div style="display:flex; gap:8px; margin-top:10px; justify-content:flex-end;">
+                <button class="btn btn-ghost btn-sm" onclick="closeModals()">Cancel</button>
+                <button class="btn btn-primary btn-sm" id="create-submit" onclick="submitCreate()">Create</button>
             </div>
         </div>
     </div>
 
-    <div id="toast" class="toast"></div>
+    <!-- Import-from-games modal -->
+    <div class="modal-back" id="import-back">
+        <div class="modal">
+            <h3>Import from recent games</h3>
+            <p class="muted">Every deck you played is already recorded — pick one, no copy-paste needed.</p>
+            <div id="import-list"><span class="muted">Loading…</span></div>
+            <div style="display:flex; margin-top:10px; justify-content:flex-end;">
+                <button class="btn btn-ghost btn-sm" onclick="closeModals()">Close</button>
+            </div>
+        </div>
+    </div>
 
-<script>
-// -- State --
-let decks = [];
-let selectedDeckId = null;
-let openDropdown = null;
+    <!-- Guide viewer modal -->
+    <div class="modal-back" id="guide-back">
+        <div class="modal">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h3 style="margin:0;">Play guide</h3>
+                <button class="btn btn-ghost btn-sm" onclick="closeModals()">Close</button>
+            </div>
+            <div class="guide-body" id="guide-body"></div>
+        </div>
+    </div>
 
-// -- Toast --
-function showToast(msg, isError = false) {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.className = 'toast show' + (isError ? ' error' : '');
-    setTimeout(() => t.className = 'toast', 2500);
-}
+    <!-- Rules preview modal -->
+    <div class="modal-back" id="rules-back">
+        <div class="modal">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h3 style="margin:0;">Strategy rules preview</h3>
+                <button class="btn btn-ghost btn-sm" onclick="closeModals()">Close</button>
+            </div>
+            <div id="rules-summary" class="muted" style="margin:8px 0;"></div>
+            <pre class="rules-json" id="rules-json"></pre>
+            <div style="display:flex; gap:8px; justify-content:flex-end;">
+                <button class="btn btn-primary btn-sm" id="rules-activate">Activate for this deck</button>
+            </div>
+        </div>
+    </div>
 
-// -- Color dots --
-function colorDots(colors) {
-    return (colors || []).map(c => '<span class="color-dot color-' + c + '"></span>').join('');
-}
+    <div class="toast" id="toast"></div>
 
-// -- Format date --
-function fmtDate(d) {
-    if (!d) return '';
-    const dt = new Date(d);
-    return dt.toLocaleDateString() + ' ' + dt.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
-}
+    <script src="/static/marked.min.js"></script>
+    <script>
+    // ── API layer (same-origin glass-host; the sidecar proxies the cloud) ──
+    async function api(url, opts) {
+        const r = await fetch(url, Object.assign({headers: {'Content-Type': 'application/json'}}, opts));
+        let body = {};
+        try { body = await r.json(); } catch (e) { /* empty body is fine */ }
+        return { ok: r.ok, status: r.status, body };
+    }
+    function toast(msg, isError) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.classList.toggle('error', !!isError);
+        t.classList.add('open');
+        clearTimeout(toast._t);
+        toast._t = setTimeout(() => t.classList.remove('open'), 5000);
+    }
+    function closeModals() {
+        for (const id of ['create-back', 'import-back', 'guide-back', 'rules-back'])
+            document.getElementById(id).classList.remove('open');
+    }
 
-// -- API helpers --
-async function apiFetch(url, opts) {
-    try {
-        const res = await fetch(url, opts);
-        if (!res.ok) {
-            const data = await res.json().catch(() => ({}));
-            throw new Error(data.detail || data.error || 'Request failed (' + res.status + ')');
+    let selectedDeck = null;      // deck_id
+    let createTargetDeck = null;  // null = new deck, else deck_id (new version)
+    const pollers = {};           // job_id → interval
+
+    // ── Deck list ───────────────────────────────────────────────────────────
+    async function loadDecks() {
+        const { ok, body } = await api('/api/decks');
+        const el = document.getElementById('deck-list');
+        if (!ok) { el.innerHTML = '<span class="muted">Failed to load decks.</span>'; return; }
+        const decks = (body.decks || []).filter(d => !d.deleted);
+        if (!decks.length) {
+            el.innerHTML = '<span class="muted">No decks yet.</span>';
+            return;
         }
-        return res.json();
-    } catch (e) {
-        showToast(e.message, true);
-        throw e;
-    }
-}
-
-// -- Load Decks --
-async function loadDecks() {
-    try {
-        decks = await apiFetch('/api/decks');
-        renderDeckList(decks);
-    } catch (e) {
-        document.getElementById('deck-list').innerHTML =
-            '<div class="empty-state">Failed to load decks</div>';
-    }
-}
-
-function renderDeckList(list) {
-    const el = document.getElementById('deck-list');
-    if (!list.length) {
-        el.innerHTML = '<div class="empty-state">No decks yet. Create one to get started.</div>';
-        return;
-    }
-    el.innerHTML = list.map(d => {
-        const id = d.deck_id || d.deck_id;
-        const isActive = id === selectedDeckId;
-        const badges = [];
-        if (d.card_count === 0) badges.push('<span class="badge badge-warn">no decklist</span>');
-        if (d.is_active || d.deployed_version) badges.push('<span class="badge badge-deployed">deployed</span>');
-        if (d.rules_count) badges.push('<span class="badge badge-rules">' + d.rules_count + ' rules</span>');
-        else badges.push('<span class="badge badge-warn">no rules</span>');
-        if (d.ga_fitness) badges.push('<span class="badge badge-ga">GA ' + (d.ga_fitness * 100).toFixed(0) + '%</span>');
-        const ver = d.active_version || d.version || '';
-        return '<div class="deck-item' + (isActive ? ' active' : '') + '" onclick="loadDeckDetail(\'' + id + '\')">'
-            + '<div class="deck-item-name">' + colorDots(d.colors) + ' ' + escHtml(d.name) + '</div>'
-            + '<div class="deck-item-meta">'
-            + (d.archetype ? '<span>' + escHtml(d.archetype) + '</span>' : '')
-            + (ver ? '<span>v' + ver + '</span>' : '')
-            + badges.join('')
-            + '</div></div>';
-    }).join('');
-}
-
-// -- Load Deck Detail --
-async function loadDeckDetail(deckId) {
-    selectedDeckId = deckId;
-    renderDeckList(decks);
-    const el = document.getElementById('deck-detail');
-    el.innerHTML = '<div class="loading">Loading...</div>';
-
-    try {
-        const detail = await apiFetch('/api/decks/' + deckId);
-        renderDeckDetail(detail);
-        loadRecoOutcomes(deckId);
-    } catch (e) {
-        el.innerHTML = '<div class="empty-state">Failed to load deck</div>';
-    }
-}
-
-// Applied-suggestion outcomes (the loop closing): show accepted optimizer swaps
-// and their record since applied.
-async function loadRecoOutcomes(deckId) {
-    const slot = document.getElementById('deck-recos');
-    if (!slot) return;
-    let data;
-    try {
-        data = await apiFetch('/api/decks/' + deckId + '/recommendations');
-    } catch (e) { return; }
-    const recos = (data && data.recommendations) || [];
-    if (!recos.length) return;
-    let h = '<div class="detail-section"><h3>Applied suggestions</h3>'
-        + '<div style="font-size:12px;color:#888;margin-bottom:6px">'
-        + recos.length + ' applied · ' + (data.with_match_data || 0) + ' with match data so far</div>'
-        + '<table style="width:100%;border-collapse:collapse;font-size:13px"><tbody>';
-    recos.forEach(r => {
-        const tier = (r.confidence || 'trusted').toUpperCase();
-        const rec = r.matches_after
-            ? (r.wins + '-' + r.losses + ' (' + r.win_rate.toFixed(0) + '%)')
-            : '<span style="color:#888">no matches yet</span>';
-        h += '<tr style="border-top:1px solid rgba(255,255,255,0.08)">'
-            + '<td style="padding:3px 6px">' + escHtml(r.cut) + ' → <strong>' + escHtml(r.add_card || r.add || '') + '</strong></td>'
-            + '<td style="padding:3px 6px;color:#888">' + tier + '</td>'
-            + '<td style="padding:3px 6px">' + rec + '</td></tr>';
-    });
-    h += '</tbody></table></div>';
-    slot.innerHTML = h;
-}
-
-function renderDeckDetail(d) {
-    const el = document.getElementById('deck-detail');
-    const versions = d.versions || [];
-    // Get deck list from active version
-    const activeVer = (d.versions || []).find(v => v.is_active) || (d.versions || [])[0] || {};
-    const currentList = activeVer.deck_list || d.deck_list || '';
-    const missing = d.missing_cards || [];
-
-    let html = '<div class="deck-list-header">'
-        + '<h2>' + colorDots(d.colors) + ' ' + escHtml(d.name) + '</h2>'
-        + (d.archetype ? '<span style="font-size:12px;color:#888">' + escHtml(d.archetype) + '</span>' : '')
-        + '</div>';
-
-    // Description
-    html += '<div style="margin-bottom:12px">'
-        + '<textarea class="editable-desc" id="deck-desc" placeholder="Deck description...">'
-        + escHtml(d.description || '') + '</textarea>'
-        + '<button class="btn btn-secondary btn-small" style="margin-top:4px" '
-        + 'onclick="saveDescription(\'' + d.deck_id + '\')">Save Description</button>'
-        + '</div>';
-
-    // Action buttons
-    html += '<div class="btn-row" style="margin-bottom:12px">'
-        + '<div class="dropdown">'
-        + '<button class="btn btn-primary btn-small" onclick="toggleDropdown(event,\'gen-dd\')">Generate Rules &#9662;</button>'
-        + '<div class="dropdown-menu" id="gen-dd">'
-        + '<button onclick="generateRules(\'' + d.deck_id + '\',' + (d.active_version || 1) + ',\'auto\')">Auto (heuristic)</button>'
-        + '<button onclick="generateRules(\'' + d.deck_id + '\',' + (d.active_version || 1) + ',\'llm\')">LLM-assisted</button>'
-        + '<button onclick="generateRules(\'' + d.deck_id + '\',' + (d.active_version || 1) + ',\'expert\')">Expert review</button>'
-        + '</div></div>'
-        + '<button class="btn btn-secondary btn-small" onclick="deployVersion(\'' + d.deck_id + '\',' + (d.active_version || 1) + ')">Deploy</button>'
-        + '<button class="btn btn-secondary btn-small" onclick="optimizeDeck(\'' + d.deck_id + '\',' + (d.active_version || 1) + ')">Optimize &#9881;</button>'
-        + '<button class="btn btn-secondary btn-small" onclick="buildPortfolio(\'' + d.deck_id + '\',' + (d.active_version || 1) + ')">Build variants &#9906;</button>'
-        + '</div>';
-
-    // Optimizer + portfolio results (engine sidecar)
-    html += '<div id="optimize-result"></div>';
-    html += '<div id="portfolio-result"></div>';
-
-    // Missing cards
-    if (missing.length) {
-        html += '<div class="warning-box">Missing from collection: '
-            + missing.map(c => '<strong>' + escHtml(c.name) + '</strong> x' + c.count).join(', ')
-            + '</div>';
-    }
-
-    // Versions
-    if (versions.length) {
-        html += '<div class="detail-section"><h3>Versions</h3>';
-        const sorted = [...versions].sort((a, b) => (b.version || 0) - (a.version || 0));
-        sorted.forEach(v => {
-            const badges = [];
-            if (v.is_active) badges.push('<span class="badge badge-deployed">deployed</span>');
-            if (v.rules_count) badges.push('<span class="badge badge-rules">' + v.rules_count + ' rules</span>');
-            if (v.ga_fitness != null) badges.push('<span class="badge badge-ga">GA ' + v.ga_fitness.toFixed(2) + '</span>');
-            html += '<div class="version-item">'
-                + '<span class="v-num">v' + (v.version_number || '?') + '</span>'
-                + '<span class="v-date">' + fmtDate(v.created_at) + '</span>'
-                + '<span class="v-summary">' + escHtml(v.change_summary || '') + '</span>'
-                + '<span class="v-badges">' + badges.join('') + '</span>'
-                + '</div>';
-        });
-        html += '</div>';
-    }
-
-    // GA results
-    if (d.ga_results) {
-        html += '<div class="detail-section"><h3>GA Results</h3>'
-            + '<div style="font-size:12px;color:#888;margin-bottom:6px">Fitness: <strong style="color:#ffa500">'
-            + (d.ga_results.fitness || 0).toFixed(3) + '</strong></div>';
-        const matchups = d.ga_results.matchups || [];
-        if (matchups.length) {
-            matchups.forEach(m => {
-                const total = (m.wins || 0) + (m.losses || 0) + (m.draws || 0);
-                if (!total) return;
-                const wPct = ((m.wins / total) * 100).toFixed(0);
-                html += '<div style="font-size:11px;margin-bottom:4px">'
-                    + escHtml(m.opponent) + ' &mdash; ' + wPct + '% (' + m.wins + 'W/' + m.losses + 'L)'
-                    + '<div class="matchup-bar">'
-                    + '<div class="win" style="width:' + (m.wins / total * 100) + '%"></div>'
-                    + '<div class="loss" style="width:' + (m.losses / total * 100) + '%"></div>'
-                    + '<div class="draw" style="width:' + ((m.draws || 0) / total * 100) + '%"></div>'
-                    + '</div></div>';
-            });
+        el.innerHTML = '';
+        for (const d of decks) {
+            const row = document.createElement('div');
+            row.className = 'deck-row' + (d.deck_id === selectedDeck ? ' selected' : '');
+            row.onclick = () => { selectedDeck = d.deck_id; loadDecks(); loadDetail(d.deck_id); };
+            row.innerHTML = `<div><div>${esc(d.name)}</div>
+                <div class="muted">${(d.colors||[]).join('')} ${esc(d.archetype||'')} · v${d.latest_version ?? 1}</div></div>
+                ${d.activated ? '<span class="pill ok" title="Rules active in the advisor">ON</span>' : ''}`;
+            el.appendChild(row);
         }
-        html += '</div>';
+    }
+    function esc(s) { const d = document.createElement('div'); d.textContent = s ?? ''; return d.innerHTML; }
+
+    async function loadQuota() {
+        const { body } = await api('/api/decks/quota');
+        const q = document.getElementById('quota');
+        if (body.status === 'ok' && body.body) {
+            const b = body.body;
+            q.textContent = `guide budget $${(b.balance_usd ?? 0).toFixed(2)}`;
+        } else { q.textContent = ''; }
     }
 
-    // Current deck list (readonly) — only show if we have one
-    const hasDecklist = activeVer.card_count > 0;
-    if (hasDecklist) {
-        html += '<div class="detail-section"><h3>Current Deck List</h3>'
-            + '<textarea class="deck-textarea" readonly>' + escHtml(currentList) + '</textarea>'
-            + '</div>';
+    // ── Detail ──────────────────────────────────────────────────────────────
+    async function loadDetail(deckId) {
+        const { ok, body } = await api('/api/decks/' + encodeURIComponent(deckId));
+        const el = document.getElementById('detail');
+        if (!ok) { el.innerHTML = '<span class="muted">Failed to load deck.</span>'; return; }
+        const versions = body.versions || [];
+        let rows = '';
+        for (const v of versions) {
+            const diff = [
+                ...(v.added || []).map(a => `<span class="diff-add">${esc(a)}</span>`),
+                ...(v.removed || []).map(r => `<span class="diff-del">${esc(r)}</span>`),
+            ].join(', ') || '<span class="muted">—</span>';
+            const rules = v.rules_count > 0
+                ? `<span class="pill ${v.rules_validated ? 'ok' : 'warn'}">${v.rules_count} rules</span>`
+                : '<span class="pill off">no rules</span>';
+            const active = v.is_active ? ' <span class="pill ok">active</span>' : '';
+            const genCell = v.guide_path
+                ? `<button class="btn btn-ghost btn-sm" onclick="viewGuide('${body.deck_id}','${esc(v.guide_path)}')">Guide</button>`
+                : (v.guide_job_id
+                    ? `<span class="gen-status" id="gen-${esc(v.guide_job_id)}"><span class="spin"></span> generating…</span>`
+                    : '');
+            rows += `<tr>
+                <td>v${v.version_number}${active}</td>
+                <td>${v.card_count}</td>
+                <td>${diff}</td>
+                <td>${rules}</td>
+                <td style="white-space:nowrap;">
+                    ${genCell}
+                    <button class="btn btn-secondary btn-sm" onclick="generateGuide('${body.deck_id}',${v.version_number})">Generate</button>
+                    ${v.rules_count > 0 ? `<button class="btn btn-ghost btn-sm" onclick="previewRules('${body.deck_id}',${v.version_number})">Rules</button>` : ''}
+                </td></tr>`;
+        }
+        el.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h3 style="margin:0;">${esc(body.name)} <span class="muted">${(body.colors||[]).join('')} ${esc(body.archetype||'')}</span></h3>
+                <div style="display:flex; gap:6px;">
+                    <button class="btn btn-secondary btn-sm" onclick="openNewVersion('${body.deck_id}')">+ Version</button>
+                    ${body.activated
+                        ? `<button class="btn btn-ghost btn-sm" onclick="undeploy('${body.deck_id}')">Deactivate rules</button>`
+                        : ''}
+                    <button class="btn btn-ghost btn-sm" style="color:var(--error,#e57373);" onclick="deleteDeck('${body.deck_id}')">Delete</button>
+                </div>
+            </div>
+            <table class="version-table">
+                <tr><th>Version</th><th>Cards</th><th>Changes</th><th>Rules</th><th></th></tr>
+                ${rows}
+            </table>
+            <p class="muted" style="margin-top:10px;">Generate builds an English play guide + advisor rules from this exact list
+            (mulligans, first turns, combos, dangerous meta cards). Rules go live only after you review and press Activate.</p>
+            <button class="btn btn-ghost btn-sm" disabled title="Simulated optimization vs the meta — planned">Optimize vs meta — coming soon</button>`;
+        // resume polling for versions with a pending job and no guide yet
+        for (const v of versions) {
+            if (v.guide_job_id && !v.guide_path) pollJob(body.deck_id, v.guide_job_id);
+        }
     }
 
-    // Edit / new version — or set decklist for promoted stubs
-    const editLabel = hasDecklist ? 'Edit Deck List' : 'Set Deck List';
-    const editPlaceholder = hasDecklist ? 'Paste updated MTGA deck list here...' : 'Paste MTGA deck list to complete this deck...';
-    html += '<div class="detail-section"><h3>' + editLabel + '</h3>';
-    if (!hasDecklist) {
-        html += '<div class="warning-box" style="margin-bottom:8px">This deck has rules but no decklist. Paste one below to complete it.</div>';
+    // ── Create / import ────────────────────────────────────────────────────
+    function openCreate() {
+        createTargetDeck = null;
+        document.getElementById('create-title').textContent = 'New deck';
+        document.getElementById('create-name').style.display = '';
+        document.getElementById('create-back').classList.add('open');
     }
-    html += '<textarea class="deck-textarea" id="edit-deck-list" placeholder="' + editPlaceholder + '">'
-        + escHtml(hasDecklist ? currentList : '') + '</textarea>'
-        + '<div class="btn-row" style="margin-top:8px">';
-    if (hasDecklist) {
-        html += '<button class="btn btn-primary btn-small" onclick="addVersion(\'' + d.deck_id + '\')">Save as New Version</button>';
-    } else {
-        html += '<button class="btn btn-primary btn-small" onclick="setDecklist(\'' + d.deck_id + '\',' + (activeVer.version_number || 1) + ')">Set Decklist</button>';
+    function openNewVersion(deckId) {
+        createTargetDeck = deckId;
+        document.getElementById('create-title').textContent = 'New version';
+        document.getElementById('create-name').style.display = 'none';
+        document.getElementById('create-back').classList.add('open');
     }
-    html += '</div></div>';
-
-    // Slot for applied-suggestion outcomes (filled async by loadRecoOutcomes).
-    html += '<div id="deck-recos"></div>';
-
-    el.innerHTML = html;
-}
-
-// -- Create Deck --
-function openCreateModal() {
-    document.getElementById('create-modal').classList.add('open');
-    document.getElementById('new-deck-name').value = '';
-    document.getElementById('new-deck-list').value = '';
-    document.getElementById('new-deck-name').focus();
-}
-function closeCreateModal() {
-    document.getElementById('create-modal').classList.remove('open');
-}
-
-async function createDeck() {
-    const name = document.getElementById('new-deck-name').value.trim();
-    const deckList = document.getElementById('new-deck-list').value.trim();
-    if (!name) { showToast('Deck name is required', true); return; }
-    if (!deckList) { showToast('Deck list is required', true); return; }
-
-    const btn = document.getElementById('create-btn');
-    btn.disabled = true; btn.textContent = 'Creating...';
-    try {
-        const res = await apiFetch('/api/decks', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({name, deck_list: deckList})
-        });
-        showToast('Deck "' + name + '" created');
-        closeCreateModal();
-        await loadDecks();
-        if (res.deck_id || res.id) loadDeckDetail(res.deck_id || res.id);
-    } catch (e) { /* toast shown by apiFetch */ }
-    btn.disabled = false; btn.textContent = 'Create';
-}
-
-// -- Actions --
-async function generateRules(deckId, version, mode) {
-    closeAllDropdowns();
-    showToast('Generating rules (' + mode + ')...');
-    try {
-        await apiFetch('/api/decks/' + deckId + '/versions/' + version + '/generate-rules', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({mode})
-        });
-        showToast('Rules generated');
-        loadDeckDetail(deckId);
-    } catch (e) { /* toast shown */ }
-}
-
-async function deployVersion(deckId, version) {
-    try {
-        await apiFetch('/api/decks/' + deckId + '/versions/' + version + '/deploy', {method:'POST'});
-        showToast('Version ' + version + ' deployed');
-        await loadDecks();
-        loadDeckDetail(deckId);
-    } catch (e) { /* toast shown */ }
-}
-
-async function optimizeDeck(deckId, version) {
-    const panel = document.getElementById('optimize-result');
-    if (panel) panel.innerHTML = '<div class="detail-section"><h3>Optimizer</h3>'
-        + '<div style="color:#9fc">&#9881; Running simulations vs the proactive gauntlet — this takes ~30–60s…</div></div>';
-    try {
-        const r = await apiFetch('/api/decks/' + deckId + '/versions/' + version + '/optimize', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({games: 12, steps: 3}),
-        });
-        // stash for the per-suggestion Apply buttons (avoids quoting card names in onclick)
-        window._opt = { deckId, version, r };
-        renderOptimize(r);
-    } catch (e) {
-        if (panel) panel.innerHTML = '<div class="detail-section"><h3>Optimizer</h3>'
-            + '<div class="warning-box">Optimizer unavailable — is the engine sidecar (glass-server /optimize) running?</div></div>';
+    async function submitCreate() {
+        const list = document.getElementById('create-list').value;
+        if (createTargetDeck) {
+            const { ok, status, body } = await api(`/api/decks/${encodeURIComponent(createTargetDeck)}/versions`,
+                { method: 'POST', body: JSON.stringify({ deck_list: list }) });
+            if (ok) { toast('Version added'); closeModals(); loadDetail(createTargetDeck); }
+            else toast(body.error || `HTTP ${status}`, true);
+            return;
+        }
+        const name = document.getElementById('create-name').value.trim();
+        if (!name) { toast('Name the deck first', true); return; }
+        const { ok, status, body } = await api('/api/decks',
+            { method: 'POST', body: JSON.stringify({ name, deck_list: list, colors: window._importColors || [], archetype: window._importArchetype || '' }) });
+        window._importColors = null; window._importArchetype = null;
+        if (ok) { toast('Deck created'); closeModals(); selectedDeck = body.deck_id; loadDecks(); loadDetail(body.deck_id); }
+        else toast(body.error || `HTTP ${status}`, true);
     }
-}
-
-async function buildPortfolio(deckId, version) {
-    const panel = document.getElementById('portfolio-result');
-    if (panel) panel.innerHTML = '<div class="detail-section"><h3>Build variants</h3>'
-        + '<div style="color:#9fc">&#9906; Exploring diverse builds (MAP-Elites) — ~30–60s…</div></div>';
-    try {
-        const r = await apiFetch('/api/decks/' + deckId + '/versions/' + version + '/portfolio', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({iters: 150, games: 12}),
-        });
-        renderPortfolio(r);
-    } catch (e) {
-        if (panel) panel.innerHTML = '<div class="detail-section"><h3>Build variants</h3>'
-            + '<div class="warning-box">Engine unavailable — is the glass-server sidecar running?</div></div>';
+    async function openImport() {
+        document.getElementById('import-back').classList.add('open');
+        const { ok, body } = await api('/api/decks/import-candidates');
+        const el = document.getElementById('import-list');
+        if (!ok || !(body.candidates || []).length) {
+            el.innerHTML = '<span class="muted">No recorded games with a readable deck yet — play a match first.</span>';
+            return;
+        }
+        el.innerHTML = '';
+        for (const c of body.candidates) {
+            const row = document.createElement('div');
+            row.className = 'deck-row';
+            row.innerHTML = `<div><div>${esc(c.deck_name || '(unnamed)')}</div>
+                <div class="muted">${(c.colors||[]).join('')} ${esc(c.archetype||'')} · played ${c.times_played}× · last ${esc((c.last_played||'').slice(0,10))}${c.unnamed_cards ? ` · ⚠ ${c.unnamed_cards} unreadable cards dropped` : ''}</div></div>
+                <button class="btn btn-secondary btn-sm">Use</button>`;
+            row.querySelector('button').onclick = () => {
+                closeModals();
+                openCreate();
+                document.getElementById('create-name').value = c.deck_name || '';
+                document.getElementById('create-list').value = c.deck_list;
+                window._importColors = c.colors || [];
+                window._importArchetype = c.archetype || '';
+            };
+            el.appendChild(row);
+        }
     }
-}
 
-function renderPortfolio(r) {
-    const panel = document.getElementById('portfolio-result');
-    if (!panel) return;
-    const builds = r.builds || [];
-    let h = '<div class="detail-section"><h3>Build variants</h3>';
-    h += '<div style="font-size:12px;color:#888;margin-bottom:4px">'
-        + escHtml(r.colors || '') + ' · seed ' + (r.seed_win_rate || 0).toFixed(0) + '% · '
-        + builds.length + ' variants across ' + r.cells_filled + '/' + r.grid_cells + ' styles</div>';
-    h += '<div style="font-size:12px;color:#ffd24a;margin-bottom:8px">' + escHtml(r.confidence_basis || '') + '</div>';
-    builds.forEach(b => {
-        const diff = (b.added && b.added.length || b.removed && b.removed.length)
-            ? '<span style="color:#7fd88a">+' + (b.added || []).map(escHtml).join(', ') + '</span>'
-              + (b.removed && b.removed.length ? ' <span style="color:#ff9a9a">−' + (b.removed || []).map(escHtml).join(', ') + '</span>' : '')
-            : '<span style="color:#888">(your current list)</span>';
-        h += '<div style="border-top:1px solid rgba(255,255,255,0.08);padding:5px 2px">'
-            + '<div><strong>' + escHtml(b.label) + '</strong> — ' + b.win_rate.toFixed(0)
-            + '% <span style="color:#888">[' + b.ci_lo.toFixed(0) + '–' + b.ci_hi.toFixed(0) + '], cmc '
-            + b.avg_cmc.toFixed(1) + ', ' + b.creatures + ' creatures</span></div>'
-            + '<div style="font-size:12px">' + diff + '</div></div>';
-    });
-    h += '</div>';
-    panel.innerHTML = h;
-}
-
-// Apply an optimizer suggestion: edit the deck (new version) AND log the
-// accepted recommendation so its outcome can be tracked against future matches.
-async function applySuggestion(i) {
-    const opt = window._opt;
-    if (!opt || !opt.r.suggestions[i]) return;
-    const s = opt.r.suggestions[i];
-    try {
-        const res = await apiFetch('/api/decks/' + opt.deckId + '/versions/' + opt.version + '/apply-suggestion', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                cut: s.cut, add: s.add,
-                confidence: opt.r.confidence || '', basis: opt.r.confidence_basis || '',
-            }),
-        });
-        showToast('Applied: cut ' + s.cut + ' → add ' + s.add + ' (v' + res.version_number + ', logged for outcome tracking)');
-        await loadDecks();
-        loadDeckDetail(opt.deckId);
-    } catch (e) { /* toast shown by apiFetch */ }
-}
-
-function renderOptimize(r) {
-    const panel = document.getElementById('optimize-result');
-    if (!panel) return;
-    const pct = (x) => (x == null ? '?' : x.toFixed(1));
-    const sgn = (x) => (x >= 0 ? '+' : '') + x.toFixed(1);
-    let h = '<div class="detail-section"><h3>Optimizer</h3>';
-    // Trust contract: the cut/add SWAPS carry an evidence tier (the manabase below
-    // is closed-form / pilot-independent and reliable regardless). Render the tier
-    // as a distinct badge so measured and speculative advice don't look identical.
-    const conf = r.confidence || 'trusted';
-    const badge = conf === 'trusted'
-        ? { bg: 'rgba(76,175,80,0.18)', fg: '#7fd88a', label: 'MEASURED' }
-        : conf === 'directional'
-        ? { bg: 'rgba(255,193,7,0.18)', fg: '#ffd24a', label: 'DIRECTIONAL' }
-        : { bg: 'rgba(255,82,82,0.16)', fg: '#ff9a9a', label: 'LOW CONFIDENCE' };
-    h += '<div style="display:flex;align-items:baseline;gap:8px;margin:2px 0 8px;flex-wrap:wrap">'
-        + '<span style="font-size:11px;font-weight:700;letter-spacing:.5px;padding:2px 8px;border-radius:4px;background:'
-        + badge.bg + ';color:' + badge.fg + '">' + badge.label + ' SWAPS</span>'
-        + '<span style="font-size:12px;color:#aaa">' + escHtml(r.confidence_basis || '') + '</span></div>';
-    h += '<div style="font-size:12px;color:#888;margin-bottom:6px">' + escHtml(r.colors || '')
-        + ' · coverage ' + r.coverage_resolved + '/' + r.coverage_total
-        + ' · trusted pool ' + r.pool_size + ' · ' + r.games + 'g search</div>';
-    if (r.reactive) {
-        h += '<div class="warning-box">Looks like a reactive/control deck ('
-            + Math.round((r.creature_share || 0) * 100) + '% creatures) — the pilot is tuned for PROACTIVE decks, '
-            + 'so treat the card swaps as low-confidence (the manabase below is pilot-independent).</div>';
+    // ── Guide generation + polling ──────────────────────────────────────────
+    async function generateGuide(deckId, v) {
+        const { ok, status, body } = await api(`/api/decks/${encodeURIComponent(deckId)}/versions/${v}/generate-guide`, { method: 'POST' });
+        if (!ok) {
+            const msg = body.code === 'no_balance' ? 'Guide budget exhausted — ask for a top-up.'
+                : body.code === 'not_alpha' ? 'Guide generation is alpha-only for now.'
+                : body.error || `HTTP ${status}`;
+            toast(msg, true);
+            return;
+        }
+        toast(body.cached ? 'Served from cache — free' : 'Generation started');
+        loadDetail(deckId);
+        if (body.job_id) pollJob(deckId, body.job_id);
+        loadQuota();
     }
-    if (r.coverage_resolved < r.coverage_total) {
-        h += '<div class="warning-box">' + (r.coverage_total - r.coverage_resolved)
-            + ' card(s) are off-catalog and were dropped from the simulation — suggestions are partial.</div>';
+    function pollJob(deckId, jobId) {
+        if (pollers[jobId]) return;
+        pollers[jobId] = setInterval(async () => {
+            const { body } = await api('/api/decks/guide-job/' + encodeURIComponent(jobId));
+            const el = document.getElementById('gen-' + jobId);
+            if (el && body.status && body.status !== 'done' && body.status !== 'failed')
+                el.innerHTML = `<span class="spin"></span> ${esc(body.status)}…`;
+            if (body.status === 'done' || body.status === 'failed') {
+                clearInterval(pollers[jobId]);
+                delete pollers[jobId];
+                if (body.status === 'failed') toast('Generation failed: ' + (body.error || 'unknown'), true);
+                else if (body.result && body.result.rules_omitted_reason)
+                    toast('Guide ready — rules omitted: ' + body.result.rules_omitted_reason, true);
+                else toast('Guide ready');
+                loadDetail(deckId);
+                loadQuota();
+            }
+        }, 2000);
     }
-    h += '<div style="margin-bottom:8px">Base win-rate vs gauntlet: <strong>' + pct(r.base_rate)
-        + '%</strong> <span style="color:#888">[' + pct(r.base_ci_lo) + '–' + pct(r.base_ci_hi) + ']</span></div>';
-    if (!r.suggestions || !r.suggestions.length) {
-        h += '<div style="color:#9fc">No confirmed card swap — the list is already well-tuned for this gauntlet.</div>';
-    } else {
-        h += '<table style="width:100%;border-collapse:collapse;font-size:13px">'
-            + '<thead><tr style="color:#888;text-align:left">'
-            + '<th style="padding:2px 6px">Cut</th><th style="padding:2px 6px">Add</th>'
-            + '<th style="padding:2px 6px">&Delta; win%</th><th></th></tr></thead><tbody>';
-        r.suggestions.forEach((s, i) => {
-            h += '<tr style="border-top:1px solid rgba(255,255,255,0.08)">'
-                + '<td style="padding:3px 6px">' + escHtml(s.cut) + '</td>'
-                + '<td style="padding:3px 6px"><strong>' + escHtml(s.add) + '</strong></td>'
-                + '<td style="padding:3px 6px">' + sgn(s.after - s.before)
-                + ' <span style="color:#888">[' + sgn(s.ci_lo) + ',' + sgn(s.ci_hi) + ']</span></td>'
-                + '<td style="padding:3px 6px"><button class="btn btn-secondary btn-small" onclick="applySuggestion(' + i + ')">Apply</button></td></tr>';
-        });
-        h += '</tbody></table>';
-        h += '<div style="margin-top:6px">Net: ' + pct(r.suggestions[0].before) + '% → <strong>'
-            + pct(r.final_rate) + '%</strong> (' + sgn(r.net_gain) + ' pts)</div>';
+
+    // ── Guide viewer / rules preview / activation ──────────────────────────
+    async function viewGuide(deckId, guidePath) {
+        const filename = guidePath.split('/').pop();
+        const r = await fetch(`/api/manage/guide/${encodeURIComponent(deckId)}/${encodeURIComponent(filename)}`);
+        if (!r.ok) { toast('Guide file missing', true); return; }
+        const md = await r.text();
+        document.getElementById('guide-body').innerHTML = marked.parse(md);
+        document.getElementById('guide-back').classList.add('open');
     }
-    const m = r.manabase || {};
-    h += '<div style="margin-top:10px"><strong>Manabase</strong> <span style="color:#888">('
-        + (m.total_lands || 0) + ' lands, closed-form)</span><ul style="margin:4px 0 0 16px;padding:0">';
-    (m.colors || []).forEach(c => {
-        h += '<li style="font-size:12px">' + escHtml(c.color) + ': ' + c.sources
-            + ' sources vs ~' + c.target + ' ideal — ' + escHtml(c.status) + '</li>';
-    });
-    h += '</ul><div style="font-size:12px;color:#888;margin-top:4px">' + escHtml(m.advice || '') + '</div></div>';
-    h += '</div>';
-    panel.innerHTML = h;
-}
+    async function previewRules(deckId, v) {
+        const detail = await api('/api/decks/' + encodeURIComponent(deckId));
+        const ver = (detail.body.versions || []).find(x => x.version_number === v);
+        if (!ver || !ver.rules_path) { toast('No rules stored for this version', true); return; }
+        // The version strategy file is served through the manage strategy API
+        // only after activation, so preview reads it via a dedicated fetch of
+        // the deck detail; the JSON itself rides in rules_path on disk — show
+        // counts from rules_count and fetch content lazily via activate step.
+        const summary = `${ver.rules_count} rules · source ${esc(ver.rules_source || '?')} · ${ver.rules_validated ? 'validated' : 'NOT validated'}`;
+        document.getElementById('rules-summary').textContent = summary;
+        document.getElementById('rules-json').textContent = 'Rules are stored at:\n' + ver.rules_path +
+            '\n\nActivate to load them into the advisor. After activation the full JSON is visible under Manage → Strategies.';
+        const btn = document.getElementById('rules-activate');
+        btn.onclick = async () => {
+            const { ok, body } = await api(`/api/decks/${encodeURIComponent(deckId)}/versions/${v}/activate`, { method: 'POST' });
+            if (ok) { toast('Rules activated — the advisor uses them when you play this deck'); closeModals(); loadDecks(); loadDetail(deckId); }
+            else toast(body.error || 'Activation failed', true);
+        };
+        document.getElementById('rules-back').classList.add('open');
+    }
+    async function undeploy(deckId) {
+        const { ok } = await api(`/api/decks/${encodeURIComponent(deckId)}/undeploy`, { method: 'POST' });
+        if (ok) { toast('Rules deactivated'); loadDecks(); loadDetail(deckId); }
+    }
+    async function deleteDeck(deckId) {
+        if (!confirm('Delete this deck and its versions? Guides and rules on disk are removed too.')) return;
+        const { ok } = await api('/api/decks/' + encodeURIComponent(deckId), { method: 'DELETE' });
+        if (ok) { toast('Deck deleted'); selectedDeck = null; loadDecks(); document.getElementById('detail').innerHTML = '<span class="muted">Select a deck.</span>'; }
+    }
+    async function syncCloud() {
+        toast('Syncing decks with your account…');
+        const { ok, body } = await api('/api/decks/sync-cloud', { method: 'POST' });
+        if (ok) { toast(`Synced — ${body.decks_created} new decks, ${body.versions_added} new versions pulled`); loadDecks(); }
+        else toast(body.error || 'Sync failed', true);
+    }
 
-async function setDecklist(deckId, version) {
-    const deckList = document.getElementById('edit-deck-list').value.trim();
-    if (!deckList) { showToast('Deck list cannot be empty', true); return; }
-    try {
-        await apiFetch('/api/decks/' + deckId + '/versions/' + version + '/decklist', {
-            method: 'PUT',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({deck_list: deckList})
-        });
-        showToast('Decklist set');
-        await loadDecks();
-        loadDeckDetail(deckId);
-    } catch (e) { /* toast shown */ }
-}
-
-async function addVersion(deckId) {
-    const deckList = document.getElementById('edit-deck-list').value.trim();
-    if (!deckList) { showToast('Deck list cannot be empty', true); return; }
-    try {
-        await apiFetch('/api/decks/' + deckId + '/versions', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({deck_list: deckList})
-        });
-        showToast('New version added');
-        await loadDecks();
-        loadDeckDetail(deckId);
-    } catch (e) { /* toast shown */ }
-}
-
-async function saveDescription(deckId) {
-    const desc = document.getElementById('deck-desc').value;
-    try {
-        await apiFetch('/api/decks/' + deckId, {
-            method: 'PATCH',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({description: desc})
-        });
-        showToast('Description saved');
-    } catch (e) { /* toast shown */ }
-}
-
-// -- Dropdown --
-function toggleDropdown(e, id) {
-    e.stopPropagation();
-    const menu = document.getElementById(id);
-    const isOpen = menu.classList.contains('open');
-    closeAllDropdowns();
-    if (!isOpen) { menu.classList.add('open'); openDropdown = id; }
-}
-function closeAllDropdowns() {
-    document.querySelectorAll('.dropdown-menu.open').forEach(m => m.classList.remove('open'));
-    openDropdown = null;
-}
-document.addEventListener('click', closeAllDropdowns);
-
-// -- Helpers --
-function escHtml(text) {
-    const d = document.createElement('div');
-    d.textContent = text || '';
-    return d.innerHTML;
-}
-
-// -- Init --
-document.addEventListener('DOMContentLoaded', loadDecks);
-</script>
+    loadDecks();
+    loadQuota();
+    </script>
+    <script src="/static/shell.js?v=16"></script>
 </body>
 </html>
