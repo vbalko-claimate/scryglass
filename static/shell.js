@@ -1,5 +1,42 @@
 /* Scryglass App Shell & Shared Account Handler */
 (function() {
+  // ── Update notice (app window, PRIMARY surface) ────────────────────────────
+  // The Tauri shell eval()s `showUpdateNotice('x.y.z')` into the main window
+  // when the updater finds a new version (on launch + every 4 h). USER-REPORTED
+  // 2026-08-19: the tray-only advert was invisible — a tester sat on an old
+  // version for days. Injected by the shared shell so it shows on every app
+  // page; dismissible (a real window, unlike the overlay), and a dismissed
+  // version stays dismissed until a NEWER one appears.
+  let dismissedUpdate = null;
+  window.showUpdateNotice = function (version) {
+    if (version === dismissedUpdate) return;
+    let bar = document.getElementById('shell-update-notice');
+    if (!bar) {
+      bar = document.createElement('div');
+      bar.id = 'shell-update-notice';
+      bar.style.cssText =
+        'position:fixed;top:0;left:0;right:0;z-index:9999;display:flex;' +
+        'align-items:center;justify-content:center;gap:12px;padding:8px 14px;' +
+        'background:#ffd166;color:#0f1117;font-weight:600;font-size:14px;';
+      const txt = document.createElement('span');
+      txt.id = 'shell-update-notice-text';
+      const btn = document.createElement('button');
+      btn.textContent = 'Dismiss';
+      btn.style.cssText =
+        'border:none;border-radius:4px;padding:2px 10px;cursor:pointer;' +
+        'background:rgba(15,17,23,0.15);color:#0f1117;font-weight:600;';
+      btn.addEventListener('click', () => {
+        dismissedUpdate = version;
+        bar.remove();
+      });
+      bar.appendChild(txt);
+      bar.appendChild(btn);
+      document.body.appendChild(bar);
+    }
+    document.getElementById('shell-update-notice-text').textContent =
+      'Update v' + version + ' is ready — install from the Scryglass tray menu (Install Update v' + version + '…)';
+  };
+
   window.ScryglassShell = {
     user: { email: null, is_anon: true, alpha: false, created_at: null },
     syncing: false,

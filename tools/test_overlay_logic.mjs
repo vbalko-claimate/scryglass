@@ -186,5 +186,17 @@ eq(idlePx >= 15, true, `CSS: the idle message is legible (font-size ${idlePx}px,
 const idleAlpha = Number((idleRule.match(/color:\s*rgba\([^)]*,\s*([\d.]+)\s*\)/) || [])[1] || 0);
 eq(idleAlpha >= 0.7, true, `CSS: the idle message has real contrast (alpha ${idleAlpha}, needs >= 0.7)`);
 
+// ★ UPDATE NOTICE (user-requested 2026-08-19: a tester sat on an old version
+// for days — the tray-only advert was invisible). The banner is the overlay's
+// only surface for "a new version exists", so two properties are pinned: the
+// entry point the Tauri shell eval()s must exist, and no advice-path function
+// may clear it (advice updates arrive every few seconds; a banner they wiped
+// would be as invisible as the tray item was).
+eq(/function showUpdateNotice\(/.test(html), true,
+   'SOURCE: showUpdateNotice exists for the shell to eval');
+const advicePath2 = extract('updateAdvice') + extract('clearAdvicePanels');
+eq(/update-notice/.test(advicePath2), false,
+   'SOURCE: no advice-path function touches the update notice');
+
 console.log(failures ? `\n${failures} FAILED` : '\nall passed');
 process.exit(failures ? 1 : 0);

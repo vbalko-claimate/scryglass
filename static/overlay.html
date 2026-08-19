@@ -54,6 +54,10 @@ html, body {
 }
 #peek-pill .peek-pill-mark { color: #6c7bd9; }
 #peek-pill .peek-pill-label { font-weight: 500; opacity: 0.7; letter-spacing: 0.02em; }
+/* The minimized overlay's one-line update hint — empty (and thus invisible)
+   unless a new version is pending and no match is running. */
+#peek-pill .peek-pill-update { display: block; font-size: 10px; color: #ffd166; }
+#peek-pill .peek-pill-update:empty { display: none; }
 @keyframes peek-pop { from { transform: scale(0.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
 /* Opponent line */
@@ -410,6 +414,25 @@ html, body {
 }
 .advice-idle.visible { display: block; }
 
+/* ── Update notice ───────────────────────────────────────────────────────────
+   "A new version is ready" — the tray menu is where the INSTALL lives, but the
+   overlay is where the player LOOKS (user-reported: a tester sat on an old
+   version for days; the tray-only advert was invisible in practice). The window
+   is click-through, so there is no dismiss button: the banner fades on its own
+   and reappears on the next check (launch + every 4 h). */
+.update-notice {
+    display: none;
+    margin: 4px 0;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #0f1117;
+    background: #ffd166;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+.update-notice.visible { display: block; }
+
 /* ── Follow acknowledgement ──────────────────────────────────────────────────
    Feedback on a play ALREADY MADE, so it deliberately does not live on the
    advice card:
@@ -448,13 +471,14 @@ html, body {
 <body>
 <div id="overlay" class="no-match">
     <div id="compliance-flash"></div>
-    <div id="peek-pill"><span class="peek-pill-mark">◈</span> <span class="peek-pill-label">Scryglass</span></div>
+    <div id="peek-pill"><span class="peek-pill-mark">◈</span> <span class="peek-pill-label">Scryglass</span><span class="peek-pill-update" id="peek-pill-update"></span></div>
     <div class="opp-line" id="opp-line">
         <span class="waiting" id="waiting-msg">Waiting for match...</span>
     </div>
     <div class="lethal-banner" id="lethal-banner"></div>
     <div class="combo-banner" id="combo-banner"></div>
     <div class="synergy-hint" id="synergy-hint"></div>
+    <div class="update-notice" id="update-notice"></div>
     <div class="advice-idle" id="advice-idle"></div>
     <div class="key-play" id="key-play" style="display:none">
         <div class="key-play-indicator medium" id="key-play-indicator"></div>
@@ -532,6 +556,7 @@ async function tick() {
         active = ((await (await fetch('/match-status')).json()).active === true);
     } catch (e) { return; /* engine not reachable — keep last state */ }
     inMatch = active;
+    renderUpdateNotice();
     const overlay = document.getElementById('overlay');
     overlay.classList.remove('no-match'); // never force-hide all; managed below
     const wm = document.getElementById('waiting-msg');
@@ -770,6 +795,29 @@ function updateOppLine(info) {
 // Every panel `updateAdvice` can turn on. One list, used by both the empty-push
 // path and the between-matches branch — `synergy-hint` was missing from the
 // latter, so a teaching hint survived into the session-record view.
+// Called by the Tauri shell (overlay.eval) when the updater finds a new
+// version. The overlay is the SECONDARY surface (the app window is primary):
+// the banner shows only OUT of a match — mid-game it would be noise — and the
+// peek pill carries a one-line hint so a minimized overlay still says it.
+// No dismiss button: the window is click-through outside feedback mode.
+let pendingUpdateVersion = null;
+function showUpdateNotice(version) {
+    pendingUpdateVersion = version;
+    renderUpdateNotice();
+}
+function renderUpdateNotice() {
+    const el = document.getElementById('update-notice');
+    const pill = document.getElementById('peek-pill-update');
+    const show = pendingUpdateVersion && !inMatch;
+    if (el) {
+        el.textContent = show
+            ? `Update v${pendingUpdateVersion} ready — install from the Scryglass tray menu`
+            : '';
+        el.classList.toggle('visible', !!show);
+    }
+    if (pill) pill.textContent = show ? `update v${pendingUpdateVersion} ready` : '';
+}
+
 function clearAdvicePanels() {
     document.getElementById('advice-for')?.classList.remove('visible', 'live', 'stale');
     document.getElementById('key-play').classList.remove('stale');

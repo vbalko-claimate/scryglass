@@ -435,19 +435,58 @@ pub fn run() {
                 .item(&quit_item)
                 .build()?;
 
-            // On launch (release only): a background check that ADVERTISES an
-            // available update on the tray (retitles the item) — no dialog, no
-            // auto-install, so it never interrupts a game (Sparkle-style gentle
-            // reminder). The user installs on their terms from the menu.
+            // On launch AND every 4 hours after (release only): a background
+            // check that ADVERTISES an available update — no dialog, no
+            // auto-install, so it never interrupts a game. Two surfaces:
+            //   * the tray item retitles ("Install Update v…"), where the
+            //     install actually happens;
+            //   * the OVERLAY shows a banner. USER-REPORTED 2026-08-19: the
+            //     tray-only advert was invisible in practice — a tester sat on
+            //     an old version for days without knowing. The overlay is the
+            //     one surface the player actually looks at.
+            // The periodic re-check exists because the app stays open across
+            // days; a launch-only check re-creates the same blindness.
             #[cfg(not(debug_assertions))]
             {
                 let handle = app.handle().clone();
                 let item = update_item.clone();
                 tauri::async_runtime::spawn(async move {
-                    if let Ok(updater) = handle.updater() {
-                        if let Ok(Some(update)) = updater.check().await {
-                            let _ = item.set_text(format!("Install Update v{}…", update.version));
+                    loop {
+                        if let Ok(updater) = handle.updater() {
+                            if let Ok(Some(update)) = updater.check().await {
+                                let v = update.version.clone();
+                                let _ = item.set_text(format!("Install Update v{v}…"));
+                                // Surface it in BOTH webviews: the MAIN app
+                                // window is the primary notice (a real, clickable
+                                // banner); the overlay shows it only out of a
+                                // match and as a peek-pill line (its JS decides).
+                                // The guarded call makes pages without the shell
+                                // (e.g. /decks) a silent no-op instead of a JS
+                                // error. Windows may not exist yet right after
+                                // launch — retry for ~2 minutes, then let the
+                                // 4-hour cycle try again. The version string
+                                // comes from the SIGNED update manifest (semver),
+                                // so interpolating it into eval is safe.
+                                let js = format!(
+                                    "window.showUpdateNotice&&window.showUpdateNotice('{v}')"
+                                );
+                                for _ in 0..24 {
+                                    let mut delivered = 0;
+                                    for label in ["main", "overlay"] {
+                                        if let Some(w) = handle.get_webview_window(label) {
+                                            if w.eval(&js).is_ok() {
+                                                delivered += 1;
+                                            }
+                                        }
+                                    }
+                                    if delivered == 2 {
+                                        break;
+                                    }
+                                    tokio::time::sleep(std::time::Duration::from_secs(5)).await;
+                                }
+                            }
                         }
+                        tokio::time::sleep(std::time::Duration::from_secs(4 * 3600)).await;
                     }
                 });
             }
