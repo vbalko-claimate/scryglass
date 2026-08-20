@@ -20,6 +20,21 @@
         .version-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
         .version-table th, .version-table td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border, #2a2d37); vertical-align: top; }
         .pill { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+        /* Mana pips — byte-identical to the cloud dashboard's .pip scale
+           (glass-cloud/src/app.html) so a deck looks the same in the app and
+           on scryglass.win/app. "WUB" as bare letters is not readable to a new
+           player; the letter stays inside the pip so colour is never the only
+           channel. */
+        .pips { display: inline-flex; gap: 2px; vertical-align: -3px; }
+        .pip { width: 15px; height: 15px; border-radius: 50%; font-size: 9px; font-weight: 800;
+               display: inline-flex; align-items: center; justify-content: center;
+               border: 1px solid rgba(0,0,0,0.35); }
+        .pip-W { background: #f3ecd8; color: #2b2a24; }
+        .pip-U { background: #4a90d9; color: #082440; }
+        .pip-B { background: #4b4753; color: #dcd8e0; }
+        .pip-R { background: #d9635c; color: #3d100d; }
+        .pip-G { background: #4f9d68; color: #0d2916; }
+        .pip-C { background: #8b90a0; color: #1a1c22; }
         .pill.ok { background: rgba(129,199,132,0.18); color: #81c784; }
         .pill.warn { background: rgba(255,209,102,0.18); color: #ffd166; }
         .pill.off { background: rgba(139,142,152,0.15); color: #8b8e98; }
@@ -98,7 +113,7 @@
             <div class="deck-list-panel">
                 <div style="display:flex; gap:8px; align-items:center; margin-bottom:10px;">
                     <strong>My Decks</strong>
-                    <span id="quota" class="quota-badge" title="Guide-generation budget"></span>
+                    <span id="quota" class="quota-badge" title="Your AI guide budget — the same balance shown on scryglass.win/app"></span>
                 </div>
                 <div style="display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap;">
                     <button class="btn btn-secondary btn-sm" onclick="openCreate()">+ New</button>
@@ -210,19 +225,30 @@
             row.className = 'deck-row' + (d.deck_id === selectedDeck ? ' selected' : '');
             row.onclick = () => { selectedDeck = d.deck_id; loadDecks(); loadDetail(d.deck_id); };
             row.innerHTML = `<div><div>${esc(d.name)}</div>
-                <div class="muted">${(d.colors||[]).join('')} ${esc(d.archetype||'')} · v${d.latest_version ?? 1}</div></div>
-                ${d.activated ? '<span class="pill ok" title="Rules active in the advisor">ON</span>' : ''}`;
+                <div class="muted">${pips(d.colors)} ${esc(d.archetype || '')} · v${d.latest_version ?? 1}</div></div>
+                ${d.activated ? '<span class="pill ok" title="Rules active in the advisor">ACTIVE</span>' : ''}`;
             el.appendChild(row);
         }
     }
     function esc(s) { const d = document.createElement('div'); d.textContent = s ?? ''; return d.innerHTML; }
+
+    // Same output as the cloud dashboard's colorPips(): pip + letter, titled
+    // with the colour name. Kept in sync deliberately — see the .pip CSS note.
+    function pips(colors) {
+        const names = { W: 'White', U: 'Blue', B: 'Black', R: 'Red', G: 'Green', C: 'Colorless' };
+        const list = (colors || []).filter(c => 'WUBRGC'.includes(c));
+        const use = list.length ? list : ['C'];
+        return '<span class="pips">' + use.map(c =>
+            `<span class="pip pip-${c}" title="${names[c] || c}">${c}</span>`).join('') + '</span>';
+    }
 
     async function loadQuota() {
         const { body } = await api('/api/decks/quota');
         const q = document.getElementById('quota');
         if (body.status === 'ok' && body.body) {
             const b = body.body;
-            q.textContent = `guide budget $${(b.balance_usd ?? 0).toFixed(2)}`;
+            // Same label as the dashboard's tile, so the two read as one number.
+            q.textContent = `AI guide budget · $${(b.balance_usd ?? 0).toFixed(2)} left`;
         } else { q.textContent = ''; }
     }
 
@@ -241,7 +267,7 @@
             const rules = v.rules_count > 0
                 ? `<span class="pill ${v.rules_validated ? 'ok' : 'warn'}">${v.rules_count} rules</span>`
                 : '<span class="pill off">no rules</span>';
-            const active = v.is_active ? ' <span class="pill ok">active</span>' : '';
+            const active = v.is_active ? ' <span class="pill ok">ACTIVE</span>' : '';
             const genCell = v.guide_path
                 ? `<button class="btn btn-ghost btn-sm" onclick="viewGuide('${body.deck_id}','${esc(v.guide_path)}')">Guide</button>`
                 : (v.guide_job_id
@@ -260,7 +286,7 @@
         }
         el.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h3 style="margin:0;">${esc(body.name)} <span class="muted">${(body.colors||[]).join('')} ${esc(body.archetype||'')}</span></h3>
+                <h3 style="margin:0;">${esc(body.name)} <span class="muted">${pips(body.colors)} ${esc(body.archetype || '')}</span></h3>
                 <div style="display:flex; gap:6px;">
                     <button class="btn btn-secondary btn-sm" onclick="openNewVersion('${body.deck_id}')">+ Version</button>
                     ${body.activated
