@@ -4,6 +4,16 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.50] - 2026-08-20
+
+### Changed
+- Your deck's AI Guide rules now STEER the advisor's recommendation, not just
+  annotate it: a fired rule can promote a close-call play (bounded — the
+  engine keeps veto power over large gaps), HOLD rules genuinely favor
+  holding, and when a rule changes the pick the overlay says which rule did.
+- GA/LLM-tuned `global_biases` from your deck strategy are applied again
+  (they were silently dropped by the Rust port).
+
 ## [0.8.49] — 2026-08-20
 
 ### Fixed
