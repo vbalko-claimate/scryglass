@@ -4,6 +4,17 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.49] — 2026-08-20
+
+### Fixed
+
+- **Older decks now appear on the Decks screen.** Decks created before the deck-management
+  module existed only as files and were invisible — they are adopted automatically, versions
+  included.
+- **Deck sync is automatic.** Creating a deck, adding a version, activating rules or finishing
+  a guide now pushes to your account by itself; the ⇅ Sync button remains for manual use. Your
+  account dashboard at scryglass.win fills in without extra steps.
+
 ## [0.8.48] — 2026-08-20
 
 ### Added
