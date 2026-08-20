@@ -356,9 +356,10 @@
             const row = document.createElement('div');
             row.className = 'deck-row';
             row.innerHTML = `<div><div>${esc(c.deck_name || '(unnamed)')}</div>
-                <div class="muted">${(c.colors||[]).join('')} ${esc(c.archetype||'')} · played ${c.times_played}× · last ${esc((c.last_played||'').slice(0,10))}${c.unnamed_cards ? ` · ⚠ ${c.unnamed_cards} unreadable cards dropped` : ''}</div></div>
-                <button class="btn btn-secondary btn-sm">Use</button>`;
-            row.querySelector('button').onclick = () => {
+                <div class="muted">${(c.colors||[]).join('')} ${esc(c.archetype||'')} · played ${c.times_played}× · last ${esc((c.last_played||'').slice(0,10))}${c.unnamed_cards ? ` · ⚠ ${c.unnamed_cards} unreadable card${c.unnamed_cards>1?'s':''} — can't import a complete list` : ''}</div></div>
+                <button class="btn btn-secondary btn-sm"${c.importable === false ? ' disabled title="Some cards could not be resolved to names — importing would save an incomplete deck"' : ''}>Use</button>`;
+            const useBtn = row.querySelector('button');
+            if (c.importable !== false) useBtn.onclick = () => {
                 closeModals();
                 openCreate();
                 document.getElementById('create-name').value = c.deck_name || '';

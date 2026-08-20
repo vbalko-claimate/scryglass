@@ -4,6 +4,17 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.51] - 2026-08-21
+
+### Fixed
+- Guide rules with conditions the engine can't evaluate (unknown fields,
+  typos) now stay silent instead of firing as if the condition passed; the
+  cloud generator repairs them at generation time.
+- Rule color conditions are now actually checked (previously always treated
+  as satisfied).
+- "Import from recent matches" no longer offers decks with unreadable cards —
+  importing them would have saved an incomplete list as if it were complete.
+
 ## [0.8.50] - 2026-08-20
 
 ### Changed
