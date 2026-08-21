@@ -4,6 +4,19 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.52] - 2026-08-21
+
+### Added
+- The overlay now shows WHICH deck strategy is steering the advice, and warns
+  when the active rules were generated for an older version of your deck.
+- Deck screen: a STALE chip when the deck list moved past its active rules,
+  and a "Legacy strategies" section for rule files without a deck list (with
+  one-click deactivation).
+
+### Fixed
+- A one-card strategy signature can no longer outrank a fully-matched
+  five-card one when binding a strategy to your match.
+
 ## [0.8.51] - 2026-08-21
 
 ### Fixed

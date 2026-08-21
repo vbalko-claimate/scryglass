@@ -215,19 +215,44 @@
         const el = document.getElementById('deck-list');
         if (!ok) { el.innerHTML = '<span class="muted">Failed to load decks.</span>'; return; }
         const decks = (body.decks || []).filter(d => !d.deleted);
+        el.innerHTML = '';
         if (!decks.length) {
             el.innerHTML = '<span class="muted">No decks yet.</span>';
-            return;
         }
-        el.innerHTML = '';
         for (const d of decks) {
             const row = document.createElement('div');
             row.className = 'deck-row' + (d.deck_id === selectedDeck ? ' selected' : '');
             row.onclick = () => { selectedDeck = d.deck_id; loadDecks(); loadDetail(d.deck_id); };
             row.innerHTML = `<div><div>${esc(d.name)}</div>
                 <div class="muted">${pips(d.colors)} ${esc(d.archetype || '')} · v${d.latest_version ?? 1}</div></div>
-                ${d.activated ? '<span class="pill ok" title="Rules active in the advisor">ACTIVE</span>' : ''}`;
+                ${d.activated ? '<span class="pill ok" title="Rules active in the advisor">ACTIVE</span>' : ''}${d.activated && d.active_version != null && d.latest_version != null && d.active_version < d.latest_version ? `<span class="pill warn" title="The active rules were generated for v${d.active_version}, but the deck list is at v${d.latest_version} — regenerate or re-activate">STALE v${d.active_version}&lt;v${d.latest_version}</span>` : ''}`;
             el.appendChild(row);
+        }
+        // #22: strategy dirs with no deck.json — invisible here until now, yet
+        // the advisor's signature scan CAN bind them to a match. Show them so
+        // the user knows what may steer their advice, with a way to turn each
+        // one off (removes only the activation marker, never the files).
+        const legacy = body.legacy_strategies || [];
+        if (legacy.length) {
+            const hdr = document.createElement('div');
+            hdr.className = 'muted';
+            hdr.style.cssText = 'margin-top:14px; font-size:11px; text-transform:uppercase; letter-spacing:0.05em;';
+            hdr.textContent = `Legacy strategies (${legacy.length}) — no deck list, still match live`;
+            el.appendChild(hdr);
+            for (const g of legacy) {
+                const row = document.createElement('div');
+                row.className = 'deck-row';
+                row.innerHTML = `<div><div>${esc(g.name || g.dir)}</div>
+                    <div class="muted">${esc(g.dir)} · signature ${g.signature_len} card${g.signature_len === 1 ? '' : 's'}</div></div>
+                    <button class="btn btn-secondary btn-sm">Deactivate</button>`;
+                row.querySelector('button').onclick = async (ev) => {
+                    ev.stopPropagation();
+                    if (!confirm(`Deactivate "${g.name || g.dir}"? The advisor will stop binding it. Files are kept.`)) return;
+                    const r = await api(`/api/decks/${encodeURIComponent(g.dir)}/undeploy`, { method: 'POST' });
+                    if (r.ok) { toast('Deactivated'); loadDecks(); } else { toast('Failed to deactivate'); }
+                };
+                el.appendChild(row);
+            }
         }
     }
     function esc(s) { const d = document.createElement('div'); d.textContent = s ?? ''; return d.innerHTML; }
