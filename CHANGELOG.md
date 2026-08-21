@@ -4,6 +4,12 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.55] - 2026-08-21
+
+### Fixed
+- Regenerating a deck's AI guide now saves the new rules locally — previously
+  a version that had already received a guide once silently kept the old one.
+
 ## [0.8.54] - 2026-08-21
 
 ### Changed
