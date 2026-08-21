@@ -4,6 +4,13 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.56] - 2026-08-21
+
+### Fixed
+- Target advice now considers every candidate the game offers — enchantments,
+  artifacts and planeswalkers were silently dropped, so spells like Sheltered
+  by Ghosts' exile could get no recommendation (or only creature options).
+
 ## [0.8.55] - 2026-08-21
 
 ### Fixed
