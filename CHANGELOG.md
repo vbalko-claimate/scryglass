@@ -4,6 +4,13 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.57] - 2026-08-21
+
+### Changed
+- Aura targeting advice now prefers the synergy carrier (a creature that
+  benefits from being enchanted) over the biggest body — measured against
+  real players, this fixes the two worst-scoring aura recommendations.
+
 ## [0.8.56] - 2026-08-21
 
 ### Fixed
