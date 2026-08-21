@@ -4,6 +4,15 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.54] - 2026-08-21
+
+### Changed
+- Deck strategy steering is now driven purely by the strategy's RULES (each
+  changed recommendation names the rule that caused it). Legacy GA-era
+  family-wide biases no longer shift recommendations — they were tuned for
+  the old advice sorter, and measurement showed them dominating changes with
+  hard-to-justify sequencing shoves.
+
 ## [0.8.53] - 2026-08-21
 
 ### Fixed
