@@ -4,6 +4,15 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.53] - 2026-08-21
+
+### Fixed
+- Deck guide viewer renders the AI guide with the same safe DOM renderer as
+  the cloud dashboard (no third-party markdown library, model output never
+  reaches raw HTML).
+- The combo banner now simulates exactly the recommended action — previously
+  a card with two abilities could get the banner computed for the wrong one.
+
 ## [0.8.52] - 2026-08-21
 
 ### Added

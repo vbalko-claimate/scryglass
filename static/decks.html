@@ -47,6 +47,9 @@
         .guide-body { line-height: 1.55; font-size: 14px; }
         .guide-body h1, .guide-body h2 { border-bottom: 1px solid #2a2d37; padding-bottom: 4px; }
         .guide-body code { background: #0f1117; padding: 1px 5px; border-radius: 4px; }
+        .guide-body table { border-collapse: collapse; margin: 8px 0; }
+        .guide-body th, .guide-body td { border: 1px solid #2a2d37; padding: 4px 8px; text-align: left; }
+        .guide-body blockquote { border-left: 3px solid #2a2d37; margin: 8px 0; padding: 2px 12px; color: #a7aab5; }
         .gen-status { display: inline-flex; gap: 8px; align-items: center; font-size: 12px; color: #ffd166; }
         .spin { display:inline-block; width: 10px; height: 10px; border: 2px solid #ffd166; border-top-color: transparent; border-radius: 50%; animation: sp 0.9s linear infinite; }
         @keyframes sp { to { transform: rotate(360deg); } }
@@ -183,7 +186,7 @@
 
     <div class="toast" id="toast"></div>
 
-    <script src="/static/marked.min.js"></script>
+    <script src="/static/md_render.js"></script>
     <script>
     // ── API layer (same-origin glass-host; the sidecar proxies the cloud) ──
     async function api(url, opts) {
@@ -447,7 +450,10 @@
         const r = await fetch(`/api/manage/guide/${encodeURIComponent(deckId)}/${encodeURIComponent(filename)}`);
         if (!r.ok) { toast('Guide file missing', true); return; }
         const md = await r.text();
-        document.getElementById('guide-body').innerHTML = marked.parse(md);
+        // DOM-building renderer (shared with the cloud dashboard) — LLM output
+        // never reaches innerHTML (#20).
+        const body = document.getElementById('guide-body');
+        body.replaceChildren(renderMarkdown(md));
         document.getElementById('guide-back').classList.add('open');
     }
     // ── Card overview: the version's list, enriched with ROLES from the
