@@ -4,6 +4,13 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.60] - 2026-08-22
+
+### Changed
+- Main-phase advice now recommends the land drop before spells (measured
+  against real games and strength-checked), except when a combo line is
+  recognized — that still leads.
+
 ## [0.8.59] - 2026-08-22
 
 ### Added
