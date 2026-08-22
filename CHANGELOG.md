@@ -4,6 +4,12 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.59] - 2026-08-22
+
+### Added
+- The overlay now shows the advisor's planned line for the whole turn
+  ("Line: Play Swamp → Cast Mossborn Hydra"), not just the next action.
+
 ## [0.8.58] - 2026-08-22
 
 ### Fixed
