@@ -4,6 +4,13 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.58] - 2026-08-22
+
+### Fixed
+- Hostile auras (Pacifism-style "can't attack/block") are no longer
+  recommended onto your own creature — v0.8.57's aura targeting preferred
+  your side for every aura, including the opponent's disabling ones.
+
 ## [0.8.57] - 2026-08-21
 
 ### Changed
