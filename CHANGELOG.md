@@ -4,6 +4,16 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.64] - 2026-08-24
+
+### Fixed
+- Removal that shrinks a creature (-X/-X: Last Gasp, Stab, Nowhere to Run and
+  a dozen more) is finally recognized as removal — it was scored as if it did
+  nothing, and could even be recommended with no target on the board.
+- Saga chapters that share one effect ("III, IV — …") now fire on every
+  listed chapter instead of only the first.
+- Ral Zarek's -1 makes the OPPONENT discard, not you.
+
 ## [0.8.63] - 2026-08-24
 
 ### Fixed
