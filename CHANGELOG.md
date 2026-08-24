@@ -4,6 +4,13 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.62] - 2026-08-24
+
+### Added
+- Per-decision advice telemetry (what was recommended, whether deck rules
+  influenced it, which strategy was active) — enables advice-quality
+  analytics across all testers.
+
 ## [0.8.61] - 2026-08-22
 
 ### Fixed
