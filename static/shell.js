@@ -37,6 +37,96 @@
       'Update v' + version + ' is ready — install from the Scryglass tray menu (Install Update v' + version + '…)';
   };
 
+  // ── What's changed (first run of a NEW version) ────────────────────────────
+  // The Tauri shell eval()s `showWhatsChanged('x.y.z', '<release notes>')` into
+  // the main window on the first launch after an update — the launch check now
+  // installs OTA updates by itself, so this is the only place the user learns
+  // what actually changed. It never fires on a fresh install (the shell has no
+  // previous version on record) and the shell records "seen" as soon as this
+  // call lands, so it does not come back after a dismissal.
+  //
+  // Same markup style as ensureSigninModal below (.modal-* from style.css) so
+  // it looks like the rest of the app. No inline handlers — CSP-safe.
+  //
+  // ⚠ THE DISMISSAL IS PERSISTED, unlike showUpdateNotice's in-memory flag. The
+  // shell has to keep re-delivering this call for a while (the main window
+  // re-navigates to :8765 the moment the sidecar comes up, which destroys any
+  // JS state and would swallow a single early attempt), and a memory-only guard
+  // resets on exactly that navigation — so a dismissed panel would come back.
+  // localStorage is per-origin and every app page is served from :8765.
+  const WC_KEY = 'scry-whats-changed-dismissed';
+  let whatsChangedFor = null;
+  window.showWhatsChanged = function (version, notes) {
+    if (version === whatsChangedFor) return;
+    try {
+      if (localStorage.getItem(WC_KEY) === version) return;
+    } catch (e) { /* private mode / storage disabled — show it anyway */ }
+    whatsChangedFor = version;
+    document.getElementById('whats-changed-modal')?.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'whats-changed-modal';
+    modal.className = 'modal-backdrop';
+
+    const container = document.createElement('div');
+    container.className = 'modal-container';
+
+    const header = document.createElement('div');
+    header.className = 'modal-header';
+    const title = document.createElement('span');
+    title.className = 'modal-title';
+    title.textContent = "What's changed in v" + version;
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'btn btn-ghost btn-sm';
+    closeBtn.textContent = '✕';
+    header.appendChild(title);
+    header.appendChild(closeBtn);
+
+    const body = document.createElement('div');
+    body.className = 'modal-body';
+    // md_render.js ships only on /decks, so this is a progressive upgrade:
+    // rendered markdown when it is loaded, readable plain text otherwise.
+    // Both paths build nodes — the notes are never assigned as innerHTML.
+    if (typeof window.renderMarkdown === 'function') {
+      body.appendChild(window.renderMarkdown(notes, document));
+    } else {
+      const pre = document.createElement('div');
+      pre.style.cssText = 'white-space:pre-wrap;font-size:13px;line-height:1.55;';
+      pre.textContent = String(notes == null ? '' : notes);
+      body.appendChild(pre);
+    }
+
+    const footer = document.createElement('div');
+    footer.className = 'modal-footer';
+    const okBtn = document.createElement('button');
+    okBtn.className = 'btn btn-primary';
+    okBtn.textContent = 'Got it';
+    footer.appendChild(okBtn);
+
+    container.appendChild(header);
+    container.appendChild(body);
+    container.appendChild(footer);
+    modal.appendChild(container);
+
+    function dismiss() {
+      try { localStorage.setItem(WC_KEY, version); } catch (e) { /* best effort */ }
+      document.removeEventListener('keydown', onKey);
+      modal.remove();
+    }
+    function onKey(e) {
+      if (e.key === 'Escape') dismiss();
+    }
+    closeBtn.addEventListener('click', dismiss);
+    okBtn.addEventListener('click', dismiss);
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) dismiss();
+    });
+    document.addEventListener('keydown', onKey);
+
+    document.body.appendChild(modal);
+    modal.classList.add('open');
+  };
+
   window.ScryglassShell = {
     user: { email: null, is_anon: true, alpha: false, created_at: null },
     syncing: false,

@@ -4,6 +4,19 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.65] - 2026-08-24
+
+### Added
+- Launching Scryglass when it is already running now focuses the open window
+  instead of starting a second copy.
+- Updates install automatically at startup and the app restarts into the new
+  version — never while a match is in progress.
+- After an update, a "What's changed" panel shows that version's release notes.
+
+### Fixed
+- The "don't restart during a match" check asked the backend a question it
+  never answered (a 404), so it had never actually protected a live game.
+
 ## [0.8.64] - 2026-08-24
 
 ### Fixed

@@ -30,7 +30,10 @@ fn read_json(path: &Path) -> Option<Value> {
 /// The sidecar's data dir — the same `{SCRY_USER_DATA or ~/MTG/mtg-data}/app_data`
 /// that `spawn_glass_host` passes it, so we read the account it already uses
 /// instead of minting a second identity.
-fn app_data_dir(app: &tauri::AppHandle) -> PathBuf {
+///
+/// Shared with `update`, which keeps its "last seen version" state here for the
+/// same reason: one data root for the whole app, not one per module.
+pub(crate) fn app_data_dir(app: &tauri::AppHandle) -> PathBuf {
     use tauri::Manager;
     let root = std::env::var("SCRY_USER_DATA").unwrap_or_else(|_| {
         app.path()

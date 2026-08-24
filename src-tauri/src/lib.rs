@@ -14,6 +14,7 @@ mod diag;
 mod mtga_detect;
 mod report;
 mod sidecar;
+mod update;
 
 #[tauri::command]
 fn toggle_overlay() {
@@ -302,6 +303,39 @@ async fn check_match_active() -> bool {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        // ★ FIRST IN THE CHAIN, AND IT MUST STAY FIRST.
+        //
+        // Two reasons, one of them specific to this app:
+        //
+        //  * the plugin's own docs require it (a later registration can miss the
+        //    hand-off), and
+        //  * ⚠ THE SIDECAR. `sidecar::start_and_wait` — called from `.setup()`
+        //    below — runs `kill_stale_sidecars()` before spawning THIS bundle's
+        //    glass-host, by design (it must never adopt an orphan from a prior
+        //    version). A second launch that reached that code would therefore
+        //    kill the RUNNING instance's backend and leave every one of its
+        //    windows on a blank page.
+        //
+        // That cannot happen: plugin `setup` hooks run in `Builder::build()`
+        // (`AppManager::initialize_plugins`, in registration order), whereas the
+        // app's own `.setup()` closure runs later, from `App::run()`. The second
+        // instance calls `std::process::exit(0)` inside the plugin's setup —
+        // before any window is created, before `diag::init`, and before a single
+        // line of sidecar code executes.
+        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+            // Runs in the ALREADY-RUNNING instance (its diag log is open, so
+            // this is visible; the second process exits too early to log).
+            diag::log("[single-instance] second launch — focusing the running window");
+            if let Some(w) = app.get_webview_window("main") {
+                // `show` as well as `unminimize`: closing the window only hides
+                // it (see `on_window_event`), which is the state a menu-bar app
+                // spends most of its life in — an unminimize alone would focus
+                // a window nobody can see.
+                let _ = w.unminimize();
+                let _ = w.show();
+                let _ = w.set_focus();
+            }
+        }))
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_dialog::init())
@@ -435,26 +469,54 @@ pub fn run() {
                 .item(&quit_item)
                 .build()?;
 
+            // "What's changed": the FIRST run of a new version shows that
+            // version's release notes in the app window, once. Not gated on the
+            // updater (or on release builds) — a hand-installed DMG/MSI upgrade
+            // has to be covered too, and the notes then come from the bundled
+            // CHANGELOG instead of the update manifest.
+            {
+                let handle = app.handle().clone();
+                tauri::async_runtime::spawn(async move {
+                    update::deliver_whats_changed(&handle).await;
+                });
+            }
+
             // On launch AND every 4 hours after (release only): a background
-            // check that ADVERTISES an available update — no dialog, no
-            // auto-install, so it never interrupts a game. Two surfaces:
-            //   * the tray item retitles ("Install Update v…"), where the
-            //     install actually happens;
+            // update check.
+            //
+            // AT LAUNCH it now AUTO-APPLIES: check → download → install →
+            // relaunch, with no dialog. The hard constraint is unchanged and is
+            // enforced in `update::try_auto_apply` — it never restarts while a
+            // match is live (and never on a match state it could not read). When
+            // it declines, this falls straight back to the advertise-only
+            // behaviour below and tries again on the next launch.
+            //
+            // The PERIODIC re-check stays advertise-only: the app stays open
+            // across days, and silently restarting someone hours into a session
+            // is a different (worse) bargain than doing it during startup. Two
+            // surfaces:
+            //   * the tray item retitles ("Install Update v…"), where the manual,
+            //     consent-gated install still happens, unchanged;
             //   * the OVERLAY shows a banner. USER-REPORTED 2026-08-19: the
             //     tray-only advert was invisible in practice — a tester sat on
             //     an old version for days without knowing. The overlay is the
             //     one surface the player actually looks at.
-            // The periodic re-check exists because the app stays open across
-            // days; a launch-only check re-creates the same blindness.
             #[cfg(not(debug_assertions))]
             {
                 let handle = app.handle().clone();
                 let item = update_item.clone();
                 tauri::async_runtime::spawn(async move {
+                    // Only the first pass is the launch pass.
+                    let mut at_launch = true;
                     loop {
                         if let Ok(updater) = handle.updater() {
                             if let Ok(Some(update)) = updater.check().await {
                                 let v = update.version.clone();
+                                if at_launch {
+                                    // Returns only if it DECLINED — a successful
+                                    // install restarts the process here.
+                                    update::try_auto_apply(&handle, update).await;
+                                }
                                 let _ = item.set_text(format!("Install Update v{v}…"));
                                 // Surface it in BOTH webviews: the MAIN app
                                 // window is the primary notice (a real, clickable
@@ -486,6 +548,7 @@ pub fn run() {
                                 }
                             }
                         }
+                        at_launch = false;
                         tokio::time::sleep(std::time::Duration::from_secs(4 * 3600)).await;
                     }
                 });
@@ -562,22 +625,6 @@ pub fn run() {
         .expect("error while running tauri application");
 }
 
-/// Query glass-host whether an MTGA match is active — game-aware update deferral
-/// (Scryglass must never restart mid-game). Fails safe to `false` (host
-/// unreachable ⇒ treat as not-in-a-match).
-#[cfg(not(debug_assertions))]
-async fn is_match_active() -> bool {
-    match reqwest::get("http://localhost:8765/active").await {
-        Ok(resp) => resp
-            .json::<serde_json::Value>()
-            .await
-            .ok()
-            .and_then(|v| v.get("active").and_then(serde_json::Value::as_bool))
-            .unwrap_or(false),
-        Err(_) => false,
-    }
-}
-
 /// The tray "Check for Updates…" flow: check → up-to-date message, or an
 /// available-update path that NEVER restarts mid-game and installs only on the
 /// user's explicit consent (the Sparkle menu-bar pattern).
@@ -616,7 +663,15 @@ async fn run_update_check(app: tauri::AppHandle) {
     };
     let new_v = update.version.clone();
     // Never restart mid-game — defer with a message, leave it installable later.
-    if is_match_active().await {
+    //
+    // ⚠ THIS USED TO BE DEAD. The old helper asked glass-host for `/active`, a
+    // route that does not exist (verified: 404 against a running host), so the
+    // deferral fired exactly never and this dialog could install on top of a
+    // live game. `update::match_definitely_active` asks `/match-status`, which
+    // is the tracker's own match-lifecycle flag. "Definitely": an unreadable
+    // answer must not block a user who explicitly asked for the update — that
+    // asymmetry with the unattended path is deliberate.
+    if update::match_definitely_active().await {
         let _ = app
             .dialog()
             .message(format!(
@@ -651,6 +706,10 @@ async fn run_update_check(app: tauri::AppHandle) {
         ))
         .blocking_show();
     if install {
+        // Keep the release notes for the process that replaces this one:
+        // `update.body` dies with it, and the next launch shows "what's changed"
+        // whether the install came from here or from the automatic launch path.
+        update::stage_notes(&app, &new_v, update.body.as_deref());
         // ⚠ STOP THE SIDECAR FIRST. Windows cannot replace a binary that a
         // running process holds open, and the installer's own "close related
         // apps" step only knows about Scryglass.exe — `glass-host.exe` is a
@@ -662,6 +721,9 @@ async fn run_update_check(app: tauri::AppHandle) {
             Ok(()) => app.restart(),
             Err(e) => {
                 crate::diag::log(&format!("[update!] install failed: {e}"));
+                // The install we staged notes for did not happen; leaving them
+                // would make a later launch of THIS version show them.
+                update::clear_staged_notes(&app);
                 let _ = app
                     .dialog()
                     .message(format!("Install failed: {e}"))
