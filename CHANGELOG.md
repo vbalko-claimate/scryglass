@@ -4,6 +4,15 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.63] - 2026-08-24
+
+### Fixed
+- Planeswalkers no longer vanish from the advisor's simulations — their
+  loyalty was never read from the game, so every simulated line played out
+  as if all planeswalkers had died instantly.
+- Room cards show the cost of the door being cast, not both doors combined.
+- Life-drain creatures are no longer labeled as removal in advice reasoning.
+
 ## [0.8.62] - 2026-08-24
 
 ### Added
