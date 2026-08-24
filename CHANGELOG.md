@@ -4,6 +4,15 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.66] - 2026-08-25
+
+### Fixed
+- 17 lands that should enter tapped ("unless a player has 13 or less life",
+  "unless you control a Mount or Vehicle", …) were entering untapped, so the
+  advisor thought you had mana you did not have.
+- Equipment cards no longer carry a phantom extra effect (Bloodthorn Flail's
+  "or discard a card" was treated as part of resolving it).
+
 ## [0.8.65] - 2026-08-24
 
 ### Added
