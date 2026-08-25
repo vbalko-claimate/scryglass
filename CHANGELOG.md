@@ -4,6 +4,14 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.68] - 2026-08-25
+
+### Fixed
+- Prowess now actually works. Every creature printed with the bare keyword
+  (Emberheart Challenger, Heartfire Immolator, Stormcatch Mentor and 26 more)
+  was being treated as if it had no prowess at all, so the advisor never saw
+  lines like "burn spell first, then attack with two bigger creatures".
+
 ## [0.8.67] - 2026-08-25
 
 ### Fixed
