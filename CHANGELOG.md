@@ -4,6 +4,14 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.67] - 2026-08-25
+
+### Fixed
+- Equipment can finally be equipped: the engine never offered the action, so
+  the advisor could not suggest equipping and never accounted for it when
+  planning a turn.
+- Moving an Equipment no longer leaves its bonus on the previous creature.
+
 ## [0.8.66] - 2026-08-25
 
 ### Fixed
