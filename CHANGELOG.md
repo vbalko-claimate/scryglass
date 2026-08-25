@@ -4,6 +4,18 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.69] - 2026-08-25
+
+### Fixed
+- Attack advice no longer trades your real creatures into opponent tokens for
+  nothing: a new gate models the defender's best token blocks (first strike,
+  double strike, deathtouch, shield counters, protection, marked damage) and
+  says "Hold back" instead — while never holding a lethal or trampling attack,
+  goaded creatures, or token-for-token trades.
+- Summon: Shiva and Rediscover the Way: chapters I and II did nothing at all
+  (the tap+stun / card-selection text was compiled outside the Saga trigger);
+  both now fire on the right chapters.
+
 ## [0.8.68] - 2026-08-25
 
 ### Fixed
