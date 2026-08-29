@@ -4,6 +4,23 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.70] - 2026-08-29
+
+### Fixed
+- "Whenever you attack" abilities now actually work end to end: Anim Pakal,
+  Jolene, Dyadrine, Razorkin Hordecaller and Warren Warleader never triggered
+  at all, Hired Claw-style tribal qualifiers fired for the wrong creatures,
+  and Persistent Marshstalker never returned from the graveyard.
+- Food tokens are real artifact Food (sacrifice for 3 life) instead of 1/1
+  creatures — affects every Food deck (46 cards).
+- Burn spells that hit "creature or planeswalker" (Obliterating Bolt, Torch
+  the Tower, …) now damage planeswalker loyalty correctly and the advisor
+  treats a lone opposing planeswalker as a live target instead of dead removal.
+- Voice of Victory / Grand Abolisher-style "opponents can't cast spells
+  during your turn" is now enforced in the advisor's simulations.
+- Impractical Joke's "damage can't be prevented this turn" now works and
+  survives the whole turn.
+
 ## [0.8.69] - 2026-08-25
 
 ### Fixed
