@@ -4,6 +4,22 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.71] - 2026-08-30
+
+### Fixed
+- The advisor no longer tells you to hold back a lethal trample attack: a
+  chump blocker was credited with absorbing a trampler's entire power, which
+  suppressed the "swing for lethal" override (found from a real match where
+  a 28/28 Hydra was told to stay home against an opponent at 6).
+- When the advisor holds attackers back because they would only trade with a
+  token, the advice now says exactly which attacker and which token.
+
+### Changed
+- Every telemetry event and match record now reports the app and engine
+  version, so tester games can be attributed to the build that played them.
+- Game replays record every target of multi-target and repeated spells
+  (previously only the first target per spell name each turn survived).
+
 ## [0.8.70] - 2026-08-29
 
 ### Fixed
