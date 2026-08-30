@@ -201,6 +201,35 @@
             </div>
           </div>
         </div>
+
+        <!-- 4. Overlay feedback hotkey -->
+        <div class="glass-card">
+          <div class="card-header">
+            <div class="card-title">
+              <span>⌨️ Overlay Hotkeys</span>
+            </div>
+            <span class="badge badge-indigo">OVERLAY</span>
+          </div>
+
+          <div class="form-group" style="margin-bottom:12px;">
+            <label class="form-label" for="overlay-feedback-key">Feedback key</label>
+            <select class="select" id="overlay-feedback-key" onchange="previewOverlayHotkey()">
+              <option value="left_alt">Left Alt (doporučeno)</option>
+              <option value="right_ctrl">Right Ctrl (experimentální — ověř, že nespouští MTGA Full Control)</option>
+              <option value="left_ctrl">Left Ctrl (původní — koliduje s MTGA Full Control)</option>
+            </select>
+          </div>
+
+          <div id="overlay-hotkey-diagnostics" style="margin-bottom:12px;"></div>
+
+          <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--border); padding-top:12px; gap:12px;">
+            <div style="font-size:11px; color:var(--muted);">
+              <div>Windows: změna se projeví přibližně do 2 s. macOS: změna se projeví až po RESTARTU aplikace.</div>
+              <div id="overlay-hotkey-status" style="margin-top:3px;"></div>
+            </div>
+            <button id="btn-save-overlay-hotkey" class="btn btn-primary" onclick="saveOverlayHotkey()">Save Hotkey</button>
+          </div>
+        </div>
       </div>
     </main>
   </div>
@@ -606,12 +635,99 @@
     }
   }
 
-  // ── Init: all three sections are visible at once (no tabs) ──
+  // ─────────────────────────────────────────────────────────────
+  // 4. OVERLAY HOTKEY
+  //    GET/PUT /api/manage/overlay-config
+  //    GET with ?candidate= previews warnings without changing the config.
+  // ─────────────────────────────────────────────────────────────
+  function renderOverlayHotkeyDiagnostics(items) {
+    const container = document.getElementById('overlay-hotkey-diagnostics');
+    container.replaceChildren();
+    (items || []).forEach(item => {
+      const line = document.createElement('div');
+      const warning = item.severity === 'warn';
+      line.textContent = `${warning ? '⚠' : 'ℹ'} ${item.message || ''}`;
+      line.style.cssText =
+        `font-size:12px;padding:6px 10px;margin-top:6px;border-radius:var(--radius-md);` +
+        (warning
+          ? 'color:var(--warning);background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);'
+          : 'color:var(--muted);background:rgba(99,102,241,0.08);border:1px solid var(--border);');
+      container.appendChild(line);
+    });
+  }
+
+  async function fetchOverlayHotkey(candidate) {
+    const query = candidate ? `?candidate=${encodeURIComponent(candidate)}` : '';
+    const res = await fetch(`/api/manage/overlay-config${query}`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to load overlay hotkey');
+    return data;
+  }
+
+  async function loadOverlayHotkey() {
+    const status = document.getElementById('overlay-hotkey-status');
+    try {
+      const data = await fetchOverlayHotkey();
+      document.getElementById('overlay-feedback-key').value = data.feedback_key || 'left_alt';
+      renderOverlayHotkeyDiagnostics(data.diagnostics);
+    } catch (e) {
+      status.textContent = `Error: ${e.message}`;
+      status.style.color = 'var(--error, #ef4444)';
+    }
+  }
+
+  async function previewOverlayHotkey() {
+    const key = document.getElementById('overlay-feedback-key').value;
+    const btn = document.getElementById('btn-save-overlay-hotkey');
+    const status = document.getElementById('overlay-hotkey-status');
+    btn.disabled = true;
+    try {
+      const data = await fetchOverlayHotkey(key);
+      renderOverlayHotkeyDiagnostics(data.diagnostics);
+      status.textContent = 'Diagnostics are advisory; saving is always allowed.';
+      status.style.color = 'var(--muted)';
+    } catch (e) {
+      status.textContent = `Error: ${e.message}`;
+      status.style.color = 'var(--error, #ef4444)';
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  async function saveOverlayHotkey() {
+    const btn = document.getElementById('btn-save-overlay-hotkey');
+    const status = document.getElementById('overlay-hotkey-status');
+    const feedbackKey = document.getElementById('overlay-feedback-key').value;
+    btn.disabled = true;
+    try {
+      const res = await fetch('/api/manage/overlay-config', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ feedback_key: feedbackKey }),
+      });
+      const data = await res.json();
+      if (!res.ok || data.status !== 'ok') {
+        throw new Error(data.error || 'Save failed');
+      }
+      status.textContent = 'Saved. Windows: within ~2 s; macOS: after app RESTART.';
+      status.style.color = 'var(--success, #22c55e)';
+      notify('Overlay hotkey saved');
+    } catch (e) {
+      status.textContent = `Error: ${e.message}`;
+      status.style.color = 'var(--error, #ef4444)';
+      notify('Overlay hotkey save failed', true);
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  // ── Init: all sections are visible at once (no tabs) ──
   document.addEventListener('DOMContentLoaded', () => {
     loadCollectionStats();
     pollCollectionRefreshStatus();
     loadMetaDecks();
     loadCloudConfig();
+    loadOverlayHotkey();
   });
   </script>
 </body>

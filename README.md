@@ -92,6 +92,22 @@ mtg-data/
       guides/             # strategy guides (.md)
 ```
 
+### Overlay Feedback Key
+
+The hold-to-enable feedback key defaults to Left Alt (Left Option on macOS). To
+change it before the management UI supports this setting, create
+`app_data/overlay_config.json` under `SCRY_USER_DATA`:
+
+```json
+{
+  "feedback_key": "left_alt"
+}
+```
+
+Supported values are `left_alt`, `right_ctrl` (experimental), and `left_ctrl`
+(the legacy Left Command binding on macOS). Windows reloads this file within
+about two seconds; macOS applies it when Scryglass is relaunched.
+
 ### LLM Backends
 
 The advisor can use LLMs for supplementary advice (optional):

@@ -499,7 +499,7 @@ html, body {
     <div class="advice-for" id="advice-for"></div>
     <div class="phase-line" id="phase-line"></div>
     <div class="seat-lines" id="seat-lines"></div>
-    <div class="hint-line" id="hint-line">Left ⌘: feedback + drag to move · hover to hide</div>
+    <div class="hint-line" id="hint-line">Left Alt: feedback + drag to move · hover to hide</div>
     <div class="feedback-btns" id="feedback-btns">
         <div class="fb-btn good" onclick="sendFeedback('up')" title="Good advice">✓</div>
         <div class="fb-btn bad" onclick="sendFeedback('down')" title="Bad advice">✗</div>
@@ -514,6 +514,17 @@ let ws = null;
 let currentStrategyInfo = null;
 let isMyTurn = false;
 let inMatch = false;
+// Native code replaces this with the platform-specific configured label after
+// the overlay loads and whenever feedback mode/config changes.
+let hotkeyLabel = 'Left Alt';
+function updateControlHint() {
+    const hint = document.getElementById('hint-line');
+    if (hint) hint.textContent = `${hotkeyLabel}: feedback + drag to move · hover to ${inMatch ? 'hide' : 'open'}`;
+}
+function setHotkeyLabel(label) {
+    hotkeyLabel = (typeof label === 'string' && label.trim()) ? label.trim() : 'Left Alt';
+    updateControlHint();
+}
 // Live decision context (from `state_update`) and the context the advice on
 // screen was computed for (from the `advice` push's `for` field).
 let liveTurn = null;
@@ -569,12 +580,7 @@ async function tick() {
     if (peekPolarityFor !== active) {
         peekPolarityFor = active;
         setPeek(!active);
-        const hint = document.getElementById('hint-line');
-        if (hint) {
-            hint.textContent = active
-                ? 'Left ⌘: feedback + drag to move · hover to hide'
-                : 'Left ⌘: feedback + drag to move · hover to open';
-        }
+        updateControlHint();
     }
     if (active) {
         // In a match: the advisor panels render from WS (updateState/updateAdvice).
@@ -1254,7 +1260,7 @@ function overlayCursor(x, y) {
 
 // ─── Drag to move (in feedback mode) ───────────────────────────────────
 // The overlay is click-through, so it only receives real mouse events while
-// feedback mode is active (Right ⌘ / Right Win makes the window interactive).
+// feedback mode is active (the configured native key makes it interactive).
 // There you can drag the panel to reposition it; the position persists just like
 // the Option+arrow nudge. Clicks on the ✓/✗/⚑ buttons are left alone.
 // Module-scoped so a feedback-mode transition can cancel a drag that never saw its
@@ -1302,12 +1308,8 @@ function cancelOverlayDrag() {
     if (savedY) el.style.top = savedY;
 })();
 
-// Platform-aware control hint — feedback key is Left ⌘ on macOS, Left Ctrl on Windows.
-(function() {
-    const key = /Mac/i.test(navigator.userAgent) ? 'Left ⌘' : 'Left Ctrl';
-    const h = document.getElementById('hint-line');
-    if (h) h.textContent = `${key}: feedback + drag to move · hover to hide`;
-})();
+// Safe fallback until the native layer pushes the configured platform label.
+setHotkeyLabel('Left Alt');
 </script>
 </body>
 </html>

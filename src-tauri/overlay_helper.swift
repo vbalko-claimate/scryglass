@@ -4,6 +4,36 @@
 import Cocoa
 import WebKit
 
+enum FeedbackKey: String {
+    case leftAlt = "left_alt"
+    case rightCtrl = "right_ctrl"
+    case leftCtrl = "left_ctrl"
+
+    static func fromLaunchArguments() -> FeedbackKey {
+        let args = CommandLine.arguments
+        guard let flag = args.firstIndex(of: "--feedback-key"), flag + 1 < args.count else {
+            return .leftAlt
+        }
+        return FeedbackKey(rawValue: args[flag + 1]) ?? .leftAlt
+    }
+
+    var keyCode: UInt16 {
+        switch self {
+        case .leftAlt: return 58       // Left Option
+        case .rightCtrl: return 62     // Right Control (experimental)
+        case .leftCtrl: return 55      // Legacy binding: Left Command on macOS
+        }
+    }
+
+    var label: String {
+        switch self {
+        case .leftAlt: return "Left Option"
+        case .rightCtrl: return "Right Ctrl"
+        case .leftCtrl: return "Left Command"
+        }
+    }
+}
+
 /// Find the NSScreen that MTGA's main window is on (multi-monitor aware).
 /// CoreGraphics window bounds use a top-left origin; convert the window center
 /// to AppKit global coords (bottom-left origin) to locate the containing screen.
@@ -37,10 +67,11 @@ class OverlayWindow: NSWindow {
     override var canBecomeMain: Bool { false }
 }
 
-class OverlayDelegate: NSObject, NSApplicationDelegate {
+class OverlayDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate {
     var window: NSWindow!
     var webView: WKWebView!
     var timer: Timer?
+    let feedbackKey = FeedbackKey.fromLaunchArguments()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Create borderless transparent window
@@ -63,9 +94,17 @@ class OverlayDelegate: NSObject, NSApplicationDelegate {
         // Sends position offset to WKWebView via JavaScript
         NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
             guard let self = self, event.modifierFlags.contains(.option) else { return }
-            // Option+H toggles the peek (shrink-to-pill) state.
+            // Option+H remains the peek shortcut. H makes this a chord, so when
+            // Left Option is also the feedback key the chord takes precedence
+            // until Option is released.
             if event.keyCode == 4 {
-                self.webView.evaluateJavaScript("togglePeek()", completionHandler: nil)
+                DispatchQueue.main.async {
+                    if self.feedbackKey == .leftAlt || self.isInteractive {
+                        self.suppressFeedbackUntilRelease = true
+                        self.exitFeedbackMode()
+                    }
+                    self.webView.evaluateJavaScript("togglePeek()", completionHandler: nil)
+                }
                 return
             }
             let step: CGFloat = event.modifierFlags.contains(.shift) ? 50 : 10
@@ -119,6 +158,7 @@ class OverlayDelegate: NSObject, NSApplicationDelegate {
         webView = WKWebView(frame: window.contentView!.bounds, configuration: config)
         webView.autoresizingMask = [.width, .height]
         webView.setValue(false, forKey: "drawsBackground")
+        webView.navigationDelegate = self
 
         // Load overlay HTML
         if let url = URL(string: "http://localhost:8765/overlay") {
@@ -146,17 +186,25 @@ class OverlayDelegate: NSObject, NSApplicationDelegate {
             self?.checkServerAlive()
         }
 
-        // Left Command key monitor — toggle feedback mode. Left (keyCode 55) so it
-        // can be held with the left hand while the mouse stays in the right.
+        // Configured modifier monitor — Left Option by default, so MTGA's
+        // hold-Left-Control Full Control shortcut remains untouched.
         NSEvent.addGlobalMonitorForEvents(matching: .flagsChanged) { [weak self] event in
             guard let self = self else { return }
-            let flags = event.modifierFlags
-            let leftCmd = flags.contains(.command) && event.keyCode == 55
-            let cmdReleased = !flags.contains(.command)
+            guard event.keyCode == self.feedbackKey.keyCode else { return }
+            // modifierFlags combines the left/right variants. Query the exact
+            // key so holding the opposite Ctrl/Option/Command cannot mask this
+            // key's release and leave feedback mode stuck on.
+            let keyPressed = CGEventSource.keyState(
+                .combinedSessionState,
+                key: CGKeyCode(self.feedbackKey.keyCode)
+            )
             DispatchQueue.main.async {
-                if leftCmd && !self.isInteractive && self.window.isVisible {
+                if self.suppressFeedbackUntilRelease && !keyPressed {
+                    self.suppressFeedbackUntilRelease = false
+                }
+                if keyPressed && !self.suppressFeedbackUntilRelease && !self.isInteractive && self.window.isVisible {
                     self.enterFeedbackMode()
-                } else if cmdReleased && self.isInteractive {
+                } else if !keyPressed && self.isInteractive {
                     self.exitFeedbackMode()
                 }
             }
@@ -181,13 +229,22 @@ class OverlayDelegate: NSObject, NSApplicationDelegate {
     var feedbackTimeout: DispatchWorkItem?
     var lastPeekSend = Date.distantPast
     var pendingPeek: DispatchWorkItem?
+    var suppressFeedbackUntilRelease = false
+
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        pushHotkeyLabel()
+    }
+
+    func pushHotkeyLabel() {
+        webView.evaluateJavaScript("setHotkeyLabel('\(feedbackKey.label)')", completionHandler: nil)
+    }
 
     func enterFeedbackMode() {
         isInteractive = true
         (window as! OverlayWindow).interactiveMode = true
         window.ignoresMouseEvents = false
         window.makeKeyAndOrderFront(nil)
-        webView.evaluateJavaScript("setInteractiveMode(true)", completionHandler: nil)
+        webView.evaluateJavaScript("setHotkeyLabel('\(feedbackKey.label)'); setInteractiveMode(true)", completionHandler: nil)
 
         // Safety timeout — 5s max
         feedbackTimeout?.cancel()
@@ -204,7 +261,7 @@ class OverlayDelegate: NSObject, NSApplicationDelegate {
         (window as! OverlayWindow).interactiveMode = false
         window.ignoresMouseEvents = true
         window.resignKey()
-        webView.evaluateJavaScript("setInteractiveMode(false)", completionHandler: nil)
+        webView.evaluateJavaScript("setHotkeyLabel('\(feedbackKey.label)'); setInteractiveMode(false)", completionHandler: nil)
 
         // Re-focus MTGA
         if let mtga = NSWorkspace.shared.runningApplications.first(where: { ($0.localizedName ?? "").contains("MTGA") }) {

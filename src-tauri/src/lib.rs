@@ -12,6 +12,7 @@ use tauri_plugin_updater::UpdaterExt;
 
 mod diag;
 mod mtga_detect;
+mod overlay_config;
 mod report;
 mod sidecar;
 mod update;
@@ -31,6 +32,7 @@ fn find_mtga() -> mtga_detect::MtgaWindow {
 #[cfg(target_os = "macos")]
 fn launch_overlay_macos(handle: &tauri::AppHandle) {
     let shell = handle.shell();
+    let feedback_key = overlay_config::load(handle);
     let mut restart_count = 0u32;
 
     loop {
@@ -40,7 +42,7 @@ fn launch_overlay_macos(handle: &tauri::AppHandle) {
         );
 
         let cmd = match shell.sidecar("overlay-helper") {
-            Ok(c) => c,
+            Ok(c) => c.args(["--feedback-key", feedback_key.config_value()]),
             Err(e) => {
                 eprintln!("[overlay] Cannot create overlay sidecar: {}", e);
                 return;
@@ -147,8 +149,15 @@ fn fit_overlay_to_monitor(overlay: &tauri::WebviewWindow) {
     ));
 }
 
+#[cfg(target_os = "windows")]
+fn push_windows_hotkey_label(overlay: &tauri::WebviewWindow, key: overlay_config::FeedbackKey) {
+    if let Ok(label) = serde_json::to_string(key.windows_label()) {
+        let _ = overlay.eval(&format!("setHotkeyLabel({label})"));
+    }
+}
+
 /// Windows: Use Tauri overlay window — poll MTGA foreground + match status to show/hide.
-/// Also polls Alt key for feedback mode toggle.
+/// Also polls the configured feedback key (Left Alt by default).
 #[cfg(target_os = "windows")]
 fn launch_overlay_windows(handle: &tauri::AppHandle) {
     let handle = handle.clone();
@@ -196,6 +205,7 @@ fn launch_overlay_windows(handle: &tauri::AppHandle) {
                         // resolution since the last match.
                         fit_overlay_to_monitor(&overlay);
                         let _ = overlay.show();
+                        push_windows_hotkey_label(&overlay, overlay_config::load(&h1));
                         was_visible = true;
                         crate::diag::log(&format!(
                             "[overlay] showing — visible={:?} position={:?} size={:?}",
@@ -219,49 +229,86 @@ fn launch_overlay_windows(handle: &tauri::AppHandle) {
     });
 
     // Key + cursor polling thread (50ms poll):
-    //  - Left Ctrl toggles feedback mode (click-through off + interactive buttons).
-    //    Left-hand key so it can be held while the mouse stays in the right hand.
+    //  - The configured key toggles feedback mode (click-through off + buttons).
+    //    The left-hand default can be held while the mouse stays in the right hand.
     //  - Otherwise forward the cursor position so the overlay can peek (shrink) when
     //    the cursor is over it. GetCursorPos is a passive read → click-through stays
     //    intact; JS owns the geometry (see overlayCursor in overlay.html).
     let h2 = handle.clone();
     std::thread::spawn(move || {
         use windows::Win32::Foundation::POINT;
-        use windows::Win32::UI::Input::KeyboardAndMouse::{GetAsyncKeyState, VK_LCONTROL, VK_MENU};
+        use windows::Win32::UI::Input::KeyboardAndMouse::{
+            GetAsyncKeyState, VK_LCONTROL, VK_LMENU, VK_MENU, VK_RCONTROL,
+        };
         use windows::Win32::UI::WindowsAndMessaging::GetCursorPos;
 
-        let mut was_ctrl = false;
+        let mut feedback_key = overlay_config::load(&h2);
+        let mut last_config_refresh = std::time::Instant::now();
+        let mut was_feedback = false;
         let mut was_peek_key = false;
+        let mut suppress_feedback_until_release = false;
         let mut last_pt = (i32::MIN, i32::MIN);
+
+        if let Some(overlay) = h2.get_webview_window("overlay") {
+            push_windows_hotkey_label(&overlay, feedback_key);
+        }
 
         loop {
             std::thread::sleep(std::time::Duration::from_millis(50));
 
-            // Left Ctrl (≈ Left Command on Mac keyboards) toggles feedback mode.
-            let ctrl_down = unsafe { GetAsyncKeyState(VK_LCONTROL.0 as i32) } & (1i16 << 15) != 0;
-
-            if ctrl_down != was_ctrl {
-                if let Some(overlay) = h2.get_webview_window("overlay") {
-                    let _ = overlay.set_ignore_cursor_events(!ctrl_down);
-                    let js = format!("setInteractiveMode({})", ctrl_down);
-                    let _ = overlay.eval(&js);
+            // File I/O stays off the 50ms hot path. A manual/UI config change is
+            // picked up within about two seconds without restarting the app.
+            if last_config_refresh.elapsed() >= std::time::Duration::from_secs(2) {
+                let refreshed = overlay_config::load(&h2);
+                if refreshed != feedback_key {
+                    feedback_key = refreshed;
+                    if let Some(overlay) = h2.get_webview_window("overlay") {
+                        push_windows_hotkey_label(&overlay, feedback_key);
+                    }
                 }
-                was_ctrl = ctrl_down;
+                last_config_refresh = std::time::Instant::now();
             }
 
-            // Alt+H toggles the peek (shrink-to-pill) state (mirrors macOS Option+H).
+            let feedback_vk = match feedback_key {
+                overlay_config::FeedbackKey::LeftAlt => VK_LMENU.0 as i32,
+                overlay_config::FeedbackKey::RightCtrl => VK_RCONTROL.0 as i32,
+                overlay_config::FeedbackKey::LeftCtrl => VK_LCONTROL.0 as i32,
+            };
+            let feedback_down = unsafe { GetAsyncKeyState(feedback_vk) } & (1i16 << 15) != 0;
+
+            // Alt+H remains the peek shortcut even though Left Alt is now the
+            // default feedback key. The chord takes precedence until Alt is
+            // released, so setInteractiveMode's setPeek(false) coupling remains
+            // intact and cannot immediately undo the toggle.
             let peek_key = (unsafe { GetAsyncKeyState(VK_MENU.0 as i32) } & (1i16 << 15) != 0)
                 && (unsafe { GetAsyncKeyState(0x48) } & (1i16 << 15) != 0); // 0x48 = 'H'
+            if suppress_feedback_until_release && !feedback_down {
+                suppress_feedback_until_release = false;
+            }
             if peek_key && !was_peek_key {
+                suppress_feedback_until_release = true;
                 if let Some(overlay) = h2.get_webview_window("overlay") {
-                    let _ = overlay.eval("togglePeek()");
+                    let _ = overlay.set_ignore_cursor_events(true);
+                    let _ = overlay.eval("setInteractiveMode(false); togglePeek()");
                 }
+                was_feedback = false;
             }
             was_peek_key = peek_key;
 
+            let feedback_active = feedback_down && !suppress_feedback_until_release;
+            if feedback_active != was_feedback {
+                if let Some(overlay) = h2.get_webview_window("overlay") {
+                    let _ = overlay.set_ignore_cursor_events(!feedback_active);
+                    push_windows_hotkey_label(&overlay, feedback_key);
+                    let js = format!("setInteractiveMode({feedback_active})");
+                    let _ = overlay.eval(&js);
+                }
+                was_feedback = feedback_active;
+            }
+
             // Peek: forward cursor pos (skip while in feedback mode, if unmoved, or
             // while the overlay is hidden — mirrors the Swift window.isVisible guard).
-            if !ctrl_down {
+            if !feedback_active {
                 let mut pt = POINT::default();
                 if unsafe { GetCursorPos(&mut pt) }.is_ok() && (pt.x, pt.y) != last_pt {
                     last_pt = (pt.x, pt.y);
