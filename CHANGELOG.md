@@ -4,6 +4,21 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.72] - 2026-08-30
+
+### Added
+- Overlay hotkey is configurable (Settings → Overlay Hotkeys): default is now
+  Left Alt, so holding Ctrl for MTGA's Full Control (bluffing instants) no
+  longer expands the overlay. The picker warns about known collisions per key.
+
+### Fixed
+- Mulligan advice no longer bottoms Leylines: cards that begin the game on
+  the battlefield are exempt from "bottom the most expensive card".
+- Removal that hits planeswalkers or enchantments (Long Goodbye, Get Lost
+  style) is no longer scored as dead against a lone planeswalker/enchantment.
+- Tribal "attack with one or more X" triggers now match Allies, Armies,
+  Mercenaries, Harpies and Ponies correctly.
+
 ## [0.8.71] - 2026-08-30
 
 ### Fixed
