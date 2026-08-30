@@ -4,6 +4,14 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.74] - 2026-08-30
+
+### Added
+- The advisor now tells you when nothing in your hand or on your board can
+  answer the threat that is killing you ("No answer to Kaito — Stab: cannot
+  target (hexproof): consider racing or trading elsewhere") instead of only
+  giving locally-correct turn advice while the game slips away.
+
 ## [0.8.73] - 2026-08-30
 
 ### Fixed
