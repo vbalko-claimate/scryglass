@@ -4,6 +4,17 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.73] - 2026-08-30
+
+### Fixed
+- Removal targeting values real cards over tokens and recognizes engines
+  (a Pest token no longer outranks the creature making the Pests), considers
+  a second affordable burn spell when one alone can't kill the big threat,
+  and prefers the right-sized removal when several spells all do the job.
+- Advice compliance no longer counts a spell's own token against you: casting
+  a recommended spell that creates a token (Bake into a Pie → Food) was
+  logged as ignoring the advice.
+
 ## [0.8.72] - 2026-08-30
 
 ### Added
