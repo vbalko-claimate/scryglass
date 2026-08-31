@@ -4,6 +4,19 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.75] - 2026-08-31
+
+### Changed
+- The in-game pilot and search rollouts now use the trample-aware lethal
+  math the advisor already had — measured across 1.2M mirror games: no deck
+  got worse, trample decks win more (verified on a 300k-game replication).
+- Telemetry uploads no longer include raw engine annotations (the noisiest,
+  least-used event kind) — local recordings keep full fidelity.
+
+### Infrastructure
+- The cloud database moved off the shared free-tier host onto our own
+  server with nightly backups; admin analytics endpoints work again.
+
 ## [0.8.74] - 2026-08-30
 
 ### Added
