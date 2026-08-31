@@ -115,6 +115,8 @@ These require an identified opponent deck (from meta_decks.json) to evaluate.
 - `conflicts_with` (string[], DEPRECATED): Legacy field. Only used for mulligan rules. For non-mulligan hold/use conflicts, the engine auto-detects via action_family. New rules should NOT include conflicts_with.
 
 **Learning (set defaults):**
+- `source_ref` (string, optional): `spellbook:<variant-id>` for a rule grounded
+  in a Commander Spellbook hit; omit for LLM-authored rules.
 - `weight` (float): 1.0 neutral. 1.2-1.5 for confident rules.
 - `stats`: `{"fired": 0, "correct": 0}`
 

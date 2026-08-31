@@ -4,6 +4,18 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.76] - 2026-08-31
+
+### Added
+- Deck guides are now grounded in Commander Spellbook's Standard-legal combo
+  database: when your 60 cards contain (or nearly contain) a known combo, the
+  guide documents it and the advisor learns it as a verified synergy rule —
+  and when there is no known combo, the guide is instructed not to invent one.
+- The advisor tells you when you are one card away from one of your deck's
+  synergies ("Synergy 'X': you hold ..., missing Y"), with the missing card
+  checked against what is actually left in your library — and stays quiet
+  when you are under lethal pressure.
+
 ## [0.8.75] - 2026-08-31
 
 ### Changed
