@@ -4,6 +4,22 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.77] - 2026-09-01
+
+### Fixed
+- Giada, Font of Hope: entering Angels now actually get their bonus +1/+1
+  counters (one per Angel you already control) — the ability compiled as a
+  no-op before.
+- Heroic Reinforcements: the team +1/+1 and haste until end of turn now
+  works (only the two Soldier tokens were modeled before).
+
+### Changed
+- Deck guides now validate every AI-authored synergy rule against the card's
+  actual oracle text — a rule must quote the exact sentence it relies on, or
+  it is dropped. Card names in rules are checked to exist, and non-Standard
+  cards are flagged. (Measured before this change: a third of synergy rules
+  contained factual errors.)
+
 ## [0.8.76] - 2026-08-31
 
 ### Added
