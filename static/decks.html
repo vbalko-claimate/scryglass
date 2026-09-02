@@ -287,7 +287,11 @@
         if (!ok) { el.innerHTML = '<span class="muted">Failed to load deck.</span>'; return; }
         const versions = body.versions || [];
         let rows = '';
-        for (const v of versions) {
+        // #20: rendered NEWEST-FIRST so the freshest version is the obvious
+        // default instead of buried at the bottom of a growing table — a
+        // display-only reverse (`versions` itself stays ascending, which
+        // `renderCards` below and the poll-resume loop still rely on).
+        for (const v of [...versions].reverse()) {
             const diff = [
                 ...(v.added || []).map(a => `<span class="diff-add">${esc(a)}</span>`),
                 ...(v.removed || []).map(r => `<span class="diff-del">${esc(r)}</span>`),
@@ -296,13 +300,14 @@
                 ? `<span class="pill ${v.rules_validated ? 'ok' : 'warn'}">${v.rules_count} rules</span>`
                 : '<span class="pill off">no rules</span>';
             const active = v.is_active ? ' <span class="pill ok">ACTIVE</span>' : '';
+            const latest = v.is_latest ? ' <span class="pill off">latest</span>' : '';
             const genCell = v.guide_path
                 ? `<button class="btn btn-ghost btn-sm" onclick="viewGuide('${body.deck_id}','${esc(v.guide_path)}')">Guide</button>`
                 : (v.guide_job_id
                     ? `<span class="gen-status" id="gen-${esc(v.guide_job_id)}"><span class="spin"></span> generating…</span>`
                     : '');
             rows += `<tr>
-                <td>v${v.version_number}${active}</td>
+                <td>v${v.version_number}${active}${latest}</td>
                 <td>${v.card_count}</td>
                 <td>${diff}</td>
                 <td>${rules}</td>
