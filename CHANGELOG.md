@@ -4,6 +4,15 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.79] - 2026-09-02
+
+### Fixed
+- Auto-registered decks no longer duplicate an existing deck that has the
+  same 60 cards under a different detected name — your deck rules and
+  guides stay bound to the deck you actually maintain.
+- Adopting a guide no longer writes an invalid strategy field (validator
+  crash on null global_biases).
+
 ## [0.8.78] - 2026-09-02
 
 ### Added
