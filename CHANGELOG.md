@@ -4,6 +4,13 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.80] - 2026-09-02
+
+### Fixed
+- Deck version and guide listings now mark the newest entry (and the deck
+  page shows versions newest-first with a "latest" pill) — adopting a guide
+  no longer defaults you to the oldest one.
+
 ## [0.8.79] - 2026-09-02
 
 ### Fixed
