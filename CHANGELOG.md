@@ -4,6 +4,20 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.78] - 2026-09-02
+
+### Added
+- Decks you play are registered automatically: a new deck seen in a match
+  creates its deck entry (with the detected list) so deck rules and guides
+  can bind — no manual import needed. Auto-created decks are marked "played".
+- Admin: per-user last-seen build report — testers on stale versions show an
+  amber "STALE" badge instead of requiring forensics.
+
+### Fixed
+- The advisor no longer recommends spells you cannot cast: "exile N cards
+  from your graveyard" additional costs (Abhorrent Oculus, Soaring
+  Stoneglider) were silently ignored.
+
 ## [0.8.77] - 2026-09-01
 
 ### Fixed
