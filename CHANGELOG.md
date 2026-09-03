@@ -4,6 +4,23 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.81] - 2026-09-03
+
+### Added
+- Cloud admin overhaul: owner/admin roles (owners grant admin rights from
+  the Access tab), per-user detail drill-down (activity, decks, guides,
+  usage, flags, build history), a Flags review tab, and a filterable audit
+  log of every login, upload, guide job and admin action.
+- Deck pages show each version's rules provenance (LLM guide vs cloud
+  mirror) and honest sync status — the "Synced Xm ago" label now reflects
+  reality (it used to be decorative), and decks carry a real last-synced
+  timestamp from the cloud.
+
+### Fixed
+- Account merges no longer orphan guide history, LLM usage, tokens or
+  synced decks — and the merge preview now counts everything the merge
+  will actually move.
+
 ## [0.8.80] - 2026-09-02
 
 ### Fixed
