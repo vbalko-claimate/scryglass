@@ -4,6 +4,18 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.82] - 2026-09-03
+
+### Added
+- Stats page gains a "Time of Day & Matchups" section: win rate by hour of
+  day (your local time, with confidence intervals and a configurable
+  minimum-sample threshold so small hours don't mislead), a wins/losses
+  volume histogram, win rate by opponent archetype, KPI tiles (overall win
+  rate, streaks, best/worst matchup), and two plain-English verdicts — a
+  runs test and a permutation test that say whether your streaks or "hot
+  hours" are real or just chance. Filter by deck, format and date range.
+  The same analytics appear per-user in the cloud admin detail view.
+
 ## [0.8.81] - 2026-09-03
 
 ### Added
