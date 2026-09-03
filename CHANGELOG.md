@@ -4,6 +4,17 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.84] - 2026-09-03
+
+### Changed
+- Admin user detail redesigned: the dashboard now uses the full screen
+  width, the detail is organized into clear zones instead of one long
+  column, chart info opens a proper dialog (not a hover tooltip), and
+  hovering a chart bar shows its underlying numbers.
+
+### Fixed
+- "2 wines" → "2 wins".
+
 ## [0.8.83] - 2026-09-03
 
 ### Added
