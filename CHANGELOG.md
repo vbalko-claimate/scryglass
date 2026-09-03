@@ -4,6 +4,17 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.83] - 2026-09-03
+
+### Added
+- The account page (/app) now has its own Stats tab with the time-of-day &
+  matchup dashboard.
+- Every analytics chart has an info tooltip explaining what it shows.
+
+### Changed
+- Admin user detail is now a list+detail split (was a modal), with a fixed
+  low-contrast text issue on values.
+
 ## [0.8.82] - 2026-09-03
 
 ### Added
