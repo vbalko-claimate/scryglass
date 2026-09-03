@@ -92,7 +92,26 @@
     .tod-streak-value { font-weight: 700; }
     .tod-sentence { font-size: 12px; color: var(--muted); margin: 8px 0 0; line-height: 1.5; }
     .tod-mini-stat { display: flex; flex-direction: column; gap: 1px; font-size: 12px; }
-    .tod-info { cursor: help; color: var(--muted); font-size: 12px; margin-left: 2px; }
+    .tod-info { cursor: pointer; color: var(--muted); font-size: 12px; margin-left: 2px; background: none; border: none; padding: 0; font: inherit; }
+    .tod-info:hover, .tod-info:focus-visible { color: var(--text); }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+    /* Info dialog reuses the existing .modal-backdrop/.modal-container
+       system (see the Summary Modal below) — narrowed here, because this
+       is prose, not data: 448px/~13px keeps lines inside the classic
+       50-75-character optimal reading measure. */
+    #info-dialog .modal-container { max-width: 448px; }
+    #info-dialog .modal-body p { margin: 0 0 10px; line-height: 1.5; }
+    #info-dialog .modal-body p:last-child { margin-bottom: 0; }
+
+    /* Volume chart's per-hour hit-rect: deliberately separate from .tod-bar
+       so its own hover never draws the outline stroke — the lift is
+       applied to the real win/loss segments by JS instead. */
+    .tod-col-hit { cursor: default; }
+    .tod-seg-active { stroke: var(--text); stroke-width: 1.5px; }
+
+    /* Shared chart-hover tooltip (Time-of-day bars). */
+    .chart-tooltip { position: fixed; z-index: 210; pointer-events: none; background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; font-size: 12px; max-width: 220px; box-shadow: var(--shadow-dropdown); }
   </style>
 </head>
 <body>
@@ -210,7 +229,7 @@
       <div class="glass-card" style="margin-bottom:20px;">
         <div class="card-header">
           <div class="card-title"><span>🕒 Time of Day &amp; Matchups</span>
-            <span class="tod-info" tabindex="0" title="Win rates below use a 95% confidence interval — the range your true win rate probably falls in. &quot;Min games / bucket&quot; sets how many games an hour or matchup needs before it's trusted enough to highlight; below that, it's shown greyed out.">&#9432;</span>
+            <button type="button" class="tod-info" aria-haspopup="dialog" data-info-key="hour-general">&#9432;<span class="sr-only">What is this?</span></button>
           </div>
           <span class="card-subtitle" id="tod-tz-label">—</span>
         </div>
@@ -261,7 +280,7 @@
           <div>
             <div class="tod-chart-header">
               <span class="tod-chart-title">Win rate by hour of day
-                <span class="tod-info" tabindex="0" title="Bars show win rate for games started in that local hour. The vertical whisker is a 95% confidence interval — wide means too few games yet. The horizontal line is your overall win rate. Grey bars have fewer games than your min-n setting.">&#9432;</span>
+                <button type="button" class="tod-info" aria-haspopup="dialog" data-info-key="hour-winrate">&#9432;<span class="sr-only">What is this?</span></button>
               </span>
               <button class="tod-table-toggle" type="button" data-target="tod-hour-table" data-svg="tod-hour-svg">Table view</button>
             </div>
@@ -271,7 +290,7 @@
           <div>
             <div class="tod-chart-header">
               <span class="tod-chart-title">Games played by hour of day
-                <span class="tod-info" tabindex="0" title="How many games you played in each local hour, split into wins and losses. Compare the shape to the win-rate chart on the left — if a swing there lines up with very few games here, it's more likely noise than a real pattern.">&#9432;</span>
+                <button type="button" class="tod-info" aria-haspopup="dialog" data-info-key="hour-volume">&#9432;<span class="sr-only">What is this?</span></button>
               </span>
               <button class="tod-table-toggle" type="button" data-target="tod-volume-table" data-svg="tod-volume-svg">Table view</button>
             </div>
@@ -288,13 +307,13 @@
         <div class="grid grid-2">
           <div>
             <div class="tod-chart-header"><span class="tod-chart-title">Win rate by opponent archetype
-              <span class="tod-info" tabindex="0" title="Win rate against your 10 most-played opponent archetypes, sorted best to worst. The vertical line is your overall win rate. Grey bars have fewer games than your min-n setting.">&#9432;</span>
+              <button type="button" class="tod-info" aria-haspopup="dialog" data-info-key="matchup-winrate">&#9432;<span class="sr-only">What is this?</span></button>
             </span></div>
             <svg id="tod-matchup-svg" viewBox="0 0 720 400" style="width:100%; height:auto;" role="img" aria-label="Win rate by opponent archetype"></svg>
           </div>
           <div>
             <div class="tod-chart-header"><span class="tod-chart-title">Streaks &amp; randomness
-              <span class="tod-info" tabindex="0" title="A 'run' is a streak of consecutive wins or losses. These two lines test whether your streaks and hourly win-rate swings look like real patterns or just ordinary randomness — most players' results are consistent with chance.">&#9432;</span>
+              <button type="button" class="tod-info" aria-haspopup="dialog" data-info-key="streaks-randomness">&#9432;<span class="sr-only">What is this?</span></button>
             </span></div>
             <div id="tod-streak-panel"><div class="empty-state">Loading…</div></div>
           </div>
@@ -467,6 +486,31 @@
       </div>
     </div>
   </div>
+
+  <!-- Reusable info dialog — replaces the OS-drawn `title`-tooltip `.tod-info`
+       pattern (no dark-theme styling, ~1s hover delay, one unstyled line,
+       and a real accessibility gap: a title attribute is not reliably
+       announced by screen readers). One instance per page; content swapped
+       via INFO_DIALOGS[key]. Reuses the existing modal system above rather
+       than inventing a new skin, narrowed via the CSS override in <head>
+       (prose, not data). Unlike the Summary Modal, dismissable by Escape
+       and backdrop click too, not just the ✕ — three discoverable dismiss
+       paths; no footer "Got it" button implying a decision to make. -->
+  <div id="info-dialog" class="modal-backdrop">
+    <div class="modal-container">
+      <div class="modal-header">
+        <span class="modal-title" id="info-dialog-title"></span>
+        <button id="info-dialog-close" aria-label="Close" class="btn btn-ghost btn-sm">✕</button>
+      </div>
+      <div class="modal-body" id="info-dialog-body"></div>
+    </div>
+  </div>
+
+  <!-- Shared chart-hover tooltip — one instance per page, positioned by JS
+       on pointerenter/focus, content swapped per mark. Replaces the native
+       SVG <title> tooltips on the Time-of-day bars (OS-styled, ~1s delay,
+       one line, no layout control). -->
+  <div id="chart-tooltip" role="tooltip" class="chart-tooltip" style="display:none;"></div>
 
   <script src="/static/shell.js"></script>
   <script>
@@ -1088,6 +1132,96 @@
     ctx.fillText('Opponent', W - PAD.right - 40, PAD.top - 6);
   }
 
+  // ─── Info dialog (shared #info-dialog markup, near end of <body>) ───
+  // One dialog instance for the whole page; content swapped by key. Copy is
+  // duplicated byte-for-byte from admin.html's INFO_DIALOGS (not imported —
+  // same "duplicated verbatim" convention as the Time-of-day block below),
+  // including the third-person voice — kept identical across all three
+  // pages on purpose so there is exactly one copy to keep correct, rather
+  // than a second hand-written variant that silently drifts.
+  const INFO_DIALOGS = {
+    'hour-winrate': {
+      title: 'Win rate by hour of day',
+      body: `
+        <p>Each bar is this account's win rate for games that <em>started</em> in that local hour (their machine's clock, not the server's), computed only from games in the selected date range and deck filter above.</p>
+        <p>The vertical whisker on each bar is a 95% confidence interval — the range the true win rate probably falls in, given how many games actually landed in that hour. A wide whisker means "not enough games yet to trust this bar," not "unusually volatile" — an hour with 3 games can show a 40-percentage-point-wide interval even with a perfectly ordinary win rate underneath. The horizontal line is the account's overall win rate across the whole range, for comparison.</p>
+        <p><strong>Read it as a screening tool, not a verdict.</strong> Scanning 24 bars for the tallest or shortest one is a classic multiple-comparisons trap — with 24 chances, an unusually high or low bar shows up by chance alone more often than intuition suggests. That's exactly what the "streaks &amp; randomness" panel's permutation test is for: it tests whether the <em>spread</em> across all 24 hours is bigger than random shuffling would produce, and reports a p-value instead of a single eye-catching bar. Trust that test's verdict over "hour 14 looks high."</p>
+        <p>Bars below the "min games/bucket" threshold (default 10) are shown in a muted grey — they're real data, just not enough of it yet to act on.</p>`
+    },
+    'hour-volume': {
+      title: 'Games played by hour of day',
+      body: `
+        <p>How many games this account played in each local hour, split into wins (top segment) and losses (bottom segment) of the stacked bar.</p>
+        <p>This chart's job is to sanity-check the win-rate-by-hour chart next to it: if that chart shows a dramatic swing in an hour where this one shows only 2–3 games, the swing is much more likely to be noise than a real time-of-day effect. A tall, evenly-split bar here backing a small swing there is a stronger signal than either chart alone.</p>
+        <p>There's no confidence interval here because this chart isn't estimating a rate — it's a direct count of games played, no uncertainty to show.</p>`
+    },
+    'matchup-winrate': {
+      title: 'Win rate by opponent archetype',
+      body: `
+        <p>Win rate against this account's 10 most-played opponent archetypes in the selected range, sorted best to worst. The vertical line is the overall win rate for comparison; each bar's horizontal whisker is a 95% confidence interval, same meaning as the hour-of-day chart.</p>
+        <p>Archetype labels come from the same matchup classifier used elsewhere in the app — treat "unknown" or narrowly-attended archetypes as lower-confidence groupings, not misclassifications.</p>
+        <p>Bars below the min-n threshold are muted grey, same rule as the other charts: real data, just not enough games against that archetype yet to read the number as meaningful.</p>`
+    },
+    'hour-general': {
+      title: 'About the confidence intervals and min-n setting',
+      body: `
+        <p>Every win rate on this page (by hour, by matchup, overall) is shown with a 95% confidence interval — the range the account's <em>true</em> win rate probably falls in, given the sample size actually observed. Fewer games in a bucket means a wider interval, not a less real number.</p>
+        <p>"Min games/bucket" (default 10, adjustable above) sets the threshold below which a bar or row is shown muted grey instead of full color. It doesn't hide the data — it's a visual cue not to read too much into a bar built from 2 games.</p>`
+    },
+    'streaks-randomness': {
+      title: 'Streaks & randomness',
+      body: `
+        <p>A "run" is a streak of consecutive wins or consecutive losses. Humans are notoriously bad at judging whether a streak is unusual — both "3 losses in a row means something's wrong" and "of course there's no such thing as a hot hand" are frequently asserted with equal confidence and no math behind either.</p>
+        <p>The runs test on this panel checks whether the actual number of streaks in this account's game history is consistent with a coin-flip-like process at the same overall win rate, and reports a z-score: values roughly inside ±2 are "looks like chance," further out flags "more streaky than chance would produce" (which itself doesn't diagnose a cause — it's a flag to look closer, not a conclusion).</p>
+        <p>The permutation test answers a related but different question: is there a real hour-of-day effect, or could the spread in the hour-of-day chart have arisen just by randomly reshuffling which games were wins? It reshuffles the win/loss labels 2000 times, keeping each hour's game count fixed, and reports what fraction of reshuffles produced a spread at least as large as what's actually observed — that fraction is the p-value.</p>`
+    },
+  };
+  function openInfoDialog(key, triggerEl) {
+    const cfg = INFO_DIALOGS[key];
+    if (!cfg) return;
+    document.getElementById('info-dialog-title').textContent = cfg.title;   // textContent, not innerHTML — title is plain text
+    document.getElementById('info-dialog-body').innerHTML = cfg.body;      // body is authored HTML, not user data
+    const dialog = document.getElementById('info-dialog');
+    dialog.classList.add('open');
+    dialog._returnFocusTo = triggerEl;
+    document.getElementById('info-dialog-close').focus();
+  }
+  function closeInfoDialog() {
+    const dialog = document.getElementById('info-dialog');
+    dialog.classList.remove('open');
+    if (dialog._returnFocusTo) dialog._returnFocusTo.focus();  // return focus to the ⓘ that opened it
+  }
+  document.getElementById('info-dialog-close').addEventListener('click', closeInfoDialog);
+  // Backdrop click: the backdrop IS #info-dialog itself (same structure as
+  // the existing Summary Modal, no separate overlay child), so only close
+  // when the click lands on the backdrop, not a descendant.
+  document.getElementById('info-dialog').addEventListener('click', e => {
+    if (e.target.id === 'info-dialog') closeInfoDialog();
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && document.getElementById('info-dialog').classList.contains('open')) closeInfoDialog();
+  });
+
+  // ─── Chart hover tooltip (shared #chart-tooltip element) ───
+  // Bar charts: the mark is the hit target, so no crosshair — just a
+  // per-mark tooltip positioned off the hovered/focused element's real
+  // screen rect (already accounts for the SVG viewBox→rendered-size scale
+  // factor, so no manual svg-unit math needed).
+  function showChartTooltip(targetEl, html) {
+    const tip = document.getElementById('chart-tooltip');
+    tip.innerHTML = html;
+    tip.style.display = 'block';
+    const rect = targetEl.getBoundingClientRect();
+    const tipRect = tip.getBoundingClientRect();
+    let x = rect.left + rect.width / 2 - tipRect.width / 2;
+    let y = rect.top - tipRect.height - 8;
+    if (y < 4) y = rect.bottom + 8;                   // flip below if it would clip the top of the viewport
+    x = Math.max(4, Math.min(x, window.innerWidth - tipRect.width - 4));  // clamp to viewport edges
+    tip.style.left = x + 'px';
+    tip.style.top = y + 'px';
+  }
+  function hideChartTooltip() { document.getElementById('chart-tooltip').style.display = 'none'; }
+
   // ─── Time of Day & Matchups ───
   // Shared math/SVG core is duplicated (not <script src>'d) into
   // admin.html's overlay — the two pages live in different repos/servers
@@ -1381,8 +1515,10 @@
         const color = qualifies ? 'var(--accent)' : 'var(--muted)';
         const fillOpacity = qualifies ? '1' : '0.55';
         const d = todRoundedTopBarPath(x, y(b.wr), barW, y(0), 4);
-        const tip = `Hour ${b.hour}:00–${b.hour}:59 · n=${b.n} · ${b.wins}W-${b.losses}L · WR ${todFmtPct1(b.wr)} (95% CI ${todFmtPct1(b.lo)}–${todFmtPct1(b.hi)})${qualifies ? '' : ' · below min-n'}`;
-        bars += `<path class="tod-bar" tabindex="0" d="${d}" fill="${color}" fill-opacity="${fillOpacity}"><title>${esc(tip)}</title></path>`;
+        bars += `<path class="tod-bar" tabindex="0" d="${d}" fill="${color}" fill-opacity="${fillOpacity}"
+          data-tip-hour="${b.hour}" data-tip-n="${b.n}" data-tip-w="${b.wins}" data-tip-l="${b.losses}"
+          data-tip-wr="${todFmtPct1(b.wr)}" data-tip-lo="${todFmtPct1(b.lo)}" data-tip-hi="${todFmtPct1(b.hi)}"
+          data-tip-qualifies="${qualifies}"></path>`;
         const cx = x + barW / 2;
         const yLo = y(b.lo), yHi = y(b.hi);
         bars += `<g stroke="var(--text)" stroke-opacity="0.55" stroke-width="1.5">
@@ -1398,6 +1534,20 @@
       `<text x="${TOD_W - TOD_M.right}" y="${(by - 4).toFixed(1)}" text-anchor="end" font-size="9" fill="var(--warning)">Overall ${todFmtPct1(overall.wr)}</text>`;
 
     svg.innerHTML = grid + bars + baseline + axisLabels;
+
+    document.querySelectorAll('#tod-hour-svg .tod-bar').forEach(el => {
+      const show = () => showChartTooltip(el, `
+        <div style="color:var(--muted)">${el.dataset.tipHour}:00–${el.dataset.tipHour}:59</div>
+        <div style="color:var(--text);font-weight:700;font-size:13px">${el.dataset.tipWr} win rate</div>
+        <div style="color:var(--text)">95% CI ${el.dataset.tipLo}–${el.dataset.tipHi}</div>
+        <div style="color:var(--text)">${el.dataset.tipW}W – ${el.dataset.tipL}L &middot; n=${el.dataset.tipN}</div>
+        ${el.dataset.tipQualifies === 'false' ? '<div style="color:var(--muted);margin-top:4px">Below min-n — greyed out above</div>' : ''}
+      `);
+      el.addEventListener('pointerenter', show);
+      el.addEventListener('focus', show);
+      el.addEventListener('pointerleave', hideChartTooltip);
+      el.addEventListener('blur', hideChartTooltip);
+    });
   }
 
   // -- Chart 3: volume histogram (stacked wins/losses) --
@@ -1438,13 +1588,41 @@
         ], 2, 4);
         for (const s of segs) {
           const color = s.seg.kind === 'win' ? 'var(--success)' : 'var(--error)';
-          const label = s.seg.kind === 'win' ? `${b.wins}W` : `${b.losses}L`;
-          bars += `<path class="tod-bar" tabindex="0" d="${s.d}" fill="${color}"><title>${esc(`Hour ${b.hour}:00–${b.hour}:59 · ${label} of ${b.n}`)}</title></path>`;
+          bars += `<path class="tod-bar" tabindex="0" d="${s.d}" fill="${color}" data-hour="${b.hour}"></path>`;
         }
+        // Transparent full-height hit-rect spanning the whole slot (not
+        // just barW — bigger hit target, and lets one hover show BOTH
+        // segments' values via a single combined tooltip). Left edge is
+        // the slot's own edge, not the centered bar's `x` — deliberately
+        // wider than the visible bars. Kept OFF the .tod-bar class so its
+        // own hover never draws the outline stroke; the lift is applied
+        // to the real segments explicitly below.
+        const slotX = TOD_M.left + h * slot;
+        bars += `<rect class="tod-col-hit" tabindex="0" x="${slotX}" y="${TOD_M.top}" width="${slot}" height="${plotH}"
+          fill="transparent" data-hour="${b.hour}"
+          data-tip-hour="${b.hour}" data-tip-n="${b.n}" data-tip-w="${b.wins}" data-tip-l="${b.losses}"></rect>`;
       }
     });
 
     svg.innerHTML = grid + bars + axisLabels;
+
+    document.querySelectorAll('#tod-volume-svg .tod-col-hit').forEach(el => {
+      const hour = el.dataset.hour;
+      const segs = () => document.querySelectorAll(`#tod-volume-svg .tod-bar[data-hour="${hour}"]`);
+      const show = () => {
+        segs().forEach(s => s.classList.add('tod-seg-active'));
+        showChartTooltip(el, `
+          <div style="color:var(--muted)">${el.dataset.tipHour}:00–${el.dataset.tipHour}:59 &middot; ${el.dataset.tipN} games</div>
+          <div style="display:flex;align-items:center;gap:6px;color:var(--text)"><span style="display:inline-block;width:10px;height:2px;background:var(--success)"></span> Wins <span style="font-weight:700;margin-left:auto">${el.dataset.tipW}</span></div>
+          <div style="display:flex;align-items:center;gap:6px;color:var(--text)"><span style="display:inline-block;width:10px;height:2px;background:var(--error)"></span> Losses <span style="font-weight:700;margin-left:auto">${el.dataset.tipL}</span></div>
+        `);
+      };
+      const hide = () => { segs().forEach(s => s.classList.remove('tod-seg-active')); hideChartTooltip(); };
+      el.addEventListener('pointerenter', show);
+      el.addEventListener('focus', show);
+      el.addEventListener('pointerleave', hide);
+      el.addEventListener('blur', hide);
+    });
   }
 
   // -- Chart 4: matchup horizontal bars (label above each bar) --
@@ -1481,9 +1659,11 @@
       const color = qualifies ? 'var(--accent)' : 'var(--muted)';
       const fillOpacity = qualifies ? '1' : '0.55';
       const d = todRoundedRightBarPath(left, barY, x(r.wr), barH, 4);
-      const tip = `${r.name} · n=${r.n} · ${r.wins}W-${r.losses}L · WR ${todFmtPct1(r.wr)} (95% CI ${todFmtPct1(r.lo)}–${todFmtPct1(r.hi)})${qualifies ? '' : ' · below min-n'}`;
       content += `<text x="${left}" y="${labelY}" font-size="11" fill="var(--text)">${esc(r.name)}</text>`;
-      content += `<path class="tod-bar" tabindex="0" d="${d}" fill="${color}" fill-opacity="${fillOpacity}"><title>${esc(tip)}</title></path>`;
+      content += `<path class="tod-bar" tabindex="0" d="${d}" fill="${color}" fill-opacity="${fillOpacity}"
+        data-tip-name="${esc(r.name)}" data-tip-n="${r.n}" data-tip-w="${r.wins}" data-tip-l="${r.losses}"
+        data-tip-wr="${todFmtPct1(r.wr)}" data-tip-lo="${todFmtPct1(r.lo)}" data-tip-hi="${todFmtPct1(r.hi)}"
+        data-tip-qualifies="${qualifies}"></path>`;
       const cy = barY + barH / 2;
       const xLo = x(r.lo), xHi = x(r.hi);
       content += `<g stroke="var(--text)" stroke-opacity="0.55" stroke-width="1.5">
@@ -1497,6 +1677,19 @@
     });
 
     svg.innerHTML = refLines + content;
+
+    document.querySelectorAll('#tod-matchup-svg .tod-bar').forEach(el => {
+      const show = () => showChartTooltip(el, `
+        <div style="color:var(--text);font-weight:700;font-size:13px">${el.dataset.tipName}</div>
+        <div style="color:var(--text)">${el.dataset.tipWr} win rate &middot; 95% CI ${el.dataset.tipLo}–${el.dataset.tipHi}</div>
+        <div style="color:var(--text)">${el.dataset.tipW}W – ${el.dataset.tipL}L &middot; n=${el.dataset.tipN}</div>
+        ${el.dataset.tipQualifies === 'false' ? '<div style="color:var(--muted);margin-top:4px">Below min-n — greyed out above</div>' : ''}
+      `);
+      el.addEventListener('pointerenter', show);
+      el.addEventListener('focus', show);
+      el.addEventListener('pointerleave', hideChartTooltip);
+      el.addEventListener('blur', hideChartTooltip);
+    });
   }
 
   // -- Panel 5: streaks & randomness (plain-language, not a chart) --
@@ -1510,7 +1703,7 @@
     const perm = todPermutationTest(permMatches, minN, 2000);
 
     const curColor = streaks.currentWin ? 'var(--success)' : 'var(--error)';
-    const curLabel = `${streaks.currentLen} ${streaks.currentWin ? 'win' : 'loss'}${streaks.currentLen === 1 ? '' : 'es'}`;
+    const curLabel = `${streaks.currentLen} ${streaks.currentWin ? 'win' : 'loss'}${streaks.currentLen === 1 ? '' : (streaks.currentWin ? 's' : 'es')}`;
 
     el.innerHTML = `
       <div class="tod-streak-line">Current streak: <span class="tod-streak-value" style="color:${curColor}">${esc(curLabel)}</span></div>
@@ -1623,6 +1816,9 @@
       if (showingTable) { table.style.display = 'none'; svg.style.display = ''; btn.textContent = 'Table view'; }
       else { table.style.display = ''; svg.style.display = 'none'; btn.textContent = 'Chart view'; }
     });
+  });
+  document.querySelectorAll('.tod-info').forEach(btn => {
+    btn.addEventListener('click', () => openInfoDialog(btn.dataset.infoKey, btn));
   });
 
   // ─── Init ───
