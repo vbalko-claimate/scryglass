@@ -73,6 +73,25 @@
     .tl-game-end { padding: 8px 12px; margin-top: 6px; border-radius: var(--radius-md); font-size: 12px; font-weight: 600; }
     .tl-game-end.win { background: rgba(88,201,139,0.1); color: var(--success); border: 1px solid rgba(88,201,139,0.2); }
     .tl-game-end.loss { background: rgba(217,115,122,0.1); color: var(--error); border: 1px solid rgba(217,115,122,0.2); }
+
+    /* Time of Day & Matchups */
+    .tod-controls { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end; margin-bottom: 4px; }
+    .tod-control { display: flex; flex-direction: column; gap: 4px; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.3px; }
+    .tod-control select, .tod-control input { font-size: 13px; text-transform: none; letter-spacing: normal; }
+    .tod-caveat { font-size: 11px; color: var(--warning); margin: 6px 0 0; }
+    .tod-chart-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+    .tod-chart-title { font-size: 12px; font-weight: 600; color: var(--text); }
+    .tod-table-toggle { background: none; border: none; color: var(--accent-hover); font-size: 11px; cursor: pointer; padding: 0; text-decoration: underline; }
+    .tod-table-wrap { margin-top: 8px; max-height: 260px; overflow: auto; }
+    .tod-caption { font-size: 11px; color: var(--muted); margin-top: 6px; }
+    .tod-bar { cursor: default; }
+    .tod-bar:hover, .tod-bar:focus-visible { stroke: var(--text); stroke-width: 1.5px; outline: none; }
+    .tod-legend { display: flex; gap: 14px; font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+    .tod-legend-swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: middle; }
+    .tod-streak-line { font-size: 13px; color: var(--text); margin: 6px 0; }
+    .tod-streak-value { font-weight: 700; }
+    .tod-sentence { font-size: 12px; color: var(--muted); margin: 8px 0 0; line-height: 1.5; }
+    .tod-mini-stat { display: flex; flex-direction: column; gap: 1px; font-size: 12px; }
   </style>
 </head>
 <body>
@@ -183,6 +202,91 @@
           <span class="stat-label">Current Streak</span>
           <span class="stat-value" style="color:var(--warning);" id="stat-streak">…</span>
           <span class="stat-sub">current run</span>
+        </div>
+      </div>
+
+      <!-- Time of Day & Matchups -->
+      <div class="glass-card" style="margin-bottom:20px;">
+        <div class="card-header">
+          <div class="card-title"><span>🕒 Time of Day &amp; Matchups</span></div>
+          <span class="card-subtitle" id="tod-tz-label">—</span>
+        </div>
+
+        <div class="tod-controls">
+          <label class="tod-control">Deck
+            <select class="select" id="tod-deck-select"><option value="">All decks</option></select>
+          </label>
+          <label class="tod-control">Format
+            <select class="select" id="tod-format-select"><option value="">All formats</option></select>
+          </label>
+          <label class="tod-control">Range
+            <select class="select" id="tod-range-select">
+              <option value="7">Last 7 days</option>
+              <option value="30" selected>Last 30 days</option>
+              <option value="90">Last 90 days</option>
+              <option value="all">All time</option>
+            </select>
+          </label>
+          <label class="tod-control">Min games / bucket
+            <input class="input" type="number" id="tod-minn-input" value="10" min="1" max="500" style="width:70px;">
+          </label>
+        </div>
+        <p class="tod-caveat" id="tod-format-caveat" style="display:none;"></p>
+
+        <div class="grid grid-4" id="tod-kpi-row" style="margin:14px 0;">
+          <div class="stat-tile">
+            <span class="stat-label">Win Rate (in range)</span>
+            <span class="stat-value" id="tod-kpi-winrate">…</span>
+            <span class="stat-sub" id="tod-kpi-winrate-sub">loading…</span>
+          </div>
+          <div class="stat-tile">
+            <span class="stat-label">Games in Range</span>
+            <span class="stat-value" id="tod-kpi-games">…</span>
+            <span class="stat-sub">matches (W+L)</span>
+          </div>
+          <div class="stat-tile">
+            <span class="stat-label">Best / Worst Matchup</span>
+            <div id="tod-kpi-matchups" style="margin-top:2px;"><span class="empty-state">Loading…</span></div>
+          </div>
+          <div class="stat-tile">
+            <span class="stat-label">Streak</span>
+            <div id="tod-kpi-streak" style="margin-top:2px;"><span class="empty-state">Loading…</span></div>
+          </div>
+        </div>
+
+        <div class="grid grid-2" style="margin-bottom:16px;">
+          <div>
+            <div class="tod-chart-header">
+              <span class="tod-chart-title">Win rate by hour of day</span>
+              <button class="tod-table-toggle" type="button" data-target="tod-hour-table" data-svg="tod-hour-svg">Table view</button>
+            </div>
+            <svg id="tod-hour-svg" viewBox="0 0 720 210" style="width:100%; height:auto;" role="img" aria-label="Win rate by local hour of day"></svg>
+            <div id="tod-hour-table" class="tod-table-wrap" style="display:none;"></div>
+          </div>
+          <div>
+            <div class="tod-chart-header">
+              <span class="tod-chart-title">Games played by hour of day</span>
+              <button class="tod-table-toggle" type="button" data-target="tod-volume-table" data-svg="tod-volume-svg">Table view</button>
+            </div>
+            <div class="tod-legend">
+              <span><span class="tod-legend-swatch" style="background:var(--success)"></span>Wins</span>
+              <span><span class="tod-legend-swatch" style="background:var(--error)"></span>Losses</span>
+            </div>
+            <svg id="tod-volume-svg" viewBox="0 0 720 210" style="width:100%; height:auto;" role="img" aria-label="Games played by local hour of day, wins versus losses"></svg>
+            <div id="tod-volume-table" class="tod-table-wrap" style="display:none;"></div>
+            <p class="tod-caption">Compare bar heights here to the win-rate chart on the left — if the shapes track each other, hourly winrate swings are mostly a volume effect, not a real skill or matchup edge.</p>
+          </div>
+        </div>
+
+        <div class="grid grid-2">
+          <div>
+            <div class="tod-chart-header"><span class="tod-chart-title">Win rate by opponent archetype</span></div>
+            <svg id="tod-matchup-svg" viewBox="0 0 720 400" style="width:100%; height:auto;" role="img" aria-label="Win rate by opponent archetype"></svg>
+          </div>
+          <div>
+            <div class="tod-chart-header"><span class="tod-chart-title">Streaks &amp; randomness</span></div>
+            <div id="tod-streak-panel"><div class="empty-state">Loading…</div></div>
+          </div>
         </div>
       </div>
 
@@ -973,12 +1077,550 @@
     ctx.fillText('Opponent', W - PAD.right - 40, PAD.top - 6);
   }
 
+  // ─── Time of Day & Matchups ───
+  // Shared math/SVG core is duplicated (not <script src>'d) into
+  // admin.html's overlay — the two pages live in different repos/servers
+  // with no static dir spanning both, so this block is written to be
+  // pasted verbatim rather than imported.
+
+  // -- Stats --
+  function todWilson(wins, n, z) {
+    z = z || 1.959963985; // 95%
+    if (!n) return { p: 0, lo: 0, hi: 0 };
+    const p = wins / n;
+    const denom = 1 + (z * z) / n;
+    const center = p + (z * z) / (2 * n);
+    const margin = z * Math.sqrt((p * (1 - p)) / n + (z * z) / (4 * n * n));
+    return { p, lo: Math.max(0, (center - margin) / denom), hi: Math.min(1, (center + margin) / denom) };
+  }
+
+  function todRunsTest(seq) {
+    const n1 = seq.filter(Boolean).length;
+    const n2 = seq.length - n1;
+    const N = seq.length;
+    if (n1 === 0 || n2 === 0 || N < 2) {
+      return { z: null, verdict: 'not enough result variation to test streakiness' };
+    }
+    let runs = 1;
+    for (let i = 1; i < N; i++) if (seq[i] !== seq[i - 1]) runs++;
+    const meanR = (2 * n1 * n2) / N + 1;
+    const varR = (2 * n1 * n2 * (2 * n1 * n2 - N)) / (N * N * (N - 1));
+    if (!(varR > 0)) return { z: null, verdict: 'not enough result variation to test streakiness' };
+    const z = (runs - meanR) / Math.sqrt(varR);
+    const verdict = Math.abs(z) < 2
+      ? `streaks look consistent with chance (z=${z.toFixed(2)})`
+      : `more streaky than chance (z=${z.toFixed(2)})`;
+    return { z, runs, verdict };
+  }
+
+  function todComputeStreaks(seq) {
+    if (!seq.length) return { currentWin: null, currentLen: 0, longestWin: 0, longestLoss: 0 };
+    let longestWin = 0, longestLoss = 0;
+    let runVal = seq[0], runLen = 0;
+    for (const v of seq) {
+      if (v === runVal) { runLen++; }
+      else {
+        if (runVal) longestWin = Math.max(longestWin, runLen); else longestLoss = Math.max(longestLoss, runLen);
+        runVal = v; runLen = 1;
+      }
+    }
+    if (runVal) longestWin = Math.max(longestWin, runLen); else longestLoss = Math.max(longestLoss, runLen);
+    let currentLen = 1;
+    const currentWin = seq[seq.length - 1];
+    for (let i = seq.length - 2; i >= 0 && seq[i] === currentWin; i--) currentLen++;
+    return { currentWin, currentLen, longestWin, longestLoss };
+  }
+
+  function todShuffle(arr, rng) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(rng() * (i + 1));
+      const t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+    }
+  }
+
+  // matches: [{hour:0-23, win:bool}] — hour assignment is fixed; only the
+  // win labels get shuffled, so the qualifying-hour set never changes
+  // mid-test (n per hour is independent of the win/loss label).
+  function todPermutationTest(matches, minN, K, rng) {
+    K = K || 2000;
+    rng = rng || Math.random;
+    const nPerHour = new Array(24).fill(0);
+    const hourList = new Array(matches.length);
+    for (let i = 0; i < matches.length; i++) {
+      const h = matches[i].hour;
+      hourList[i] = h;
+      nPerHour[h]++;
+    }
+    const qualifying = [];
+    for (let h = 0; h < 24; h++) if (nPerHour[h] >= minN) qualifying.push(h);
+    if (qualifying.length < 2) {
+      return { p: null, verdict: `not enough hourly data (need ≥${minN} games in at least 2 hours) to test for an hour-of-day effect` };
+    }
+    function spreadFor(labels) {
+      const winCount = new Array(24).fill(0);
+      for (let i = 0; i < labels.length; i++) if (labels[i]) winCount[hourList[i]]++;
+      let mx = -Infinity, mn = Infinity;
+      for (const h of qualifying) {
+        const wr = winCount[h] / nPerHour[h];
+        if (wr > mx) mx = wr;
+        if (wr < mn) mn = wr;
+      }
+      return mx - mn;
+    }
+    const labels = matches.map(m => !!m.win);
+    const observed = spreadFor(labels);
+    let ge = 0;
+    const work = labels.slice();
+    for (let k = 0; k < K; k++) {
+      todShuffle(work, rng);
+      if (spreadFor(work) >= observed - 1e-12) ge++;
+    }
+    const p = (ge + 1) / (K + 1);
+    const verdict = p < 0.05
+      ? `hour-of-day effect (p=${p.toFixed(3)})`
+      : `no hour-of-day effect detected (p=${p.toFixed(3)})`;
+    return { p, observed, verdict };
+  }
+
+  // -- Time parsing: ts is UTC, with or without an offset marker --
+  function todParseTs(ts) {
+    const s = String(ts);
+    const hasOffset = /(Z|[+-]\d{2}:?\d{2})$/i.test(s);
+    const iso = s.includes('T') ? s : s.replace(' ', 'T');
+    return new Date(hasOffset ? iso : iso + 'Z');
+  }
+  function todLocalHour(ts) { return todParseTs(ts).getHours(); }
+  function todTzLabel() {
+    try { return Intl.DateTimeFormat().resolvedOptions().timeZone || 'local time'; }
+    catch (e) { return 'local time'; }
+  }
+
+  // -- SVG bar geometry (pure functions) --
+  function todRoundedTopBarPath(x, yTop, w, yBottom, r) {
+    const h = yBottom - yTop;
+    if (h <= 0.5 || w <= 0) return '';
+    r = Math.min(r, w / 2, h);
+    if (r <= 0) return `M${x},${yTop} h${w} v${h} h${-w} Z`;
+    return `M${x},${yBottom} L${x},${yTop + r} Q${x},${yTop} ${x + r},${yTop} ` +
+           `L${x + w - r},${yTop} Q${x + w},${yTop} ${x + w},${yTop + r} L${x + w},${yBottom} Z`;
+  }
+  function todSquareBarPath(x, yTop, w, yBottom) {
+    const h = yBottom - yTop;
+    if (h <= 0.5 || w <= 0) return '';
+    return `M${x},${yTop} h${w} v${h} h${-w} Z`;
+  }
+  // segments ordered BOTTOM -> TOP; only the top one is rounded (the
+  // "data end"); `gap` px of surface color separates touching segments
+  // (marks-and-anatomy.md's stacked-bar spacer rule).
+  function todStackedBarPaths(x, w, yBase, segments, gap, capR) {
+    gap = gap == null ? 2 : gap;
+    capR = capR == null ? 4 : capR;
+    const out = [];
+    let y = yBase;
+    segments.forEach((seg, i) => {
+      const isTop = i === segments.length - 1;
+      const isBottom = i === 0;
+      let segTop = y - seg.height;
+      let segBottom = y;
+      if (!isBottom) segBottom -= gap / 2;
+      if (!isTop) segTop += gap / 2;
+      const d = isTop ? todRoundedTopBarPath(x, segTop, w, segBottom, capR) : todSquareBarPath(x, segTop, w, segBottom);
+      if (d) out.push({ seg, d });
+      y -= seg.height;
+    });
+    return out;
+  }
+  function todRoundedRightBarPath(x0, y, x1, h, r) {
+    const w = x1 - x0;
+    if (w <= 0.5 || h <= 0) return '';
+    r = Math.min(r, h / 2, w);
+    if (r <= 0) return `M${x0},${y} v${h} h${w} v${-h} Z`;
+    return `M${x0},${y} L${x1 - r},${y} Q${x1},${y} ${x1},${y + r} ` +
+           `L${x1},${y + h - r} Q${x1},${y + h} ${x1 - r},${y + h} L${x0},${y + h} Z`;
+  }
+  function todNiceCeil(n) {
+    if (n <= 0) return 1;
+    const mag = Math.pow(10, Math.floor(Math.log10(n)));
+    const steps = [1, 2, 2.5, 5, 10];
+    for (const s of steps) { const v = s * mag; if (v >= n) return v; }
+    return 10 * mag;
+  }
+
+  function todFmtPct1(x) { return (x * 100).toFixed(1) + '%'; }
+
+  // -- Grouping --
+  function todGroupByHour(matches) {
+    const buckets = Array.from({ length: 24 }, (_, h) => ({ hour: h, n: 0, wins: 0 }));
+    for (const m of matches) {
+      const h = todLocalHour(m.ts);
+      buckets[h].n++;
+      if (m.win) buckets[h].wins++;
+    }
+    for (const b of buckets) {
+      b.losses = b.n - b.wins;
+      b.wr = b.n ? b.wins / b.n : null;
+      const w = todWilson(b.wins, b.n);
+      b.lo = w.lo; b.hi = w.hi;
+    }
+    return buckets;
+  }
+
+  function todGroupByArchetype(matches) {
+    const map = new Map();
+    for (const m of matches) {
+      const name = m.opp_archetype == null ? '(unknown opponent)' : m.opp_archetype;
+      if (!map.has(name)) map.set(name, { name, n: 0, wins: 0 });
+      const e = map.get(name);
+      e.n++; if (m.win) e.wins++;
+    }
+    const rows = [...map.values()];
+    for (const r of rows) {
+      r.losses = r.n - r.wins;
+      r.wr = r.wins / r.n;
+      const w = todWilson(r.wins, r.n);
+      r.lo = w.lo; r.hi = w.hi;
+    }
+    return rows;
+  }
+
+  function todOverall(matches) {
+    const n = matches.length;
+    const wins = matches.reduce((s, m) => s + (m.win ? 1 : 0), 0);
+    const w = todWilson(wins, n);
+    return { n, wins, losses: n - wins, wr: n ? wins / n : null, lo: w.lo, hi: w.hi };
+  }
+
+  // -- KPI tiles --
+  function todRenderKpis(matches, minN) {
+    const overall = todOverall(matches);
+    setText('tod-kpi-winrate', overall.n ? todFmtPct1(overall.wr) : '—');
+    document.getElementById('tod-kpi-winrate-sub').textContent = overall.n
+      ? `n=${overall.n} · 95% CI ${todFmtPct1(overall.lo)}–${todFmtPct1(overall.hi)}`
+      : 'no matches in range';
+
+    setText('tod-kpi-games', String(overall.n));
+
+    const archRows = todGroupByArchetype(matches).filter(r => r.n >= minN);
+    const mEl = document.getElementById('tod-kpi-matchups');
+    if (!archRows.length) {
+      mEl.innerHTML = `<span class="empty-state">No matchup has ≥${minN} games yet</span>`;
+    } else {
+      const best = archRows.reduce((a, b) => (b.wr > a.wr ? b : a));
+      const worst = archRows.reduce((a, b) => (b.wr < a.wr ? b : a));
+      mEl.innerHTML = `
+        <div class="tod-mini-stat"><span style="color:var(--success)">Best: ${esc(best.name)} ${todFmtPct1(best.wr)}</span><span class="stat-sub">n=${best.n}</span></div>
+        <div class="tod-mini-stat" style="margin-top:6px;"><span style="color:var(--error)">Worst: ${esc(worst.name)} ${todFmtPct1(worst.wr)}</span><span class="stat-sub">n=${worst.n}</span></div>`;
+    }
+
+    const seq = matches.map(m => !!m.win);
+    const streaks = todComputeStreaks(seq);
+    const sEl = document.getElementById('tod-kpi-streak');
+    if (!seq.length) {
+      sEl.innerHTML = `<span class="empty-state">No matches</span>`;
+    } else {
+      const curColor = streaks.currentWin ? 'var(--success)' : 'var(--error)';
+      const curLabel = `${streaks.currentLen}${streaks.currentWin ? 'W' : 'L'}`;
+      sEl.innerHTML = `
+        <div class="tod-mini-stat"><span style="color:${curColor}">Current: ${curLabel}</span></div>
+        <div class="tod-mini-stat" style="margin-top:6px;"><span style="color:var(--success)">Longest win streak: ${streaks.longestWin}</span></div>`;
+    }
+  }
+
+  // -- Chart 2: hour win-rate bars --
+  const TOD_W = 720, TOD_H = 210;
+  const TOD_M = { top: 14, right: 10, bottom: 26, left: 34 };
+
+  function todHourTableHtml(buckets, minN) {
+    const rows = buckets.filter(b => b.n > 0).map(b => `
+      <tr>
+        <td>${b.hour}:00</td>
+        <td>${b.n}${b.n < minN ? ' <span class="badge badge-muted">low n</span>' : ''}</td>
+        <td>${b.wins}-${b.losses}</td>
+        <td>${todFmtPct1(b.wr)} (${todFmtPct1(b.lo)}–${todFmtPct1(b.hi)})</td>
+      </tr>`).join('');
+    return `<table class="data-table"><thead><tr><th>Hour</th><th>N</th><th>W-L</th><th>WR (95% CI)</th></tr></thead>
+      <tbody>${rows || '<tr><td colspan="4"><div class="empty-state">No data</div></td></tr>'}</tbody></table>`;
+  }
+
+  function todRenderHourChart(buckets, overall, minN) {
+    const svg = document.getElementById('tod-hour-svg');
+    document.getElementById('tod-hour-table').innerHTML = todHourTableHtml(buckets, minN);
+    if (!overall.n) { svg.innerHTML = `<text x="360" y="105" text-anchor="middle" font-size="12" fill="var(--muted)">No matches in range</text>`; return; }
+
+    const plotW = TOD_W - TOD_M.left - TOD_M.right;
+    const plotH = TOD_H - TOD_M.top - TOD_M.bottom;
+    const slot = plotW / 24;
+    const barW = Math.min(22, slot - 6);
+    const y = frac => TOD_M.top + (1 - frac) * plotH;
+
+    let grid = '';
+    [0, 0.25, 0.5, 0.75, 1].forEach(f => {
+      grid += `<line x1="${TOD_M.left}" y1="${y(f).toFixed(1)}" x2="${TOD_W - TOD_M.right}" y2="${y(f).toFixed(1)}" stroke="var(--border)" stroke-width="1"/>`;
+      grid += `<text x="${TOD_M.left - 6}" y="${(y(f) + 3).toFixed(1)}" text-anchor="end" font-size="9" fill="var(--muted)">${Math.round(f * 100)}%</text>`;
+    });
+
+    let bars = '', axisLabels = '';
+    buckets.forEach((b, h) => {
+      const x = TOD_M.left + h * slot + (slot - barW) / 2;
+      if (h % 3 === 0) {
+        axisLabels += `<text x="${(x + barW / 2).toFixed(1)}" y="${TOD_H - TOD_M.bottom + 14}" text-anchor="middle" font-size="9" fill="var(--muted)">${h}</text>`;
+      }
+      if (b.n > 0) {
+        const qualifies = b.n >= minN;
+        const color = qualifies ? 'var(--accent)' : 'var(--muted)';
+        const fillOpacity = qualifies ? '1' : '0.55';
+        const d = todRoundedTopBarPath(x, y(b.wr), barW, y(0), 4);
+        const tip = `Hour ${b.hour}:00–${b.hour}:59 · n=${b.n} · ${b.wins}W-${b.losses}L · WR ${todFmtPct1(b.wr)} (95% CI ${todFmtPct1(b.lo)}–${todFmtPct1(b.hi)})${qualifies ? '' : ' · below min-n'}`;
+        bars += `<path class="tod-bar" tabindex="0" d="${d}" fill="${color}" fill-opacity="${fillOpacity}"><title>${esc(tip)}</title></path>`;
+        const cx = x + barW / 2;
+        const yLo = y(b.lo), yHi = y(b.hi);
+        bars += `<g stroke="var(--text)" stroke-opacity="0.55" stroke-width="1.5">
+          <line x1="${cx}" y1="${yLo.toFixed(1)}" x2="${cx}" y2="${yHi.toFixed(1)}"/>
+          <line x1="${(cx - 3).toFixed(1)}" y1="${yLo.toFixed(1)}" x2="${(cx + 3).toFixed(1)}" y2="${yLo.toFixed(1)}"/>
+          <line x1="${(cx - 3).toFixed(1)}" y1="${yHi.toFixed(1)}" x2="${(cx + 3).toFixed(1)}" y2="${yHi.toFixed(1)}"/>
+        </g>`;
+      }
+    });
+
+    const by = y(overall.wr);
+    const baseline = `<line x1="${TOD_M.left}" y1="${by.toFixed(1)}" x2="${TOD_W - TOD_M.right}" y2="${by.toFixed(1)}" stroke="var(--warning)" stroke-width="1.5"/>` +
+      `<text x="${TOD_W - TOD_M.right}" y="${(by - 4).toFixed(1)}" text-anchor="end" font-size="9" fill="var(--warning)">Overall ${todFmtPct1(overall.wr)}</text>`;
+
+    svg.innerHTML = grid + bars + baseline + axisLabels;
+  }
+
+  // -- Chart 3: volume histogram (stacked wins/losses) --
+  function todVolumeTableHtml(buckets) {
+    const rows = buckets.filter(b => b.n > 0).map(b => `<tr><td>${b.hour}:00</td><td>${b.n}</td><td class="result-win">${b.wins}</td><td class="result-loss">${b.losses}</td></tr>`).join('');
+    return `<table class="data-table"><thead><tr><th>Hour</th><th>Total</th><th>Wins</th><th>Losses</th></tr></thead>
+      <tbody>${rows || '<tr><td colspan="4"><div class="empty-state">No data</div></td></tr>'}</tbody></table>`;
+  }
+
+  function todRenderVolumeChart(buckets) {
+    const svg = document.getElementById('tod-volume-svg');
+    document.getElementById('tod-volume-table').innerHTML = todVolumeTableHtml(buckets);
+    const totalN = buckets.reduce((s, b) => s + b.n, 0);
+    if (!totalN) { svg.innerHTML = `<text x="360" y="105" text-anchor="middle" font-size="12" fill="var(--muted)">No matches in range</text>`; return; }
+
+    const plotW = TOD_W - TOD_M.left - TOD_M.right;
+    const plotH = TOD_H - TOD_M.top - TOD_M.bottom;
+    const slot = plotW / 24;
+    const barW = Math.min(22, slot - 6);
+    const maxN = todNiceCeil(Math.max(1, ...buckets.map(b => b.n)));
+    const y = v => TOD_M.top + (1 - v / maxN) * plotH;
+    const yBase = y(0);
+
+    let grid = '';
+    [0, maxN / 2, maxN].forEach(v => {
+      grid += `<line x1="${TOD_M.left}" y1="${y(v).toFixed(1)}" x2="${TOD_W - TOD_M.right}" y2="${y(v).toFixed(1)}" stroke="var(--border)" stroke-width="1"/>`;
+      grid += `<text x="${TOD_M.left - 6}" y="${(y(v) + 3).toFixed(1)}" text-anchor="end" font-size="9" fill="var(--muted)">${Math.round(v)}</text>`;
+    });
+
+    let bars = '', axisLabels = '';
+    buckets.forEach((b, h) => {
+      const x = TOD_M.left + h * slot + (slot - barW) / 2;
+      if (h % 3 === 0) axisLabels += `<text x="${(x + barW / 2).toFixed(1)}" y="${TOD_H - TOD_M.bottom + 14}" text-anchor="middle" font-size="9" fill="var(--muted)">${h}</text>`;
+      if (b.n > 0) {
+        const segs = todStackedBarPaths(x, barW, yBase, [
+          { height: (b.losses / maxN) * plotH, kind: 'loss' },
+          { height: (b.wins / maxN) * plotH, kind: 'win' },
+        ], 2, 4);
+        for (const s of segs) {
+          const color = s.seg.kind === 'win' ? 'var(--success)' : 'var(--error)';
+          const label = s.seg.kind === 'win' ? `${b.wins}W` : `${b.losses}L`;
+          bars += `<path class="tod-bar" tabindex="0" d="${s.d}" fill="${color}"><title>${esc(`Hour ${b.hour}:00–${b.hour}:59 · ${label} of ${b.n}`)}</title></path>`;
+        }
+      }
+    });
+
+    svg.innerHTML = grid + bars + axisLabels;
+  }
+
+  // -- Chart 4: matchup horizontal bars (label above each bar) --
+  const TOD_MU_ROWH = 46;
+
+  function todRenderMatchupChart(matches, overall, minN) {
+    const svg = document.getElementById('tod-matchup-svg');
+    const all = todGroupByArchetype(matches);
+    const top = all.slice().sort((a, b) => b.n - a.n).slice(0, 10);
+    const rows = top.slice().sort((a, b) => b.wr - a.wr);
+    const left = 4, right = 90, topM = 8;
+    const barAreaW = TOD_W - left - right;
+    const barH = 16;
+    const H = topM * 2 + Math.max(1, rows.length) * TOD_MU_ROWH;
+    svg.setAttribute('viewBox', `0 0 ${TOD_W} ${H}`);
+
+    if (!rows.length) {
+      svg.innerHTML = `<text x="${TOD_W / 2}" y="${H / 2}" text-anchor="middle" font-size="12" fill="var(--muted)">No matchup data yet</text>`;
+      return;
+    }
+
+    const x = frac => left + frac * barAreaW;
+    let refLines = `<line x1="${x(0.5).toFixed(1)}" y1="${topM}" x2="${x(0.5).toFixed(1)}" y2="${H - topM}" stroke="var(--border)" stroke-width="1"/>`;
+    if (overall.n) {
+      refLines += `<line x1="${x(overall.wr).toFixed(1)}" y1="${topM}" x2="${x(overall.wr).toFixed(1)}" y2="${H - topM}" stroke="var(--warning)" stroke-width="1.5"/>`;
+    }
+
+    let content = '';
+    rows.forEach((r, i) => {
+      const rowY = topM + i * TOD_MU_ROWH;
+      const labelY = rowY + 10;
+      const barY = rowY + 16;
+      const qualifies = r.n >= minN;
+      const color = qualifies ? 'var(--accent)' : 'var(--muted)';
+      const fillOpacity = qualifies ? '1' : '0.55';
+      const d = todRoundedRightBarPath(left, barY, x(r.wr), barH, 4);
+      const tip = `${r.name} · n=${r.n} · ${r.wins}W-${r.losses}L · WR ${todFmtPct1(r.wr)} (95% CI ${todFmtPct1(r.lo)}–${todFmtPct1(r.hi)})${qualifies ? '' : ' · below min-n'}`;
+      content += `<text x="${left}" y="${labelY}" font-size="11" fill="var(--text)">${esc(r.name)}</text>`;
+      content += `<path class="tod-bar" tabindex="0" d="${d}" fill="${color}" fill-opacity="${fillOpacity}"><title>${esc(tip)}</title></path>`;
+      const cy = barY + barH / 2;
+      const xLo = x(r.lo), xHi = x(r.hi);
+      content += `<g stroke="var(--text)" stroke-opacity="0.55" stroke-width="1.5">
+        <line x1="${xLo.toFixed(1)}" y1="${cy}" x2="${xHi.toFixed(1)}" y2="${cy}"/>
+        <line x1="${xLo.toFixed(1)}" y1="${cy - 3}" x2="${xLo.toFixed(1)}" y2="${cy + 3}"/>
+        <line x1="${xHi.toFixed(1)}" y1="${cy - 3}" x2="${xHi.toFixed(1)}" y2="${cy + 3}"/>
+      </g>`;
+      const tipX = Math.max(x(r.wr) + 6, x(0.12));
+      content += `<text x="${tipX.toFixed(1)}" y="${cy + 3}" font-size="10" fill="var(--text)">${todFmtPct1(r.wr)}</text>`;
+      content += `<text x="${(tipX + 34).toFixed(1)}" y="${cy + 3}" font-size="9" fill="var(--muted)">n=${r.n}</text>`;
+    });
+
+    svg.innerHTML = refLines + content;
+  }
+
+  // -- Panel 5: streaks & randomness (plain-language, not a chart) --
+  function todRenderStreakPanel(matches, minN) {
+    const el = document.getElementById('tod-streak-panel');
+    if (!matches.length) { el.innerHTML = '<div class="empty-state">No matches in range</div>'; return; }
+    const seq = matches.map(m => !!m.win);
+    const streaks = todComputeStreaks(seq);
+    const runs = todRunsTest(seq);
+    const permMatches = matches.map(m => ({ hour: todLocalHour(m.ts), win: !!m.win }));
+    const perm = todPermutationTest(permMatches, minN, 2000);
+
+    const curColor = streaks.currentWin ? 'var(--success)' : 'var(--error)';
+    const curLabel = `${streaks.currentLen} ${streaks.currentWin ? 'win' : 'loss'}${streaks.currentLen === 1 ? '' : 'es'}`;
+
+    el.innerHTML = `
+      <div class="tod-streak-line">Current streak: <span class="tod-streak-value" style="color:${curColor}">${esc(curLabel)}</span></div>
+      <div class="tod-streak-line">Longest win streak: <span class="tod-streak-value" style="color:var(--success)">${streaks.longestWin}</span>
+        &nbsp;·&nbsp; Longest loss streak: <span class="tod-streak-value" style="color:var(--error)">${streaks.longestLoss}</span></div>
+      <p class="tod-sentence">${esc(runs.verdict)}.</p>
+      <p class="tod-sentence">${esc(perm.verdict)}.</p>`;
+  }
+
+  // -- Orchestration + controls --
+  let todAllMatches = [];
+
+  function todCurrentMinN() {
+    const v = parseInt(document.getElementById('tod-minn-input').value, 10);
+    return Number.isFinite(v) && v > 0 ? v : 10;
+  }
+
+  function todFilteredMatches() {
+    const deck = document.getElementById('tod-deck-select').value;
+    const format = document.getElementById('tod-format-select').value;
+    return todAllMatches.filter(m => {
+      if (deck && m.deck !== deck) return false;
+      if (format) {
+        if (format === '__unknown__') { if (m.event_id != null) return false; }
+        else if (m.event_id !== format) return false;
+      }
+      return true;
+    });
+  }
+
+  function todRenderAll() {
+    const minN = todCurrentMinN();
+    const filtered = todFilteredMatches();
+    const overall = todOverall(filtered);
+    const hourBuckets = todGroupByHour(filtered);
+
+    todRenderKpis(filtered, minN);
+    todRenderHourChart(hourBuckets, overall, minN);
+    todRenderVolumeChart(hourBuckets);
+    todRenderMatchupChart(filtered, overall, minN);
+    todRenderStreakPanel(filtered, minN);
+
+    const deck = document.getElementById('tod-deck-select').value;
+    const deckFiltered = deck ? todAllMatches.filter(m => m.deck === deck) : todAllMatches;
+    const unknownCount = deckFiltered.filter(m => m.event_id == null).length;
+    const caveatEl = document.getElementById('tod-format-caveat');
+    if (unknownCount > 0) {
+      caveatEl.style.display = '';
+      caveatEl.textContent = `⚠ Format tracking (event_id) only exists from 2026-08-12 — ${unknownCount} match${unknownCount === 1 ? '' : 'es'} in range have unknown format and stay included under "All formats" (pick "Unknown format" to see just them).`;
+    } else {
+      caveatEl.style.display = 'none';
+    }
+  }
+
+  function todPopulateSelect(el, values, allLabel) {
+    const cur = el.value;
+    el.innerHTML = `<option value="">${esc(allLabel)}</option>` + values.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
+    el.value = values.includes(cur) ? cur : '';
+  }
+
+  function todPopulateFormatSelect(el, events, hasUnknown) {
+    const cur = el.value;
+    let html = '<option value="">All formats</option>' + events.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
+    if (hasUnknown) html += `<option value="__unknown__">Unknown format (pre-2026-08-12)</option>`;
+    el.innerHTML = html;
+    el.value = [...el.options].some(o => o.value === cur) ? cur : '';
+  }
+
+  function todRangeBounds(sel) {
+    if (sel === 'all') return {};
+    const days = parseInt(sel, 10) || 30;
+    const from = new Date(Date.now() - days * 24 * 3600 * 1000);
+    return { from: from.toISOString() };
+  }
+
+  function todStatsMatchesUrl(bounds) {
+    const p = new URLSearchParams();
+    if (bounds.from) p.set('from', bounds.from);
+    if (bounds.to) p.set('to', bounds.to);
+    const qs = p.toString();
+    return '/api/stats/matches' + (qs ? '?' + qs : '');
+  }
+
+  async function todFetchAndRender() {
+    const range = document.getElementById('tod-range-select').value;
+    const url = todStatsMatchesUrl(todRangeBounds(range));
+    let data;
+    try {
+      data = await fetchJSON(url);
+    } catch (e) {
+      document.getElementById('tod-kpi-row').innerHTML = `<div class="empty-state">Couldn't load: ${esc(e.message)}</div>`;
+      return;
+    }
+    todAllMatches = data.matches || [];
+    todPopulateSelect(document.getElementById('tod-deck-select'), data.decks || [], 'All decks');
+    todPopulateFormatSelect(document.getElementById('tod-format-select'), data.events || [], todAllMatches.some(m => m.event_id == null));
+    document.getElementById('tod-tz-label').textContent = 'Hours in ' + todTzLabel();
+    todRenderAll();
+  }
+
+  document.getElementById('tod-range-select').addEventListener('change', todFetchAndRender);
+  document.getElementById('tod-deck-select').addEventListener('change', todRenderAll);
+  document.getElementById('tod-format-select').addEventListener('change', todRenderAll);
+  document.getElementById('tod-minn-input').addEventListener('input', todRenderAll);
+  document.querySelectorAll('.tod-table-toggle').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const table = document.getElementById(btn.dataset.target);
+      const svg = document.getElementById(btn.dataset.svg);
+      const showingTable = table.style.display !== 'none';
+      if (showingTable) { table.style.display = 'none'; svg.style.display = ''; btn.textContent = 'Table view'; }
+      else { table.style.display = ''; svg.style.display = 'none'; btn.textContent = 'Chart view'; }
+    });
+  });
+
   // ─── Init ───
   (function () {
     Promise.allSettled([
       loadOverview(), loadTrend(), loadDecks(), loadMatchups(),
       loadColorMatchups(), loadMulligan(), loadMyCards(), loadManaCurve(),
       loadCompliance(), loadWeaknesses(), loadOppCards(), loadHistory(),
+      todFetchAndRender(),
     ]);
   })();
 
