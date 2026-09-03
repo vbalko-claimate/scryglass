@@ -92,6 +92,7 @@
     .tod-streak-value { font-weight: 700; }
     .tod-sentence { font-size: 12px; color: var(--muted); margin: 8px 0 0; line-height: 1.5; }
     .tod-mini-stat { display: flex; flex-direction: column; gap: 1px; font-size: 12px; }
+    .tod-info { cursor: help; color: var(--muted); font-size: 12px; margin-left: 2px; }
   </style>
 </head>
 <body>
@@ -208,7 +209,9 @@
       <!-- Time of Day & Matchups -->
       <div class="glass-card" style="margin-bottom:20px;">
         <div class="card-header">
-          <div class="card-title"><span>🕒 Time of Day &amp; Matchups</span></div>
+          <div class="card-title"><span>🕒 Time of Day &amp; Matchups</span>
+            <span class="tod-info" tabindex="0" title="Win rates below use a 95% confidence interval — the range your true win rate probably falls in. &quot;Min games / bucket&quot; sets how many games an hour or matchup needs before it's trusted enough to highlight; below that, it's shown greyed out.">&#9432;</span>
+          </div>
           <span class="card-subtitle" id="tod-tz-label">—</span>
         </div>
 
@@ -257,7 +260,9 @@
         <div class="grid grid-2" style="margin-bottom:16px;">
           <div>
             <div class="tod-chart-header">
-              <span class="tod-chart-title">Win rate by hour of day</span>
+              <span class="tod-chart-title">Win rate by hour of day
+                <span class="tod-info" tabindex="0" title="Bars show win rate for games started in that local hour. The vertical whisker is a 95% confidence interval — wide means too few games yet. The horizontal line is your overall win rate. Grey bars have fewer games than your min-n setting.">&#9432;</span>
+              </span>
               <button class="tod-table-toggle" type="button" data-target="tod-hour-table" data-svg="tod-hour-svg">Table view</button>
             </div>
             <svg id="tod-hour-svg" viewBox="0 0 720 210" style="width:100%; height:auto;" role="img" aria-label="Win rate by local hour of day"></svg>
@@ -265,7 +270,9 @@
           </div>
           <div>
             <div class="tod-chart-header">
-              <span class="tod-chart-title">Games played by hour of day</span>
+              <span class="tod-chart-title">Games played by hour of day
+                <span class="tod-info" tabindex="0" title="How many games you played in each local hour, split into wins and losses. Compare the shape to the win-rate chart on the left — if a swing there lines up with very few games here, it's more likely noise than a real pattern.">&#9432;</span>
+              </span>
               <button class="tod-table-toggle" type="button" data-target="tod-volume-table" data-svg="tod-volume-svg">Table view</button>
             </div>
             <div class="tod-legend">
@@ -280,11 +287,15 @@
 
         <div class="grid grid-2">
           <div>
-            <div class="tod-chart-header"><span class="tod-chart-title">Win rate by opponent archetype</span></div>
+            <div class="tod-chart-header"><span class="tod-chart-title">Win rate by opponent archetype
+              <span class="tod-info" tabindex="0" title="Win rate against your 10 most-played opponent archetypes, sorted best to worst. The vertical line is your overall win rate. Grey bars have fewer games than your min-n setting.">&#9432;</span>
+            </span></div>
             <svg id="tod-matchup-svg" viewBox="0 0 720 400" style="width:100%; height:auto;" role="img" aria-label="Win rate by opponent archetype"></svg>
           </div>
           <div>
-            <div class="tod-chart-header"><span class="tod-chart-title">Streaks &amp; randomness</span></div>
+            <div class="tod-chart-header"><span class="tod-chart-title">Streaks &amp; randomness
+              <span class="tod-info" tabindex="0" title="A 'run' is a streak of consecutive wins or losses. These two lines test whether your streaks and hourly win-rate swings look like real patterns or just ordinary randomness — most players' results are consistent with chance.">&#9432;</span>
+            </span></div>
             <div id="tod-streak-panel"><div class="empty-state">Loading…</div></div>
           </div>
         </div>
