@@ -135,6 +135,77 @@
       this.bindAccountControl();
       this.fetchAccountStatus();
       this.highlightActiveNav();
+      this.initSyncStatus();
+    },
+
+    // ── Sync status chip (#22 wave 3B) ──────────────────────────────────────
+    // Several pages ship a hardcoded "Synced 2m ago" in their markup
+    // (#sync-time-text) that never updated — pure decoration. There is no
+    // server-side timestamp this client can read to compute a real age:
+    // GET /api/manage/cloud-me was live-verified (2026-09-03, localhost:8765)
+    // to return only {alpha, created_at, email, has_password, is_admin,
+    // is_anon, passkey_count} — no last-sync field of any kind — and its
+    // upstream /me profile carries none either. `POST /api/manage/cloud-sync`
+    // returns a SyncReport (uploaded/bundle_version/error/…) but that report
+    // is never persisted anywhere the client can re-read later, so it can only
+    // inform the moment of the click itself.
+    //
+    // So the only truthful age this widget can ever show is computed from a
+    // timestamp THIS BROWSER recorded itself, at the moment a manual "Sync
+    // now" click actually succeeded (persisted in localStorage so it survives
+    // reloads). Absent that, it falls back to "Sync: on/off" from cloud-me's
+    // enabled/disabled status — never a fabricated relative age.
+    //
+    // Follow-up for the server: /api/manage/cloud-me (or /me) would need a
+    // real `last_sync_at` / `last_ingest_at` field for a true cross-session,
+    // background-sync-aware age to be possible.
+    SYNC_KEY: 'scry-last-manual-sync-at',
+    syncEnabled: null,
+    lastManualSyncAt: null,
+
+    initSyncStatus: function() {
+      try {
+        const saved = localStorage.getItem(this.SYNC_KEY);
+        this.lastManualSyncAt = saved ? parseInt(saved, 10) : null;
+      } catch (e) { this.lastManualSyncAt = null; }
+      this.renderSyncStatus();
+      this.pollSyncStatus();
+      setInterval(() => this.pollSyncStatus(), 60000);
+    },
+
+    pollSyncStatus: async function() {
+      try {
+        const res = await fetch('/api/manage/cloud-me');
+        const data = await res.json().catch(() => ({}));
+        this.syncEnabled = data.status === 'ok' ? true : (data.status === 'disabled' ? false : null);
+      } catch (e) {
+        this.syncEnabled = null;
+      }
+      this.renderSyncStatus();
+    },
+
+    formatAge: function(ms) {
+      const s = Math.floor(ms / 1000);
+      if (s < 60) return 'just now';
+      const m = Math.floor(s / 60);
+      if (m < 60) return m + 'm ago';
+      const h = Math.floor(m / 60);
+      if (h < 24) return h + 'h ago';
+      return Math.floor(h / 24) + 'd ago';
+    },
+
+    renderSyncStatus: function() {
+      const el = document.getElementById('sync-time-text');
+      if (!el) return;
+      if (this.lastManualSyncAt) {
+        el.textContent = 'Synced ' + this.formatAge(Date.now() - this.lastManualSyncAt);
+      } else if (this.syncEnabled === false) {
+        el.textContent = 'Sync: off';
+      } else if (this.syncEnabled === true) {
+        el.textContent = 'Sync: on';
+      } else {
+        el.textContent = '—';
+      }
     },
 
     highlightActiveNav: function() {
@@ -302,10 +373,19 @@
       if (syncText) syncText.textContent = 'Syncing now...';
 
       try {
-        await fetch('/api/manage/cloud-sync', { method: 'POST' });
-        setTimeout(() => {
-          if (syncText) syncText.textContent = 'Synced just now';
-        }, 1000);
+        const res = await fetch('/api/manage/cloud-sync', { method: 'POST' });
+        const data = await res.json().catch(() => ({}));
+        // Only stamp success on an ACTUAL ok report (manage_cloud_sync returns
+        // status:"error" for a misconfigured/failed sync with HTTP 200) — a
+        // fake "Synced" on a failed cycle is exactly the decorative bug this
+        // replaces.
+        if (res.ok && data.status === 'ok') {
+          this.lastManualSyncAt = Date.now();
+          try { localStorage.setItem(this.SYNC_KEY, String(this.lastManualSyncAt)); } catch (e) { /* private mode */ }
+          this.renderSyncStatus();
+        } else if (syncText) {
+          syncText.textContent = 'Sync failed';
+        }
       } catch (e) {
         if (syncText) syncText.textContent = 'Sync failed';
       }
