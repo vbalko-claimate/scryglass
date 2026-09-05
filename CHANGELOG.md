@@ -4,6 +4,25 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.85] - 2026-09-05
+
+### Fixed
+- 12 cards now play by their real rules: Frenzied Baloth (combat damage
+  can't be prevented), Cryogen Relic (stun-counter payoff), Erode (basic
+  land search for the destroyed permanent's controller), No More Lies
+  (countered spell is exiled), Rot-Curse Rakshasa (Decayed keyword:
+  can't block + sacrificed at end of combat), Bladewheel Chariot
+  (tap-two-artifacts alt-crew), Pinnacle Starcage (exile dump + one Robot
+  per card + sacrifice), Repurposing Bay (fetch an artifact costing 1 more
+  than the sacrificed one).
+- Engine correctness hardening from an adversarial review: blinked
+  permanents are no longer confused with their old objects (end-of-combat
+  sacrifices, Starcage, Bladewheel), graveyard replacement effects are
+  honored by Starcage's dump, sacrificed/fetched cards fire their
+  death/enter triggers, transformed double-faced cards report the correct
+  mana value, and tapping artifacts for costs triggers "becomes tapped"
+  abilities.
+
 ## [0.8.84] - 2026-09-03
 
 ### Changed
