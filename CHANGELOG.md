@@ -4,6 +4,27 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.86] - 2026-09-05
+
+### Fixed
+- Mobilize finally works as printed (12 cards incl. Voice of Victory):
+  the tokens enter tapped and attacking, deal combat damage, and are
+  sacrificed at the beginning of the next end step; Avenger of the
+  Fallen's "Mobilize X" now really counts creature cards in your
+  graveyard.
+- "This creature can't block." is now enforced (Bloodghast, Forsaken
+  Miner and 8 more) — these creatures could previously block freely.
+- A sacrificed creature's own "when this creature dies" ability now
+  triggers on every sacrifice (costs, edicts, ward payments).
+- Ajani, Outland Chaperone's -2 hits the chosen tapped creature (it
+  previously dealt its 4 damage to the opponent's face) and only tapped
+  creatures are legal targets.
+- Krang, Master Mind draws up to 4 on entry; Tyvar, the Pummeler's
+  team pump uses the real greatest-power X; Improvised Arsenal counts
+  your artifacts every turn, not just at equip time.
+- Fire Lord Sozin's keyword line and 20+ mana-ability classifications
+  corrected in the card database (audit hygiene, no gameplay change).
+
 ## [0.8.85] - 2026-09-05
 
 ### Fixed
