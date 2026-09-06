@@ -4,6 +4,26 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.87] - 2026-09-06
+
+### Fixed
+- 12 cards now respect "target tapped creature" (Deadly Riposte, Keep
+  Out, Harbinger of the Tides, Super Villain Lockup and more) — several
+  could previously aim their removal at an untapped creature or even a
+  player's face.
+- Moment of Reckoning reanimates from the graveyard as printed (it
+  previously bounced a battlefield permanent to hand) and "choose up to
+  N" spells are castable even with no legal mode.
+- Awaken the Honored Dead chapter III returns a creature or land card
+  after the discard; Yuna, Hope of Spira reanimates an enchantment with
+  a finality counter — and 17 trigger effects that silently did nothing
+  on the real game path (Maelstrom Pulse, goad, explore and more) now
+  resolve.
+- Eerie Interference no longer risks protecting an OPPONENT's creature;
+  "up to one target" triggers keep their other effects when no target
+  exists; blinked permanents are no longer affected by their old
+  triggers (suspect).
+
 ## [0.8.86] - 2026-09-05
 
 ### Fixed
