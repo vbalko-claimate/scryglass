@@ -4,6 +4,30 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.88] - 2026-09-06
+
+### Fixed
+- Planeswalkers gain loyalty from their printed triggers (Tezzeret, Ral,
+  Kaito — an artifact entering or a spell cast now actually adds the
+  counter), and Tezzeret's 0 untaps the chosen artifact or creature as
+  printed.
+- "Destroy target land" works (Avengers Disassembled previously destroyed
+  the OPPOSITE kind of permanent; Price of Freedom, Bumi Bash, Sandworm
+  fixed too, including the basic-land compensation).
+- Cruelclaw's Heist exiles the chosen nonland card and — when the gift
+  was promised — you can really cast it; a card you cast that belongs to
+  the opponent now fights for you and ends up in its owner's graveyard.
+- Chief Warg's Company can attack alongside its own Wolf tokens and
+  Mouser Mark III next to any artifact token (tokens were invisible to
+  their attack conditions); Lightstall Inquisitor's enter effect exiles
+  a card from each opponent's hand.
+- Spells can no longer be cast "into nothing" via Treasure/convoke
+  payment shortcuts or missing target checks (Maelstrom Pulse, Get Lost,
+  Tragic Trajectory and more), and destroyed stolen permanents return to
+  their owner's graveyard.
+- 18 cards whose "enters tapped"-style abilities were wrongly marked as
+  supported are now honestly tracked (database hygiene).
+
 ## [0.8.87] - 2026-09-06
 
 ### Fixed
