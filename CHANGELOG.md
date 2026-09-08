@@ -4,6 +4,22 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.89] - 2026-09-08
+
+### Fixed
+- Deck guides and rules now actually reach the cloud. The cloud used to keep
+  whatever it received the first time a deck version was uploaded — usually
+  before the guide existed — and silently ignored every later update, so
+  regenerated guides and repaired rules never showed up on the server.
+- The deck list and the version list no longer disagree about which version
+  is active. Decks that were activated through the older path are repaired
+  automatically the next time the app starts.
+
+### Security
+- Hardening across the local API and the cloud admin: stricter input
+  validation, safer escaping and response headers, and tighter file
+  permissions on locally stored tokens.
+
 ## [0.8.88] - 2026-09-06
 
 ### Fixed
