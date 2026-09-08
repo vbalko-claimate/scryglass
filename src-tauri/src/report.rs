@@ -27,6 +27,39 @@ fn read_json(path: &Path) -> Option<Value> {
     serde_json::from_str(&std::fs::read_to_string(path).ok()?).ok()
 }
 
+/// Best-effort write, 0600 on unix: `cloud_sync_state.json` carries the cloud
+/// bearer token in plaintext, so a default-umask 0644 file would let any
+/// other local account read it.
+///
+/// ⚠ P1d(i): `OpenOptions::mode()` is only honoured by `open()` when it
+/// actually CREATES a fresh inode (`O_CREAT` on a name that didn't exist) —
+/// POSIX ignores the mode argument to `open()` on an existing file. On every
+/// already-installed machine `cloud_sync_state.json` already exists (usually
+/// at the default-umask 0644 from before this function existed), so relying
+/// on `.mode(0o600)` alone was a no-op there. `set_permissions` after open
+/// applies unconditionally, BEFORE the token is written, so an existing
+/// world/group-readable file gets narrowed first rather than after.
+fn write_json_0600(path: &Path, contents: &str) -> std::io::Result<()> {
+    #[cfg(unix)]
+    {
+        use std::io::Write;
+        use std::os::unix::fs::OpenOptionsExt;
+        use std::os::unix::fs::PermissionsExt;
+        let mut f = std::fs::OpenOptions::new()
+            .write(true)
+            .create(true)
+            .truncate(true)
+            .mode(0o600)
+            .open(path)?;
+        f.set_permissions(std::fs::Permissions::from_mode(0o600))?;
+        f.write_all(contents.as_bytes())
+    }
+    #[cfg(not(unix))]
+    {
+        std::fs::write(path, contents)
+    }
+}
+
 /// The sidecar's data dir — the same `{SCRY_USER_DATA or ~/MTG/mtg-data}/app_data`
 /// that `spawn_glass_host` passes it, so we read the account it already uses
 /// instead of minting a second identity.
@@ -127,7 +160,7 @@ async fn token_for(http: &reqwest::Client, dir: &Path, url: &str) -> Option<Stri
         obj.insert("token".into(), json!(token));
         obj.entry("client_id").or_insert(json!(client_id));
         let _ = std::fs::create_dir_all(dir);
-        let _ = std::fs::write(&state_path, merged.to_string());
+        let _ = write_json_0600(&state_path, &merged.to_string());
     }
     Some(token)
 }
@@ -198,5 +231,60 @@ pub async fn send_failure(app: &tauri::AppHandle, kind: &str, message: &str) {
             ));
         }
         Err(e) => crate::diag::log(&format!("[report] upload failed: {e}")),
+    }
+}
+
+#[cfg(all(test, unix))]
+mod tests {
+    use super::*;
+    use std::os::unix::fs::PermissionsExt;
+
+    fn tmp(tag: &str) -> PathBuf {
+        let d = std::env::temp_dir().join(format!(
+            "scryglass_report_test_{}_{}",
+            tag,
+            std::process::id()
+        ));
+        let _ = std::fs::create_dir_all(&d);
+        d
+    }
+
+    /// P1d(i): a file that already exists at the default-umask 0644 — the
+    /// state every already-installed machine's `cloud_sync_state.json` is in
+    /// — must end up 0600 after a write, not just a brand-new file. The old
+    /// implementation relied solely on `OpenOptions::mode()`, which POSIX
+    /// ignores once the file already exists, making the "fix" a no-op here.
+    #[test]
+    fn write_json_0600_narrows_an_already_existing_wide_open_file() {
+        let dir = tmp("existing");
+        let path = dir.join("cloud_sync_state.json");
+        std::fs::write(&path, "{}").unwrap();
+        std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o644)).unwrap();
+
+        write_json_0600(&path, r#"{"token":"secret"}"#).unwrap();
+
+        let mode = std::fs::metadata(&path).unwrap().permissions().mode() & 0o777;
+        assert_eq!(mode, 0o600, "existing 0644 file must be narrowed to 0600");
+        assert_eq!(
+            std::fs::read_to_string(&path).unwrap(),
+            r#"{"token":"secret"}"#
+        );
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    /// The brand-new-file path (already worked before this fix) must keep
+    /// working: `create(true)` + the explicit `set_permissions` agree.
+    #[test]
+    fn write_json_0600_is_0600_on_a_fresh_file() {
+        let dir = tmp("fresh");
+        let path = dir.join("cloud_sync_state.json");
+
+        write_json_0600(&path, "{}").unwrap();
+
+        let mode = std::fs::metadata(&path).unwrap().permissions().mode() & 0o777;
+        assert_eq!(mode, 0o600, "a freshly created file must be 0600");
+
+        let _ = std::fs::remove_dir_all(&dir);
     }
 }
