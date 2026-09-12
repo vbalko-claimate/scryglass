@@ -4,6 +4,35 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.94] - 2026-09-12
+
+### Fixed
+- 198 triggered abilities on permanents were silently dead: the compiler
+  typed them as spell text, and the engine only listens to abilities typed
+  as triggers. Heroic Feast never made its Food, Death to Our Enemies never
+  made a Treasure, Corpses of the Lost's Skeleton never entered, Simulacrum
+  Synthesizer never built a Construct, Case of the Stashed Skeleton,
+  Dáin's Company, Stormchaser's Talent, Magda, Ravenous Robots and the rest
+  of the list now fire as printed. The same defect gated casting such a
+  permanent on its trigger's targets and made the advisor value the trigger
+  as an instant answer; both side effects are gone.
+- "Whenever another X you control enters / dies" honours what X is: Kíli
+  the Resourceful, Woodland Weavemaster, the Shrines, Boggart Cursecrafter,
+  Vaultborn Tyrant and about twenty other cards no longer trigger on any
+  creature or artifact entering — only on the named type, subtype, power or
+  keyword.
+- Trigger conditions are read from the trigger clause only, so Smaug the
+  Magnificent no longer triggers on every damage event and Dragonhawk no
+  longer triggers at every end step because their rules text mentions
+  those words later on.
+- "Whenever equipped creature attacks" (Ultima Weapon and seven other
+  Equipment) now fires for the creature wearing the Equipment.
+
+### Changed
+- Advisor engine: glass-shard trigger matching is fail-closed — a trigger
+  whose qualifier the engine cannot read stays quiet rather than firing on
+  the wrong objects.
+
 ## [0.8.89] - 2026-09-08
 
 ### Fixed
