@@ -4,6 +4,17 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.95] - 2026-09-12
+
+### Fixed
+- "You may pay {N}. If you do / When you do, …" now actually costs the mana.
+  Spellbook Vendor no longer hands out a free Sorcerer Role every combat,
+  Forsaken Miner no longer returns itself for free on every crime, Frenzied
+  Goblin no longer stops a blocker for free on every attack, and about
+  thirty more cards with the same wording pay for their effect or skip it.
+  The advisor's simulations were crediting these cards with value they could
+  not have without spending mana.
+
 ## [0.8.94] - 2026-09-12
 
 ### Fixed
