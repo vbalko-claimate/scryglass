@@ -4,6 +4,20 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.96] - 2026-09-14
+
+### Fixed
+- Eight cards claimed to be removal they are not. Thor, God of Thunder
+  looked like it could exile any permanent, when it only exiles a card
+  from your own graveyard. Nita, Forum Conciliator looked like creature
+  removal. Magmatic Hellkite and Maelstrom Artisan looked like they
+  destroy any permanent, when they destroy a nonbasic land. Practiced
+  Scrollsmith, Reenact the Crime, Disruptor Wanderglyph and Angel of
+  Finality were wrong the same way. The advisor was planning around
+  removal that does not exist, and now reads these cards as printed.
+- Gollum the Abandoned had lost its graveyard exile entirely, and Lord
+  Skitter, Sewer King did nothing at all. Both work now.
+
 ## [0.8.95] - 2026-09-12
 
 ### Fixed
