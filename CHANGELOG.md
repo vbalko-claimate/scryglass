@@ -4,6 +4,16 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.99] - 2026-09-15
+
+### Fixed
+- Temporary tokens no longer live forever. Thirteen cards make a token and
+  sacrifice it at the next end step — Dalkovan Encampment, The Fire Crystal,
+  Chrome Dome, Calamity, Saheeli, The Jolly Balloon Man, Terra, War Effort,
+  Harried Dronesmith, Fire Navy Trebuchet, Molten Duplication and others.
+  The sacrifice was dropped, so the advisor planned as if those tokens
+  stayed on the battlefield permanently and over-valued the cards.
+
 ## [0.8.98] - 2026-09-15
 
 ### Fixed
