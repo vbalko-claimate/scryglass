@@ -4,6 +4,34 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.9.0] - 2026-09-15
+
+### Fixed
+- **The advisor aimed "target permanent you control" effects at your BEST
+  permanent.** Its target ranking was built for removal — bigger is a better
+  thing to kill — and it was being applied to effects that put the target at
+  risk instead. Badgermole Cub's earthbend turned your colour-fixing dual land
+  into a 0/0 creature that dies to any damage, taking the land with it, when a
+  basic was the right choice. Sacrifice-as-a-cost decisions had the same shape.
+  The advisor now knows whether an effect HELPS or HURTS what it lands on, and
+  gives up the least valuable permanent instead of the most.
+- **Land destruction aimed at the wrong land.** Lands were ranked by "does it
+  have printed abilities", so a colourless utility land scored higher than a
+  dual. Against cards like Avengers Disassembled ("destroy target land; its
+  controller may search for a basic"), destroying their colourless land and
+  handing them a coloured basic is an UPGRADE for the opponent. Lands are now
+  ranked by the mana they actually make.
+- **Targets picked while a triggered ability resolved were sided against the
+  wrong player** roughly half the time (CR 608.2 — the resolving object's
+  controller makes its choices; the engine was still holding whoever passed
+  priority last). Targets chosen when a spell was cast were never affected,
+  which is why this went unnoticed.
+
+Measured over 12 metagame decks at 8000 mirror games each, on two independent
+seed grids: two archetypes improved (+2.6 and +3.9 percentage points of win
+rate), the other ten were provably untouched — not one decision changed — and
+none were harmed.
+
 ## [0.8.99] - 2026-09-15
 
 ### Fixed
