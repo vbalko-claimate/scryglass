@@ -4,6 +4,18 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.97] - 2026-09-15
+
+### Fixed
+- Twelve abilities that never did anything now work. The engine had no
+  handler at all for three common wordings: "at the beginning of each
+  opponent's upkeep", "whenever a creature you control enters" (without
+  the word "another"), and "whenever an opponent casts a spell". Painful
+  Quandary, Political Triumph, Warleader's Call, Impact Tremors, Abhorrent
+  Oculus, The Queen of Dale, Lorehold, Taurean Mauler, Mindsparker and
+  others were compiled correctly and then simply never triggered, so the
+  advisor valued them at their mana cost alone.
+
 ## [0.8.96] - 2026-09-14
 
 ### Fixed
