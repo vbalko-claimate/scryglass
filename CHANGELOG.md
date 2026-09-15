@@ -4,6 +4,17 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.8.98] - 2026-09-15
+
+### Fixed
+- Three cards had their activation COST compiled as their effect, which
+  inverted what they do. Maze's End looked like it could bounce any
+  permanent, when returning the land is what you pay. Susur Secundi looked
+  like it forces a sacrifice. Fomori Vault looked like a pure card loss —
+  discarding is the cost, not the result — so the advisor would never have
+  activated it. All three are now read honestly, with their payoffs listed
+  as not yet modelled rather than replaced by their own cost.
+
 ## [0.8.97] - 2026-09-15
 
 ### Fixed
