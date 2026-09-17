@@ -4,6 +4,13 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.9.1] - 2026-09-17
+
+### Fixed
+- Updated Tauri and tray-icon for macOS 26 menu-bar tray registration.
+- Release builds can reuse the checked-in overlay helper when the local Swift
+  toolchain and SDK patch levels do not match.
+
 ## [0.9.0] - 2026-09-15
 
 ### Fixed
