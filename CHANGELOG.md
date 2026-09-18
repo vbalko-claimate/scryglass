@@ -4,6 +4,34 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.9.2] - 2026-09-18
+
+### Fixed
+- **v0.9.0's headline fix never actually reached the advisor.** It said "the
+  advisor now knows whether an effect helps or hurts what it lands on". That
+  was true of the game engine and the self-play pilot, and false of the advice
+  you are shown — the advice path was still calling the old chooser. The target
+  advice in v0.9.0 and v0.9.1 is therefore unchanged from v0.8.99. It changes
+  now, and is pinned by a test that drives the real advice path and fails
+  against v0.9.0's code — the check that was missing the first time.
+- **Advice for abilities you activate was unaffected too.** The direction model
+  only looked at spells and triggers, so every *activated* ability — four of
+  the five earthbend cards among them — still got the old advice.
+- **"Exile your own creature and copy it" was advised backwards.** For Mardu
+  Siegebreaker the exiled creature is the template the copies are made from, so
+  you want your best body; it was being reasoned about as if exiling were a cost.
+- Two further misreadings corrected: granting +1/+1 counters to your own
+  artifact, and mixed-sign pumps like +1/-1, are no longer treated as harmful
+  to what they hit. A fight spell no longer biases toward the opposing creature
+  most likely to win the fight.
+
+### Note on what v0.9.0 actually delivered
+Its other half — ranking lands by the mana they actually produce — did reach
+you, and is unchanged. The arena result quoted there (+2.6 / +3.9 percentage
+points on two archetypes) belongs to that half plus one hardcoded case, not to
+the direction model as a whole. Corrected in the repository rather than left
+standing.
+
 ## [0.9.1] - 2026-09-17
 
 ### Fixed
