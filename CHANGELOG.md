@@ -4,6 +4,32 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.9.3] - 2026-09-21
+
+### Fixed
+- **Twenty-four abilities that say "put it into your hand" were putting a land
+  onto the battlefield instead.** Thrór's Map, Brave the Wilds, Case of the
+  Shattered Pact, Marshals' Pathcruiser, Strixhaven Skycoach, Down in the
+  Valley, Sagu Wildling, Nervous Gardener, Aang's Journey, Analyze the Pollen,
+  Spinewoods Armadillo, Subway Train, Vinewoven Chariot and others. The
+  advisor believed you had a tapped land in play that the card never puts
+  there, so it misread your available mana, your land drop, and every landfall
+  trigger those cards appeared to switch on. They were also being counted as
+  landfall enablers when planning, which they are not.
+- **Ten more of the same family were being treated as "draw a card".** That was
+  a deliberate approximation from when the engine had no way to express
+  "search for a basic land and put it in hand" — a draw understates the card
+  rather than inventing something, so it was the safer of two wrong answers.
+  The engine can express it now, so these are exact: the advisor knows you
+  fetch the land you need rather than whatever is on top.
+
+### How it was found
+A new audit reads each card's printed text on its own and reports which parts
+of it our compiled rules fail to account for. This family came back as a zone
+change the rules never made. Worth noting where it was hiding: every one of
+these abilities was marked as successfully compiled, so the existing "we know
+we did not handle this" list could not have surfaced any of them.
+
 ## [0.9.2] - 2026-09-18
 
 ### Fixed
