@@ -4,6 +4,35 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.9.4] - 2026-09-23
+
+### Fixed
+- **Some abilities treated their own trigger as an effect.** "Whenever you draw a
+  card, you gain 2 life" also drew a card, and "whenever you gain life, draw a
+  card" also gained 2 life, which re-triggered it forever. 44 cards changed.
+- **Team keyword grants reached only one creature.** "Creatures you control gain
+  trample" (Craterhoof Behemoth, Esper Origins, Moonshaker Cavalry …) now reaches
+  all of them. "This creature gets +2/+2 and gains lifelink" (Resplendent Angel,
+  Iron-Shield Elf, Frog Butler …) now goes to the card itself, not to a chosen one.
+- **A token's quoted ability leaked into the card that makes it.** For example,
+  the Mercenary makers pumped instead of making the token, and Moseo gained life
+  on entering. 41 cards changed.
+- **"This ability triggers only once each turn" and "for the first time each
+  turn"** now fire once per turn (Exemplar of Light, Enduring Innocence, Fear of
+  Missing Out …).
+- **"Whenever an opponent loses life"** now triggers at all (Bloodthirsty
+  Conqueror, The Master of Lake-town).
+- **Smaller fixes:** "mill" read inside "milled" / "Millennium", "create X
+  tokens" made one, "you don't lose the game … life" cost 1 life, spree modes
+  that did nothing (Smuggler's Surprise, Final Showdown).
+
+### Recording
+- Games now record which modes you chose for modal and spree spells, and which
+  attacker each blocker blocked, so the advisor can later be checked against
+  those decisions too. Only games played on this version or later carry this.
+
+**Relaunch the app after updating** — the engine is swapped at launch.
+
 ## [0.9.3] - 2026-09-21
 
 ### Fixed
