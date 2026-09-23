@@ -4,6 +4,28 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.9.5] - 2026-09-23
+
+### Changed
+- **The engine no longer taps all your lands in advance.** Until now, at the
+  start of each phase it tapped every land into the mana pool "just in case".
+  Now it taps only the lands a payment actually needs — the way you play. So
+  the advisor and the self-play pilot can finally **hold mana up** for an
+  instant on your opponent's turn, and the lands the engine thinks you have
+  left open match the real game. Measured on 90 recorded games: lands tapped
+  wrongly dropped from 211 to 53, and the turns the engine reproduces exactly
+  went from 305 to 410 of 1132. It is also about 20% faster.
+- Costs like cycling, equip, flashback, foretell, suspend, ninjutsu, evoke,
+  disguise, ward and unlocking a Room now all count your untapped lands the
+  same way casting a spell does.
+
+### Recording
+- Games now record how each card reached the battlefield (cast, fetched,
+  returned from the graveyard …), so replays no longer confuse a fetched land
+  with a land drop.
+
+**Relaunch the app after updating** — the engine is swapped at launch.
+
 ## [0.9.4] - 2026-09-23
 
 ### Fixed
