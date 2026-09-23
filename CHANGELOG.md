@@ -4,6 +4,35 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.9.6] - 2026-09-23
+
+### Fixed
+- **Tokens missed anthems until something else was cast.** A token made during
+  a turn — a Mobilize Warrior, a creature token from an ability — did not get
+  "creatures you control get +1/+1" until the next permanent spell resolved,
+  so it attacked and blocked too small.
+- **Sneak on instants and sorceries** (The Last Ronin's Technique) can now be
+  cast for its sneak cost in the declare-blockers step, returning an unblocked
+  attacker; its tokens enter tapped and attacking.
+- **Exile effects hit the wrong things.** "Exile target creature an opponent
+  controls" could take an enchantment, "exile target artifact or enchantment"
+  a creature, and a "exile target card from a graveyard" mode (Glorious Decay)
+  acted as removal on the battlefield. Flickers of **your own** creature
+  (Y'shtola Rhul, Go Ninja Go, Niko, Skyskipper Duo, Lilysplash Mentor …) were
+  read as exiling an opponent's creature for good. Koh, the Face Stealer and
+  Fiend Hunter now exile on entering.
+- **Tokens keep all their creature types and their name.** A "Zombie Knight"
+  token was only a Knight (no Zombie payoffs); legendary tokens such as
+  Galactus or Redwing are now named and keep every keyword they print.
+- "Each player loses N life" (Risky Shortcut, Summon: Primal Odin) no longer
+  charges only the caster.
+
+### Recording
+- Games now record the **X** of X spells and **every target** of an ability
+  with several (both seats), so replays reproduce them.
+
+**Relaunch the app after updating** — the engine is swapped at launch.
+
 ## [0.9.5] - 2026-09-23
 
 ### Changed
