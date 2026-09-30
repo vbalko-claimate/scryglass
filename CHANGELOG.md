@@ -4,6 +4,44 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.9.7] - 2026-09-30
+
+### Fixed
+- **Creature-lands were one size too big.** "Becomes a 3/3 creature" added 3 to
+  a 1/1 default instead of setting the size, so every Restless land, Mutavault
+  and Ride the Shoopuf hit for +1 (Shoopuf 8/8 instead of 7/7). Animations with
+  no stated duration (Ride the Shoopuf, Soulstone Sanctuary, Figure of Fable)
+  now last until the permanent leaves.
+- **Graveyard abilities were never offered.** Reassembling Skeleton, Falkenrath
+  Forebear, Tunnel Rats, Abzan Devotee and 18 others could not come back; seven
+  "return to your hand" abilities returned to the battlefield instead.
+- **Earthbend lands return.** A land animated by Earthbend that dies or is
+  exiled returns tapped.
+- **Unholy Annex** drains only if you control a Demon, otherwise you lose 2 —
+  it did both. A changeling **Kindred** permanent (Firdoch Core) counts as a
+  Demon.
+- **Aetherize** returns every attacking creature, also when cast after blockers.
+- **Converge** (Together as One, Archaic's Agony): X is the number of colors of
+  mana spent, payment spends as many colors as it can, and Together as One
+  draws and gains life.
+- **Lessons from Life / Embrace the Paradox / H.E.R.B.I.E. Scout Unit** put a
+  land from hand onto the battlefield tapped (after the draw).
+- **Voldaren Bloodcaster / Anje, Maid of Dishonor** make their Blood tokens when
+  a nontoken creature dies / a Vampire enters.
+- **Combat.** A blocked attacker without trample deals ALL its damage (lifelink
+  counts it); damage among several blockers kills as many as it can.
+- **Mana payment** taps as few mana creatures as it can, so the one you wanted
+  to attack with stays untapped.
+- **Auras** such as Ethereal Armor can enchant your own creature; keyword
+  counters put after "loses all abilities" (Abigale) work.
+- Earthbender Ascension no longer picks a target below four quest counters;
+  Rooms unlock correctly; "put counters on up to N targets" spells work.
+
+### Changed
+- Recorded games now carry the step inside the phase, the order of plays across
+  both players, and who controlled a played card (replay schema 9). This is what
+  lets the replay check reproduce a real game turn by turn.
+
 ## [0.9.6] - 2026-09-23
 
 ### Fixed
