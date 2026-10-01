@@ -4,6 +4,30 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.9.8] - 2026-10-01
+
+### Added
+- **Reality Fracture (FRA) is playable.** All 279 new cards of the set compile, and every
+  mechanic they need is in the engine (prepare, entrust/kindred, granted planeswalker
+  abilities, loyalty mana abilities and -X, split second, threshold, Empower Jace, ...).
+
+### Fixed
+- **Two-faced cards no longer borrow the other face's keywords.** Scryfall lists the keywords
+  of every face on the card; 47 front faces got phantom flying, haste, lifelink and more
+  (Cecil, Dark Knight healed on every hit, Gwen Stacy flew).
+- **"Lose life equal to X" was always 1.** Villainous Wrath, Castle Locthwain and Teval now
+  read the real amount; Dark Confidant, Darkstar Augur and Sorin's +1 actually put the top
+  card into your hand.
+- **"+1/+1 counter on each <Type> you control"** put the counter on the source only (Blech,
+  Minwu, Lyra, Krenko, Thalia's Lieutenant and 9 more).
+- **"Whenever another Frog, Rabbit, Raccoon, or Squirrel enters"** never fired (Valley
+  Mightcaller, Honored Dreyleader).
+- **Warp costs with life** (Timeline Culler) are paid, and warp / unearth / tuck / bounce
+  exits now count as leaving the battlefield (Super Shredder and friends).
+- Enrage-style "is dealt damage" triggers fire; Karn, Ghalta, Tarmogoyf-style cards, Solve
+  for Disappointment, Desperate Measures, Trumpeting Carnosaur and Recursive Recruitment
+  behave per their text.
+
 ## [0.9.7] - 2026-09-30
 
 ### Fixed
