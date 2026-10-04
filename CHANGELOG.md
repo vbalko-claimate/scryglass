@@ -4,6 +4,19 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.9.9] - 2026-10-04
+
+### Added
+- **The Ring tempts you.** Ring level and Ring-bearer with all four level abilities (can't be
+  blocked by greater power; loot on attack; blockers sacrificed at end of combat; drain 3 on
+  combat damage). Nazgul, Call of the Ring, Claim the Precious, Rohirrim Lancer, Gollum,
+  Ringwraiths, Gollum's Bite and One Ring to Rule Them All work (They were empty stubs before).
+
+### Fixed
+- **Leaves-the-battlefield watchers saw too little.** Warp, unearth, bargain/ninjutsu/web-slinging
+  exits, tucks and exile costs now count as leaving (Super Shredder and friends).
+- Lands record the turn they entered; a freshly created 0/0 token leaves at the next check.
+
 ## [0.9.8] - 2026-10-01
 
 ### Added
