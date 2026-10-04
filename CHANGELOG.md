@@ -4,6 +4,26 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.9.10] - 2026-10-05
+
+### Added
+- **Additional combat phases.** Fear of Missing Out, Aurelia, the Warleader and Anzrag, the
+  Quake-Mole now really get their extra combat (the engine had no such phase before).
+- Break Out puts a creature of mana value 2 or less onto the battlefield with haste, a dearer one
+  goes to your hand.
+- Replay records carry which permanents paid for each spell (schema v10), so Treasure and
+  non-basic mana sources can be reproduced.
+
+### Fixed
+- A planeswalker's recorded ability is the one that targets: Chandra, Torch of Defiance's -3 on
+  a creature is no longer replayed as her +1.
+- The game ends the moment a player's life reaches 0 - triggers already on the stack (a drain
+  from Vengeful Bloodwitch) no longer resolve afterwards.
+- Evoke, Role may-pay, Room back door, planeswalker attack targets and Mind Swap names are read
+  from the game record, closing many first divergences in replayed games.
+- Construct tokens from Puppet Crafting, Ring-tempts residuals and the rest of the Reality
+  Fracture tail (about 20 cards compiled wrongly).
+
 ## [0.9.9] - 2026-10-04
 
 ### Added
