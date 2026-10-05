@@ -4,6 +4,15 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.9.11] - 2026-10-05
+
+### Changed
+- **Opponent recognition knows the Reality Fracture metagame.** The archetype list grew from 37 to
+  74 and is built from current data (MTGGoldfish plus Untapped's public Bronze-Platinum ladder),
+  with plain names such as "Azorius Control" or "Mono-Black Demons" instead of card-name labels.
+  Measured on 2140 recorded opponents: 90% are now named after 8 revealed cards (was 83%), and on
+  the first post-set games 14 of 14 (was 12 of 14).
+
 ## [0.9.10] - 2026-10-05
 
 ### Added
