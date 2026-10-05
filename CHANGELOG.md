@@ -4,6 +4,16 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.9.12] - 2026-10-05
+
+### Changed
+- **The opponent model starts from the current metagame.** The deck catalogue behind it was built
+  from June lists; the new one covers the current and August pools (112 decks). On your first
+  games after the set it produced a model of the opponent for 100% of decisions (was 97%), with
+  no opponent left outside the catalogue. Measured on 2131 recorded games, it also predicts the
+  cards an opponent shows better than the old catalogue. All decks are weighted equally: weights
+  from Platinum popularity were tested and did not help.
+
 ## [0.9.11] - 2026-10-05
 
 ### Changed
