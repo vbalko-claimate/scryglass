@@ -4,6 +4,20 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.9.13] - 2026-10-06
+
+### Changed
+- **Opponent recognition no longer names a deck after colours it has not shown.** An archetype whose
+  colour set goes beyond what the opponent revealed now loses most of its score, so a two-colour
+  opponent is not called a three-colour deck on thin evidence.
+- **Lively Dirge and Insatiable Avarice work in the advisor.** Their three spree modes (search to the
+  graveyard, search to the top of the library, return up to two creatures with total mana value 4 or
+  less) were silently ignored; the engine now plays them.
+- **The simulation follows real games more closely.** Opponent permanents whose enter trigger needs
+  a target wait for it, a Treasure is spent when the real game spent it, and a planeswalker killed in
+  combat is attacked. On 2185 recorded games the share of turns that match the real game exactly
+  rose from 54.9% to 55.7%.
+
 ## [0.9.12] - 2026-10-05
 
 ### Changed
