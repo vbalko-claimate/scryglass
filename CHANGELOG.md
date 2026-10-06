@@ -4,6 +4,19 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.9.14] - 2026-10-06
+
+### Changed
+- **Summon: Titan, Summon: G.F. Cerberus and Political Triumph work in the advisor.** Titan's second
+  chapter returns every land from the graveyard tapped; Cerberus's second and third chapters copy
+  your next instant or sorcery once or twice; Political Triumph now counts plan counters, and the
+  fourth sacrifices it, draws a card and grows every creature you control.
+- **Games are recorded with the abilities of every spell on the stack, for both players.** This is
+  how the modes the opponent chose on a modal spell can be recovered afterwards; nothing changes in
+  what the app shows. The recording only helps once you have played games on this version.
+- The simulation that replays recorded games follows them more closely again (planeswalkers killed in
+  combat, Treasure spending, spells waiting for the target of their enter trigger).
+
 ## [0.9.13] - 2026-10-06
 
 ### Changed
