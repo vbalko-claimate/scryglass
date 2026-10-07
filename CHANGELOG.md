@@ -4,6 +4,30 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.9.15] - 2026-10-07
+
+### Changed
+- **"Whenever you cast …" abilities now look at the spell.** Triggers that name a kind of spell (an
+  instant or sorcery, an artifact, an enchantment, a creature, a spell with mana value N or more, or
+  Repartee's "that targets a creature") used to fire on every spell you cast. Archmage of Runes drew a
+  card for a creature, Lecturing Scornmage grew for any spell, Lurking Lizards ignored its mana value.
+  The advisor now reads the type, the cost (including X) and the targets of the spell that was cast.
+- **Prepare creatures are actually prepared when they enter**, so the advisor knows their spell can be
+  cast (40 cards; before, none of them ever was). "When this enters and when you sacrifice it" cards
+  (Carrot Cake, Heaped Harvest) now also fire on the sacrifice, and a sacrificed Food from forage counts.
+- **Seasoned Cryomancer stuns creatures that are already tapped**, Class level-ups take effect at once
+  (Caretaker's Talent's token bonus applied only from the next turn), and an Aura whose target is gone
+  no longer enters the battlefield.
+- **United Battlefront and Repurposing Bay let the controller choose** which library card they put onto
+  the battlefield instead of taking the first one.
+- **Games are recorded in more detail** (recording format 12): the stack after every change in the
+  game's own order, so simultaneous triggers resolve in the order the player chose, spells that were
+  countered or fizzled with their targets, and the cards of both players' Adventure and Prepare halves
+  are now named. Nothing changes in what the app shows; the recording only helps once you have played
+  games on this version.
+- The simulation that replays recorded games follows them more closely again (counterspells answering
+  creature spells on the stack, hidden library choices, activations that waited for earlier spells).
+
 ## [0.9.14] - 2026-10-06
 
 ### Changed
