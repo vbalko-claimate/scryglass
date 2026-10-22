@@ -4,6 +4,41 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.9.16] - 2026-10-23
+
+### Changed
+- **47 instants and sorceries now do something when the advisor plays them.** They were read as
+  triggered abilities, so casting one spent the mana and changed nothing: Shared Roots and the other
+  land-fetch spells (Circuitous Route, Map the Frontier, Reach the Horizon, Proctor's Gaze, Tend the
+  Sprigs, They Went This Way, Roamer's Routine, Return from the Wilds), the team pumps (Overrun, Make
+  a Stand, Preposterous Proportions, On the Job, Outlaws' Fury, Rabbit Response, Zealous Display,
+  Claws Out), the fight spells (Kapow!, Perilous Lunge, Dragonclaw Strike, Earth Rumble, Troll
+  Negotiations), the stun spells (Freeze in Place, Procrastinate, Stall Out), Systems Override,
+  Unexpected Request and more. Twelve similar cards (for example Electroduplicate, Face Yourself,
+  Root Manipulation, Pain 101) are still not played correctly and are listed in the repository.
+- **Take-control spells really take control** (Vengeful Possession, Take for a Ride, Involuntary
+  Employment, Twisted Fealty, Caught Red-Handed, Zidane, Goatnap, Systems Override and others): the
+  untap and haste went to the wrong creature and the control change was dropped.
+- **Burn that would kill nothing goes at the opponent's face** in the engine's own play, and "any
+  target" damage is rechecked when it resolves (a burn spell aimed at a planeswalker or your own
+  creature no longer fizzles).
+- **Damage rules**: divided damage (Twin Bolt, Gandalf, Avacyn's Judgment, Death to Our Enemies),
+  damage to "that player" triggers, damage sweeps without a target, damage doubling (Mjolnir, Gratuitous
+  Violence, Neriv) and life payments doubled by Bloodletter.
+- **Tutors search for the card the text names** instead of drawing a random card, and "you may discard
+  a card" is the player's decision (Tweeze, Rydia, Artist's Talent and others).
+- **Bulwark Ox's sacrifice** gives hexproof and indestructible to every creature with a counter, and
+  Dain Ironfoot's attach is a real ability.
+- **Auto-tap follows Magic Arena's own land choice** more closely (checked against 641 logged payments).
+- **The overlay re-identifies your deck** when a different deck list arrives, instead of keeping the
+  previous match's deck.
+- **Star Trek: Strange New Worlds** cards are read from their card and reminder text ahead of release
+  (Spacecraft charge tiers, Beam me up, differently named lands, total power 8 attack triggers). They are
+  checked against the official rules once those are published.
+- The simulation that replays recorded games was fixed in several places (a countered spell is no longer
+  cast before the land that pays for it, Saddle, uncaptured land-fetch spells): 57.6% to 61.1% of 1141
+  turns from the newest 109 cloud games replay without a difference.
+
 ## [0.9.15] - 2026-10-07
 
 ### Changed
