@@ -4,6 +4,36 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.9.17] - 2026-10-25
+
+### Added
+- **✗ now gives you another recommendation.** Hold the feedback key and press ✗ on a play or a target
+  you do not want: the overlay steps to the next best option for the same decision (and ✗ again goes
+  one further). For a main-phase play this is the engine's next-ranked action, not a new search, so
+  it is marked as a fallback. It works for plays, targets, library-search picks and "choose cards"
+  prompts; attackers, blockers, mulligan and scry/surveil have nothing to step to and say so.
+- **Scry and surveil advice.** The overlay now says which looked-at cards to keep on top and which to
+  send to the bottom or graveyard (a simple rule: spells stay, a land stays while you hold fewer
+  than three, a reanimator deck bins a big creature on a surveil).
+- **Library searches: which land to fetch.** For a fetch land or land-search spell the overlay names
+  the land that lets you cast the most cards in your hand next turn, then the colour your decklist
+  needs most. Searches for other cards are listed without a pick.
+- **Deck plans can say what to take** (`search_preferences` in a deck guide): a reanimation spell or a
+  tutor can name the card the deck wants. New guides generate them; existing guides regenerate.
+
+### Changed
+- **Many instants and sorceries now play as written**: granted triggers and "until end of turn"
+  keywords that were dropped, "up to N target" spells that fizzled when a slot was empty, "one or two
+  target creatures" with one slot per target, riders that say "it" / "that creature", triggers that
+  fire on "enters or dies" and "enters or leaves", activation costs that tap N creatures, and
+  Avatar's Wrath (120 cards compile differently).
+- The replay checker leaves an optional target empty when the recorded one is not in the engine's
+  legal set, waits for attackers before an attacking-creature spell, and understands cycling.
+
+### Fixed
+- A generated deck guide could ship a strategy the engine could not load (a null `global_biases`
+  left by the validator); such a strategy was silently ignored by the advisor.
+
 ## [0.9.16] - 2026-10-23
 
 ### Changed
