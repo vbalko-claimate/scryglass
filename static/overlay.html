@@ -624,6 +624,10 @@ function connect() {
                 // `for` is the decision the push was computed for; older builds
                 // omit it, and `adviceStatus` treats a missing context as live.
                 adviceForCtx = msg.for || null;
+                // Which decision this push belongs to. Echoed on ✗ so the server refuses a
+                // click that lands after a NEWER decision replaced the advice (older servers
+                // send no `seq`; ✗ is then a plain vote, as before).
+                lastAdviceSeq = (msg.seq === undefined || msg.seq === null) ? null : msg.seq;
                 updateAdvice(msg.data);
                 break;
             case 'advice_compliance':
@@ -1062,6 +1066,7 @@ function updateAdvice(data) {
 }
 
 let lastAdvice = null;
+let lastAdviceSeq = null;
 let feedbackMode = false;
 let feedbackAdviceSnapshot = null;
 
@@ -1080,6 +1085,7 @@ function setInteractiveMode(active) {
         // Snapshot current advice for race condition protection
         feedbackAdviceSnapshot = {
             decision_id: lastAdvice[0]?.decision_id || null,
+            seq: lastAdviceSeq,
             message: lastAdvice[0]?.message || '',
             timestamp: Date.now()
         };
@@ -1106,12 +1112,47 @@ function sendFeedback(vote) {
     // reason.
     document.querySelectorAll('.fb-btn').forEach(b => b.classList.add('sent'));
     flagDecision(null, vote === 'up' ? 'good' : 'bad');
+    // ✗ also asks for ANOTHER recommendation: the player does not want to play this one.
+    if (vote !== 'up') rejectAdvice();
 
     // Visual confirmation flash
     const overlay = document.getElementById('overlay');
     const cls = vote === 'up' ? 'feedback-good' : 'feedback-bad';
     overlay.classList.add(cls);
     setTimeout(() => overlay.classList.remove(cls), 500);
+}
+
+// What the player is told when ✗ cannot produce another recommendation. Pure (no DOM) so the
+// mapping is checkable on its own. `reason` is the server's machine-readable refusal.
+function rejectOutcomeText(reason) {
+    switch (reason) {
+        case 'stale': return 'Advice changed — look again';
+        case 'no_alternative': return 'No other option';
+        case 'unsupported_mode': return 'No alternative here';
+        case 'nothing_named': return 'No pick to replace';
+        default: return 'Could not change';
+    }
+}
+
+// ✗ → ask the sidecar for the next best recommendation for THIS decision. The alternative arrives
+// as an ordinary `advice` push (same `seq`), so there is nothing to render here; on success the
+// buttons are re-armed so ✗ can step on to the next one, on failure the indicator says why.
+function rejectAdvice() {
+    const seq = feedbackAdviceSnapshot && feedbackAdviceSnapshot.seq;
+    if (seq === null || seq === undefined) return;   // older server: ✗ stays a plain vote
+    const indicator = document.getElementById('interactive-indicator');
+    fetch('/reject-advice?seq=' + encodeURIComponent(seq), { method: 'POST' })
+        .then(r => r.json())
+        .then(d => {
+            if (d && d.ok) {
+                document.querySelectorAll('.fb-btn').forEach(b => b.classList.remove('sent'));
+                return;
+            }
+            if (!indicator) return;
+            indicator.textContent = rejectOutcomeText(d && d.reason);
+            setTimeout(() => { indicator.textContent = 'FEEDBACK'; }, 2000);
+        })
+        .catch(() => {});
 }
 
 // Flag the current decision — POST to the sidecar (same-origin :8765), which
