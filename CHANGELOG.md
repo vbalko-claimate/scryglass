@@ -4,6 +4,16 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.9.22] - 2026-10-25
+
+### Fixed
+- **"Return … to your hand" picks are advised.** Overlord of the Balemurk's choice (and any effect
+  worded "to your hand") fell to "cannot tell whether the card is kept or lost"; it now recommends
+  the best card to take.
+- **Multiversal Passage's "choose a basic land type" is advised.** MTGA sends this choice without
+  listing the options, so it was silently skipped. The advisor now names the type your hand and
+  deck need (for example `Choose Island — Multiversal Passage`).
+
 ## [0.9.21] - 2026-10-25
 
 ### Fixed
