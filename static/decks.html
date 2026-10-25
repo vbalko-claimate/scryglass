@@ -649,11 +649,19 @@
             ? 'Deck sync: last OK at ' + new Date(parseInt(raw, 10)).toLocaleTimeString()
             : 'Deck sync: not yet synced on this device';
     }
+    // The toast after a sync. `guides_upgraded` = guides another device regenerated under a newer
+    // generator that replaced this device's older copy (absent on an older engine: no suffix).
+    function syncSummary(body) {
+        let t = `Synced — ${body.decks_created} new decks, ${body.versions_added} new versions pulled`;
+        const n = body.guides_upgraded || 0;
+        if (n > 0) t += `, ${n} guide${n === 1 ? '' : 's'} updated from another device`;
+        return t;
+    }
     async function syncCloud() {
         toast('Syncing decks with your account…');
         const { ok, body } = await api('/api/decks/sync-cloud', { method: 'POST' });
         if (ok) {
-            toast(`Synced — ${body.decks_created} new decks, ${body.versions_added} new versions pulled`);
+            toast(syncSummary(body));
             try { localStorage.setItem(DECK_SYNC_KEY, String(Date.now())); } catch (e) { /* private mode */ }
             renderDeckSyncStatus();
             loadDecks();

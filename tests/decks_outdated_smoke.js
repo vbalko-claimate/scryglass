@@ -31,4 +31,13 @@ ok(ctx.banner([{ activated: true, rules_outdated: false }]) === '' && ctx.banner
 const h = { rules: 30, search_preferences: 1, tutors_covered: [], tutors_uncovered: [], tutors_known: true };
 ok(/older version of the guide generator/.test(ctx.panel(h, true, true)), 'the heuristics panel warns when the active rules are outdated');
 ok(!/older version/.test(ctx.panel(h, true, false)), '...and does not when they are current');
+
+// The sync toast mentions guides another device regenerated (guides_upgraded), and stays quiet otherwise.
+const e = html.indexOf('function syncSummary');
+const f = html.indexOf('async function syncCloud');
+assert(e > 0 && f > e, 'syncSummary not found');
+vm.runInContext(html.slice(e, f) + ';this.sum = syncSummary;', ctx);
+ok(/1 guide updated from another device/.test(ctx.sum({ decks_created: 0, versions_added: 0, guides_upgraded: 1 })), 'the sync toast says one guide was updated from another device');
+ok(/3 guides updated/.test(ctx.sum({ decks_created: 0, versions_added: 0, guides_upgraded: 3 })), '...and pluralises');
+ok(!/updated from another device/.test(ctx.sum({ decks_created: 1, versions_added: 2 })) && !/updated/.test(ctx.sum({ decks_created: 1, versions_added: 2, guides_upgraded: 0 })), 'no suffix when nothing was upgraded or an older engine sends no count');
 console.log(n + ' checks passed');
