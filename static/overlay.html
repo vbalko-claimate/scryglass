@@ -798,7 +798,7 @@ function updateStrategyLine(info) {
         return;
     }
     el.style.display = '';
-    el.textContent = '\u{1F4CB} ' + info.strategy_name
+    el.textContent = '\u{1F4CB} ' + (info.deck_name || info.strategy_name)
         + (info.stale ? ` \u26A0 rules v${info.rules_version} < deck v${info.deck_version} — regenerate` : '');
     el.style.color = info.stale ? '#ffd166' : '#8b8e98';
 }
@@ -840,7 +840,7 @@ function updateOppLine(info) {
             + `<span class="opp-conf ${confClass}">${conf}%</span>`;
     } else if (info && info.strategy_name) {
         waitMsg.style.display = 'none';
-        el.innerHTML = `<span class="opp-deck">${info.strategy_name}</span>`;
+        el.innerHTML = `<span class="opp-deck">${info.deck_name || info.strategy_name}</span>`;
     } else {
         waitMsg.style.display = '';
         waitMsg.textContent = 'Waiting for match...';

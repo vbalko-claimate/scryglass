@@ -488,7 +488,9 @@
         const filename = guidePath.split('/').pop();
         const r = await fetch(`/api/manage/guide/${encodeURIComponent(deckId)}/${encodeURIComponent(filename)}`);
         if (!r.ok) { toast('Guide file missing', true); return; }
-        const md = await r.text();
+        // The endpoint answers JSON ({content, deck_id, file}); rendering the raw body showed the
+        // JSON text itself instead of the guide.
+        const md = (await r.json()).content || '';
         // DOM-building renderer (shared with the cloud dashboard) — LLM output
         // never reaches innerHTML (#20).
         const body = document.getElementById('guide-body');
