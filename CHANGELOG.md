@@ -4,6 +4,18 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.9.23] - 2026-10-25
+
+### Fixed
+- **A refused ✗ is visible.** The message ("No alternative here", "No other option", …) used to
+  appear in the FEEDBACK indicator, which hides about 0.3 s after the click, so a refusal looked
+  like nothing happening. It is now a separate note that stays for 4 s, and a failed request says
+  so ("Sidecar did not answer", "Not saved: …") instead of failing silently.
+
+### Added
+- Every ✓ / ✗ / ⚑ press is recorded (`overlay_click` in the match log) together with how the
+  sidecar answered, so a press that does nothing can be traced.
+
 ## [0.9.22] - 2026-10-25
 
 ### Fixed

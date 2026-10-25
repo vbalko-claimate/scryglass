@@ -257,6 +257,17 @@ html, body {
 }
 #interactive-indicator.visible { display: block; }
 
+/* Outcome of a ✓/✗/⚑ press. Separate from the indicator: that one disappears ~0.3 s after the
+   mouse-up (feedback mode ends), which hid every refusal. */
+#overlay-toast {
+    display: none;
+    font-size: 11px;
+    color: #ffb74d;
+    margin-top: 4px;
+    text-align: right;
+}
+#overlay-toast.visible { display: block; }
+
 /* Feedback flash confirmation */
 #overlay.feedback-good { border-color: rgba(129, 199, 132, 0.5); }
 #overlay.feedback-bad { border-color: rgba(239, 83, 80, 0.5); }
@@ -507,6 +518,7 @@ html, body {
         <div class="fb-btn flag" onclick="flagDecision(this, 'flag')" title="Flag this decision — save the full game state to reproduce later">⚑</div>
     </div>
     <div id="interactive-indicator">FEEDBACK</div>
+    <div id="overlay-toast"></div>
     <div id="debrief" style="display:none;text-align:center;padding:8px 0"></div>
 </div>
 
@@ -1141,6 +1153,7 @@ function sendFeedback(vote) {
     // number. Typing a reason mid-game is not an option, so the button IS the
     // reason.
     document.querySelectorAll('.fb-btn').forEach(b => b.classList.add('sent'));
+    announceClick(vote === 'up' ? 'good' : 'bad');
     flagDecision(null, vote === 'up' ? 'good' : 'bad');
     // ✗ also asks for ANOTHER recommendation: the player does not want to play this one.
     if (vote !== 'up') rejectAdvice();
@@ -1150,6 +1163,28 @@ function sendFeedback(vote) {
     const cls = vote === 'up' ? 'feedback-good' : 'feedback-bad';
     overlay.classList.add(cls);
     setTimeout(() => overlay.classList.remove(cls), 500);
+}
+
+// Tell the sidecar a button was pressed BEFORE anything else happens to the press. A press that
+// leaves no row at all means it never reached the page; a `click` row with no outcome row after it
+// means the fetch or the server dropped it. Best effort by design: it must never block the vote.
+function announceClick(kind) {
+    const seq = feedbackAdviceSnapshot ? feedbackAdviceSnapshot.seq : '';
+    fetch('/overlay-click?kind=' + encodeURIComponent(kind) + '&seq=' + encodeURIComponent(seq ?? ''),
+          { method: 'POST' }).catch(() => {});
+}
+
+// A failure the player can SEE: the message used to sit in the feedback indicator, which is hidden
+// again 0.3 s after the click, and a rejected fetch was swallowed, so "nothing happened" could not
+// be told from "refused".
+let overlayToastTimer = null;
+function showOverlayNotice(text) {
+    const toast = document.getElementById('overlay-toast');
+    if (!toast) return;
+    toast.textContent = text;
+    toast.classList.add('visible');
+    clearTimeout(overlayToastTimer);
+    overlayToastTimer = setTimeout(() => toast.classList.remove('visible'), 4000);
 }
 
 // What the player is told when ✗ cannot produce another recommendation. Pure (no DOM) so the
@@ -1170,7 +1205,6 @@ function rejectOutcomeText(reason) {
 function rejectAdvice() {
     const seq = feedbackAdviceSnapshot && feedbackAdviceSnapshot.seq;
     if (seq === null || seq === undefined) return;   // older server: ✗ stays a plain vote
-    const indicator = document.getElementById('interactive-indicator');
     fetch('/reject-advice?seq=' + encodeURIComponent(seq), { method: 'POST' })
         .then(r => r.json())
         .then(d => {
@@ -1178,11 +1212,9 @@ function rejectAdvice() {
                 document.querySelectorAll('.fb-btn').forEach(b => b.classList.remove('sent'));
                 return;
             }
-            if (!indicator) return;
-            indicator.textContent = rejectOutcomeText(d && d.reason);
-            setTimeout(() => { indicator.textContent = 'FEEDBACK'; }, 2000);
+            showOverlayNotice(rejectOutcomeText(d && d.reason));
         })
-        .catch(() => {});
+        .catch(() => showOverlayNotice('Sidecar did not answer'));
 }
 
 // Flag the current decision — POST to the sidecar (same-origin :8765), which
@@ -1204,8 +1236,9 @@ function flagDecision(btn, reason) {
             const cls = ok ? 'feedback-good' : 'feedback-bad';
             overlay.classList.add(cls);
             setTimeout(() => overlay.classList.remove(cls), 600);
+            if (!ok) showOverlayNotice('Not saved: ' + ((d && d.error) || 'unknown'));
         })
-        .catch(() => {});
+        .catch(() => showOverlayNotice('Sidecar did not answer'));
 }
 
 function showDebrief(data) {

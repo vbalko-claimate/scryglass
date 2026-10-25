@@ -36,7 +36,7 @@ function makeEnv() {
   class WebSocket { constructor() { wsInst = this; setTimeout(() => this.onopen && this.onopen(), 0); } send() {} }
   const pending = {};
   const fetch = (url, opts) => {
-    if (!/flag-decision|reject-advice/.test(url)) return new Promise(() => {});   // unrelated polling
+    if (!/flag-decision|reject-advice|overlay-click/.test(url)) return new Promise(() => {});   // unrelated polling
     calls.push({ url, method: opts && opts.method });
     return new Promise((res) => { pending[url.split('?')[0]] = (body) => res({ json: () => Promise.resolve(body) }); });
   };
@@ -60,11 +60,11 @@ function makeEnv() {
   api.setInteractiveMode(true);
   check(api.getSnap() && api.getSnap().seq === 7, 'snapshot carries the push seq');
   api.sendFeedback('down');
-  check(e.calls.map(c => c.url).join('|') === '/flag-decision?reason=bad|/reject-advice?seq=7', 'down = flag(bad) then reject with seq: ' + e.calls.map(c => c.url));
+  check(e.calls.map(c => c.url).join('|') === '/overlay-click?kind=bad&seq=7|/flag-decision?reason=bad|/reject-advice?seq=7', 'down = announce, flag(bad), then reject with seq: ' + e.calls.map(c => c.url));
   check(e.calls.every(c => c.method === 'POST'), 'both POST');
   e.pending['/reject-advice']({ ok: false, reason: 'no_alternative' });
   await new Promise(r => setTimeout(r, 5));
-  check(e.els['interactive-indicator'].__state.text === 'No other option', 'refusal is shown: ' + e.els['interactive-indicator'].__state.text);
+  check(e.els['overlay-toast'].__state.text === 'No other option' && e.els['overlay-toast'].__state.classes.has('visible'), 'refusal is shown in the toast, not the indicator that hides after the click: ' + e.els['overlay-toast'].__state.text);
   // 2. success re-arms the buttons
   e = makeEnv(); const a2 = e.ctx.__api; a2.connect(); await new Promise(r => setTimeout(r, 5));
   e.getWs().onmessage({ data: JSON.stringify({ type: 'advice', seq: 9, data: [{ message: 'm', source: 'engine', priority: 'high', action_scores: [], recommended_cards: ['x'] }] }) });
@@ -76,12 +76,12 @@ function makeEnv() {
   e = makeEnv(); const a3 = e.ctx.__api; a3.connect(); await new Promise(r => setTimeout(r, 5));
   e.getWs().onmessage({ data: JSON.stringify({ type: 'advice', data: [{ message: 'm', source: 'engine', priority: 'high', action_scores: [], recommended_cards: ['x'] }] }) });
   a3.setInMatch(true); a3.setInteractiveMode(true); a3.sendFeedback('down');
-  check(e.calls.length === 1 && e.calls[0].url === '/flag-decision?reason=bad', 'no seq -> only the vote: ' + e.calls.map(c => c.url));
+  check(e.calls.map(c => c.url).join('|') === '/overlay-click?kind=bad&seq=|/flag-decision?reason=bad', 'no seq -> only the vote: ' + e.calls.map(c => c.url));
   // 4. up never rejects
   e = makeEnv(); const a4 = e.ctx.__api; a4.connect(); await new Promise(r => setTimeout(r, 5));
   e.getWs().onmessage({ data: JSON.stringify({ type: 'advice', seq: 1, data: [{ message: 'm', source: 'engine', priority: 'high', action_scores: [], recommended_cards: ['x'] }] }) });
   a4.setInMatch(true); a4.setInteractiveMode(true); a4.sendFeedback('up');
-  check(e.calls.length === 1 && e.calls[0].url === '/flag-decision?reason=good', 'up -> no reject: ' + e.calls.map(c => c.url));
+  check(e.calls.map(c => c.url).join('|') === '/overlay-click?kind=good&seq=1|/flag-decision?reason=good', 'up -> no reject: ' + e.calls.map(c => c.url));
   // 5. reason text table
   const t = a4.rejectOutcomeText;
   check([t('stale'), t('no_alternative'), t('unsupported_mode'), t('nothing_named'), t('zzz')].join('|') === 'Advice changed — look again|No other option|No alternative here|No pick to replace|Could not change', 'reason texts');
