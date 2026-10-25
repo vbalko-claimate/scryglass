@@ -4,6 +4,37 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.9.19] - 2026-10-25
+
+### Added
+- **Guides made by an older version of the guide generator are marked `OUTDATED`.** In Decks an
+  active deck gets an `OUTDATED` badge (and each version row too), a banner above the list counts the
+  decks affected, the Heuristics panel says so, and the overlay's strategy line reads
+  `⚠ rules from an older generator — regenerate in Decks`. The rules keep working. To refresh a deck
+  open it and press **Generate**; that uses your cloud credit, so **nothing is regenerated
+  automatically**. Guides made before this version show as outdated once, because the generator
+  improved (see Notes). The same marker appears on the My Decks page on scryglass.win.
+- **A guide regenerated on another device now reaches this one.** When you sync, a copy that another
+  device made with a newer generator replaces your older copy (guide, rules, and the active rules too
+  if you never edited them); the sync message says how many guides were updated. It only ever
+  upgrades: hand-made rules are never overwritten, an older or equal copy changes nothing, and a
+  regeneration made with the same generator version does not travel.
+
+### Fixed
+- **A deck's rules from the previous match no longer advise (and label) the next game** when the new
+  deck matches none of your decks. A reanimator game used to be advised as Mono White Lifegain for the
+  whole match.
+- The overlay names a deck the way your deck list does, and the Decks guide viewer shows the guide
+  instead of the raw JSON it is delivered in.
+
+### Notes
+- Guide generation on the cloud improved alongside this release: the current meta now actually reaches
+  the generator, rules that could never fire are rejected, a truncated answer no longer loses the
+  rules, and the default models changed. That is why guides from before show `OUTDATED`.
+- Syncing carries the generator version of each guide, so another device (and the web) can mark it
+  too. A guide made on an older app and synced before this version carries none and is not marked
+  until that device syncs with this version.
+
 ## [0.9.18] - 2026-10-25
 
 ### Added
