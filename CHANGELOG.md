@@ -4,6 +4,17 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.9.24] - 2026-10-25
+
+### Fixed
+- **Overlay presses are actually recorded.** 0.9.23 wrote them where an existing database could
+  silently refuse them (a press with no match in progress). They now go to their own table, and a
+  failed write is logged.
+
+### Added
+- Every mouse press that reaches the overlay in feedback mode is recorded too, so a ✗ that does
+  nothing can be traced to the window, the page or the button.
+
 ## [0.9.23] - 2026-10-25
 
 ### Fixed

@@ -1362,6 +1362,16 @@ function overlayCursor(x, y) {
     setPeek(hits(r));
 }
 
+// Any mouse press that reaches the page while feedback mode is on. If a ✗ press leaves NO row at
+// all but this one appears, the click lands on the page but not on the button; if neither appears,
+// the click never leaves the native window.
+document.addEventListener('mousedown', (e) => {
+    if (!feedbackMode) return;
+    const t = e.target;
+    const cls = (t && t.className && String(t.className)) || (t && t.tagName) || '?';
+    announceClick('mousedown:' + cls.slice(0, 40));
+}, true);
+
 // ─── Drag to move (in feedback mode) ───────────────────────────────────
 // The overlay is click-through, so it only receives real mouse events while
 // feedback mode is active (the configured native key makes it interactive).
