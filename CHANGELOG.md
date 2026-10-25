@@ -4,6 +4,17 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.9.20] - 2026-10-25
+
+### Fixed
+- **Scry, surveil, library search and the ✗ button now actually work in the app.** The advisor never
+  received what kind of choice MTGA was asking for, so every "choose" prompt showed "cannot tell …
+  names no pick". The request now carries the choice type and count, plus the attacker ids (blocks)
+  and MTGA's proposed damage split (damage assignment) that were also being dropped.
+- **`OUTDATED` markers on guides now appear.** The check for the current guide generator used only an
+  explicitly configured cloud account and skipped the account token the app normally holds, so the
+  markers added in 0.9.19 never showed. It never provisions an account.
+
 ## [0.9.19] - 2026-10-25
 
 ### Added
