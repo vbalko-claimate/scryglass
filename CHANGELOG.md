@@ -4,6 +4,21 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.9.21] - 2026-10-25
+
+### Fixed
+- **Choices the game forces are no longer blank.** When the game offers exactly one card and you
+  must take it, the overlay says `<card> — forced`; when it asks you to order triggers it cannot
+  name, it says it does not rank them.
+- **Superior Spider-Man's copy pick** now recommends the best creature to copy instead of the
+  cheapest (the word "exile" in its text was read as a cost).
+- **"Any target" effects can aim at the opponent.** The opponent was never among the candidates, so
+  a ping or burn source looked like it could only hit your own creatures and the advice named one.
+  When the pick would be your own creature and the effect is not a boost, the advice now says
+  `Target: the opponent`.
+- **A high-priority deck-rule note is no longer hidden behind a low-priority general one** in the
+  two lines the overlay shows.
+
 ## [0.9.20] - 2026-10-25
 
 ### Fixed
