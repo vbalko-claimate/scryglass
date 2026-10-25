@@ -214,11 +214,34 @@
     const pollers = {};           // job_id → interval
 
     // ── Deck list ───────────────────────────────────────────────────────────
+    // What the activated strategy gives the advisor (from /api/decks `heuristics`): rule count, library-search
+    // preferences, and tutors in the list that have none.
+    let heuristicsByDeck = {};
+    function heuristicsPill(h) {
+        if (!h) return '';
+        const n = (h.tutors_uncovered || []).length;
+        if (n) return `<span class="pill warn" title="No list of good search targets for: ${esc(h.tutors_uncovered.join(', '))}. The advisor falls back to a generic pick when these resolve — regenerate the guide.">SEARCH ×${n} NO LIST</span>`;
+        if (h.search_preferences) return `<span class="pill ok" title="${h.search_preferences} deck search preference(s)">SEARCH ✓</span>`;
+        return '';
+    }
+    function heuristicsPanel(h, activated) {
+        if (!activated) return '<div class="muted" style="margin:8px 0;">Heuristics: rules are not active for this deck — the advisor uses only the general rules.</div>';
+        if (!h) return '';
+        const list = a => (a || []).map(esc).join(', ');
+        const lines = [`<b>${h.rules}</b> rule(s) · <b>${h.search_preferences}</b> library-search preference(s)`];
+        if ((h.tutors_covered || []).length) lines.push(`Search targets listed for: ${list(h.tutors_covered)}`);
+        if ((h.tutors_uncovered || []).length) lines.push(`<span style="color:#ffd166;">⚠ No search-target list for: ${list(h.tutors_uncovered)} — advisor picks generically. Regenerate the guide to add one.</span>`);
+        else if (!h.tutors_known) lines.push('Tutor check unavailable (card catalog not loaded).');
+        else if (!(h.tutors_covered || []).length) lines.push('No tutor cards detected in this list — nothing to prefer.');
+        return `<div class="muted" style="margin:8px 0; line-height:1.5;">Heuristics: ${lines.join('<br>')}</div>`;
+    }
+
     async function loadDecks() {
         const { ok, body } = await api('/api/decks');
         const el = document.getElementById('deck-list');
         if (!ok) { el.innerHTML = '<span class="muted">Failed to load decks.</span>'; return; }
         const decks = (body.decks || []).filter(d => !d.deleted);
+        heuristicsByDeck = Object.fromEntries(decks.filter(d => d.heuristics).map(d => [d.deck_id, d.heuristics]));
         el.innerHTML = '';
         if (!decks.length) {
             el.innerHTML = '<span class="muted">No decks yet.</span>';
@@ -229,7 +252,7 @@
             row.onclick = () => { selectedDeck = d.deck_id; loadDecks(); loadDetail(d.deck_id); };
             row.innerHTML = `<div><div>${esc(d.name)}</div>
                 <div class="muted">${pips(d.colors)} ${esc(d.archetype || '')} · v${d.latest_version ?? 1}</div></div>
-                ${d.activated ? '<span class="pill ok" title="Rules active in the advisor">ACTIVE</span>' : ''}${d.activated && d.active_version != null && d.latest_version != null && d.active_version < d.latest_version ? `<span class="pill warn" title="The active rules were generated for v${d.active_version}, but the deck list is at v${d.latest_version} — regenerate or re-activate">STALE v${d.active_version}&lt;v${d.latest_version}</span>` : ''}`;
+                ${d.activated ? '<span class="pill ok" title="Rules active in the advisor">ACTIVE</span>' : ''}${d.activated ? heuristicsPill(d.heuristics) : ''}${d.activated && d.active_version != null && d.latest_version != null && d.active_version < d.latest_version ? `<span class="pill warn" title="The active rules were generated for v${d.active_version}, but the deck list is at v${d.latest_version} — regenerate or re-activate">STALE v${d.active_version}&lt;v${d.latest_version}</span>` : ''}`;
             el.appendChild(row);
         }
         // #22: strategy dirs with no deck.json — invisible here until now, yet
@@ -338,6 +361,7 @@
                     <button class="btn btn-ghost btn-sm" style="color:var(--error,#e57373);" onclick="deleteDeck('${body.deck_id}')">Delete</button>
                 </div>
             </div>
+            ${heuristicsPanel(heuristicsByDeck[body.deck_id], body.activated)}
             <table class="version-table">
                 <tr><th>Version</th><th>Cards</th><th>Changes</th><th>Rules</th><th></th></tr>
                 ${rows}

@@ -473,6 +473,7 @@ html, body {
     <div id="compliance-flash"></div>
     <div id="peek-pill"><span class="peek-pill-mark">◈</span> <span class="peek-pill-label">Scryglass</span><span class="peek-pill-update" id="peek-pill-update"></span></div>
     <div class="strategy-line" id="strategy-line" style="display:none; font-size:11px; color:#8b8e98; margin:2px 0;"></div>
+    <div id="heuristics-line" style="display:none; font-size:11px; color:#8b8e98; margin:0 0 2px 0; cursor:pointer;" title="Click for details"></div>
     <div class="opp-line" id="opp-line">
         <span class="waiting" id="waiting-msg">Waiting for match...</span>
     </div>
@@ -790,6 +791,7 @@ function flashCompliance(followed) {
 // the deck is at v(deck_version)).
 function updateStrategyLine(info) {
     const el = document.getElementById('strategy-line');
+    updateHeuristicsLine(info);
     if (!info || !info.strategy_name) {
         el.style.display = 'none';
         el.textContent = '';
@@ -799,6 +801,31 @@ function updateStrategyLine(info) {
     el.textContent = '\u{1F4CB} ' + info.strategy_name
         + (info.stale ? ` \u26A0 rules v${info.rules_version} < deck v${info.deck_version} — regenerate` : '');
     el.style.color = info.stale ? '#ffd166' : '#8b8e98';
+}
+
+// Second micro-line: what the deck's heuristics cover. Only library-search targets are checked so far —
+// a tutor in the list with no deck preference is called out (the advisor then picks generically).
+let heuristicsExpanded = false;
+function updateHeuristicsLine(info) {
+    const el = document.getElementById('heuristics-line');
+    const h = info && info.heuristics;
+    if (!h) { el.style.display = 'none'; el.textContent = ''; return; }
+    const uncovered = h.tutors_uncovered || [];
+    const covered = h.tutors_covered || [];
+    el.style.display = '';
+    el.style.color = uncovered.length ? '#ffd166' : '#8b8e98';
+    const head = uncovered.length
+        ? `\u{1F3AF} no search-target list: ${uncovered.length} card${uncovered.length > 1 ? 's' : ''}`
+        : covered.length ? `\u{1F3AF} search targets \u2713 (${h.search_preferences})`
+        : h.search_preferences ? `\u{1F3AF} ${h.search_preferences} search pref` : `\u{1F3AF} no tutors`;
+    let text = head;
+    if (heuristicsExpanded) {
+        text += ` \u00B7 ${h.rules} rules`;
+        if (uncovered.length) text += ` \u00B7 missing: ${uncovered.join(', ')} \u2014 regenerate guide`;
+        if (covered.length) text += ` \u00B7 listed: ${covered.join(', ')}`;
+    }
+    el.textContent = text;
+    el.onclick = () => { heuristicsExpanded = !heuristicsExpanded; updateHeuristicsLine(info); };
 }
 
 function updateOppLine(info) {
