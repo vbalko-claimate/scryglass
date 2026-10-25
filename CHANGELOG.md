@@ -4,6 +4,20 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.9.18] - 2026-10-25
+
+### Added
+- **The overlay and the Decks page show what a deck's heuristics cover.** A second small line under the
+  strategy name says whether the deck has a list of good library-search targets
+  (`🎯 search targets ✓`), has none for a tutor in the list (`🎯 no search-target list: 2 cards`, in
+  yellow), or has no tutors at all; click it for the card names and the rule count. In Decks, an active
+  deck gets a `SEARCH ✓` / `SEARCH ×N NO LIST` badge and a Heuristics panel in its detail. The tutor
+  check is a hint read from the compiled card effects, not a verdict.
+
+### Changed
+- Target decisions now record which card asked for the target, so they can be told apart by what they
+  do when we measure the advice. No visible change.
+
 ## [0.9.17] - 2026-10-25
 
 ### Added
