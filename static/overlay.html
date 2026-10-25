@@ -798,9 +798,12 @@ function updateStrategyLine(info) {
         return;
     }
     el.style.display = '';
+    // Rules made by an older cloud generator (strategy_info.rules_outdated): they still work, so say it
+    // quietly - regenerating spends the user's cloud credit, nothing does it for them.
     el.textContent = '\u{1F4CB} ' + (info.deck_name || info.strategy_name)
-        + (info.stale ? ` \u26A0 rules v${info.rules_version} < deck v${info.deck_version} — regenerate` : '');
-    el.style.color = info.stale ? '#ffd166' : '#8b8e98';
+        + (info.stale ? ` \u26A0 rules v${info.rules_version} < deck v${info.deck_version} — regenerate` : '')
+        + (info.rules_outdated ? ' \u26A0 rules from an older generator — regenerate in Decks' : '');
+    el.style.color = (info.stale || info.rules_outdated) ? '#ffd166' : '#8b8e98';
 }
 
 // Second micro-line: what the deck's heuristics cover. Only library-search targets are checked so far —

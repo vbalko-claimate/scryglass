@@ -214,6 +214,18 @@
     const pollers = {};           // job_id → interval
 
     // ── Deck list ───────────────────────────────────────────────────────────
+    // Rules/guide made by an OLDER version of the cloud guide generator. The app compares the era
+    // stored with the guide to the cloud's current one (decks.rs `rules_outdated`); nothing is
+    // regenerated automatically, because regenerating spends the user's cloud credit.
+    function outdatedPill(on) {
+        return on ? '<span class="pill warn" title="These rules were made by an older version of the guide generator. They keep working; press Generate to refresh them (this uses your cloud credit).">OUTDATED</span>' : '';
+    }
+    function outdatedBanner(decks) {
+        const n = (decks || []).filter(d => d.activated && d.rules_outdated).length;
+        if (!n) return '';
+        return `<div id="outdated-banner" style="margin:0 0 10px; padding:8px 10px; border:1px solid #ffd166; border-radius:6px; font-size:12px; line-height:1.4;">⚠ ${n} of your decks use rules from an older version of the guide generator. They keep working. To get the improvements, open the deck and press <b>Generate</b> — it uses your cloud credit, so nothing is regenerated automatically.</div>`;
+    }
+
     // What the activated strategy gives the advisor (from /api/decks `heuristics`): rule count, library-search
     // preferences, and tutors in the list that have none.
     let heuristicsByDeck = {};
@@ -224,7 +236,7 @@
         if (h.search_preferences) return `<span class="pill ok" title="${h.search_preferences} deck search preference(s)">SEARCH ✓</span>`;
         return '';
     }
-    function heuristicsPanel(h, activated) {
+    function heuristicsPanel(h, activated, outdated) {
         if (!activated) return '<div class="muted" style="margin:8px 0;">Heuristics: rules are not active for this deck — the advisor uses only the general rules.</div>';
         if (!h) return '';
         const list = a => (a || []).map(esc).join(', ');
@@ -233,6 +245,7 @@
         if ((h.tutors_uncovered || []).length) lines.push(`<span style="color:#ffd166;">⚠ No search-target list for: ${list(h.tutors_uncovered)} — advisor picks generically. Regenerate the guide to add one.</span>`);
         else if (!h.tutors_known) lines.push('Tutor check unavailable (card catalog not loaded).');
         else if (!(h.tutors_covered || []).length) lines.push('No tutor cards detected in this list — nothing to prefer.');
+        if (outdated) lines.push('<span style="color:#ffd166;">⚠ These rules were made by an older version of the guide generator. They keep working; press Generate on the active version to refresh them (uses your cloud credit).</span>');
         return `<div class="muted" style="margin:8px 0; line-height:1.5;">Heuristics: ${lines.join('<br>')}</div>`;
     }
 
@@ -242,7 +255,7 @@
         if (!ok) { el.innerHTML = '<span class="muted">Failed to load decks.</span>'; return; }
         const decks = (body.decks || []).filter(d => !d.deleted);
         heuristicsByDeck = Object.fromEntries(decks.filter(d => d.heuristics).map(d => [d.deck_id, d.heuristics]));
-        el.innerHTML = '';
+        el.innerHTML = outdatedBanner(decks);
         if (!decks.length) {
             el.innerHTML = '<span class="muted">No decks yet.</span>';
         }
@@ -252,7 +265,7 @@
             row.onclick = () => { selectedDeck = d.deck_id; loadDecks(); loadDetail(d.deck_id); };
             row.innerHTML = `<div><div>${esc(d.name)}</div>
                 <div class="muted">${pips(d.colors)} ${esc(d.archetype || '')} · v${d.latest_version ?? 1}</div></div>
-                ${d.activated ? '<span class="pill ok" title="Rules active in the advisor">ACTIVE</span>' : ''}${d.activated ? heuristicsPill(d.heuristics) : ''}${d.activated && d.active_version != null && d.latest_version != null && d.active_version < d.latest_version ? `<span class="pill warn" title="The active rules were generated for v${d.active_version}, but the deck list is at v${d.latest_version} — regenerate or re-activate">STALE v${d.active_version}&lt;v${d.latest_version}</span>` : ''}`;
+                ${d.activated ? '<span class="pill ok" title="Rules active in the advisor">ACTIVE</span>' : ''}${d.activated ? heuristicsPill(d.heuristics) : ''}${d.activated && d.active_version != null && d.latest_version != null && d.active_version < d.latest_version ? `<span class="pill warn" title="The active rules were generated for v${d.active_version}, but the deck list is at v${d.latest_version} — regenerate or re-activate">STALE v${d.active_version}&lt;v${d.latest_version}</span>` : ''}${d.activated ? outdatedPill(d.rules_outdated) : ''}`;
             el.appendChild(row);
         }
         // #22: strategy dirs with no deck.json — invisible here until now, yet
@@ -340,7 +353,7 @@
                     ? `<span class="gen-status" id="gen-${esc(v.guide_job_id)}"><span class="spin"></span> generating…</span>`
                     : '');
             rows += `<tr>
-                <td>v${v.version_number}${active}${latest}</td>
+                <td>v${v.version_number}${active}${latest}${outdatedPill(v.rules_outdated)}</td>
                 <td>${v.card_count}</td>
                 <td>${diff}</td>
                 <td>${rules} ${sourceBadge}</td>
@@ -361,7 +374,7 @@
                     <button class="btn btn-ghost btn-sm" style="color:var(--error,#e57373);" onclick="deleteDeck('${body.deck_id}')">Delete</button>
                 </div>
             </div>
-            ${heuristicsPanel(heuristicsByDeck[body.deck_id], body.activated)}
+            ${heuristicsPanel(heuristicsByDeck[body.deck_id], body.activated, (body.versions || []).some(v => v.is_active && v.rules_outdated))}
             <table class="version-table">
                 <tr><th>Version</th><th>Cards</th><th>Changes</th><th>Rules</th><th></th></tr>
                 ${rows}

@@ -27,3 +27,11 @@ t('built-in strategy (no deck_name) keeps the strategy name', () => {
   ctx.o({ strategy_name: 'Boros Aggro' });
   assert(els['opp-line'].innerHTML.includes('Boros Aggro'));
 });
+t('rules from an older generator are called out, in the warning colour; current rules are not', () => {
+  ctx.s({ strategy_name: 'X', deck_name: 'X', rules_outdated: true });
+  assert(/older generator/.test(els['strategy-line'].textContent) && els['strategy-line'].style.color === '#ffd166', els['strategy-line'].textContent);
+  ctx.s({ strategy_name: 'X', deck_name: 'X', rules_outdated: false });
+  assert(!/older generator/.test(els['strategy-line'].textContent) && els['strategy-line'].style.color !== '#ffd166', els['strategy-line'].textContent);
+  ctx.s({ strategy_name: 'X', deck_name: 'X' });   // an app/server without the flag
+  assert(!/older generator/.test(els['strategy-line'].textContent));
+});
