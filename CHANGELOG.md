@@ -4,6 +4,14 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.9.25] - 2026-10-26
+
+### Fixed
+- **✓ / ✗ / ⚑ can be pressed again.** The overlay window is that of an inactive app, and a web view
+  swallows the first mouse press in such a window (it only activates the app). Feedback mode then
+  ended 0.3 s after the release, so the buttons showed but no press ever reached them — no vote or
+  flag was recorded after 2026-08-29. The first press is now delivered.
+
 ## [0.9.24] - 2026-10-25
 
 ### Fixed

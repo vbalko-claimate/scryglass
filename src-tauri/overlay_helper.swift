@@ -67,6 +67,16 @@ class OverlayWindow: NSWindow {
     override var canBecomeMain: Bool { false }
 }
 
+// ⚠ The overlay helper is an `.accessory` app and feedback mode only makes its window key — it
+// never activates the app. A WKWebView in a window of an INACTIVE app refuses the first mouse
+// press (`acceptsFirstMouse` is false): the press merely activates the app and never reaches the
+// page. The left-mouse-up monitor then ends feedback mode 0.3 s later, so no ✓/✗/⚑ press could
+// ever land — the buttons showed, the click did nothing and left no trace (no vote was recorded
+// after 2026-08-29). Accepting the first press delivers it to the page.
+class FirstMouseWebView: WKWebView {
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
+}
+
 class OverlayDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate {
     var window: NSWindow!
     var webView: WKWebView!
@@ -155,7 +165,7 @@ class OverlayDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate {
 
         // Create WKWebView with transparent background
         let config = WKWebViewConfiguration()
-        webView = WKWebView(frame: window.contentView!.bounds, configuration: config)
+        webView = FirstMouseWebView(frame: window.contentView!.bounds, configuration: config)
         webView.autoresizingMask = [.width, .height]
         webView.setValue(false, forKey: "drawsBackground")
         webView.navigationDelegate = self
