@@ -4,6 +4,21 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.9.26] - 2026-10-27
+
+### Fixed
+- **Combo decks are advised on the right cards.** Alternative-cost casts (Overlord of the Balemurk
+  for its impending cost) now carry the card's name, so the advisor can rank and recommend them;
+  impending permanents are valued as permanents.
+- **Reanimator chains resolve as they should.** Untargeted "return a creature card from a
+  graveyard" effects act on resolution, mass reanimation (Bringer of the Last Gift) puts everything
+  onto the battlefield at once so each-entering triggers (Terror of the Peaks) all see it, and
+  several optional/"may" effects (Bookworm draw, Speaker untap) were corrected.
+- **Cavern of Souls and Starting Town make coloured mana.** An any-colour ability listed after a
+  {C} one was read as colourless only. Cavern's spend restriction is honoured, and the creature type
+  you named is now read from the game log so the advisor knows what Cavern mana can pay for.
+- Rebuilt the bundled card database (23 cards changed).
+
 ## [0.9.25] - 2026-10-26
 
 ### Fixed
