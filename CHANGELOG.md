@@ -4,6 +4,30 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.9.29] - 2026-10-28
+
+### Added
+- **Deck plan box in the overlay.** A small separate box at the top right, minimised to "◈ Plan",
+  opens while the cursor is over it and shows what your deck is built around — for example
+  lifegain, landfall, auras, sacrifice or mass reanimation — with its key payoff and enabler cards
+  and, where it finds one, a finisher. It is read off the cards of the deck you are playing, so it
+  needs no strategy file, and a `plan_override` in the deck's `strategy.json` replaces it. About 60%
+  of decks (control, planeswalkers, artifacts, burn, tokens and so on) have no plan the advisor
+  recognises; the box then says "No recognised plan for this deck". It is information only: it does
+  not change any advice.
+
+### Fixed
+- **Mana that may only be spent on certain spells no longer pays for the wrong ones.** Gideon's
+  Memorial ("only to cast a planeswalker spell"), Great Hall of the Biblioplex and Tablet of
+  Discovery ("only for instants and sorceries"), the artifact, creature and noncreature variants,
+  and Cavern of Souls (a changeling counts as every creature type) are read when the advisor
+  decides what you can cast. Before, such mana was counted as ordinary, so it could recommend a
+  spell you could not actually pay for. Not covered yet: restricted mana already floating in the
+  pool, and restrictions on paying the cost of an ability.
+- **A lone attacker is held back when first strike or a double block kills it for free.** The
+  attack advice no longer sends a single creature into a blocker it cannot survive, unless you are
+  racing, it has an attack trigger, it must attack, or it cannot be blocked or killed that way.
+
 ## [0.9.28] - 2026-10-28
 
 ### Added

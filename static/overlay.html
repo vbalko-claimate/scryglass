@@ -477,6 +477,33 @@ html, body {
     14%  { opacity: 1; }
     100% { opacity: 0; }
 }
+
+/* Plan box: the deck's derived plan, kept apart from the advice panel. Minimised to a pill; the native
+   cursor-forward (`overlayCursor` -> `planCursor`) opens it while the cursor is over it. Top-right, so it
+   stays clear of the advice panel at the top-left. Read-only information: it changes no advice. */
+#plan-box {
+    display: none;
+    position: fixed;
+    top: 56px; right: 12px;
+    max-width: 300px;
+    padding: 4px 9px;
+    background: rgba(12, 12, 18, 0.82);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 8px;
+    color: rgba(240, 238, 230, 0.95);
+    font-size: 12px;
+}
+#plan-box.show { display: block; }
+#plan-box .plan-pill { font-weight: 700; white-space: nowrap; color: rgba(240, 238, 230, 0.92); }
+#plan-box .plan-pill .mark { color: #6c7bd9; }
+#plan-box .plan-body { display: none; margin-top: 6px; line-height: 1.35; }
+#plan-box.open { padding: 8px 12px; }
+#plan-box.open .plan-body { display: block; }
+#plan-box .plan-kind { font-weight: 700; margin-top: 4px; }
+#plan-box .plan-row { color: rgba(240, 238, 230, 0.75); }
+#plan-box .plan-note { color: #8b8e98; margin-top: 4px; }
 </style>
 </head>
 <body>
@@ -520,6 +547,10 @@ html, body {
     <div id="interactive-indicator">FEEDBACK</div>
     <div id="overlay-toast"></div>
     <div id="debrief" style="display:none;text-align:center;padding:8px 0"></div>
+</div>
+<div id="plan-box">
+    <div class="plan-pill"><span class="mark">◈</span> Plan</div>
+    <div class="plan-body" id="plan-body"></div>
 </div>
 
 <script>
@@ -645,6 +676,9 @@ function connect() {
                 break;
             case 'advice_compliance':
                 flashCompliance(msg.data && msg.data.followed === true);
+                break;
+            case 'deck_plan':
+                updatePlanBox(msg.data);
                 break;
             case 'strategy_info':
                 currentStrategyInfo = msg.data;
@@ -1278,6 +1312,7 @@ function showDebrief(data) {
 
 function resetOverlay() {
     inMatch = false;
+    updatePlanBox(null);
     document.getElementById('key-play').style.display = 'none';
     document.getElementById('threat-line').classList.remove('visible');
     document.getElementById('do-now').classList.remove('visible');
@@ -1339,7 +1374,50 @@ function togglePeek() {
     if (!peekActive) measurePeekRect();   // capture the box BEFORE the pill collapses it
     setPeek(!peekActive);
 }
+// ─── Plan box ──────────────────────────────────────────────────────────
+// `deck_plan` (server: deck_plan_view) is the plan read off the deck's own cards, or null. A deck with
+// no recognised plan still shows the box (about 60% of decks have none) and says so, rather than
+// vanishing as if the feature were broken.
+function planEsc(t) {
+    return String(t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+function planCards(list) {
+    return (list || []).map((c) => `${c.copies}\u00D7 ${planEsc(c.name)}`).join(', ');
+}
+function updatePlanBox(data) {
+    const box = document.getElementById('plan-box');
+    const body = document.getElementById('plan-body');
+    if (!box || !body) return;
+    if (!data) {
+        box.classList.remove('show', 'open');
+        body.innerHTML = '';
+        return;
+    }
+    const plans = data.plans || [];
+    let html = '';
+    for (const p of plans) {
+        const label = String(p.kind || '');
+        html += `<div class="plan-kind">${planEsc(label.charAt(0).toUpperCase() + label.slice(1))}</div>`;
+        if ((p.payoffs || []).length) html += `<div class="plan-row">Payoffs: ${planCards(p.payoffs)}</div>`;
+        if ((p.enablers || []).length) html += `<div class="plan-row">Enablers: ${planCards(p.enablers)}</div>`;
+    }
+    if (!plans.length) html += '<div class="plan-row">No recognised plan for this deck.</div>';
+    if ((data.finishers || []).length) html += `<div class="plan-row">Finishers: ${planCards(data.finishers)}</div>`;
+    if (data.source === 'manual') html += '<div class="plan-note">Plan set by hand in strategy.json.</div>';
+    body.innerHTML = html;
+    box.classList.add('show');
+}
+// Hit-test the box AS IT IS NOW (not a cached rectangle): opening grows it down and to the left of its
+// top-right pill, so the open box contains the pill and the cursor cannot bounce out and oscillate.
+function planCursor(x, y) {
+    const box = document.getElementById('plan-box');
+    if (!box || !box.classList.contains('show')) return;
+    const M = 6;
+    const l = box.offsetLeft, t = box.offsetTop, w = box.offsetWidth, h = box.offsetHeight;
+    box.classList.toggle('open', x >= l - M && x <= l + w + M && y >= t - M && y <= t + h + M);
+}
 function overlayCursor(x, y) {
+    planCursor(x, y);
     const el = document.getElementById('overlay');
     if (!el || el.classList.contains('hidden') || el.classList.contains('no-match')) {
         setPeek(false);

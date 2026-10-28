@@ -119,11 +119,39 @@ const run = async () => {
   check('empty push clears the key play', keyPlayShown(), false);
   check('empty push clears the combo banner', comboShown(), false);
 
+  // 3c. PLAN BOX: the deck's derived plan (`deck_plan` WS message) lives in its OWN box, minimised to a
+  //     pill, and opens while the cursor is over it. It must not disturb the main panel's peek.
+  const planEl = getEl('plan-box');
+  planEl.offsetLeft = 1500; planEl.offsetTop = 60; planEl.offsetWidth = 70; planEl.offsetHeight = 22;
+  const planShown = () => getEl('plan-box')._classes.has('show');
+  const planOpen = () => getEl('plan-box')._classes.has('open');
+  check('plan box is hidden before any plan arrives', planShown(), false);
+  wsSend({ type: 'deck_plan', data: {
+    source: 'derived', unknown_cards: 0, finishers: [],
+    plans: [{ kind: 'lifegain', payoffs: [{ name: "Ajani's Pridemate", copies: 4 }], enablers: [{ name: 'Leonin Vanguard', copies: 4 }] }],
+  } });
+  check('a plan shows the box', planShown(), true);
+  check('...minimised (not open) until hovered', planOpen(), false);
+  check('...naming the plan and its cards', /Lifegain/.test(getEl('plan-body').innerHTML) && /Pridemate/.test(getEl('plan-body').innerHTML), true);
+  vm.runInContext('overlayCursor(1510, 70)', sandbox);
+  check('hovering the plan pill opens it', planOpen(), true);
+  check('...without peeking the main panel', peeked(), false);
+  vm.runInContext('overlayCursor(5, 5)', sandbox);
+  check('moving away closes it again', planOpen(), false);
+  wsSend({ type: 'deck_plan', data: { source: 'derived', plans: [], finishers: [], unknown_cards: 0 } });
+  check('a deck with no recognised plan still shows the box', planShown(), true);
+  check('...and says so', /No recognised plan/.test(getEl('plan-body').innerHTML), true);
+  wsSend({ type: 'deck_plan', data: null });
+  check('a null plan hides the box', planShown(), false);
+  wsSend({ type: 'deck_plan', data: { source: 'manual', plans: [{ kind: 'landfall', payoffs: [], enablers: [] }], finishers: [], unknown_cards: 0 } });
+  check('a plan set by hand says so', /by hand/.test(getEl('plan-body').innerHTML), true);
+
   // 4. Match ends → back to the pill.
   wsSend({ type: 'match_end', data: {} });
   matchActive = false;
   await tick();
   check('match end rests as pill', peeked(), true);
+  check('match end hides the plan box', planShown(), false);
 
   // 5. Out of match the polarity is REVERSED: hover opens.
   vm.runInContext('overlayCursor(100, 50)', sandbox);
