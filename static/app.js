@@ -1160,6 +1160,11 @@ function showAbout() {
     document.getElementById('about-overlay').style.display = 'flex';
 }
 
+function aboutCheckForUpdates() {
+    hideAbout();
+    if (window.scryglassUpdate) window.scryglassUpdate();
+}
+
 function hideAbout() {
     document.getElementById('about-overlay').style.display = 'none';
 }

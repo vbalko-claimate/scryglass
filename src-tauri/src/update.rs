@@ -611,3 +611,125 @@ Preamble that belongs to nothing.
         );
     }
 }
+
+// ── In-app update dialog (banner / About) ────────────────────────────────────
+//
+// The tray item does check → native consent dialog → download_and_install → restart. The window
+// needs the same thing as a small dialog with a progress bar and an explicit "restart now?", so the
+// flow is split in two commands the page drives: `update_start` (check, refuse during a match,
+// download with `update-progress` events) and `update_restart` (install the bytes it kept, then
+// restart). Splitting download from install is what makes the restart a real choice: the old
+// `download_and_install` replaced the app the moment the last byte arrived.
+// USER-REPORTED 2026-10-28: the banner announced an update that could only be started from a tray
+// menu the user could not see.
+
+/// The downloaded update waiting for the user's "restart now". One at a time.
+#[derive(Default)]
+pub struct PendingUpdate(std::sync::Mutex<Option<(tauri_plugin_updater::Update, Vec<u8>)>>);
+
+/// What the page needs to draw the next step: `uptodate`, `match` (a game is live), or `ready`.
+#[derive(serde::Serialize)]
+pub struct UpdateOutcome {
+    status: &'static str,
+    version: Option<String>,
+    notes: Option<String>,
+}
+
+fn outcome(status: &'static str, update: Option<&tauri_plugin_updater::Update>) -> UpdateOutcome {
+    UpdateOutcome {
+        status,
+        version: update.map(|u| u.version.clone()),
+        notes: update
+            .and_then(|u| u.body.as_deref())
+            .map(str::trim)
+            .filter(|n| !n.is_empty())
+            .map(|n| n.chars().take(900).collect()),
+    }
+}
+
+/// Check, and when a newer version exists and no match is live, download it, reporting
+/// `update-progress` `{downloaded, total}` events to the page. Keeps the bytes for `update_restart`.
+#[tauri::command]
+pub async fn update_start(app: tauri::AppHandle) -> Result<UpdateOutcome, String> {
+    #[cfg(debug_assertions)]
+    {
+        let _ = app;
+        Err("updates are disabled in debug builds".to_string())
+    }
+    #[cfg(not(debug_assertions))]
+    {
+        use tauri::Emitter;
+        use tauri_plugin_updater::UpdaterExt;
+        // Already downloaded (the user chose "Later" earlier): go straight to the restart question.
+        if let Some((u, _)) = app.state::<PendingUpdate>().0.lock().unwrap().as_ref() {
+            return Ok(outcome("ready", Some(u)));
+        }
+        let updater = app.updater().map_err(|e| e.to_string())?;
+        let Some(update) = updater.check().await.map_err(|e| e.to_string())? else {
+            return Ok(outcome("uptodate", None));
+        };
+        // Never restart mid-game, and do not spend the download on a restart that cannot happen.
+        // "Definitely": an unreadable answer must not block a user who asked for the update.
+        if match_definitely_active().await {
+            return Ok(outcome("match", Some(&update)));
+        }
+        let mut got: u64 = 0;
+        let emitter = app.clone();
+        let bytes = update
+            .download(
+                move |chunk, total| {
+                    got += chunk as u64;
+                    let _ = emitter.emit(
+                        "update-progress",
+                        json!({"downloaded": got, "total": total}),
+                    );
+                },
+                || {},
+            )
+            .await
+            .map_err(|e| e.to_string())?;
+        let out = outcome("ready", Some(&update));
+        *app.state::<PendingUpdate>().0.lock().unwrap() = Some((update, bytes));
+        Ok(out)
+    }
+}
+
+/// Install what `update_start` downloaded and restart. A match that began meanwhile keeps the
+/// update waiting (and says so) instead of restarting into it.
+#[tauri::command]
+pub async fn update_restart(app: tauri::AppHandle) -> Result<(), String> {
+    #[cfg(debug_assertions)]
+    {
+        let _ = app;
+        Err("updates are disabled in debug builds".to_string())
+    }
+    #[cfg(not(debug_assertions))]
+    {
+        let pending = app.state::<PendingUpdate>().0.lock().unwrap().take();
+        let Some((update, bytes)) = pending else {
+            return Err("no downloaded update to install".to_string());
+        };
+        if match_definitely_active().await {
+            *app.state::<PendingUpdate>().0.lock().unwrap() = Some((update, bytes));
+            return Err("A match is in progress — restart when it ends.".to_string());
+        }
+        stage_notes(&app, &update.version, update.body.as_deref());
+        // Windows cannot replace a binary a running process holds open, and the installer only
+        // knows Scryglass.exe: stop glass-host first (same as the tray path).
+        crate::diag::log("[update] stopping glass-host so the installer can replace it");
+        crate::sidecar::kill_stale_sidecars();
+        match update.install(&bytes) {
+            Ok(()) => app.restart(),
+            Err(e) => {
+                crate::diag::log(&format!("[update!] install failed: {e}"));
+                clear_staged_notes(&app);
+                // The backend was stopped for an install that did not happen: bring it back, or
+                // every window is a blank page.
+                if let Err(e2) = crate::sidecar::start_and_wait(&app).await {
+                    crate::diag::log(&format!("[update!] could not restart glass-host: {e2}"));
+                }
+                Err(e.to_string())
+            }
+        }
+    }
+}

@@ -8,6 +8,99 @@
   // page; dismissible (a real window, unlike the overlay), and a dismissed
   // version stays dismissed until a NEWER one appears.
   let dismissedUpdate = null;
+  // The update dialog (banner and About): check → download with a progress bar → "Restart now?".
+  // Drives the shell's `update_start` / `update_restart` commands; the shell refuses to download
+  // or restart during a live match and keeps a downloaded update for "Later".
+  window.scryglassUpdate = async function () {
+    if (document.getElementById('shell-update-dialog')) return;
+    const css = (el, c) => { el.style.cssText = c; return el; };
+    const wrap = css(document.createElement('div'),
+      'position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;' +
+      'background:rgba(0,0,0,0.55);');
+    wrap.id = 'shell-update-dialog';
+    const box = css(document.createElement('div'),
+      'background:#1c1f2b;color:#e8eaf2;border-radius:10px;padding:18px 20px;width:min(420px,90vw);' +
+      'font:14px system-ui,sans-serif;box-shadow:0 10px 40px rgba(0,0,0,0.5);');
+    const title = css(document.createElement('div'), 'font-weight:700;font-size:16px;margin-bottom:10px;');
+    const msg = css(document.createElement('div'), 'margin-bottom:12px;line-height:1.4;');
+    const track = css(document.createElement('div'),
+      'height:8px;border-radius:4px;background:rgba(255,255,255,0.12);overflow:hidden;margin-bottom:12px;');
+    const fill = css(document.createElement('div'), 'height:100%;width:0;background:#ffd166;');
+    track.appendChild(fill);
+    const notes = css(document.createElement('div'),
+      'max-height:140px;overflow:auto;font-size:12px;opacity:0.8;white-space:pre-wrap;margin-bottom:12px;');
+    const row = css(document.createElement('div'), 'display:flex;gap:8px;justify-content:flex-end;');
+    const btn = (label, primary) => {
+      const b = document.createElement('button');
+      b.textContent = label;
+      css(b, 'border:none;border-radius:5px;padding:6px 14px;cursor:pointer;font-weight:600;' +
+        (primary ? 'background:#ffd166;color:#0f1117;' : 'background:rgba(255,255,255,0.14);color:#e8eaf2;'));
+      return b;
+    };
+    box.append(title, msg, track, notes, row);
+    wrap.appendChild(box);
+    document.body.appendChild(wrap);
+    const close = () => { unlisten(); wrap.remove(); };
+    let unlisten = () => {};
+    const show = (t, m, buttons, withBar) => {
+      title.textContent = t;
+      msg.textContent = m;
+      track.style.display = withBar ? '' : 'none';
+      row.replaceChildren(...buttons);
+    };
+    const closeBtn = () => { const b = btn('Close', false); b.addEventListener('click', close); return b; };
+    const tauri = window.__TAURI__;
+    if (!tauri || !tauri.core) {
+      show('Update', 'Updates can only be started from the Scryglass app.', [closeBtn()], false);
+      return;
+    }
+    show('Checking for updates…', 'Looking for a newer version.', [], true);
+    fill.style.width = '0';
+    try {
+      unlisten = await tauri.event.listen('update-progress', (e) => {
+        const { downloaded, total } = e.payload || {};
+        if (total) {
+          fill.style.width = Math.min(100, (100 * downloaded) / total).toFixed(1) + '%';
+          msg.textContent = 'Downloading… ' + Math.floor((100 * downloaded) / total) + '% (' +
+            (downloaded / 1048576).toFixed(1) + ' of ' + (total / 1048576).toFixed(1) + ' MB)';
+        } else {
+          msg.textContent = 'Downloading… ' + (downloaded / 1048576).toFixed(1) + ' MB';
+        }
+        title.textContent = 'Downloading update';
+      });
+    } catch (_) { /* progress is optional; the download still runs */ }
+    let out;
+    try {
+      out = await tauri.core.invoke('update_start');
+    } catch (e) {
+      show('Update failed', String((e && e.message) || e), [closeBtn()], false);
+      return;
+    }
+    if (out.status === 'uptodate') {
+      show('You are up to date', 'This is the latest version of Scryglass.', [closeBtn()], false);
+    } else if (out.status === 'match') {
+      show('A match is in progress',
+        'Scryglass v' + out.version + ' is available. It will not be installed during a match — ' +
+        'try again when it ends.', [closeBtn()], false);
+    } else {
+      fill.style.width = '100%';
+      if (out.notes) notes.textContent = "What's new:\n" + out.notes;
+      const later = btn('Later', false);
+      later.addEventListener('click', close);
+      const go = btn('Restart now', true);
+      go.addEventListener('click', async () => {
+        show('Installing', 'Installing v' + out.version + ' — Scryglass will restart.', [], true);
+        notes.style.display = 'none';
+        try {
+          await tauri.core.invoke('update_restart');
+        } catch (e) {
+          show('Update not installed', String((e && e.message) || e), [closeBtn()], false);
+        }
+      });
+      show('Update downloaded', 'Scryglass v' + out.version + ' is ready. Restart now to finish installing?',
+        [later, go], true);
+    }
+  };
   window.showUpdateNotice = function (version) {
     if (version === dismissedUpdate) return;
     let bar = document.getElementById('shell-update-notice');
@@ -20,21 +113,28 @@
         'background:#ffd166;color:#0f1117;font-weight:600;font-size:14px;';
       const txt = document.createElement('span');
       txt.id = 'shell-update-notice-text';
-      const btn = document.createElement('button');
-      btn.textContent = 'Dismiss';
-      btn.style.cssText =
+      const btnCss =
         'border:none;border-radius:4px;padding:2px 10px;cursor:pointer;' +
         'background:rgba(15,17,23,0.15);color:#0f1117;font-weight:600;';
+      const install = document.createElement('button');
+      install.id = 'shell-update-install';
+      install.textContent = 'Install update';
+      install.style.cssText = btnCss + 'background:#0f1117;color:#ffd166;';
+      install.addEventListener('click', () => window.scryglassUpdate());
+      const btn = document.createElement('button');
+      btn.textContent = 'Dismiss';
+      btn.style.cssText = btnCss;
       btn.addEventListener('click', () => {
         dismissedUpdate = version;
         bar.remove();
       });
       bar.appendChild(txt);
+      bar.appendChild(install);
       bar.appendChild(btn);
       document.body.appendChild(bar);
     }
     document.getElementById('shell-update-notice-text').textContent =
-      'Update v' + version + ' is ready — install from the Scryglass tray menu (Install Update v' + version + '…)';
+      'Update v' + version + ' is ready.';
   };
 
   // ── What's changed (first run of a NEW version) ────────────────────────────

@@ -4,6 +4,16 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.9.28] - 2026-10-28
+
+### Added
+- **Update from the app window.** The "update is ready" banner now has an **Install update**
+  button, and the About dialog (click the version in the footer) has **Check for updates** — until
+  now an update could only be started from the tray menu, which is of no use when the tray icon is
+  not visible. A small dialog shows the download progress and then asks **Restart now** or
+  **Later**, with the release notes. Nothing is downloaded or restarted during a live match (the
+  check is repeated just before the restart), and a downloaded update waits if you choose Later.
+
 ## [0.9.27] - 2026-10-28
 
 ### Fixed

@@ -393,9 +393,12 @@ pub fn run() {
                 api.prevent_close();
             }
         })
+        .manage(update::PendingUpdate::default())
         .invoke_handler(tauri::generate_handler![
             toggle_overlay,
             find_mtga,
+            update::update_start,
+            update::update_restart,
         ])
         .setup(|app| {
             // FIRST, before anything can fail: open the diagnostics log. Every
