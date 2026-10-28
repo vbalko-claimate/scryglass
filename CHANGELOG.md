@@ -4,6 +4,29 @@ All notable changes to the Scryglass app are recorded here. The advisor engine
 ships from `glass-shard@main` (bundled `glass-host`); versions are the Tauri app
 version used for OTA updates.
 
+## [0.9.27] - 2026-10-28
+
+### Fixed
+- **Cards held under a permanent are visible to the advisor.** Deep-Cavern Bat, Banishing Light and
+  the rest of the "until this leaves the battlefield" family now carry the card they hold, read from
+  the game log. Removing the holder returns the card (to the hand or the battlefield) in the
+  simulation, and the target advice says which of the offered permanents holds one of your cards.
+  Removing a holder is worth half the held card's threat score on top of its own, so a Bat holding
+  your Superior Spider-Man can now beat a bigger creature as the pick (a held land counts for
+  nothing).
+- **An impending Overlord is not offered as an attacker.** A permanent that is not a creature now is
+  not treated as one, and the time-counter countdown is read from the game log, so the advisor knows
+  when it becomes a creature.
+- **A card returned from exile enters with its counters** (Mossborn Hydra under Banishing Light no
+  longer comes back as a dead 0/0).
+- **Reanimator decks: what to discard and what to take back.** In a deck that wins by returning
+  creatures to the battlefield in one go (Bringer of the Last Gift), a creature that does not fill
+  the graveyard itself is worth more waiting there than in your hand. Discard and "take one from the
+  graveyard" advice now follows that: Terror of the Peaks is discarded, Formidable Speaker (which
+  fills the graveyard) is kept. Mana value only breaks ties.
+- Stored replay snapshots carry a permanent's live card types when they differ from the printed
+  ones.
+
 ## [0.9.26] - 2026-10-27
 
 ### Fixed
